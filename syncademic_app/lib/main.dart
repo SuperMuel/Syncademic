@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/new_sync_profile_page.dart';
-import 'package:syncademic_app/repository/sync_profile_repository.dart';
-import 'package:syncademic_app/widgets/sync_profiles_list.dart';
+import 'screens/new_sync_profile/new_sync_profile_cubit.dart';
+import 'screens/new_sync_profile/new_sync_profile_page.dart';
+import 'repositories/sync_profile_repository.dart';
+import 'widgets/sync_profiles_list.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
   final getIt = GetIt.instance;
@@ -24,8 +27,11 @@ final _router = GoRouter(
     ),
     GoRoute(
         path: '/new-sync-profile',
-        builder: (context, state) {
-          return const NewSyncConfigPage();
+        builder: (_, __) {
+          return BlocProvider(
+            create: (_) => NewSyncProfileCubit(),
+            child: const NewSyncConfigPage(),
+          );
         }),
   ],
 );

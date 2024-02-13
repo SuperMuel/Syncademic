@@ -1,4 +1,4 @@
-import 'package:syncademic_app/models/schedule_source.dart';
+import '../models/schedule_source.dart';
 
 import '../models/sync_profile.dart';
 import '../models/types.dart';

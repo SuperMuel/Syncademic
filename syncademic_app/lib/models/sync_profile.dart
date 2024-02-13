@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:syncademic_app/models/schedule_source.dart';
+import 'schedule_source.dart';
 
 /// A synchronization profile.
 ///

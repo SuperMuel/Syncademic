@@ -1,2 +1,2 @@
 typedef ID = String;
-typedef URL = String;
+typedef Url = String;

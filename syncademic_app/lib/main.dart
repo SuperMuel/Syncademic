@@ -1,15 +1,21 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+
+import 'firebase_options.dart';
+import 'repositories/sync_profile_repository.dart';
 import 'screens/new_sync_profile/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
-import 'repositories/sync_profile_repository.dart';
 import 'widgets/sync_profiles_list.dart';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-void main() {
+void main() async {
   final getIt = GetIt.instance;
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Register the SyncProfileRepository
   getIt.registerSingleton<SyncProfileRepository>(

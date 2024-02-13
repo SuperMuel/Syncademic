@@ -44,6 +44,7 @@ dependencies:
   flutter_bloc: ^8.1.4
   quiver: ^3.2.1
   uuid: ^4.3.3
+  firebase_core: ^2.25.4
 
 dev_dependencies:
   flutter_test:

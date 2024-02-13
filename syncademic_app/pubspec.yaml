@@ -43,6 +43,7 @@ dependencies:
   validators: ^3.0.0
   flutter_bloc: ^8.1.4
   quiver: ^3.2.1
+  uuid: ^4.3.3
 
 dev_dependencies:
   flutter_test:

@@ -1,8 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import '../../models/id.dart';
+import '../../repositories/sync_profile_repository.dart';
 import 'package:validators/validators.dart';
 
+import '../../models/schedule_source.dart';
+import '../../models/sync_profile.dart';
 import '../../models/types.dart';
 
 part 'new_sync_profile_cubit.freezed.dart';
@@ -27,9 +32,27 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
-  void submit() {
+  Future<void> submit() async {
     if (state.urlError != null) return;
 
     emit(state.copyWith(isSubmitting: true));
+
+    final repo = GetIt.I<SyncProfileRepository>();
+
+    final scheduleSource = ScheduleSource(
+      id: ID(),
+      url: state.url,
+    );
+    final syncProfile = SyncProfile(
+      id: ID(),
+      scheduleSource: scheduleSource,
+    );
+
+    try {
+      await repo.createSyncProfile(syncProfile);
+      emit(state.copyWith(isSuccess: true));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
   }
 }

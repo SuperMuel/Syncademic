@@ -11,7 +11,26 @@ class NewSyncConfigPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<NewSyncProfileCubit>();
 
-    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+    return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
+      listener: (context, state) {
+        if (state.isSuccess) {
+          Navigator.of(context).pop();
+
+          ScaffoldMessenger.of(context)
+            ..removeCurrentSnackBar()
+            ..showSnackBar(const SnackBar(
+              content: Text('Synchronization configuration created'),
+            ));
+        }
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context)
+            ..removeCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+              content: Text('Error: ${state.errorMessage}'),
+              backgroundColor: Colors.red,
+            ));
+        }
+      },
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
@@ -29,6 +48,7 @@ class NewSyncConfigPage extends StatelessWidget {
                     errorText: state.urlError,
                     counterText: '',
                   ),
+                  enabled: state.canEditUrl,
                   maxLength: 5000,
                   onChanged: cubit.urlChanged,
                 ),

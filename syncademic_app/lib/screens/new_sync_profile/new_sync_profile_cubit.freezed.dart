@@ -19,6 +19,8 @@ mixin _$NewSyncProfileState {
   String get url => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
+  bool get isSuccess => throw _privateConstructorUsedError;
+  String? get errorMessage => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $NewSyncProfileStateCopyWith<NewSyncProfileState> get copyWith =>
@@ -31,7 +33,12 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
           NewSyncProfileState value, $Res Function(NewSyncProfileState) then) =
       _$NewSyncProfileStateCopyWithImpl<$Res, NewSyncProfileState>;
   @useResult
-  $Res call({String url, String? urlError, bool isSubmitting});
+  $Res call(
+      {String url,
+      String? urlError,
+      bool isSubmitting,
+      bool isSuccess,
+      String? errorMessage});
 }
 
 /// @nodoc
@@ -50,6 +57,8 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? url = null,
     Object? urlError = freezed,
     Object? isSubmitting = null,
+    Object? isSuccess = null,
+    Object? errorMessage = freezed,
   }) {
     return _then(_value.copyWith(
       url: null == url
@@ -64,6 +73,14 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.isSubmitting
           : isSubmitting // ignore: cast_nullable_to_non_nullable
               as bool,
+      isSuccess: null == isSuccess
+          ? _value.isSuccess
+          : isSuccess // ignore: cast_nullable_to_non_nullable
+              as bool,
+      errorMessage: freezed == errorMessage
+          ? _value.errorMessage
+          : errorMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -76,7 +93,12 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       __$$NewSyncProfileStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String url, String? urlError, bool isSubmitting});
+  $Res call(
+      {String url,
+      String? urlError,
+      bool isSubmitting,
+      bool isSuccess,
+      String? errorMessage});
 }
 
 /// @nodoc
@@ -93,6 +115,8 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? url = null,
     Object? urlError = freezed,
     Object? isSubmitting = null,
+    Object? isSuccess = null,
+    Object? errorMessage = freezed,
   }) {
     return _then(_$NewSyncProfileStateImpl(
       url: null == url
@@ -107,6 +131,14 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.isSubmitting
           : isSubmitting // ignore: cast_nullable_to_non_nullable
               as bool,
+      isSuccess: null == isSuccess
+          ? _value.isSuccess
+          : isSuccess // ignore: cast_nullable_to_non_nullable
+              as bool,
+      errorMessage: freezed == errorMessage
+          ? _value.errorMessage
+          : errorMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -115,7 +147,11 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
 
 class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   const _$NewSyncProfileStateImpl(
-      {this.url = '', this.urlError = null, this.isSubmitting = false})
+      {this.url = '',
+      this.urlError = null,
+      this.isSubmitting = false,
+      this.isSuccess = false,
+      this.errorMessage = null})
       : super._();
 
   @override
@@ -127,10 +163,16 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   @override
   @JsonKey()
   final bool isSubmitting;
+  @override
+  @JsonKey()
+  final bool isSuccess;
+  @override
+  @JsonKey()
+  final String? errorMessage;
 
   @override
   String toString() {
-    return 'NewSyncProfileState(url: $url, urlError: $urlError, isSubmitting: $isSubmitting)';
+    return 'NewSyncProfileState(url: $url, urlError: $urlError, isSubmitting: $isSubmitting, isSuccess: $isSuccess, errorMessage: $errorMessage)';
   }
 
   @override
@@ -142,11 +184,16 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
             (identical(other.urlError, urlError) ||
                 other.urlError == urlError) &&
             (identical(other.isSubmitting, isSubmitting) ||
-                other.isSubmitting == isSubmitting));
+                other.isSubmitting == isSubmitting) &&
+            (identical(other.isSuccess, isSuccess) ||
+                other.isSuccess == isSuccess) &&
+            (identical(other.errorMessage, errorMessage) ||
+                other.errorMessage == errorMessage));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, url, urlError, isSubmitting);
+  int get hashCode => Object.hash(
+      runtimeType, url, urlError, isSubmitting, isSuccess, errorMessage);
 
   @JsonKey(ignore: true)
   @override
@@ -160,7 +207,9 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   const factory _NewSyncProfileState(
       {final String url,
       final String? urlError,
-      final bool isSubmitting}) = _$NewSyncProfileStateImpl;
+      final bool isSubmitting,
+      final bool isSuccess,
+      final String? errorMessage}) = _$NewSyncProfileStateImpl;
   const _NewSyncProfileState._() : super._();
 
   @override
@@ -169,6 +218,10 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   String? get urlError;
   @override
   bool get isSubmitting;
+  @override
+  bool get isSuccess;
+  @override
+  String? get errorMessage;
   @override
   @JsonKey(ignore: true)
   _$$NewSyncProfileStateImplCopyWith<_$NewSyncProfileStateImpl> get copyWith =>

@@ -8,7 +8,11 @@ class NewSyncProfileState with _$NewSyncProfileState {
     @Default('') Url url,
     @Default(null) String? urlError,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isSuccess,
+    @Default(null) String? errorMessage,
   }) = _NewSyncProfileState;
 
   bool get canSubmit => url.isNotEmpty && urlError == null && !isSubmitting;
+
+  bool get canEditUrl => !isSubmitting;
 }

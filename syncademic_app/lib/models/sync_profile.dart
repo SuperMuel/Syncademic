@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'id.dart';
 import 'schedule_source.dart';
 
 /// A synchronization profile.
@@ -7,7 +8,7 @@ import 'schedule_source.dart';
 /// tells what, when and how to synchronize a university schedule
 /// with the user's calendar.
 class SyncProfile extends Equatable {
-  final String id;
+  final ID id;
   final bool enabled;
   final ScheduleSource scheduleSource;
 

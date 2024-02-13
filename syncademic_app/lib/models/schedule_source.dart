@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
+import 'id.dart';
 
 class ScheduleSource extends Equatable {
-  final String id;
+  final ID id;
   final String url;
 
   const ScheduleSource({required this.id, required this.url});

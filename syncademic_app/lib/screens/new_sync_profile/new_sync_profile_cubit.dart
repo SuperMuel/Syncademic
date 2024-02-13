@@ -1,14 +1,14 @@
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
-import '../../models/id.dart';
-import '../../repositories/sync_profile_repository.dart';
 import 'package:validators/validators.dart';
 
+import '../../models/id.dart';
 import '../../models/schedule_source.dart';
 import '../../models/sync_profile.dart';
 import '../../models/types.dart';
+import '../../repositories/sync_profile_repository.dart';
 
 part 'new_sync_profile_cubit.freezed.dart';
 part 'new_sync_profile_state.dart';

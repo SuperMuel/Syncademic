@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import '../models/id.dart';
-
 import '../models/schedule_source.dart';
-
 import '../models/sync_profile.dart';
 
 abstract class SyncProfileRepository {

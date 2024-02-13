@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import '../repositories/sync_profile_repository.dart';
 
 import '../models/sync_profile.dart';
+import '../repositories/sync_profile_repository.dart';
 
 class SyncProfilesList extends StatelessWidget {
   /// A callback that is called when a profile is tapped.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:syncademic_app/repository/sync_profile_repository.dart';
 import 'package:syncademic_app/widgets/sync_profiles_list.dart';
 
@@ -13,23 +14,42 @@ void main() {
   runApp(const MyApp());
 }
 
+// GoRouter configuration
+final _router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const HomeScreen(),
+    ),
+  ],
+);
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
         title: 'Syncademia',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,
         ),
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Syncademia'),
-          ),
-          body: const SyncProfilesList(),
-        ));
+        routerConfig: _router);
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Syncademia'),
+      ),
+      body: const SyncProfilesList(),
+    );
   }
 }

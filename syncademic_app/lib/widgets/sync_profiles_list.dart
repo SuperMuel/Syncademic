@@ -5,6 +5,7 @@ import 'package:syncademic_app/repository/sync_profile_repository.dart';
 import '../models/sync_profile.dart';
 
 class SyncProfilesList extends StatelessWidget {
+  /// A callback that is called when a profile is tapped.
   final Function(SyncProfile)? onTap;
   const SyncProfilesList({super.key, this.onTap});
 
@@ -43,7 +44,7 @@ class _List extends StatelessWidget {
         return ListTile(
             title: Text(profile.scheduleSource.url),
             subtitle: Text(profile.enabled ? 'Enabled' : 'Disabled'),
-            onTap: () => onTap?.call(profile));
+            onTap: onTap == null ? null : () => onTap!(profile));
       },
     );
   }

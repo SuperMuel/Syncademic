@@ -5,7 +5,8 @@ import 'package:syncademic_app/repository/sync_profile_repository.dart';
 import '../models/sync_profile.dart';
 
 class SyncProfilesList extends StatelessWidget {
-  const SyncProfilesList({super.key});
+  final Function(SyncProfile)? onTap;
+  const SyncProfilesList({super.key, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +23,15 @@ class SyncProfilesList extends StatelessWidget {
             return const CircularProgressIndicator();
           }
           final profiles = snapshot.data as List<SyncProfile>;
-          return _List(profiles: profiles);
+          return _List(profiles: profiles, onTap: onTap);
         });
   }
 }
 
 class _List extends StatelessWidget {
   final List<SyncProfile> profiles;
-  const _List({required this.profiles});
+  final void Function(SyncProfile)? onTap;
+  const _List({required this.profiles, this.onTap});
 
   //TODO: Add a message when the list is empty
   @override
@@ -39,9 +41,9 @@ class _List extends StatelessWidget {
       itemBuilder: (context, index) {
         final profile = profiles[index];
         return ListTile(
-          title: Text(profile.scheduleSource.url),
-          subtitle: Text(profile.enabled ? 'Enabled' : 'Disabled'),
-        );
+            title: Text(profile.scheduleSource.url),
+            subtitle: Text(profile.enabled ? 'Enabled' : 'Disabled'),
+            onTap: () => onTap?.call(profile));
       },
     );
   }

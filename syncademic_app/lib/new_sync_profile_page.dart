@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-class NewSyncConfigForm extends StatelessWidget {
-  const NewSyncConfigForm({super.key});
+class NewSyncConfigPage extends StatelessWidget {
+  const NewSyncConfigPage({super.key});
 
   @override
   Widget build(BuildContext context) {

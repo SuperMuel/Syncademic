@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/new_sync_profile_page.dart';
 import 'package:syncademic_app/repository/sync_profile_repository.dart';
 import 'package:syncademic_app/widgets/sync_profiles_list.dart';
 
@@ -21,6 +22,11 @@ final _router = GoRouter(
       path: '/',
       builder: (context, state) => const HomeScreen(),
     ),
+    GoRoute(
+        path: '/new-sync-profile',
+        builder: (context, state) {
+          return const NewSyncConfigPage();
+        }),
   ],
 );
 
@@ -50,6 +56,15 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Syncademia'),
       ),
       body: const SyncProfilesList(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.push('/new-sync-profile');
+        },
+        label: const Text('New synchronization profile'),
+      ),
     );
   }
 }
+
+
+// Add a "New synchronization profile" button to the HomeScreen

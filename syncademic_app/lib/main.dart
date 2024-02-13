@@ -57,6 +57,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: const SyncProfilesList(),
       floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
         onPressed: () {
           context.push('/new-sync-profile');
         },

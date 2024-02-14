@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import 'id.dart';
 import 'schedule_source.dart';
 

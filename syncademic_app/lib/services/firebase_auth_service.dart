@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:syncademic_app/services/auth_service.dart';
+import 'auth_service.dart';
 
-import 'package:syncademic_app/models/user.dart' as syncademic;
+import '../models/user.dart' as syncademic;
 
 class FirebaseAuthService extends AuthService {
   final FirebaseAuth _firebaseAuth;

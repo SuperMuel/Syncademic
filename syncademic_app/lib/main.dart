@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/authentication/cubit/auth_cubit.dart';
-import 'package:syncademic_app/services/firebase_auth_service.dart';
+import 'authentication/cubit/auth_cubit.dart';
+import 'screens/account/account_page.dart';
+import 'services/firebase_auth_service.dart';
 import 'services/auth_service.dart';
 
 import 'firebase_options.dart';
@@ -56,6 +57,12 @@ final _router = GoRouter(
         builder: (context, state) {
           return const GoogleSignInPage();
         }),
+    // Account page
+    GoRoute(
+        path: '/account',
+        builder: (context, state) {
+          return const AccountPage();
+        }),
     GoRoute(
         path: '/new-sync-profile',
         builder: (_, __) {
@@ -93,6 +100,10 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Syncademia'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () => context.push('/account'),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => GetIt.I<AuthCubit>()

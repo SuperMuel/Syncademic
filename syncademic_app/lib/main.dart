@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syncademic_app/authentication/cubit/auth_cubit.dart';
+import 'package:syncademic_app/services/firebase_auth_service.dart';
 import 'services/auth_service.dart';
 
 import 'firebase_options.dart';
@@ -26,7 +27,9 @@ void main() async {
   getIt.registerSingleton<SyncProfileRepository>(
       MockSyncProfileRepository()..createRandomData(10));
 
-  getIt.registerSingleton<AuthService>(MockAuthService());
+  getIt.registerSingleton<AuthService>(FirebaseAuthService()
+      // MockAuthService()..signInWithGoogle(),
+      );
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
@@ -50,7 +53,9 @@ final _router = GoRouter(
     ),
     GoRoute(
         path: '/sign-in',
-        builder: (context, state) => const GoogleSignInPage()),
+        builder: (context, state) {
+          return const GoogleSignInPage();
+        }),
     GoRoute(
         path: '/new-sync-profile',
         builder: (_, __) {
@@ -69,6 +74,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Syncademia',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,

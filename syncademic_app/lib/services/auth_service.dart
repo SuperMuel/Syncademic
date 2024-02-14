@@ -14,9 +14,6 @@ abstract class AuthService {
 
   /// Gets the current user, or null if no user is signed in.
   Future<User?> get currentUser;
-
-  /// Checks or refreshes the authentication state, adding the current user to [authStateChanges].
-  Future<void> refreshAuthState();
 }
 
 class MockAuthService implements AuthService {
@@ -46,12 +43,6 @@ class MockAuthService implements AuthService {
   Future<User?> get currentUser async {
     await Future.delayed(const Duration(milliseconds: 500));
     return _currentUser;
-  }
-
-  @override
-  Future<void> refreshAuthState() async {
-    await Future.delayed(const Duration(seconds: 1));
-    _userController.add(_currentUser);
   }
 
   void dispose() {

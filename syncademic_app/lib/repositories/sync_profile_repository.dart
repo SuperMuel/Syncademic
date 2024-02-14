@@ -50,11 +50,8 @@ class MockSyncProfileRepository implements SyncProfileRepository {
 
   void createRandomData(int n) {
     for (var i = 0; i < n; i++) {
-      final scheduleSourceId = ID();
       final scheduleSource = ScheduleSource(
-          id: scheduleSourceId,
-          url:
-              'https://insa-moncuq.fr/ade/emploi-du-temps/${scheduleSourceId.value}');
+          url: 'https://insa-moncuq.fr/ade/emploi-du-temps/${ID().value}');
 
       final id = ID();
       final syncProfile = SyncProfile(id: id, scheduleSource: scheduleSource);

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:syncademic_app/models/user.dart';
+import '../models/user.dart';
 import 'account_service.dart';
 
 class FirebaseAccountService extends AccountService {
@@ -19,6 +19,7 @@ class FirebaseAccountService extends AccountService {
   @override
   Future<void> createAccount(User user) async {
     if (await accountExists(user.id)) {
+      // TODO : or use Merge option to update the user document
       return;
     }
     try {

@@ -13,7 +13,7 @@ abstract class AuthService {
   Stream<User?> get authStateChanges;
 
   /// Gets the current user, or null if no user is signed in.
-  Future<User?> get currentUser;
+  User? get currentUser;
 }
 
 class MockAuthService implements AuthService {
@@ -40,8 +40,7 @@ class MockAuthService implements AuthService {
   Stream<User?> get authStateChanges => _userController.stream;
 
   @override
-  Future<User?> get currentUser async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  User? get currentUser {
     return _currentUser;
   }
 

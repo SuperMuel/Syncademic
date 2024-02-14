@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
-import 'package:syncademic_app/services/account_service.dart';
+import 'account_service.dart';
 
 import '../models/user.dart' as syncademic;
 import 'auth_service.dart';
@@ -43,7 +43,7 @@ class FirebaseAuthService extends AuthService {
       _firebaseAuth.authStateChanges().map((user) => user?.toSyncademicUser);
 
   @override
-  Future<syncademic.User?> get currentUser async =>
+  syncademic.User? get currentUser =>
       _firebaseAuth.currentUser?.toSyncademicUser;
 }
 

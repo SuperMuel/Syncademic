@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/services/account_service.dart';
-import 'package:syncademic_app/services/firestore_account_service.dart';
+import 'repositories/firestore_sync_profile_repository.dart';
+import 'services/account_service.dart';
+import 'services/firestore_account_service.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'firebase_options.dart';
@@ -28,11 +29,11 @@ void main() async {
 
   // Register the SyncProfileRepository
   getIt.registerSingleton<SyncProfileRepository>(
-      MockSyncProfileRepository()..createRandomData(10));
+    FirestoreSyncProfileRepository(),
+    //MockSyncProfileRepository()..createRandomData(10),
+  );
 
-  getIt.registerSingleton<AuthService>(FirebaseAuthService()
-      // MockAuthService()..signInWithGoogle(),
-      );
+  getIt.registerSingleton<AuthService>(FirebaseAuthService());
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
@@ -44,7 +45,7 @@ void main() async {
 // GoRouter configuration
 final _router = GoRouter(
   redirect: (context, state) async {
-    final user = await GetIt.I<AuthService>().currentUser;
+    final user = GetIt.I<AuthService>().currentUser;
     if (user == null) {
       return '/sign-in';
     }

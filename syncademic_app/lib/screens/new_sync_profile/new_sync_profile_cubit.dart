@@ -40,7 +40,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     final repo = GetIt.I<SyncProfileRepository>();
 
     final scheduleSource = ScheduleSource(
-      id: ID(),
       url: state.url,
     );
     final syncProfile = SyncProfile(

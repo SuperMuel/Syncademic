@@ -46,11 +46,13 @@ class FirebaseAuthService extends AuthService {
 extension on User {
   syncademic.User get toSyncademicUser => syncademic.User(
         id: uid,
+        email: email,
       );
 }
 
 extension on UserCredential {
   syncademic.User get toSyncademicUser => syncademic.User(
         id: user!.uid,
+        email: user!.email,
       );
 }

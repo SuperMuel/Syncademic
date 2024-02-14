@@ -25,7 +25,8 @@ class AccountPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Welcome, ${user.user.id}'),
+                  Text('Id : ${user.user.id}'),
+                  Text('Email : ${user.user.email}'),
                   const Gap(20),
                   ElevatedButton(
                     onPressed: () => GetIt.I<AuthCubit>()

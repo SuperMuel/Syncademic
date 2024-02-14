@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'authentication/cubit/auth_cubit.dart';
-import 'screens/account/account_page.dart';
-import 'services/firebase_auth_service.dart';
-import 'services/auth_service.dart';
+import 'package:syncademic_app/services/account_service.dart';
+import 'package:syncademic_app/services/firestore_account_service.dart';
 
+import 'authentication/cubit/auth_cubit.dart';
 import 'firebase_options.dart';
 import 'repositories/sync_profile_repository.dart';
+import 'screens/account/account_page.dart';
 import 'screens/google_sign_in_page/google_sign_in_page.dart';
 import 'screens/new_sync_profile/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
+import 'services/auth_service.dart';
+import 'services/firebase_auth_service.dart';
 import 'widgets/sync_profiles_list.dart';
 
 void main() async {
@@ -33,6 +35,8 @@ void main() async {
       );
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());
+
+  getIt.registerSingleton<AccountService>(FirebaseAccountService());
 
   runApp(const MyApp());
 }

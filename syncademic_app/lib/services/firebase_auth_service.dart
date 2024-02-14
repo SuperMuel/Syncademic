@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart';
+import 'package:get_it/get_it.dart';
+import 'package:syncademic_app/services/account_service.dart';
 
 import '../models/user.dart' as syncademic;
+import 'auth_service.dart';
 
 class FirebaseAuthService extends AuthService {
   final FirebaseAuth _firebaseAuth;
@@ -16,11 +18,13 @@ class FirebaseAuthService extends AuthService {
     try {
       GoogleAuthProvider googleProvider = GoogleAuthProvider();
 
-      // Once signed in, return the UserCredential
       final userCredential =
           await _firebaseAuth.signInWithPopup(googleProvider);
 
       final syncademicUser = userCredential.toSyncademicUser;
+
+      // Create the user in the database if it doesn't exist
+      GetIt.I<AccountService>().createAccount(syncademicUser);
 
       return syncademicUser;
     } on FirebaseAuthException catch (_) {

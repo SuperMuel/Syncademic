@@ -27,6 +27,9 @@ class AccountPage extends StatelessWidget {
                 children: [
                   Text('Id : ${user.user.id}'),
                   Text('Email : ${user.user.email}'),
+                  if (user.user.photoUrl != null)
+                    CircleAvatar(
+                        backgroundImage: NetworkImage(user.user.photoUrl!)),
                   const Gap(20),
                   ElevatedButton(
                     onPressed: () => GetIt.I<AuthCubit>()

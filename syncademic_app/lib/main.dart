@@ -34,10 +34,12 @@ void main() async {
   );
 
   getIt.registerSingleton<AuthService>(FirebaseAuthService());
+  //getIt.registerSingleton<AuthService>(MockAuthService());
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
   getIt.registerSingleton<AccountService>(FirebaseAccountService());
+  //getIt.registerSingleton<AccountService>(AccountService());
 
   runApp(const MyApp());
 }
@@ -105,6 +107,7 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Syncademia'),
         actions: [
+          ProfilePicture(onPressed: () => context.push('/account')),
           IconButton(
             icon: const Icon(Icons.account_circle),
             onPressed: () => context.push('/account'),
@@ -126,5 +129,20 @@ class HomeScreen extends StatelessWidget {
         label: const Text('New synchronization profile'),
       ),
     );
+  }
+}
+
+// TODO: créer un widget de la profile picture et mettre la classe au bon endroit
+// puis modifier le code pour l'utiliser correctement dans le HomeScreen et dans le ScreenAccount
+class ProfilePicture extends StatelessWidget {
+  const ProfilePicture({super.key});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = GetIt.I<AuthService>().currentUser;
+
+    return const Placeholder();
   }
 }

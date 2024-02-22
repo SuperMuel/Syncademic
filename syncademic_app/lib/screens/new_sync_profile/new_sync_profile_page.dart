@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'target_calendar_selector/target_calendar_selector.dart';
 
 import 'new_sync_profile_cubit.dart';
 
@@ -52,6 +53,8 @@ class NewSyncConfigPage extends StatelessWidget {
                   maxLength: 5000,
                   onChanged: cubit.urlChanged,
                 ),
+                const Gap(16),
+                const TargetCalendarSelector(),
                 const Gap(16),
                 const Text("This will create a new calendar in your account"),
                 const Gap(16),

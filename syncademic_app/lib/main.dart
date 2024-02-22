@@ -1,8 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'authorization/authorization_service.dart';
+import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
 import 'services/account_service.dart';
 import 'services/firestore_account_service.dart';
@@ -19,6 +22,8 @@ import 'services/firebase_auth_service.dart';
 import 'widgets/sync_profiles_list.dart';
 
 void main() async {
+  await dotenv.load();
+
   final getIt = GetIt.instance;
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +43,8 @@ void main() async {
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
   getIt.registerSingleton<AccountService>(FirebaseAccountService());
+
+  getIt.registerSingleton<AuthorizationService>(GoogleAuthorizationService());
 
   runApp(const MyApp());
 }
@@ -71,8 +78,11 @@ final _router = GoRouter(
     GoRoute(
         path: '/new-sync-profile',
         builder: (_, __) {
-          return BlocProvider(
-            create: (_) => NewSyncProfileCubit(),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => NewSyncProfileCubit()),
+              BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
+            ],
             child: const NewSyncConfigPage(),
           );
         }),

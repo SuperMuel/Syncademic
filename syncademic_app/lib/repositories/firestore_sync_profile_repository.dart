@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syncademic_app/models/target_calendar.dart';
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
@@ -28,13 +29,21 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
   Stream<List<SyncProfile>> getSyncProfiles() async* {
     await for (final snapshot in _syncProfilesCollection.snapshots()) {
       yield snapshot.docs.map((doc) {
-        final data = doc.data();
+        final data = doc.data() as Map<String, dynamic>;
         final scheduleSource = ScheduleSource(
-          url: (data as Map<String, dynamic>)['scheduleSource']['url'],
+          url: data['scheduleSource']['url'],
         );
+
+        // TODO: Replace with real target calendar
+        const targetCalendar = TargetCalendar(
+          id: ID.fromTrustedSource('target-google-calendar-0'),
+          title: 'Calendar 0',
+        );
+
         return SyncProfile(
           id: ID.fromTrustedSource(doc.id),
           scheduleSource: scheduleSource,
+          targetCalendar: targetCalendar,
         );
       }).toList();
     }

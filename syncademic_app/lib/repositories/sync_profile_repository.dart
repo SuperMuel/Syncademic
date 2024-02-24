@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:syncademic_app/models/target_calendar.dart';
+
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
@@ -50,11 +52,26 @@ class MockSyncProfileRepository implements SyncProfileRepository {
 
   void createRandomData(int n) {
     for (var i = 0; i < n; i++) {
-      final scheduleSource = ScheduleSource(
-          url: 'https://insa-moncuq.fr/ade/emploi-du-temps/${ID().value}');
+      ID id = ID();
 
-      final id = ID();
-      final syncProfile = SyncProfile(id: id, scheduleSource: scheduleSource);
+      final scheduleSource = ScheduleSource(
+          url: 'https://insa-moncuq.fr/ade/emploi-du-temps/${id.value}');
+
+      // Create a target calendar
+      id = ID();
+
+      final targetCalendar = TargetCalendar(
+        id: ID.fromTrustedSource('target-google-calendar-${id.value}'),
+        title: 'Calendar ${id.value}',
+      );
+
+      id = ID();
+      final syncProfile = SyncProfile(
+        id: id,
+        scheduleSource: scheduleSource,
+        targetCalendar: targetCalendar,
+        enabled: i % 2 == 0,
+      );
       _syncProfiles[id] = syncProfile;
     }
   }

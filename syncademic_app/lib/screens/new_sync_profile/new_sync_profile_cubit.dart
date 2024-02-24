@@ -34,8 +34,9 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   Future<void> submit() async {
-    if (state.urlError != null) return;
-
+    if (state.urlError != null || state.selectedCalendar == null) {
+      throw StateError('Cannot submit with invalid data');
+    }
     emit(state.copyWith(isSubmitting: true));
 
     final repo = GetIt.I<SyncProfileRepository>();
@@ -46,6 +47,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     final syncProfile = SyncProfile(
       id: ID(),
       scheduleSource: scheduleSource,
+      targetCalendar: state.selectedCalendar!,
     );
 
     try {

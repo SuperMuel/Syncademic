@@ -9,20 +9,27 @@ class TargetCalendarSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TargetCalendarSelectorCubit,
-        TargetCalendarSelectorState>(
-      builder: (context, state) {
-        switch (state.authorizationStatus) {
-          case AuthorizationStatus.unauthorized:
-            return const _UnauthorizedBody();
-          case AuthorizationStatus.authorizing:
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          case AuthorizationStatus.authorized:
-            return TargetCalendarList(calendars: state.calendars);
-        }
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Select a target calendar'),
+      ),
+      body: Center(
+        child: BlocBuilder<TargetCalendarSelectorCubit,
+            TargetCalendarSelectorState>(
+          builder: (context, state) {
+            switch (state.authorizationStatus) {
+              case AuthorizationStatus.unauthorized:
+                return const _UnauthorizedBody();
+              case AuthorizationStatus.authorizing:
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              case AuthorizationStatus.authorized:
+                return TargetCalendarList(calendars: state.calendars);
+            }
+          },
+        ),
+      ),
     );
   }
 }
@@ -58,15 +65,17 @@ class TargetCalendarList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton(
-      hint: const Text('Select a calendar'),
-      items: calendars
-          .map((calendar) => DropdownMenuItem(
-                value: calendar,
-                child: Text(calendar.title),
-              ))
-          .toList(),
-      onChanged: context.read<TargetCalendarSelectorCubit>().selectCalendar,
+    return ListView.builder(
+      itemCount: calendars.length,
+      itemBuilder: (context, index) {
+        final calendar = calendars[index];
+        return ListTile(
+          title: Text(calendar.title),
+          onTap: () {
+            Navigator.of(context).pop(calendar);
+          },
+        );
+      },
     );
   }
 }

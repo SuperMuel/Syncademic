@@ -48,7 +48,11 @@ class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
     ));
   }
 
-  void selectCalendar(TargetCalendar? calendar) {
+  void openCalendarSelector() {
+    emit(state.copyWith(selected: null));
+  }
+
+  void calendarSelected(TargetCalendar? calendar) {
     emit(state.copyWith(selected: calendar));
   }
 }

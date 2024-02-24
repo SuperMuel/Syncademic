@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/models/target_calendar.dart';
+import 'package:syncademic_app/screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
+import 'package:syncademic_app/widgets/target_calendar_card.dart';
 import 'target_calendar_selector/target_calendar_selector.dart';
 
 import 'new_sync_profile_cubit.dart';
@@ -54,13 +58,12 @@ class NewSyncConfigPage extends StatelessWidget {
                   onChanged: cubit.urlChanged,
                 ),
                 const Gap(16),
-                const TargetCalendarSelector(),
-                const Gap(16),
-                const Text("This will create a new calendar in your account"),
-                const Gap(16),
-                ElevatedButton(
+                _SelectedTargetCalendar(state),
+                const Spacer(),
+                ElevatedButton.icon(
                   onPressed: state.canSubmit ? cubit.submit : null,
-                  child: const Text('Synchronize'),
+                  icon: const Icon(Icons.save),
+                  label: const Text('Synchonize now'),
                 ),
               ],
             ),
@@ -68,5 +71,41 @@ class NewSyncConfigPage extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _SelectedTargetCalendar extends StatelessWidget {
+  const _SelectedTargetCalendar(this.state);
+
+  final NewSyncProfileState state;
+
+  @override
+  Widget build(BuildContext context) => state.selectedCalendar == null
+      ? const _SelectTargetCalendar()
+      : TargetCalendarCard(targetCalendar: state.selectedCalendar!);
+}
+
+class _SelectTargetCalendar extends StatelessWidget {
+  const _SelectTargetCalendar();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+        onPressed: () {
+          // Show dialog
+          showDialog<TargetCalendar?>(
+            context: context,
+            builder: (_) => Dialog(
+              child: BlocProvider(
+                create: (_) => TargetCalendarSelectorCubit(),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: TargetCalendarSelector(),
+                ),
+              ),
+            ),
+          ).then(context.read<NewSyncProfileCubit>().calendarSelected);
+        },
+        child: const Text('Select target calendar'));
   }
 }

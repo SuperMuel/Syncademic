@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
-import 'package:syncademic_app/repositories/target_calendar_repository.dart';
+import '../../../models/target_calendar.dart';
+import '../../../repositories/target_calendar_repository.dart';
 import '../../../authorization/authorization_service.dart';
 
 part 'target_calendar_selector_state.dart';

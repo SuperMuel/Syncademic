@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
+import '../models/target_calendar.dart';
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';

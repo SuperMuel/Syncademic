@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
+import 'target_calendar.dart';
 
 import 'id.dart';
 import 'schedule_source.dart';

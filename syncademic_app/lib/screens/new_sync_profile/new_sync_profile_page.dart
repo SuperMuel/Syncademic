@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
-import 'package:syncademic_app/screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
-import 'package:syncademic_app/widgets/target_calendar_card.dart';
+import '../../models/target_calendar.dart';
+import 'target_calendar_selector/target_calendar_selector_cubit.dart';
+import '../../widgets/target_calendar_card.dart';
 import 'target_calendar_selector/target_calendar_selector.dart';
 
 import 'new_sync_profile_cubit.dart';
@@ -90,22 +90,24 @@ class _SelectTargetCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-        onPressed: () {
-          // Show dialog
-          showDialog<TargetCalendar?>(
-            context: context,
-            builder: (_) => Dialog(
-              child: BlocProvider(
-                create: (_) => TargetCalendarSelectorCubit(),
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: TargetCalendarSelector(),
-                ),
+    return ElevatedButton.icon(
+      icon: const Icon(Icons.calendar_month),
+      onPressed: () {
+        // Show dialog
+        showDialog<TargetCalendar?>(
+          context: context,
+          builder: (_) => Dialog(
+            child: BlocProvider(
+              create: (_) => TargetCalendarSelectorCubit(),
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: TargetCalendarSelector(),
               ),
             ),
-          ).then(context.read<NewSyncProfileCubit>().calendarSelected);
-        },
-        child: const Text('Select target calendar'));
+          ),
+        ).then(context.read<NewSyncProfileCubit>().calendarSelected);
+      },
+      label: const Text('Select target calendar'),
+    );
   }
 }

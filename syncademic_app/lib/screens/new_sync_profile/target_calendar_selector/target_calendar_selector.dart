@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
+import '../../../models/target_calendar.dart';
 
 import 'target_calendar_selector_cubit.dart';
 
@@ -48,10 +48,10 @@ class _UnauthorizedBody extends StatelessWidget {
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () =>
-              context.read<TargetCalendarSelectorCubit>().authorize(),
-          child: const Text('Authorize'),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.lock_open),
+          onPressed: context.read<TargetCalendarSelectorCubit>().authorize,
+          label: const Text('Authorize'),
         ),
       ],
     );

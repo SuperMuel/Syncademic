@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:syncademic_app/models/target_calendar.dart';
+import '../models/target_calendar.dart';
 
 import '../models/id.dart';
 import '../models/schedule_source.dart';

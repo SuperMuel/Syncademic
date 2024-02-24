@@ -1,5 +1,5 @@
-import 'package:syncademic_app/models/id.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
+import '../models/id.dart';
+import '../models/target_calendar.dart';
 
 abstract class TargetCalendarRepository {
   Future<List<TargetCalendar>> getCalendars();

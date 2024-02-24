@@ -16,50 +16,14 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$TargetCalendarSelectorState {
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() unauthorized,
-    required TResult Function() authorizing,
-    required TResult Function() authorized,
-  }) =>
+  AuthorizationStatus get authorizationStatus =>
       throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthorized,
-    TResult? Function()? authorizing,
-    TResult? Function()? authorized,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthorized,
-    TResult Function()? authorizing,
-    TResult Function()? authorized,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_Unauthorized value) unauthorized,
-    required TResult Function(_Authorizing value) authorizing,
-    required TResult Function(_Authorized value) authorized,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_Unauthorized value)? unauthorized,
-    TResult? Function(_Authorizing value)? authorizing,
-    TResult? Function(_Authorized value)? authorized,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_Unauthorized value)? unauthorized,
-    TResult Function(_Authorizing value)? authorizing,
-    TResult Function(_Authorized value)? authorized,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+  List<TargetCalendar> get calendars => throw _privateConstructorUsedError;
+  TargetCalendar? get selected => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $TargetCalendarSelectorStateCopyWith<TargetCalendarSelectorState>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -69,6 +33,11 @@ abstract class $TargetCalendarSelectorStateCopyWith<$Res> {
           $Res Function(TargetCalendarSelectorState) then) =
       _$TargetCalendarSelectorStateCopyWithImpl<$Res,
           TargetCalendarSelectorState>;
+  @useResult
+  $Res call(
+      {AuthorizationStatus authorizationStatus,
+      List<TargetCalendar> calendars,
+      TargetCalendar? selected});
 }
 
 /// @nodoc
@@ -81,328 +50,150 @@ class _$TargetCalendarSelectorStateCopyWithImpl<$Res,
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? authorizationStatus = null,
+    Object? calendars = null,
+    Object? selected = freezed,
+  }) {
+    return _then(_value.copyWith(
+      authorizationStatus: null == authorizationStatus
+          ? _value.authorizationStatus
+          : authorizationStatus // ignore: cast_nullable_to_non_nullable
+              as AuthorizationStatus,
+      calendars: null == calendars
+          ? _value.calendars
+          : calendars // ignore: cast_nullable_to_non_nullable
+              as List<TargetCalendar>,
+      selected: freezed == selected
+          ? _value.selected
+          : selected // ignore: cast_nullable_to_non_nullable
+              as TargetCalendar?,
+    ) as $Val);
+  }
 }
 
 /// @nodoc
-abstract class _$$UnauthorizedImplCopyWith<$Res> {
-  factory _$$UnauthorizedImplCopyWith(
-          _$UnauthorizedImpl value, $Res Function(_$UnauthorizedImpl) then) =
-      __$$UnauthorizedImplCopyWithImpl<$Res>;
+abstract class _$$TargetCalendarSelectorStateImplCopyWith<$Res>
+    implements $TargetCalendarSelectorStateCopyWith<$Res> {
+  factory _$$TargetCalendarSelectorStateImplCopyWith(
+          _$TargetCalendarSelectorStateImpl value,
+          $Res Function(_$TargetCalendarSelectorStateImpl) then) =
+      __$$TargetCalendarSelectorStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {AuthorizationStatus authorizationStatus,
+      List<TargetCalendar> calendars,
+      TargetCalendar? selected});
 }
 
 /// @nodoc
-class __$$UnauthorizedImplCopyWithImpl<$Res>
-    extends _$TargetCalendarSelectorStateCopyWithImpl<$Res, _$UnauthorizedImpl>
-    implements _$$UnauthorizedImplCopyWith<$Res> {
-  __$$UnauthorizedImplCopyWithImpl(
-      _$UnauthorizedImpl _value, $Res Function(_$UnauthorizedImpl) _then)
+class __$$TargetCalendarSelectorStateImplCopyWithImpl<$Res>
+    extends _$TargetCalendarSelectorStateCopyWithImpl<$Res,
+        _$TargetCalendarSelectorStateImpl>
+    implements _$$TargetCalendarSelectorStateImplCopyWith<$Res> {
+  __$$TargetCalendarSelectorStateImplCopyWithImpl(
+      _$TargetCalendarSelectorStateImpl _value,
+      $Res Function(_$TargetCalendarSelectorStateImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? authorizationStatus = null,
+    Object? calendars = null,
+    Object? selected = freezed,
+  }) {
+    return _then(_$TargetCalendarSelectorStateImpl(
+      authorizationStatus: null == authorizationStatus
+          ? _value.authorizationStatus
+          : authorizationStatus // ignore: cast_nullable_to_non_nullable
+              as AuthorizationStatus,
+      calendars: null == calendars
+          ? _value._calendars
+          : calendars // ignore: cast_nullable_to_non_nullable
+              as List<TargetCalendar>,
+      selected: freezed == selected
+          ? _value.selected
+          : selected // ignore: cast_nullable_to_non_nullable
+              as TargetCalendar?,
+    ));
+  }
 }
 
 /// @nodoc
 
-class _$UnauthorizedImpl implements _Unauthorized {
-  const _$UnauthorizedImpl();
+class _$TargetCalendarSelectorStateImpl
+    implements _TargetCalendarSelectorState {
+  const _$TargetCalendarSelectorStateImpl(
+      {this.authorizationStatus = AuthorizationStatus.unauthorized,
+      final List<TargetCalendar> calendars = const [],
+      this.selected})
+      : _calendars = calendars;
+
+  @override
+  @JsonKey()
+  final AuthorizationStatus authorizationStatus;
+  final List<TargetCalendar> _calendars;
+  @override
+  @JsonKey()
+  List<TargetCalendar> get calendars {
+    if (_calendars is EqualUnmodifiableListView) return _calendars;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_calendars);
+  }
+
+  @override
+  final TargetCalendar? selected;
 
   @override
   String toString() {
-    return 'TargetCalendarSelectorState.unauthorized()';
+    return 'TargetCalendarSelectorState(authorizationStatus: $authorizationStatus, calendars: $calendars, selected: $selected)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$UnauthorizedImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$TargetCalendarSelectorStateImpl &&
+            (identical(other.authorizationStatus, authorizationStatus) ||
+                other.authorizationStatus == authorizationStatus) &&
+            const DeepCollectionEquality()
+                .equals(other._calendars, _calendars) &&
+            (identical(other.selected, selected) ||
+                other.selected == selected));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, authorizationStatus,
+      const DeepCollectionEquality().hash(_calendars), selected);
 
+  @JsonKey(ignore: true)
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() unauthorized,
-    required TResult Function() authorizing,
-    required TResult Function() authorized,
-  }) {
-    return unauthorized();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthorized,
-    TResult? Function()? authorizing,
-    TResult? Function()? authorized,
-  }) {
-    return unauthorized?.call();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthorized,
-    TResult Function()? authorizing,
-    TResult Function()? authorized,
-    required TResult orElse(),
-  }) {
-    if (unauthorized != null) {
-      return unauthorized();
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_Unauthorized value) unauthorized,
-    required TResult Function(_Authorizing value) authorizing,
-    required TResult Function(_Authorized value) authorized,
-  }) {
-    return unauthorized(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_Unauthorized value)? unauthorized,
-    TResult? Function(_Authorizing value)? authorizing,
-    TResult? Function(_Authorized value)? authorized,
-  }) {
-    return unauthorized?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_Unauthorized value)? unauthorized,
-    TResult Function(_Authorizing value)? authorizing,
-    TResult Function(_Authorized value)? authorized,
-    required TResult orElse(),
-  }) {
-    if (unauthorized != null) {
-      return unauthorized(this);
-    }
-    return orElse();
-  }
+  @pragma('vm:prefer-inline')
+  _$$TargetCalendarSelectorStateImplCopyWith<_$TargetCalendarSelectorStateImpl>
+      get copyWith => __$$TargetCalendarSelectorStateImplCopyWithImpl<
+          _$TargetCalendarSelectorStateImpl>(this, _$identity);
 }
 
-abstract class _Unauthorized implements TargetCalendarSelectorState {
-  const factory _Unauthorized() = _$UnauthorizedImpl;
-}
-
-/// @nodoc
-abstract class _$$AuthorizingImplCopyWith<$Res> {
-  factory _$$AuthorizingImplCopyWith(
-          _$AuthorizingImpl value, $Res Function(_$AuthorizingImpl) then) =
-      __$$AuthorizingImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$AuthorizingImplCopyWithImpl<$Res>
-    extends _$TargetCalendarSelectorStateCopyWithImpl<$Res, _$AuthorizingImpl>
-    implements _$$AuthorizingImplCopyWith<$Res> {
-  __$$AuthorizingImplCopyWithImpl(
-      _$AuthorizingImpl _value, $Res Function(_$AuthorizingImpl) _then)
-      : super(_value, _then);
-}
-
-/// @nodoc
-
-class _$AuthorizingImpl implements _Authorizing {
-  const _$AuthorizingImpl();
+abstract class _TargetCalendarSelectorState
+    implements TargetCalendarSelectorState {
+  const factory _TargetCalendarSelectorState(
+      {final AuthorizationStatus authorizationStatus,
+      final List<TargetCalendar> calendars,
+      final TargetCalendar? selected}) = _$TargetCalendarSelectorStateImpl;
 
   @override
-  String toString() {
-    return 'TargetCalendarSelectorState.authorizing()';
-  }
-
+  AuthorizationStatus get authorizationStatus;
   @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$AuthorizingImpl);
-  }
-
+  List<TargetCalendar> get calendars;
   @override
-  int get hashCode => runtimeType.hashCode;
-
+  TargetCalendar? get selected;
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() unauthorized,
-    required TResult Function() authorizing,
-    required TResult Function() authorized,
-  }) {
-    return authorizing();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthorized,
-    TResult? Function()? authorizing,
-    TResult? Function()? authorized,
-  }) {
-    return authorizing?.call();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthorized,
-    TResult Function()? authorizing,
-    TResult Function()? authorized,
-    required TResult orElse(),
-  }) {
-    if (authorizing != null) {
-      return authorizing();
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_Unauthorized value) unauthorized,
-    required TResult Function(_Authorizing value) authorizing,
-    required TResult Function(_Authorized value) authorized,
-  }) {
-    return authorizing(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_Unauthorized value)? unauthorized,
-    TResult? Function(_Authorizing value)? authorizing,
-    TResult? Function(_Authorized value)? authorized,
-  }) {
-    return authorizing?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_Unauthorized value)? unauthorized,
-    TResult Function(_Authorizing value)? authorizing,
-    TResult Function(_Authorized value)? authorized,
-    required TResult orElse(),
-  }) {
-    if (authorizing != null) {
-      return authorizing(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class _Authorizing implements TargetCalendarSelectorState {
-  const factory _Authorizing() = _$AuthorizingImpl;
-}
-
-/// @nodoc
-abstract class _$$AuthorizedImplCopyWith<$Res> {
-  factory _$$AuthorizedImplCopyWith(
-          _$AuthorizedImpl value, $Res Function(_$AuthorizedImpl) then) =
-      __$$AuthorizedImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$AuthorizedImplCopyWithImpl<$Res>
-    extends _$TargetCalendarSelectorStateCopyWithImpl<$Res, _$AuthorizedImpl>
-    implements _$$AuthorizedImplCopyWith<$Res> {
-  __$$AuthorizedImplCopyWithImpl(
-      _$AuthorizedImpl _value, $Res Function(_$AuthorizedImpl) _then)
-      : super(_value, _then);
-}
-
-/// @nodoc
-
-class _$AuthorizedImpl implements _Authorized {
-  const _$AuthorizedImpl();
-
-  @override
-  String toString() {
-    return 'TargetCalendarSelectorState.authorized()';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$AuthorizedImpl);
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() unauthorized,
-    required TResult Function() authorizing,
-    required TResult Function() authorized,
-  }) {
-    return authorized();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthorized,
-    TResult? Function()? authorizing,
-    TResult? Function()? authorized,
-  }) {
-    return authorized?.call();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthorized,
-    TResult Function()? authorizing,
-    TResult Function()? authorized,
-    required TResult orElse(),
-  }) {
-    if (authorized != null) {
-      return authorized();
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_Unauthorized value) unauthorized,
-    required TResult Function(_Authorizing value) authorizing,
-    required TResult Function(_Authorized value) authorized,
-  }) {
-    return authorized(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_Unauthorized value)? unauthorized,
-    TResult? Function(_Authorizing value)? authorizing,
-    TResult? Function(_Authorized value)? authorized,
-  }) {
-    return authorized?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_Unauthorized value)? unauthorized,
-    TResult Function(_Authorizing value)? authorizing,
-    TResult Function(_Authorized value)? authorized,
-    required TResult orElse(),
-  }) {
-    if (authorized != null) {
-      return authorized(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class _Authorized implements TargetCalendarSelectorState {
-  const factory _Authorized() = _$AuthorizedImpl;
+  @JsonKey(ignore: true)
+  _$$TargetCalendarSelectorStateImplCopyWith<_$TargetCalendarSelectorStateImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }

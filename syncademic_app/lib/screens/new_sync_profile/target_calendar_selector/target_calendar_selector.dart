@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syncademic_app/models/target_calendar.dart';
 
 import 'target_calendar_selector_cubit.dart';
 
@@ -11,13 +12,16 @@ class TargetCalendarSelector extends StatelessWidget {
     return BlocBuilder<TargetCalendarSelectorCubit,
         TargetCalendarSelectorState>(
       builder: (context, state) {
-        return state.when(
-          unauthorized: () => const _UnauthorizedBody(),
-          authorizing: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          authorized: () => const Text('Authorized'),
-        );
+        switch (state.authorizationStatus) {
+          case AuthorizationStatus.unauthorized:
+            return const _UnauthorizedBody();
+          case AuthorizationStatus.authorizing:
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          case AuthorizationStatus.authorized:
+            return TargetCalendarList(calendars: state.calendars);
+        }
       },
     );
   }
@@ -43,6 +47,26 @@ class _UnauthorizedBody extends StatelessWidget {
           child: const Text('Authorize'),
         ),
       ],
+    );
+  }
+}
+
+class TargetCalendarList extends StatelessWidget {
+  const TargetCalendarList({super.key, required this.calendars});
+
+  final List<TargetCalendar> calendars;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton(
+      hint: const Text('Select a calendar'),
+      items: calendars
+          .map((calendar) => DropdownMenuItem(
+                value: calendar,
+                child: Text(calendar.title),
+              ))
+          .toList(),
+      onChanged: context.read<TargetCalendarSelectorCubit>().selectCalendar,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/repositories/target_calendar_repository.dart';
 import 'authorization/authorization_service.dart';
 import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
@@ -44,7 +45,15 @@ void main() async {
 
   getIt.registerSingleton<AccountService>(FirebaseAccountService());
 
-  getIt.registerSingleton<AuthorizationService>(GoogleAuthorizationService());
+  getIt.registerSingleton<AuthorizationService>(
+    MockAuthorizationService(),
+    //GoogleAuthorizationService(),
+  );
+
+  getIt.registerSingleton<TargetCalendarRepository>(
+      MockTargetCalendarRepository()
+      // GoogleTargetCalendarRepository(),
+      );
 
   runApp(const MyApp());
 }

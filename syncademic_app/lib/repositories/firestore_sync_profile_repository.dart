@@ -13,8 +13,14 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
   @override
   Future<void> createSyncProfile(SyncProfile syncProfile) async {
     _syncProfilesCollection.doc(syncProfile.id.value).set({
+      // 'title' //TODO(SuperMuel) : Implement title
       'scheduleSource': {
         'url': syncProfile.scheduleSource.url,
+      },
+      'targetCalendar': {
+        'id': syncProfile.targetCalendar.id.value,
+        'title': syncProfile.targetCalendar.title,
+        'accessToken': syncProfile.targetCalendar.accessToken,
       },
     });
   }

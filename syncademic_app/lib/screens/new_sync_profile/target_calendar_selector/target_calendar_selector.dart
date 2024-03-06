@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../models/target_calendar.dart';
 
+import '../../../models/target_calendar.dart';
 import 'target_calendar_selector_cubit.dart';
 
 class TargetCalendarSelector extends StatelessWidget {

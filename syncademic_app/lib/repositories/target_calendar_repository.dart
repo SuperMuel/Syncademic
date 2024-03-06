@@ -13,10 +13,3 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
           id: ID.fromTrustedSource('target-google-calendar-$index'),
           title: 'Calendar $index'));
 }
-
-class GoogleTargetCalendarRepository implements TargetCalendarRepository {
-  @override
-  Future<List<TargetCalendar>> getCalendars() async {
-    return Future.value([]);
-  }
-}

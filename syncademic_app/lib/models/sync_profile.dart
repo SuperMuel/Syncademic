@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'target_calendar.dart';
 
 import 'id.dart';
 import 'schedule_source.dart';
+import 'target_calendar.dart';
 
 /// A synchronization profile.
 ///

@@ -6,12 +6,6 @@ import arrow
 
 
 @dataclass(frozen=True)
-class SynchronizationResult:
-    success: bool
-    error: Optional[str] = None
-
-
-@dataclass(frozen=True)
 class Event:
     start: arrow.Arrow
     end: arrow.Arrow
@@ -25,3 +19,6 @@ class Event:
             raise ValueError("Both start and end dates must be provided")
         if self.start >= self.end:
             raise ValueError("Start date must be before end date")
+
+        if self.title is None:
+            raise ValueError("Title must be provided")

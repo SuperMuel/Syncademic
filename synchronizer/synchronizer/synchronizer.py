@@ -1,9 +1,15 @@
-from dataclasses import replace
-from synchronizer.synchronizer.event import SynchronizationResult
+from dataclasses import dataclass, replace
+from typing import Optional
 from synchronizer.synchronizer.google_calendar_manager import GoogleCalendarManager
 from synchronizer.synchronizer.ics_parser import IcsParser
 from synchronizer.synchronizer.ics_source import UrlIcsSource
 from event import Event
+
+
+@dataclass(frozen=True)
+class SynchronizationResult:
+    success: bool
+    error: Optional[str] = None
 
 
 def _mark_events_with_syncademia(event: Event, syncConfigId: str) -> Event:

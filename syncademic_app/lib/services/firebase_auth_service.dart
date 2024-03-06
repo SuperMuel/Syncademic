@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
-import 'account_service.dart';
 
 import '../models/user.dart' as syncademic;
+import 'account_service.dart';
 import 'auth_service.dart';
 
 class FirebaseAuthService extends AuthService {
@@ -27,7 +28,8 @@ class FirebaseAuthService extends AuthService {
       GetIt.I<AccountService>().createAccount(syncademicUser);
 
       return syncademicUser;
-    } on FirebaseAuthException catch (_) {
+    } on FirebaseAuthException catch (e) {
+      log('Error signing in with Google', error: e);
       // TODO handle error
       rethrow;
     }

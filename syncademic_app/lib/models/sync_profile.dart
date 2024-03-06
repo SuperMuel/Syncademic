@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'id.dart';
 import 'schedule_source.dart';
+import 'target_calendar.dart';
 
 /// A synchronization profile.
 ///
@@ -12,10 +13,12 @@ class SyncProfile extends Equatable {
   final ID id;
   final bool enabled;
   final ScheduleSource scheduleSource;
+  final TargetCalendar targetCalendar;
 
   const SyncProfile({
     required this.id,
     required this.scheduleSource,
+    required this.targetCalendar,
     this.enabled = false,
   });
 

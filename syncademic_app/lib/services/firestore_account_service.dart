@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/user.dart';
 import 'account_service.dart';
 
@@ -10,8 +13,7 @@ class FirebaseAccountService extends AccountService {
       final doc = await _firestore.collection('users').doc(uid).get();
       return doc.exists;
     } catch (e) {
-      print(e);
-      // TODO handle error
+      log('Error checking if account exists', error: e);
       rethrow;
     }
   }
@@ -27,8 +29,7 @@ class FirebaseAccountService extends AccountService {
         'email': user.email,
       });
     } catch (e) {
-      // TODO handle error
-      print(e);
+      log('Error creating account', error: e);
       rethrow;
     }
   }

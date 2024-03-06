@@ -17,14 +17,9 @@ class AuthCubit extends Cubit<AuthState> {
     _authService.authStateChanges.listen(_userChanged);
   }
 
-  void _userChanged(User? user) {
-    if (user != null) {
-      emit(AuthState.authenticated(user));
-    } else {
-      print('unauthenticated');
-      emit(const AuthState.unauthenticated());
-    }
-  }
+  void _userChanged(User? user) => emit(user == null
+      ? const AuthState.unauthenticated()
+      : AuthState.authenticated(user));
 
   Future<void> signInWithGoogle() async {
     emit(const AuthState.loading());

@@ -10,9 +10,14 @@ class NewSyncProfileState with _$NewSyncProfileState {
     @Default(false) bool isSubmitting,
     @Default(false) bool isSuccess,
     @Default(null) String? errorMessage,
+    @Default(null) TargetCalendar? selectedCalendar,
   }) = _NewSyncProfileState;
 
-  bool get canSubmit => url.isNotEmpty && urlError == null && !isSubmitting;
+  bool get canSubmit =>
+      url.isNotEmpty &&
+      urlError == null &&
+      selectedCalendar != null &&
+      !isSubmitting;
 
   bool get canEditUrl => !isSubmitting;
 }

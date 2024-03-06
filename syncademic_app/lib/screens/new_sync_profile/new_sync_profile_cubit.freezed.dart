@@ -21,6 +21,7 @@ mixin _$NewSyncProfileState {
   bool get isSubmitting => throw _privateConstructorUsedError;
   bool get isSuccess => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
+  TargetCalendar? get selectedCalendar => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $NewSyncProfileStateCopyWith<NewSyncProfileState> get copyWith =>
@@ -38,7 +39,8 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String? urlError,
       bool isSubmitting,
       bool isSuccess,
-      String? errorMessage});
+      String? errorMessage,
+      TargetCalendar? selectedCalendar});
 }
 
 /// @nodoc
@@ -59,6 +61,7 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? isSubmitting = null,
     Object? isSuccess = null,
     Object? errorMessage = freezed,
+    Object? selectedCalendar = freezed,
   }) {
     return _then(_value.copyWith(
       url: null == url
@@ -81,6 +84,10 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.errorMessage
           : errorMessage // ignore: cast_nullable_to_non_nullable
               as String?,
+      selectedCalendar: freezed == selectedCalendar
+          ? _value.selectedCalendar
+          : selectedCalendar // ignore: cast_nullable_to_non_nullable
+              as TargetCalendar?,
     ) as $Val);
   }
 }
@@ -98,7 +105,8 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String? urlError,
       bool isSubmitting,
       bool isSuccess,
-      String? errorMessage});
+      String? errorMessage,
+      TargetCalendar? selectedCalendar});
 }
 
 /// @nodoc
@@ -117,6 +125,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? isSubmitting = null,
     Object? isSuccess = null,
     Object? errorMessage = freezed,
+    Object? selectedCalendar = freezed,
   }) {
     return _then(_$NewSyncProfileStateImpl(
       url: null == url
@@ -139,6 +148,10 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.errorMessage
           : errorMessage // ignore: cast_nullable_to_non_nullable
               as String?,
+      selectedCalendar: freezed == selectedCalendar
+          ? _value.selectedCalendar
+          : selectedCalendar // ignore: cast_nullable_to_non_nullable
+              as TargetCalendar?,
     ));
   }
 }
@@ -151,7 +164,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       this.urlError = null,
       this.isSubmitting = false,
       this.isSuccess = false,
-      this.errorMessage = null})
+      this.errorMessage = null,
+      this.selectedCalendar = null})
       : super._();
 
   @override
@@ -169,10 +183,13 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   @override
   @JsonKey()
   final String? errorMessage;
+  @override
+  @JsonKey()
+  final TargetCalendar? selectedCalendar;
 
   @override
   String toString() {
-    return 'NewSyncProfileState(url: $url, urlError: $urlError, isSubmitting: $isSubmitting, isSuccess: $isSuccess, errorMessage: $errorMessage)';
+    return 'NewSyncProfileState(url: $url, urlError: $urlError, isSubmitting: $isSubmitting, isSuccess: $isSuccess, errorMessage: $errorMessage, selectedCalendar: $selectedCalendar)';
   }
 
   @override
@@ -188,12 +205,14 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
             (identical(other.isSuccess, isSuccess) ||
                 other.isSuccess == isSuccess) &&
             (identical(other.errorMessage, errorMessage) ||
-                other.errorMessage == errorMessage));
+                other.errorMessage == errorMessage) &&
+            (identical(other.selectedCalendar, selectedCalendar) ||
+                other.selectedCalendar == selectedCalendar));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, url, urlError, isSubmitting, isSuccess, errorMessage);
+  int get hashCode => Object.hash(runtimeType, url, urlError, isSubmitting,
+      isSuccess, errorMessage, selectedCalendar);
 
   @JsonKey(ignore: true)
   @override
@@ -209,7 +228,8 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
       final String? urlError,
       final bool isSubmitting,
       final bool isSuccess,
-      final String? errorMessage}) = _$NewSyncProfileStateImpl;
+      final String? errorMessage,
+      final TargetCalendar? selectedCalendar}) = _$NewSyncProfileStateImpl;
   const _NewSyncProfileState._() : super._();
 
   @override
@@ -222,6 +242,8 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   bool get isSuccess;
   @override
   String? get errorMessage;
+  @override
+  TargetCalendar? get selectedCalendar;
   @override
   @JsonKey(ignore: true)
   _$$NewSyncProfileStateImplCopyWith<_$NewSyncProfileStateImpl> get copyWith =>

@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
-from event import Event
 import validators
 from pathlib import Path
 import requests

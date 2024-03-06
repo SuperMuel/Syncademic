@@ -1,6 +1,17 @@
-from itertools import batched
-from typing import Any, List
-from event import Event
+from typing import List
+from .event import Event
+
+
+from itertools import islice
+
+
+def batched(iterable, batch_size):
+    iterator = iter(iterable)
+    while True:
+        batch = list(islice(iterator, batch_size))
+        if not batch:
+            break
+        yield batch
 
 
 class GoogleCalendarManager:

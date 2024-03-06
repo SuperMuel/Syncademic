@@ -3,7 +3,7 @@ from typing import Optional
 from synchronizer.synchronizer.google_calendar_manager import GoogleCalendarManager
 from synchronizer.synchronizer.ics_parser import IcsParser
 from synchronizer.synchronizer.ics_source import UrlIcsSource
-from event import Event
+from synchronizer.synchronizer.event import Event
 
 
 @dataclass(frozen=True)

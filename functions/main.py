@@ -1,9 +1,3 @@
-# Welcome to Cloud Functions for Firebase for Python!
-# To get started, simply uncomment the below code or create your own.
-# Deploy with `firebase deploy`
-
-from os import access
-
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build, Resource
 
@@ -21,17 +15,15 @@ from firebase_functions.firestore_fn import (
     DocumentSnapshot,
 )
 
-from firebase_admin import firestore, initialize_app
+from firebase_admin import initialize_app
 from firebase_functions.params import StringParam
 
 from firebase_functions import firestore_fn, https_fn
 
-import google.cloud.firestore
+from synchronizer.synchronizer.synchronizer import perform_synchronization
 
-from ..synchronizer.synchronizer.synchronizer import perform_synchronization
-
-#     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#    TODO: Add one more level of synchronizer
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#   TODO: Add one more level of synchronizer
 
 
 initialize_app()
@@ -55,14 +47,20 @@ def get_calendar_service(access_token):
     return service
 
 
-@on_document_created(document="users/{userId}/syncProfiles/{syncProfileId}")
-def on_sync_profile_created(event: Event):
+@on_document_created(document="users/{userId}/syncProfiles/{syncProfileId}")  # type: ignore
+def on_sync_profile_created(event: Event[DocumentSnapshot]):
     logging.info(f"Sync profile created: {event.data}")
 
-    target_calendar = event.data["targetCalendar"]
-    scheduleSource = event.data["scheduleSource"]
+    doc = event.data.to_dict()
 
-    target_calendar_id = target_calendar["calendarId"]
+    if doc is None:
+        # TODO : Why ? throw or log
+        return
+
+    target_calendar = doc["targetCalendar"]
+    scheduleSource = doc["scheduleSource"]
+
+    target_calendar_id = target_calendar["id"]
     source_url = scheduleSource["url"]
     sync_profile_id = event.params["syncProfileId"]
 

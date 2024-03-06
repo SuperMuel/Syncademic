@@ -28,7 +28,6 @@ from firebase_functions.params import StringParam
 from firebase_functions import firestore_fn, https_fn
 
 import google.cloud.firestore
-from pyparsing import C
 
 initialize_app()
 
@@ -57,51 +56,51 @@ def daily_synchronization(event: scheduler_fn.ScheduledEvent):
     logging.info("Daily synchronization done")
 
 
-@https_fn.on_call()
-def exchange_code_and_store_tokens(req: https_fn.CallableRequest) -> Any:
-    if req.auth is None:
-        return "Unauthorized", 401
+# @https_fn.on_call()
+# def exchange_code_and_store_tokens(req: https_fn.CallableRequest) -> Any:
+#     if req.auth is None:
+#         return "Unauthorized", 401
 
-    uid = req.auth.uid
+#     uid = req.auth.uid
 
-    logging.info(f"Request: {req}")
+#     logging.info(f"Request: {req}")
 
-    # Get the code from the request
-    if "code" not in req.data:
-        return "No code provided", 400  # TODO : Better error handling
+#     # Get the code from the request
+#     if "code" not in req.data:
+#         return "No code provided", 400  # TODO : Better error handling
 
-    code = req.data["code"]
+#     code = req.data["code"]
 
-    flow = google_auth_oauthlib.flow.Flow.from_client_config(
-        client_config={
-            "web": {
-                "client_id": CLIENT_ID.value,
-                "client_secret": CLIENT_SECRET.value,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-            }
-        },
-        scopes=["https://www.googleapis.com/auth/calendar"],
-        redirect_uri="https://syncademic-36c18.firebaseapp.com/__/auth/handler",
-    )
+#     flow = google_auth_oauthlib.flow.Flow.from_client_config(
+#         client_config={
+#             "web": {
+#                 "client_id": CLIENT_ID.value,
+#                 "client_secret": CLIENT_SECRET.value,
+#                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+#                 "token_uri": "https://oauth2.googleapis.com/token",
+#             }
+#         },
+#         scopes=["https://www.googleapis.com/auth/calendar"],
+#         redirect_uri="https://syncademic-36c18.firebaseapp.com/__/auth/handler",
+#     )
 
-    flow.fetch_token(code=code)
+#     flow.fetch_token(code=code)
 
-    credentials = flow.credentials
+#     credentials = flow.credentials
 
-    firestore_client: google.cloud.firestore.Client = firestore.client()
+#     firestore_client: google.cloud.firestore.Client = firestore.client()
 
-    doc_ref = firestore_client.collection("users").document(uid)
-    doc_ref.set(
-        {
-            "access_token": credentials.token,
-            "refresh_token": credentials.refresh_token,
-            "token_uri": credentials.token_uri,
-            "client_id": credentials.client_id,
-            "client_secret": credentials.client_secret,
-            "scopes": credentials.scopes,
-        },
-        merge=True,
-    )
+#     doc_ref = firestore_client.collection("users").document(uid)
+#     doc_ref.set(
+#         {
+#             "access_token": credentials.token,
+#             "refresh_token": credentials.refresh_token,
+#             "token_uri": credentials.token_uri,
+#             "client_id": credentials.client_id,
+#             "client_secret": credentials.client_secret,
+#             "scopes": credentials.scopes,
+#         },
+#         merge=True,
+#     )
 
-    return "Tokens stored successfully.", 200
+#     return "Tokens stored successfully.", 200

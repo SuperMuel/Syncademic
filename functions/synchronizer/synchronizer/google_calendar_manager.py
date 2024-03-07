@@ -46,6 +46,6 @@ class GoogleCalendarManager:
             batch.execute()
 
     def delete_events(self, events: List[Event]) -> None:
-        # TODO : check that the events we delete are marked with syncademia
+        # TODO : check that the events we delete are marked with syncademic
         # to prevent deleting user events
         pass

@@ -12,8 +12,8 @@ class SynchronizationResult:
     error: Optional[str] = None
 
 
-def _mark_events_with_syncademia(event: Event, syncConfigId: str) -> Event:
-    """Mark events with syncademia to prevent deleting user events.
+def _mark_events_with_syncademic(event: Event, syncConfigId: str) -> Event:
+    """Mark events with syncademic to prevent deleting user events.
 
     Uses extended_properties to store the syncConfig id.
     """
@@ -22,7 +22,7 @@ def _mark_events_with_syncademia(event: Event, syncConfigId: str) -> Event:
     if "private" not in extended_properties:
         extended_properties["private"] = {}
 
-    extended_properties["private"].update({"syncademia": syncConfigId})
+    extended_properties["private"].update({"syncademic": syncConfigId})
 
     return replace(event, extended_properties=extended_properties)
 
@@ -40,7 +40,7 @@ def perform_synchronization(
     events = IcsParser().parse(ics_str)
 
     #! VERY IMPORTANT : MARK EVENTS WITH SYNCADAMIA TO PREVENT DELETING USER EVENTS
-    events = [_mark_events_with_syncademia(event, syncConfigId) for event in events]
+    events = [_mark_events_with_syncademic(event, syncConfigId) for event in events]
 
     # TODO : add middleware for events
 

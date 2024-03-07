@@ -43,7 +43,7 @@ class _UnauthorizedBody extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         const Text(
-          'You need to authorize Syncademia to access your calendars',
+          'You need to authorize Syncademic to access your calendars',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 16),
         ),

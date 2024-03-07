@@ -22,7 +22,7 @@ import 'services/firestore_account_service.dart';
 import 'widgets/sync_profiles_list.dart';
 
 void main() async {
-  await dotenv.load();
+  await dotenv.load(fileName: "dotenv");
 
   final getIt = GetIt.instance;
 

@@ -7,7 +7,23 @@
     {
       "source": "functions",
       "codebase": "default",
-      "ignore": ["venv", ".git", "firebase-debug.log", "firebase-debug.*.log"]
+      "ignore": [
+        "venv",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
     }
-  ]
+  ],
+  "hosting": {
+    "source": "syncademic_app",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "europe-west1"
+    }
+  }
 }

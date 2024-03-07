@@ -54,8 +54,8 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     doc = event.data.to_dict()
 
     if doc is None:
-        # TODO : Why ? throw or log
-        return
+        # ? Why would this happen?
+        raise ValueError("Document has been created but is None")
 
     target_calendar = doc["targetCalendar"]
     scheduleSource = doc["scheduleSource"]

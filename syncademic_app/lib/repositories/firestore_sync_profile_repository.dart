@@ -81,4 +81,8 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
     }
     return _db.collection('users').doc(user.id).collection('syncProfiles');
   }
+
+  @override
+  Future<void> deleteSyncProfile(ID id) =>
+      _syncProfilesCollection.doc(id.value).delete();
 }

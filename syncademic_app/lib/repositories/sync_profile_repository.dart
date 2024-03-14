@@ -13,6 +13,8 @@ abstract class SyncProfileRepository {
   Future<void> createSyncProfile(SyncProfile syncProfile);
   Future<void> updateSyncProfile(SyncProfile syncProfile);
   Stream<SyncProfile?> watchSyncProfile(ID id);
+
+  Future<void> deleteSyncProfile(ID id);
 }
 
 class MockSyncProfileRepository implements SyncProfileRepository {
@@ -80,5 +82,11 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   @override
   Stream<SyncProfile?> watchSyncProfile(ID id) {
     return Stream.value(_syncProfiles[id]);
+  }
+
+  @override
+  Future<void> deleteSyncProfile(ID id) async {
+    _syncProfiles.remove(id);
+    _syncProfilesController.add(_syncProfiles.values.toList());
   }
 }

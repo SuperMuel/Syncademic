@@ -65,9 +65,16 @@ final _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeScreen(),
-    ),
+        path: '/',
+        builder: (context, state) => const HomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'syncProfile/:id',
+            builder: (context, state) => SyncProfilePage(
+              syncProfileId: state.pathParameters['id'] ?? '',
+            ),
+          ),
+        ]),
     GoRoute(
         path: '/sign-in',
         builder: (context, state) {
@@ -90,12 +97,6 @@ final _router = GoRouter(
             child: const NewSyncConfigPage(),
           );
         }),
-    GoRoute(
-      path: '/syncProfile/:id',
-      builder: (context, state) => SyncProfilePage(
-        syncProfileId: state.pathParameters['id'] ?? '',
-      ),
-    ),
   ],
 );
 

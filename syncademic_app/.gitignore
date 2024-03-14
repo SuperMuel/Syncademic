@@ -14,6 +14,8 @@
 .svn/
 migrate_working_dir/
 *.env
+dotenv
+
 # IntelliJ related
 *.iml
 *.ipr

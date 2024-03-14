@@ -22,7 +22,7 @@ import 'services/firestore_account_service.dart';
 import 'widgets/sync_profiles_list.dart';
 
 void main() async {
-  await dotenv.load();
+  await dotenv.load(fileName: "dotenv");
 
   final getIt = GetIt.instance;
 
@@ -98,7 +98,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Syncademia',
+      title: 'Syncademic',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
@@ -116,7 +116,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Syncademia'),
+        title: const Text('Syncademic'),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),

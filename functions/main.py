@@ -1,12 +1,5 @@
-# Welcome to Cloud Functions for Firebase for Python!
-# To get started, simply uncomment the below code or create your own.
-# Deploy with `firebase deploy`
-
-import google.auth
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google.cloud import firestore
-import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
 
 import logging
 from typing import Any
@@ -18,16 +11,20 @@ from firebase_functions.firestore_fn import (
     on_document_updated,
     on_document_written,
     Event,
-    Change,
     DocumentSnapshot,
 )
 
-from firebase_admin import firestore, initialize_app
+from firebase_admin import initialize_app, firestore
 from firebase_functions.params import StringParam
 
-from firebase_functions import firestore_fn, https_fn
+from firebase_functions import firestore_fn, https_fn, logger
 
-import google.cloud.firestore
+
+from synchronizer.synchronizer.synchronizer import perform_synchronization
+
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#   TODO: Add one more level of synchronizer
+
 
 initialize_app()
 
@@ -36,71 +33,69 @@ CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
-@on_document_created(document="users/{userId}/syncProfiles/{syncProfileId}")
-def on_sync_profile_created(event: Event):
+def get_calendar_service(access_token):
+    # Construct a Credentials object from the access token
+    credentials = Credentials(
+        client_id=CLIENT_ID.value,
+        # client_secret="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",
+        token=access_token,
+    )
+
+    # Build the Google Calendar API service
+    service = build("calendar", "v3", credentials=credentials)
+
+    return service
+
+
+@on_document_created(document="users/{userId}/syncProfiles/{syncProfileId}")  # type: ignore
+def on_sync_profile_created(event: Event[DocumentSnapshot]):
     logging.info(f"Sync profile created: {event.data}")
 
+    doc = event.data.to_dict()
 
-@scheduler_fn.on_schedule(schedule="every day 03:00")
-def daily_synchronization(event: scheduler_fn.ScheduledEvent):
-    logging.info("Starting daily synchronization")
-    # Do the synchronization here
+    if doc is None:
+        # ? Why would this happen?
+        raise ValueError("Document has been created but is None")
 
-    firestore_client: google.cloud.firestore.Client = firestore.client()
+    target_calendar = doc["targetCalendar"]
+    scheduleSource = doc["scheduleSource"]
 
-    # Get all configurations
-    # firestore_client.document("another/doc").set({
-    # ...
-    # })
+    target_calendar_id = target_calendar["id"]
+    source_url = scheduleSource["url"]
+    sync_profile_id = event.params["syncProfileId"]
+    userId = event.params["userId"]
 
-    logging.info("Daily synchronization done")
+    access_token = target_calendar["accessToken"]
+    service = get_calendar_service(access_token)
 
+    db = firestore.client()
+    sync_profile_ref = (
+        db.collection("users")
+        .document(userId)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+    )
 
-# @https_fn.on_call()
-# def exchange_code_and_store_tokens(req: https_fn.CallableRequest) -> Any:
-#     if req.auth is None:
-#         return "Unauthorized", 401
+    status = doc.get("status")
 
-#     uid = req.auth.uid
+    # is synchronization in progress, do nothing
+    if status == "in_progress":
+        logger.info("Synchronization is in progress, skipping")
+        return
 
-#     logging.info(f"Request: {req}")
+    # mark that synchronization is in progress
+    sync_profile_ref.update({"status": "in_progress"})
 
-#     # Get the code from the request
-#     if "code" not in req.data:
-#         return "No code provided", 400  # TODO : Better error handling
-
-#     code = req.data["code"]
-
-#     flow = google_auth_oauthlib.flow.Flow.from_client_config(
-#         client_config={
-#             "web": {
-#                 "client_id": CLIENT_ID.value,
-#                 "client_secret": CLIENT_SECRET.value,
-#                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-#                 "token_uri": "https://oauth2.googleapis.com/token",
-#             }
-#         },
-#         scopes=["https://www.googleapis.com/auth/calendar"],
-#         redirect_uri="https://syncademic-36c18.firebaseapp.com/__/auth/handler",
-#     )
-
-#     flow.fetch_token(code=code)
-
-#     credentials = flow.credentials
-
-#     firestore_client: google.cloud.firestore.Client = firestore.client()
-
-#     doc_ref = firestore_client.collection("users").document(uid)
-#     doc_ref.set(
-#         {
-#             "access_token": credentials.token,
-#             "refresh_token": credentials.refresh_token,
-#             "token_uri": credentials.token_uri,
-#             "client_id": credentials.client_id,
-#             "client_secret": credentials.client_secret,
-#             "scopes": credentials.scopes,
-#         },
-#         merge=True,
-#     )
-
-#     return "Tokens stored successfully.", 200
+    try:
+        perform_synchronization(
+            syncConfigId=sync_profile_id,
+            icsSourceUrl=source_url,
+            targetCalendarId=target_calendar_id,
+            service=service,
+        )
+        sync_profile_ref.update({"status": "success"})
+        logger.info("Synchronization completed successfully")
+    except Exception as e:
+        sync_profile_ref.update({"status": "error", "error": str(e)})
+        logger.info(f"Synchronization failed: {e}")
+        raise e

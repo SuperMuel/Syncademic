@@ -9,6 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.16.9"
+          channel: "stable"
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ./syncademic_app
+
+      - name: Build
+        run: flutter build web
+        working-directory: ./syncademic_app
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks

@@ -1,7 +1,3 @@
-# Firebase
-/lib/firebase_options.dart
-
-
 # Miscellaneous
 *.class
 *.log
@@ -14,7 +10,6 @@
 .svn/
 migrate_working_dir/
 *.env
-dotenv
 
 # IntelliJ related
 *.iml

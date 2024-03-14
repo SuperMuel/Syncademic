@@ -46,3 +46,23 @@ def prettify_title(event: Event) -> Event:
 
 
 # TODO : maybe show if that's a CM, or TD, or TP
+
+
+def ExamPrettifier(events: List[Event]) -> List[Event]:
+    return [_add_exam_emoji(event) for event in events]
+
+
+def _add_exam_emoji(event: Event) -> Event:
+    """
+    SUMMARY:IF:4:S2::AFQL:EV::IF-4-S2-GR-CM
+    LOCATION:501.212 - TD 212\,501.329 - TD 329\,501.331 - TD 331\,5020002 -
+    Pierre-Gilles de Gennes
+    DESCRIPTION:\n[IF-4-S2-EC-AFQL:EV] Approche Formelle pour la Qualité Logi
+    ciel\n()\n\nIF:4:S2::AFQL:EV::IF-4-S2-GR-CM\n\n(Exporté le:14/03/2024 13
+    :44)\n\n
+    """
+
+    if ":EV]" in event.description:
+        return replace(event, title=f"🚨 {event.title}")
+
+    return event

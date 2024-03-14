@@ -21,6 +21,7 @@ from firebase_functions import firestore_fn, https_fn, logger
 
 
 from synchronizer.synchronizer.synchronizer import perform_synchronization
+from synchronizer.synchronizer.middleware.insa_middleware import TitlePrettifier
 
 #   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #   TODO: Add one more level of synchronizer
@@ -92,6 +93,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
             icsSourceUrl=source_url,
             targetCalendarId=target_calendar_id,
             service=service,
+            middlewares=[TitlePrettifier],
         )
         sync_profile_ref.update({"status": "success"})
         logger.info("Synchronization completed successfully")

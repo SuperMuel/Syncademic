@@ -26,9 +26,19 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
   }
 
   @override
+  Stream<SyncProfile?> watchSyncProfile(ID id) {
+    return _syncProfilesCollection.doc(id.value).snapshots().map((doc) {
+      if (!doc.exists) {
+        return null;
+      }
+      final data = doc.data() as Map<String, dynamic>;
+      return _fromData(data, doc.id);
+    });
+  }
+
+  @override
   Future<SyncProfile?> getSyncProfile(ID id) async {
-    // TODO: implement getSyncProfile
-    throw UnimplementedError();
+    return watchSyncProfile(id).first;
   }
 
   @override
@@ -36,23 +46,26 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
     await for (final snapshot in _syncProfilesCollection.snapshots()) {
       yield snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        final scheduleSource = ScheduleSource(
-          url: data['scheduleSource']['url'],
-        );
-
-        // TODO: Replace with real target calendar
-        const targetCalendar = TargetCalendar(
-          id: ID.fromTrustedSource('target-google-calendar-0'),
-          title: 'Calendar 0',
-        );
-
-        return SyncProfile(
-          id: ID.fromTrustedSource(doc.id),
-          scheduleSource: scheduleSource,
-          targetCalendar: targetCalendar,
-        );
+        return _fromData(data, doc.id);
       }).toList();
     }
+  }
+
+  SyncProfile _fromData(Map<String, dynamic> data, String id) {
+    final scheduleSource = ScheduleSource(
+      url: data['scheduleSource']['url'],
+    );
+
+    final targetCalendar = TargetCalendar(
+      id: ID.fromTrustedSource(data['targetCalendar']['id']),
+      title: data['targetCalendar']['title'],
+    );
+
+    return SyncProfile(
+      id: ID.fromTrustedSource(id),
+      scheduleSource: scheduleSource,
+      targetCalendar: targetCalendar,
+    );
   }
 
   @override

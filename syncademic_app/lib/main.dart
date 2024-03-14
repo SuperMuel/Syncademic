@@ -15,6 +15,7 @@ import 'screens/google_sign_in_page/google_sign_in_page.dart';
 import 'screens/new_sync_profile/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
 import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
+import 'screens/sync_profile/sync_profile_page.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
 import 'services/firebase_auth_service.dart';
@@ -89,6 +90,12 @@ final _router = GoRouter(
             child: const NewSyncConfigPage(),
           );
         }),
+    GoRoute(
+      path: '/syncProfile/:id',
+      builder: (context, state) => SyncProfilePage(
+        syncProfileId: state.pathParameters['id'] ?? '',
+      ),
+    ),
   ],
 );
 
@@ -130,7 +137,9 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const SyncProfilesList(),
+      body: SyncProfilesList(
+        onTap: (profile) => context.go('/syncProfile/${profile.id.value}'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         onPressed: () {

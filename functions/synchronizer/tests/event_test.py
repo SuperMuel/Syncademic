@@ -11,7 +11,6 @@ class TestEvent(unittest.TestCase):
         self.title = "Meeting"
         self.description = "Discuss project"
         self.location = "Office"
-        self.extended_properties = {"attendees": 10}
 
     def test_event_creation_successful(self):
         """Test successful creation of an Event instance."""
@@ -21,14 +20,12 @@ class TestEvent(unittest.TestCase):
             title=self.title,
             description=self.description,
             location=self.location,
-            extended_properties=self.extended_properties,
         )
         self.assertEqual(event.start, self.start)
         self.assertEqual(event.end, self.end)
         self.assertEqual(event.title, self.title)
         self.assertEqual(event.description, self.description)
         self.assertEqual(event.location, self.location)
-        self.assertEqual(event.extended_properties, self.extended_properties)
 
     def test_event_creation_without_start_end_raises_value_error(self):
         """Test that creating an Event without start or end raises ValueError."""
@@ -55,7 +52,6 @@ class TestEvent(unittest.TestCase):
             title=self.title,
             description=self.description,
             location=self.location,
-            extended_properties={"attendees": 10, "deep": {"nested": "property"}},
         )
         event2 = Event(
             start=self.start,
@@ -63,7 +59,6 @@ class TestEvent(unittest.TestCase):
             title=self.title,
             description=self.description,
             location=self.location,
-            extended_properties={"attendees": 10, "deep": {"nested": "property"}},
         )
         self.assertEqual(event1, event2)
 
@@ -85,15 +80,14 @@ class TestEvent(unittest.TestCase):
         )
         self.assertNotEqual(event1, event2)
 
-    def test_not_equals_different_extended_properties(self):
-        """Test that two events are not equal."""
+    def test_hash(self):
+        """Test that two equal events have the same hash."""
         event1 = Event(
             start=self.start,
             end=self.end,
             title=self.title,
             description=self.description,
             location=self.location,
-            extended_properties=self.extended_properties,
         )
         event2 = Event(
             start=self.start,
@@ -101,9 +95,26 @@ class TestEvent(unittest.TestCase):
             title=self.title,
             description=self.description,
             location=self.location,
-            extended_properties={"attendees": 11},
         )
-        self.assertNotEqual(event1, event2)
+        self.assertEqual(hash(event1), hash(event2))
+
+    def test_duplicates_can_be_removed_with_set(self):
+        """Test that duplicates can be removed with a set."""
+        event1 = Event(
+            start=self.start,
+            end=self.end,
+            title=self.title,
+            description=self.description,
+            location=self.location,
+        )
+        event2 = Event(
+            start=self.start,
+            end=self.end,
+            title=self.title,
+            description=self.description,
+            location=self.location,
+        )
+        self.assertEqual(len({event1, event2}), 1)
 
 
 if __name__ == "__main__":

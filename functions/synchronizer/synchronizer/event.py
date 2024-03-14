@@ -10,7 +10,6 @@ class Event:
     title: str = ""
     description: str = ""
     location: str = ""
-    extended_properties: Optional[dict] = None
 
     def __post_init__(self):
         if self.start is None or self.end is None:

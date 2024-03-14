@@ -1,5 +1,5 @@
 from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build, Resource
+from googleapiclient.discovery import build
 
 import logging
 from typing import Any
@@ -11,14 +11,14 @@ from firebase_functions.firestore_fn import (
     on_document_updated,
     on_document_written,
     Event,
-    Change,
     DocumentSnapshot,
 )
 
-from firebase_admin import initialize_app
+from firebase_admin import initialize_app, firestore
 from firebase_functions.params import StringParam
 
-from firebase_functions import firestore_fn, https_fn
+from firebase_functions import firestore_fn, https_fn, logger
+
 
 from synchronizer.synchronizer.synchronizer import perform_synchronization
 
@@ -63,13 +63,39 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     target_calendar_id = target_calendar["id"]
     source_url = scheduleSource["url"]
     sync_profile_id = event.params["syncProfileId"]
+    userId = event.params["userId"]
 
     access_token = target_calendar["accessToken"]
     service = get_calendar_service(access_token)
 
-    perform_synchronization(
-        syncConfigId=sync_profile_id,
-        icsSourceUrl=source_url,
-        targetCalendarId=target_calendar_id,
-        service=service,
+    db = firestore.client()
+    sync_profile_ref = (
+        db.collection("users")
+        .document(userId)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
     )
+
+    status = doc.get("status")
+
+    # is synchronization in progress, do nothing
+    if status == "in_progress":
+        logger.info("Synchronization is in progress, skipping")
+        return
+
+    # mark that synchronization is in progress
+    sync_profile_ref.update({"status": "in_progress"})
+
+    try:
+        perform_synchronization(
+            syncConfigId=sync_profile_id,
+            icsSourceUrl=source_url,
+            targetCalendarId=target_calendar_id,
+            service=service,
+        )
+        sync_profile_ref.update({"status": "success"})
+        logger.info("Synchronization completed successfully")
+    except Exception as e:
+        sync_profile_ref.update({"status": "error", "error": str(e)})
+        logger.info(f"Synchronization failed: {e}")
+        raise e

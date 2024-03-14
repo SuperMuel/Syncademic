@@ -78,9 +78,10 @@ class TestIcsParser(unittest.TestCase):
         """Test parsing multiple events."""
         ics_str = build_ics([event1, event2])
         events = self.ics_parser.parse(ics_str)
-        self.assertEqual(events[0], event1)
-        self.assertEqual(events[1], event2)
-        self.assertEqual(len(events), 2)
+
+        self.assertTrue(events[0] == event1 or events[0] == event2)
+        self.assertTrue(events[1] == event1 or events[1] == event2)
+        self.assertNotEqual(events[0], events[1])
 
     def test_an_event_has_no_title(self):
         """Test that an event has no title."""

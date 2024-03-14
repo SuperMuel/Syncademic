@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
+
+from synchronizer.middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
@@ -16,12 +18,17 @@ def perform_synchronization(
     icsSourceUrl: str,
     targetCalendarId: str,
     service,
+    middlewares: Optional[List[Middleware]] = None,
 ) -> SynchronizationResult:
     # TODO : delete previous events
 
     ics_str = UrlIcsSource(icsSourceUrl).get_ics_string()
 
     events = list(set(IcsParser().parse(ics_str)))
+
+    if middlewares:
+        for middleware in middlewares:
+            events = middleware(events)
 
     #! VERY IMPORTANT : MARK EVENTS WITH SYNCADAMIA TO PREVENT DELETING USER EVENTS
 

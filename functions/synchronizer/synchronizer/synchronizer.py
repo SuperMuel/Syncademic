@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from synchronizer.middleware.middleware import Middleware
+from .middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource

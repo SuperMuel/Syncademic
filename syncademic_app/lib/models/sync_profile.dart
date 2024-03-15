@@ -12,6 +12,7 @@ import 'target_calendar.dart';
 class SyncProfile extends Equatable {
   final ID id;
   final bool enabled;
+  //final String title;
   final ScheduleSource scheduleSource;
   final TargetCalendar targetCalendar;
 
@@ -19,9 +20,17 @@ class SyncProfile extends Equatable {
     required this.id,
     required this.scheduleSource,
     required this.targetCalendar,
+    //required this.title,
     this.enabled = false,
   });
 
   @override
-  List<Object?> get props => [id, enabled, scheduleSource];
+  List<Object?> get props => [
+        id,
+        enabled,
+        //title,
+
+        scheduleSource,
+        targetCalendar,
+      ];
 }

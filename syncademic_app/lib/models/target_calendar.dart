@@ -1,17 +1,15 @@
 import 'package:equatable/equatable.dart';
 import 'id.dart';
 
-class TargetCalendar extends Equatable {
-  final ID id;
-  final String title;
-  final String? accessToken;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const TargetCalendar({
-    required this.id,
-    required this.title,
-    this.accessToken,
-  });
+part 'target_calendar.freezed.dart';
 
-  @override
-  List<Object?> get props => [id, title, accessToken];
+@freezed
+class TargetCalendar with _$TargetCalendar {
+  const factory TargetCalendar({
+    required ID id,
+    required String title,
+    String? accessToken,
+  }) = _TargetCalendar;
 }

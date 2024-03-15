@@ -41,6 +41,8 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       bool isSuccess,
       String? errorMessage,
       TargetCalendar? selectedCalendar});
+
+  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
 }
 
 /// @nodoc
@@ -90,6 +92,18 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
               as TargetCalendar?,
     ) as $Val);
   }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $TargetCalendarCopyWith<$Res>? get selectedCalendar {
+    if (_value.selectedCalendar == null) {
+      return null;
+    }
+
+    return $TargetCalendarCopyWith<$Res>(_value.selectedCalendar!, (value) {
+      return _then(_value.copyWith(selectedCalendar: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -107,6 +121,9 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       bool isSuccess,
       String? errorMessage,
       TargetCalendar? selectedCalendar});
+
+  @override
+  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
 }
 
 /// @nodoc

@@ -38,6 +38,8 @@ abstract class $TargetCalendarSelectorStateCopyWith<$Res> {
       {AuthorizationStatus authorizationStatus,
       List<TargetCalendar> calendars,
       TargetCalendar? selected});
+
+  $TargetCalendarCopyWith<$Res>? get selected;
 }
 
 /// @nodoc
@@ -73,6 +75,18 @@ class _$TargetCalendarSelectorStateCopyWithImpl<$Res,
               as TargetCalendar?,
     ) as $Val);
   }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $TargetCalendarCopyWith<$Res>? get selected {
+    if (_value.selected == null) {
+      return null;
+    }
+
+    return $TargetCalendarCopyWith<$Res>(_value.selected!, (value) {
+      return _then(_value.copyWith(selected: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -88,6 +102,9 @@ abstract class _$$TargetCalendarSelectorStateImplCopyWith<$Res>
       {AuthorizationStatus authorizationStatus,
       List<TargetCalendar> calendars,
       TargetCalendar? selected});
+
+  @override
+  $TargetCalendarCopyWith<$Res>? get selected;
 }
 
 /// @nodoc

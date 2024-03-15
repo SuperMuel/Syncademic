@@ -1,21 +1,14 @@
-import 'package:equatable/equatable.dart';
 import 'id.dart';
 
-class TargetCalendar extends Equatable {
-  final ID id;
-  final String title;
-  final String? accessToken;
-  //TODO(SuperMuel) also get refresh token
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  final bool? backendHasAccess;
+part 'target_calendar.freezed.dart';
 
-  const TargetCalendar({
-    required this.id,
-    required this.title,
-    this.accessToken,
-    this.backendHasAccess,
-  });
-
-  @override
-  List<Object?> get props => [id, title, accessToken];
+@freezed
+class TargetCalendar with _$TargetCalendar {
+  const factory TargetCalendar({
+    required ID id,
+    required String title,
+    String? accessToken,
+  }) = _TargetCalendar;
 }

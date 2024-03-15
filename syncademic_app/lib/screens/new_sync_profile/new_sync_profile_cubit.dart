@@ -22,7 +22,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return emit(state.copyWith(url: url, urlError: 'URL cannot be empty'));
     }
 
-    if (url.length > 5000) {
+    if (url.length > 500) {
       return emit(state.copyWith(url: url, urlError: 'URL is too long'));
     }
 
@@ -33,22 +33,40 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
+  void titleChanged(String title) {
+    if (isBlank(title)) {
+      return emit(
+          state.copyWith(title: title, titleError: 'Title cannot be empty'));
+    }
+
+    if (title.length > 50) {
+      return emit(
+          state.copyWith(title: title, titleError: 'Title is too long'));
+    }
+
+    emit(state.copyWith(title: title, titleError: null));
+  }
+
   Future<void> submit() async {
-    if (state.urlError != null || state.selectedCalendar == null) {
+    if (state.hasError ||
+        state.selectedCalendar == null ||
+        state.title.isEmpty) {
       throw StateError('Cannot submit with invalid data');
     }
     emit(state.copyWith(isSubmitting: true));
 
-    final repo = GetIt.I<SyncProfileRepository>();
-
     final scheduleSource = ScheduleSource(
       url: state.url,
     );
+
     final syncProfile = SyncProfile(
       id: ID(),
+      title: state.title,
       scheduleSource: scheduleSource,
       targetCalendar: state.selectedCalendar!,
     );
+
+    final repo = GetIt.I<SyncProfileRepository>();
 
     try {
       await repo.createSyncProfile(syncProfile);

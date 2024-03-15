@@ -17,6 +17,8 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$NewSyncProfileState {
   String get url => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
+  String? get titleError => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
   bool get isSuccess => throw _privateConstructorUsedError;
@@ -36,11 +38,15 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
   @useResult
   $Res call(
       {String url,
+      String title,
+      String? titleError,
       String? urlError,
       bool isSubmitting,
       bool isSuccess,
       String? errorMessage,
       TargetCalendar? selectedCalendar});
+
+  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
 }
 
 /// @nodoc
@@ -57,6 +63,8 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
   @override
   $Res call({
     Object? url = null,
+    Object? title = null,
+    Object? titleError = freezed,
     Object? urlError = freezed,
     Object? isSubmitting = null,
     Object? isSuccess = null,
@@ -68,6 +76,14 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.url
           : url // ignore: cast_nullable_to_non_nullable
               as String,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      titleError: freezed == titleError
+          ? _value.titleError
+          : titleError // ignore: cast_nullable_to_non_nullable
+              as String?,
       urlError: freezed == urlError
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
@@ -90,6 +106,18 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
               as TargetCalendar?,
     ) as $Val);
   }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $TargetCalendarCopyWith<$Res>? get selectedCalendar {
+    if (_value.selectedCalendar == null) {
+      return null;
+    }
+
+    return $TargetCalendarCopyWith<$Res>(_value.selectedCalendar!, (value) {
+      return _then(_value.copyWith(selectedCalendar: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -102,11 +130,16 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
   @useResult
   $Res call(
       {String url,
+      String title,
+      String? titleError,
       String? urlError,
       bool isSubmitting,
       bool isSuccess,
       String? errorMessage,
       TargetCalendar? selectedCalendar});
+
+  @override
+  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
 }
 
 /// @nodoc
@@ -121,6 +154,8 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? url = null,
+    Object? title = null,
+    Object? titleError = freezed,
     Object? urlError = freezed,
     Object? isSubmitting = null,
     Object? isSuccess = null,
@@ -132,6 +167,14 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.url
           : url // ignore: cast_nullable_to_non_nullable
               as String,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      titleError: freezed == titleError
+          ? _value.titleError
+          : titleError // ignore: cast_nullable_to_non_nullable
+              as String?,
       urlError: freezed == urlError
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
@@ -161,6 +204,8 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
 class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   const _$NewSyncProfileStateImpl(
       {this.url = '',
+      this.title = '',
+      this.titleError = null,
       this.urlError = null,
       this.isSubmitting = false,
       this.isSuccess = false,
@@ -171,6 +216,12 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   @override
   @JsonKey()
   final String url;
+  @override
+  @JsonKey()
+  final String title;
+  @override
+  @JsonKey()
+  final String? titleError;
   @override
   @JsonKey()
   final String? urlError;
@@ -189,7 +240,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   String toString() {
-    return 'NewSyncProfileState(url: $url, urlError: $urlError, isSubmitting: $isSubmitting, isSuccess: $isSuccess, errorMessage: $errorMessage, selectedCalendar: $selectedCalendar)';
+    return 'NewSyncProfileState(url: $url, title: $title, titleError: $titleError, urlError: $urlError, isSubmitting: $isSubmitting, isSuccess: $isSuccess, errorMessage: $errorMessage, selectedCalendar: $selectedCalendar)';
   }
 
   @override
@@ -198,6 +249,9 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
         (other.runtimeType == runtimeType &&
             other is _$NewSyncProfileStateImpl &&
             (identical(other.url, url) || other.url == url) &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.titleError, titleError) ||
+                other.titleError == titleError) &&
             (identical(other.urlError, urlError) ||
                 other.urlError == urlError) &&
             (identical(other.isSubmitting, isSubmitting) ||
@@ -211,8 +265,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, url, urlError, isSubmitting,
-      isSuccess, errorMessage, selectedCalendar);
+  int get hashCode => Object.hash(runtimeType, url, title, titleError, urlError,
+      isSubmitting, isSuccess, errorMessage, selectedCalendar);
 
   @JsonKey(ignore: true)
   @override
@@ -225,6 +279,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 abstract class _NewSyncProfileState extends NewSyncProfileState {
   const factory _NewSyncProfileState(
       {final String url,
+      final String title,
+      final String? titleError,
       final String? urlError,
       final bool isSubmitting,
       final bool isSuccess,
@@ -234,6 +290,10 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
 
   @override
   String get url;
+  @override
+  String get title;
+  @override
+  String? get titleError;
   @override
   String? get urlError;
   @override

@@ -1,10 +1,10 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class ScheduleSource extends Equatable {
-  final String url;
+part 'schedule_source.freezed.dart';
 
-  const ScheduleSource({required this.url});
-
-  @override
-  List<Object?> get props => [url];
+@freezed
+class ScheduleSource with _$ScheduleSource {
+  const factory ScheduleSource({
+    required String url,
+  }) = _ScheduleSource;
 }

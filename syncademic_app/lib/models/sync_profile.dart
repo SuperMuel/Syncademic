@@ -1,27 +1,18 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'id.dart';
 import 'schedule_source.dart';
 import 'target_calendar.dart';
 
-/// A synchronization profile.
-///
-/// A synchronization profile is a configuration that
-/// tells what, when and how to synchronize a university schedule
-/// with the user's calendar.
-class SyncProfile extends Equatable {
-  final ID id;
-  final bool enabled;
-  final ScheduleSource scheduleSource;
-  final TargetCalendar targetCalendar;
+part 'sync_profile.freezed.dart';
 
-  const SyncProfile({
-    required this.id,
-    required this.scheduleSource,
-    required this.targetCalendar,
-    this.enabled = false,
-  });
-
-  @override
-  List<Object?> get props => [id, enabled, scheduleSource];
+@freezed
+class SyncProfile with _$SyncProfile {
+  const factory SyncProfile({
+    required ID id,
+    required ScheduleSource scheduleSource,
+    required TargetCalendar targetCalendar,
+    required String title,
+    @Default(false) bool enabled,
+  }) = _SyncProfile;
 }

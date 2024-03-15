@@ -138,8 +138,10 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SyncProfilesList(
-        onTap: (profile) => context.go('/syncProfile/${profile.id.value}'),
+      body: SafeArea(
+        child: SyncProfilesList(
+          onTap: (profile) => context.go('/syncProfile/${profile.id.value}'),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),

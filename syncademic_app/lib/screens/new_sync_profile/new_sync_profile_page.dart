@@ -44,6 +44,19 @@ class NewSyncConfigPage extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: <Widget>[
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    border: const OutlineInputBorder(),
+                    errorText: state.titleError,
+                    hintText: 'L3 - Biologie - 2023-2024',
+                  ),
+                  enabled: state.canEditTitle,
+                  maxLength: 50,
+                  onChanged: cubit.titleChanged,
+                ),
+                const Gap(16),
+
                 //TODO : Show a link or help text to explain how to get the calendar url
                 TextFormField(
                   decoration: InputDecoration(
@@ -53,7 +66,7 @@ class NewSyncConfigPage extends StatelessWidget {
                     counterText: '',
                   ),
                   enabled: state.canEditUrl,
-                  maxLength: 5000,
+                  maxLength: 500,
                   onChanged: cubit.urlChanged,
                 ),
                 const Gap(16),

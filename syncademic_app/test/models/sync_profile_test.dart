@@ -7,18 +7,20 @@ import 'package:syncademic_app/models/target_calendar.dart';
 
 void main() {
   final id = ID();
+  const title = 'Test Title';
   const scheduleSource = ScheduleSource(
     url: 'https://example.com/schedule',
   );
 
   final targetCalendar = TargetCalendar(
     id: ID(),
-    title: 'Test Title',
+    title: 'targetCalendarTitle',
   );
 
   test('should create a SyncProfile instance', () {
     final syncProfile = SyncProfile(
       id: id,
+      title: title,
       scheduleSource: scheduleSource,
       enabled: false,
       targetCalendar: targetCalendar,
@@ -34,12 +36,14 @@ void main() {
     test('should be equal to another SyncProfile with the same values', () {
       final syncProfile1 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
       );
       final syncProfile2 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
@@ -51,12 +55,33 @@ void main() {
       final id1 = ID();
       final syncProfile1 = SyncProfile(
         id: id1,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
       );
       final syncProfile2 = SyncProfile(
         id: id,
+        title: title,
+        scheduleSource: scheduleSource,
+        enabled: false,
+        targetCalendar: targetCalendar,
+      );
+      expect(syncProfile1, isNot(equals(syncProfile2)));
+    });
+
+    test('should not be equal to another SyncProfile with a different title',
+        () {
+      final syncProfile1 = SyncProfile(
+        id: id,
+        title: title,
+        scheduleSource: scheduleSource,
+        enabled: false,
+        targetCalendar: targetCalendar,
+      );
+      final syncProfile2 = SyncProfile(
+        id: id,
+        title: "${title}HHAHAAAAAAAAAAAAAAAAA",
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
@@ -72,12 +97,14 @@ void main() {
       );
       final syncProfile1 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource1,
         enabled: false,
         targetCalendar: targetCalendar,
       );
       final syncProfile2 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
@@ -94,12 +121,14 @@ void main() {
 
       final syncProfile1 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar1,
       );
       final syncProfile2 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
@@ -111,12 +140,14 @@ void main() {
         () {
       final syncProfile1 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: true,
         targetCalendar: targetCalendar,
       );
       final syncProfile2 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
@@ -128,12 +159,14 @@ void main() {
         () {
       final syncProfile1 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,
       );
       final syncProfile2 = SyncProfile(
         id: id,
+        title: title,
         scheduleSource: scheduleSource,
         enabled: false,
         targetCalendar: targetCalendar,

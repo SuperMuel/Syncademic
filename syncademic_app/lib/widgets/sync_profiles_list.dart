@@ -42,8 +42,17 @@ class _List extends StatelessWidget {
       itemBuilder: (context, index) {
         final profile = profiles[index];
         return ListTile(
-            title: Text(profile.scheduleSource.url),
-            subtitle: Text(profile.enabled ? 'Enabled' : 'Disabled'),
+            title: Text(profile.title,
+                style: Theme.of(context).textTheme.titleLarge),
+            leading: Icon(
+              Icons.sync,
+              color: profile.enabled ? Colors.green : Colors.grey,
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            subtitle: Text(
+              profile.scheduleSource.url,
+              overflow: TextOverflow.ellipsis,
+            ),
             onTap: onTap == null ? null : () => onTap!(profile));
       },
     );

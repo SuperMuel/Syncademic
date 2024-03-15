@@ -24,7 +24,7 @@ class MockAuthService implements AuthService {
   @override
   Future<User> signInWithGoogle() async {
     await Future.delayed(const Duration(seconds: 1));
-    _currentUser = User(id: 'mock-user-id');
+    _currentUser = const User(id: 'mock-user-id');
     _userController.add(_currentUser!);
     return _currentUser!;
   }

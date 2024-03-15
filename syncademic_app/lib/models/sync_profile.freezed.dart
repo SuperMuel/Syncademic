@@ -19,6 +19,7 @@ mixin _$SyncProfile {
   ID get id => throw _privateConstructorUsedError;
   ScheduleSource get scheduleSource => throw _privateConstructorUsedError;
   TargetCalendar get targetCalendar => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
   bool get enabled => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -36,6 +37,7 @@ abstract class $SyncProfileCopyWith<$Res> {
       {ID id,
       ScheduleSource scheduleSource,
       TargetCalendar targetCalendar,
+      String title,
       bool enabled});
 
   $ScheduleSourceCopyWith<$Res> get scheduleSource;
@@ -58,6 +60,7 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
     Object? id = null,
     Object? scheduleSource = null,
     Object? targetCalendar = null,
+    Object? title = null,
     Object? enabled = null,
   }) {
     return _then(_value.copyWith(
@@ -73,6 +76,10 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
           ? _value.targetCalendar
           : targetCalendar // ignore: cast_nullable_to_non_nullable
               as TargetCalendar,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
       enabled: null == enabled
           ? _value.enabled
           : enabled // ignore: cast_nullable_to_non_nullable
@@ -109,6 +116,7 @@ abstract class _$$SyncProfileImplCopyWith<$Res>
       {ID id,
       ScheduleSource scheduleSource,
       TargetCalendar targetCalendar,
+      String title,
       bool enabled});
 
   @override
@@ -131,6 +139,7 @@ class __$$SyncProfileImplCopyWithImpl<$Res>
     Object? id = null,
     Object? scheduleSource = null,
     Object? targetCalendar = null,
+    Object? title = null,
     Object? enabled = null,
   }) {
     return _then(_$SyncProfileImpl(
@@ -146,6 +155,10 @@ class __$$SyncProfileImplCopyWithImpl<$Res>
           ? _value.targetCalendar
           : targetCalendar // ignore: cast_nullable_to_non_nullable
               as TargetCalendar,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
       enabled: null == enabled
           ? _value.enabled
           : enabled // ignore: cast_nullable_to_non_nullable
@@ -161,6 +174,7 @@ class _$SyncProfileImpl implements _SyncProfile {
       {required this.id,
       required this.scheduleSource,
       required this.targetCalendar,
+      required this.title,
       this.enabled = false});
 
   @override
@@ -170,12 +184,14 @@ class _$SyncProfileImpl implements _SyncProfile {
   @override
   final TargetCalendar targetCalendar;
   @override
+  final String title;
+  @override
   @JsonKey()
   final bool enabled;
 
   @override
   String toString() {
-    return 'SyncProfile(id: $id, scheduleSource: $scheduleSource, targetCalendar: $targetCalendar, enabled: $enabled)';
+    return 'SyncProfile(id: $id, scheduleSource: $scheduleSource, targetCalendar: $targetCalendar, title: $title, enabled: $enabled)';
   }
 
   @override
@@ -188,12 +204,13 @@ class _$SyncProfileImpl implements _SyncProfile {
                 other.scheduleSource == scheduleSource) &&
             (identical(other.targetCalendar, targetCalendar) ||
                 other.targetCalendar == targetCalendar) &&
+            (identical(other.title, title) || other.title == title) &&
             (identical(other.enabled, enabled) || other.enabled == enabled));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, scheduleSource, targetCalendar, enabled);
+  int get hashCode => Object.hash(
+      runtimeType, id, scheduleSource, targetCalendar, title, enabled);
 
   @JsonKey(ignore: true)
   @override
@@ -207,6 +224,7 @@ abstract class _SyncProfile implements SyncProfile {
       {required final ID id,
       required final ScheduleSource scheduleSource,
       required final TargetCalendar targetCalendar,
+      required final String title,
       final bool enabled}) = _$SyncProfileImpl;
 
   @override
@@ -215,6 +233,8 @@ abstract class _SyncProfile implements SyncProfile {
   ScheduleSource get scheduleSource;
   @override
   TargetCalendar get targetCalendar;
+  @override
+  String get title;
   @override
   bool get enabled;
   @override

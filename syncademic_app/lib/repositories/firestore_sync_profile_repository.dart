@@ -13,7 +13,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
   @override
   Future<void> createSyncProfile(SyncProfile syncProfile) async {
     _syncProfilesCollection.doc(syncProfile.id.value).set({
-      // 'title' //TODO(SuperMuel) : Implement title
+      'title': syncProfile.title,
       'scheduleSource': {
         'url': syncProfile.scheduleSource.url,
       },
@@ -63,6 +63,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
     return SyncProfile(
       id: ID.fromTrustedSource(id),
+      title: data['title'],
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
     );

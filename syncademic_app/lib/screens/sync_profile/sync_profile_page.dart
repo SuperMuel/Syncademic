@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:syncademic_app/models/id.dart';
-import 'package:syncademic_app/models/sync_profile.dart';
-import 'package:syncademic_app/repositories/sync_profile_repository.dart';
+import '../../models/id.dart';
+import '../../models/sync_profile.dart';
+import '../../repositories/sync_profile_repository.dart';
 
 class SyncProfilePage extends StatelessWidget {
   const SyncProfilePage({super.key, required this.syncProfileId});
@@ -23,7 +23,8 @@ class SyncProfilePage extends StatelessWidget {
           final syncProfile = snapshot.data;
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Sync Profile'),
+              title:
+                  Text('Sync Profile : ${syncProfile?.title ?? 'Not found'}'),
             ),
             body: SafeArea(
               child: syncProfile != null
@@ -126,7 +127,7 @@ class _SyncProfileBody extends StatelessWidget {
 }
 
 class _NotFoundBody extends StatelessWidget {
-  const _NotFoundBody({super.key});
+  const _NotFoundBody();
 
   @override
   Widget build(BuildContext context) {

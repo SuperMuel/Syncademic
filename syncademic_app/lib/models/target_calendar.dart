@@ -1,4 +1,3 @@
-import 'package:equatable/equatable.dart';
 import 'id.dart';
 
 import 'package:freezed_annotation/freezed_annotation.dart';

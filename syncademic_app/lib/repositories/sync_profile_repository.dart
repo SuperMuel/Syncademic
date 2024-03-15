@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import '../models/target_calendar.dart';
-
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
+import '../models/target_calendar.dart';
 
 abstract class SyncProfileRepository {
   Future<SyncProfile?> getSyncProfile(ID id);
@@ -71,6 +70,7 @@ class MockSyncProfileRepository implements SyncProfileRepository {
       id = ID();
       final syncProfile = SyncProfile(
         id: id,
+        title: 'Sync Profile n°${id.value}',
         scheduleSource: scheduleSource,
         targetCalendar: targetCalendar,
         enabled: i % 2 == 0,

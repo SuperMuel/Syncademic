@@ -61,11 +61,14 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       title: data['targetCalendar']['title'],
     );
 
+    final timestamp = data['lastSuccessfulSync'] as Timestamp?;
+
     return SyncProfile(
       id: ID.fromTrustedSource(id),
       title: data['title'],
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
+      lastSuccessfulSync: timestamp?.toDate(),
     );
   }
 

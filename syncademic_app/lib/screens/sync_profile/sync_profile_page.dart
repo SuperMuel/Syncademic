@@ -92,6 +92,23 @@ class _SyncProfileBody extends StatelessWidget {
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
           const SizedBox(height: 32),
+
+          // Last synchronized
+          Text(
+            'Last Synchronized',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            syncProfile.lastSuccessfulSync != null
+                ? syncProfile.lastSuccessfulSync.toString()
+                : 'Never',
+            style: GoogleFonts.montserrat(fontSize: 16),
+          ),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [

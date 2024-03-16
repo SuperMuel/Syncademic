@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import '../models/id.dart';
 import '../models/schedule_source.dart';
@@ -67,6 +68,13 @@ class MockSyncProfileRepository implements SyncProfileRepository {
         title: 'Calendar ${id.value}',
       );
 
+      int seconds = Random().nextInt(60);
+      int minutes = Random().nextInt(2) * Random().nextInt(60);
+      int hours = minutes == 0 ? 0 : Random().nextInt(2) * Random().nextInt(24);
+      int days = hours == 0 ? 0 : Random().nextInt(2) * Random().nextInt(30);
+
+      int totalSeconds = seconds + minutes * 60 + hours * 3600 + days * 86400;
+
       id = ID();
       final syncProfile = SyncProfile(
         id: id,
@@ -74,6 +82,8 @@ class MockSyncProfileRepository implements SyncProfileRepository {
         scheduleSource: scheduleSource,
         targetCalendar: targetCalendar,
         enabled: i % 2 == 0,
+        lastSuccessfulSync:
+            DateTime.now().subtract(Duration(seconds: totalSeconds)),
       );
       _syncProfiles[id] = syncProfile;
     }

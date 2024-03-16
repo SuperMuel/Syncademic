@@ -36,7 +36,7 @@ void main() async {
   // Register the SyncProfileRepository
   getIt.registerSingleton<SyncProfileRepository>(
     FirestoreSyncProfileRepository(),
-    // MockSyncProfileRepository()..createRandomData(10),
+    //MockSyncProfileRepository()..createRandomData(10),
   );
 
   getIt.registerSingleton<AuthService>(FirebaseAuthService());

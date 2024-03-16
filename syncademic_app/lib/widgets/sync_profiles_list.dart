@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syncademic_app/widgets/last_synchronized.dart';
 import 'package:get_it/get_it.dart';
 
 import '../models/sync_profile.dart';
@@ -34,27 +35,33 @@ class _List extends StatelessWidget {
   final void Function(SyncProfile)? onTap;
   const _List({required this.profiles, this.onTap});
 
-  //TODO: Add a message when the list is empty
+  Widget _emptyList() {
+    return const Center(
+      child: Text('No sync profiles found.'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: profiles.length,
-      itemBuilder: (context, index) {
-        final profile = profiles[index];
-        return ListTile(
-            title: Text(profile.title,
-                style: Theme.of(context).textTheme.titleLarge),
-            leading: Icon(
-              Icons.sync,
-              color: profile.enabled ? Colors.green : Colors.grey,
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            subtitle: Text(
-              profile.scheduleSource.url,
-              overflow: TextOverflow.ellipsis,
-            ),
-            onTap: onTap == null ? null : () => onTap!(profile));
-      },
-    );
+    return profiles.isEmpty
+        ? _emptyList()
+        : ListView.builder(
+            itemCount: profiles.length,
+            itemBuilder: (context, index) {
+              final profile = profiles[index];
+              return ListTile(
+                  title: Text(profile.title,
+                      style: Theme.of(context).textTheme.titleLarge),
+                  leading: Icon(
+                    Icons.sync,
+                    color: profile.enabled ? Colors.green : Colors.grey,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  subtitle: profile.lastSuccessfulSync == null
+                      ? const Text('Never synced')
+                      : LastSynchronized(syncProfile: profile),
+                  onTap: onTap == null ? null : () => onTap!(profile));
+            },
+          );
   }
 }

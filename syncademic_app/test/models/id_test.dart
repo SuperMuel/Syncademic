@@ -21,14 +21,14 @@ void main() {
       'id should have correct value when created using trusted source constructor',
       () {
     const value = 'example_id';
-    const id = ID.fromTrustedSource(value);
+    const id = ID.fromString(value);
     expect(id.value, equals(value));
   });
 
   test('id should be equal to another id with the same value', () {
     const value = 'example_id';
-    const id1 = ID.fromTrustedSource(value);
-    const id2 = ID.fromTrustedSource(value);
+    const id1 = ID.fromString(value);
+    const id2 = ID.fromString(value);
     expect(id1, equals(id2));
   });
 }

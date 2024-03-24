@@ -1,6 +1,9 @@
-from typing import List, TypeAlias, Dict
+from datetime import datetime
+from typing import List, Optional, TypeAlias, Dict
 from .event import Event
 from itertools import islice
+import pytz
+
 
 ExtendedProperties: TypeAlias = Dict
 
@@ -54,7 +57,44 @@ class GoogleCalendarManager:
                 )
             batch.execute()
 
-    def delete_events(self, events: List[Event], sync_profile_id: str) -> None:
-        # TODO : check that the events we delete are marked with syncademic
-        # to prevent deleting user events
-        pass
+    def get_events_ids_from_sync_profile(
+        self,
+        sync_profile_id: str,
+        min_dt: Optional[datetime],
+        limit: Optional[int] = 1000,
+    ) -> List[str]:
+        if not sync_profile_id:
+            raise ValueError(f"{sync_profile_id=} is not valid")
+
+        events_as_dict = []
+
+        request = self.service.events().list(
+            calendarId=self.calendar_id,
+            privateExtendedProperty=f"syncademic={sync_profile_id}",
+            singleEvents=True,
+            orderBy="startTime",
+            maxResults=limit,
+            timeMin=min_dt.astimezone(pytz.utc).isoformat() if min_dt else None,
+        )
+
+        while request:
+            response = request.execute()
+            events_as_dict.extend(response.get("items", []))
+            request = self.service.events().list_next(request, response)
+
+        return [event["id"] for event in events_as_dict]
+
+    def delete_events(self, ids: List[str]) -> None:
+        for sublist in batched(ids, 50):
+            batch = self.service.new_batch_http_request()
+            for id in sublist:
+                batch.add(
+                    self.service.events().delete(
+                        calendarId=self.calendar_id,
+                        eventId=id,
+                    )
+                )
+            batch.execute()
+
+    def test_authorization(self) -> None:
+        self.service.calendarList().list().execute(num_retries=3)

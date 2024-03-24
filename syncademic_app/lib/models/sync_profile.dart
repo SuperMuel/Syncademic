@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:syncademic_app/models/sync_profile_status.dart';
 
 import 'id.dart';
 import 'schedule_source.dart';
@@ -15,5 +16,6 @@ class SyncProfile with _$SyncProfile {
     required String title,
     @Default(false) bool enabled,
     DateTime? lastSuccessfulSync,
+    SyncProfileStatus? status,
   }) = _SyncProfile;
 }

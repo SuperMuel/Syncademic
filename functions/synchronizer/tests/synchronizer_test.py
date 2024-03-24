@@ -30,7 +30,7 @@ class TestSynchronizer(unittest.TestCase):
 
         # Execute the method under test
         result = perform_synchronization(
-            syncConfigId="test_sync_id",
+            syncProfileId="test_sync_id",
             icsSourceUrl="http://example.com/calendar.ics",
             targetCalendarId="target_calendar_id",
             service=mock_service,

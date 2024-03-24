@@ -23,7 +23,7 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
     final calendarList = await _client.calendarList.list();
     return calendarList.items!
         .map((calendarListEntry) => TargetCalendar(
-              id: ID.fromTrustedSource(calendarListEntry.id!),
+              id: ID.fromString(calendarListEntry.id!),
               title: calendarListEntry.summary!,
               accessToken: accessToken,
             ))

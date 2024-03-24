@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List, Optional
 
 from .middleware.middleware import Middleware
@@ -14,7 +15,7 @@ class SynchronizationResult:
 
 
 def perform_synchronization(
-    syncConfigId: str,  # hidden in events to avoid deleting user events
+    syncProfileId: str,  # hidden in events to avoid deleting user events
     icsSourceUrl: str,
     targetCalendarId: str,
     service,
@@ -30,11 +31,23 @@ def perform_synchronization(
         for middleware in middlewares:
             events = middleware(events)
 
-    #! VERY IMPORTANT : MARK EVENTS WITH SYNCADAMIA TO PREVENT DELETING USER EVENTS
+    # TODO : Check if there are events to synchronize. If not, issue a warning and return. Do not delete events.
 
-    # TODO : add middleware for events
+    calendar_manager = GoogleCalendarManager(service, targetCalendarId)
 
-    GoogleCalendarManager(service, targetCalendarId).create_events(events, syncConfigId)
+    calendar_manager.test_authorization()
+
+    separation_dt = datetime.now()
+
+    future_events_ids = calendar_manager.get_events_ids_from_sync_profile(
+        syncProfileId, separation_dt
+    )
+
+    calendar_manager.delete_events(future_events_ids)
+
+    new_events = [event for event in events if event.end < separation_dt]
+
+    calendar_manager.create_events(new_events, syncProfileId)
 
     # TODO : improve synchronization result
     return SynchronizationResult(success=True)

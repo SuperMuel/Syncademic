@@ -22,7 +22,9 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return emit(state.copyWith(url: url, urlError: 'URL cannot be empty'));
     }
 
-    if (url.length > 500) {
+    // URLs from Montpellier Fds are 400+ characters long. We need to support
+    // long URLs.
+    if (url.length > 2000) {
       return emit(state.copyWith(url: url, urlError: 'URL is too long'));
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -74,7 +75,15 @@ class LandingPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ],
+                    ]
+                        .animate(
+                          interval: const Duration(milliseconds: 60),
+                        )
+                        .fadeIn()
+                        .scale(
+                          curve: Curves.easeInOutBack,
+                          delay: const Duration(milliseconds: 200),
+                        ),
                   ),
                 ),
               ),

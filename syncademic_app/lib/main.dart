@@ -4,9 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/screens/landing_page.dart';
-import 'package:syncademic_app/screens/sync_profile/cubit/sync_profile_cubit.dart';
-import 'package:syncademic_app/services/sync_profile_service.dart';
+import 'screens/landing_page.dart';
+import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
+import 'services/sync_profile_service.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
@@ -65,15 +65,20 @@ void main() async {
 final _router = GoRouter(
   redirect: (context, state) async {
     final user = GetIt.I<AuthService>().currentUser;
-    if (user == null) {
-      return '/landing';
+    if (user != null) {
+      return null;
     }
-    return null;
+
+    if (state.fullPath == '/sign-in') {
+      return '/sign-in';
+    }
+
+    return '/welcome';
   },
-  initialLocation: '/landing',
+  initialLocation: '/welcome',
   routes: [
     GoRoute(
-      path: '/landing',
+      path: '/welcome',
       builder: (context, state) => const LandingPage(),
     ),
     GoRoute(
@@ -146,9 +151,8 @@ class HomeScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => GetIt.I<AuthCubit>()
-                .signOut()
-                .then((value) => context.go('/sign-in')),
+            onPressed: () =>
+                GetIt.I<AuthCubit>().signOut().then((_) => context.go('/')),
           ),
         ],
       ),

@@ -1,8 +1,9 @@
 import 'package:googleapis/calendar/v3.dart';
+import 'package:http/http.dart' as http;
+
 import '../models/id.dart';
 import '../models/target_calendar.dart';
 import 'target_calendar_repository.dart';
-import 'package:http/http.dart' as http;
 
 // TODO : All the google calendars are not yet target calendars. Those are just
 // Google calendars ! We need to rename this class to GoogleCalendarRepository

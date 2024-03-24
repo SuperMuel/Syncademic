@@ -55,11 +55,9 @@ class LandingPage extends StatelessWidget {
 
                       const SizedBox(height: 32),
 
-                      // Getting Started button
+                      // Get Started button
                       ElevatedButton(
-                        onPressed: () {
-                          context.go('/sign-in');
-                        },
+                        onPressed: () => context.go('/sign-in'),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),

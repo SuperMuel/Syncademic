@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:syncademic_app/models/sync_profile_status.dart';
+import '../models/sync_profile_status.dart';
 
 import '../models/id.dart';
 import '../models/schedule_source.dart';

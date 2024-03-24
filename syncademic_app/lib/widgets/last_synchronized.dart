@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:get_time_ago/get_time_ago.dart';
 
-import 'package:syncademic_app/models/sync_profile.dart';
+import '../models/sync_profile.dart';
 
 class LastSynchronized extends StatefulWidget {
   const LastSynchronized(

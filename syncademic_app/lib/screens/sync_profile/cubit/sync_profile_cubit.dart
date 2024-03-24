@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
-import 'package:syncademic_app/models/id.dart';
-import 'package:syncademic_app/models/sync_profile.dart';
-import 'package:syncademic_app/services/sync_profile_service.dart';
+import '../../../models/id.dart';
+import '../../../models/sync_profile.dart';
+import '../../../services/sync_profile_service.dart';
 
 import '../../../repositories/sync_profile_repository.dart';
 

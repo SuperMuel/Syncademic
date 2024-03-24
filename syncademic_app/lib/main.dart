@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/screens/sync_profile/cubit/sync_profile_cubit.dart';
+import 'package:syncademic_app/services/sync_profile_service.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
@@ -36,7 +38,10 @@ void main() async {
   // Register the SyncProfileRepository
   getIt.registerSingleton<SyncProfileRepository>(
     FirestoreSyncProfileRepository(),
-    //MockSyncProfileRepository()..createRandomData(10),
+    // MockSyncProfileRepository()
+    //   ..createRandomData(10)
+    //   ..addFailedProfile()
+    //   ..addInProgressProfile(),
   );
 
   getIt.registerSingleton<AuthService>(FirebaseAuthService());
@@ -49,6 +54,8 @@ void main() async {
     //MockAuthorizationService(),
     GoogleAuthorizationService(),
   );
+
+  getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
 
   runApp(const MyApp());
 }
@@ -70,8 +77,10 @@ final _router = GoRouter(
         routes: [
           GoRoute(
             path: 'syncProfile/:id',
-            builder: (context, state) => SyncProfilePage(
-              syncProfileId: state.pathParameters['id'] ?? '',
+            builder: (context, state) => BlocProvider(
+              create: (context) =>
+                  SyncProfileCubit(state.pathParameters['id'] ?? ''),
+              child: const SyncProfilePage(),
             ),
           ),
         ]),

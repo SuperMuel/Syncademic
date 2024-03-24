@@ -9,7 +9,7 @@ class ID extends Equatable {
   ID() : value = const Uuid().v4();
 
   /// Creates a new ID from a trusted source
-  const ID.fromTrustedSource(this.value);
+  const ID.fromString(this.value);
 
   @override
   List<Object> get props => [value];

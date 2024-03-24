@@ -3,7 +3,7 @@ import 'package:syncademic_app/models/id.dart';
 import 'package:syncademic_app/models/target_calendar.dart';
 
 void main() {
-  const id = ID.fromTrustedSource('test_id');
+  const id = ID.fromString('test_id');
   const title = 'Test Title';
   const accessToken = 'test_access_token';
 
@@ -36,7 +36,7 @@ void main() {
 
     test('should not be equal to another TargetCalendar with a different id',
         () {
-      const id1 = ID.fromTrustedSource('test_id1');
+      const id1 = ID.fromString('test_id1');
       const targetCalendar1 = TargetCalendar(
         id: id1,
         title: title,

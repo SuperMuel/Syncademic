@@ -10,6 +10,6 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
   Future<List<TargetCalendar>> getCalendars() async => List.generate(
       10,
       (index) => TargetCalendar(
-          id: ID.fromTrustedSource('target-google-calendar-$index'),
+          id: ID.fromString('target-google-calendar-$index'),
           title: 'Calendar $index'));
 }

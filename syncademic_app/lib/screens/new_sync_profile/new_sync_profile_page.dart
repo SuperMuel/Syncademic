@@ -66,7 +66,7 @@ class NewSyncConfigPage extends StatelessWidget {
                     counterText: '',
                   ),
                   enabled: state.canEditUrl,
-                  maxLength: 500,
+                  maxLength: null,
                   onChanged: cubit.urlChanged,
                 ),
                 const Gap(16),

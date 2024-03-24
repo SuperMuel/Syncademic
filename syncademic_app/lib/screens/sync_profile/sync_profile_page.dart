@@ -1,39 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/id.dart';
+import 'package:syncademic_app/models/sync_profile_status.dart';
 import '../../models/sync_profile.dart';
 import '../../repositories/sync_profile_repository.dart';
+import 'cubit/sync_profile_cubit.dart';
 
 class SyncProfilePage extends StatelessWidget {
-  const SyncProfilePage({super.key, required this.syncProfileId});
-  final String syncProfileId;
+  const SyncProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final syncProfileRepository = GetIt.I<SyncProfileRepository>();
-
-    final syncProfileStream = syncProfileRepository
-        .watchSyncProfile(ID.fromTrustedSource(syncProfileId));
-
-    return StreamBuilder(
-        stream: syncProfileStream,
-        builder: (context, snapshot) {
-          final syncProfile = snapshot.data;
+  Widget build(BuildContext context) =>
+      BlocBuilder<SyncProfileCubit, SyncProfileState>(
+        builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
-              title:
-                  Text('Sync Profile : ${syncProfile?.title ?? 'Not found'}'),
+              title: const Text('Sync Profile Details'),
             ),
             body: SafeArea(
-              child: syncProfile != null
-                  ? _SyncProfileBody(syncProfile: syncProfile)
-                  : const _NotFoundBody(),
+              child: state.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                loaded: (syncProfile) =>
+                    _SyncProfileBody(syncProfile: syncProfile),
+                notFound: () => const _NotFoundBody(),
+              ),
             ),
           );
-        });
-  }
+        },
+      );
 }
 
 class _SyncProfileBody extends StatelessWidget {
@@ -69,7 +65,7 @@ class _SyncProfileBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          SelectableText(
             syncProfile.scheduleSource.url,
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
@@ -82,12 +78,12 @@ class _SyncProfileBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          SelectableText(
             'ID: ${syncProfile.targetCalendar.id.value}',
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
           const SizedBox(height: 8),
-          Text(
+          SelectableText(
             'Title: ${syncProfile.targetCalendar.title}',
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
@@ -108,19 +104,28 @@ class _SyncProfileBody extends StatelessWidget {
                 : 'Never',
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
+          const SizedBox(height: 32),
+
+          // Status
+          Text(
+            'Status',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+
+          SelectableText(
+            '${syncProfile.status}',
+            style: GoogleFonts.montserrat(fontSize: 16),
+          ),
+
+          const SizedBox(height: 32),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              ElevatedButton.icon(
-                onPressed: null, // TODO implement "Sync Now"
-                icon: const Icon(Icons.sync),
-                label: const Text('Synchronize Now'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-              ),
+              _RequestSyncButton(syncProfile: syncProfile),
               const SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: () {
@@ -143,6 +148,31 @@ class _SyncProfileBody extends StatelessWidget {
   }
 }
 
+class _RequestSyncButton extends StatelessWidget {
+  final SyncProfile syncProfile;
+
+  const _RequestSyncButton({
+    required this.syncProfile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final canRequestSync =
+        syncProfile.status != const SyncProfileStatus.inProgress();
+
+    return ElevatedButton.icon(
+      onPressed:
+          canRequestSync ? context.read<SyncProfileCubit>().requestSync : null,
+      icon: const Icon(Icons.sync),
+      label: const Text('Synchronize Now'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+      ),
+    );
+  }
+}
+
 class _NotFoundBody extends StatelessWidget {
   const _NotFoundBody();
 
@@ -159,30 +189,3 @@ class _NotFoundBody extends StatelessWidget {
     );
   }
 }
-
-// class _SyncProfileBody extends StatelessWidget {
-//   const _SyncProfileBody({super.key, this.syncProfile});
-
-//   final syncProfile;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       children: [
-//         Text(syncProfile.id.value),
-//         Text(syncProfile.scheduleSource.url),
-//         Text(syncProfile.targetCalendar.id.value),
-//         Text(syncProfile.targetCalendar.title),
-//       ],
-//     );
-//   }
-// }
-
-// class _NotFoundBody extends StatelessWidget {
-//   const _NotFoundBody({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Center(child: Text('Sync Profile not found'));
-//   }
-// }

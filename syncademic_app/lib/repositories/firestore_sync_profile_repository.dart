@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syncademic_app/models/sync_profile_status.dart';
 import '../models/target_calendar.dart';
 import '../models/id.dart';
 import '../models/schedule_source.dart';
@@ -57,18 +58,37 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
     );
 
     final targetCalendar = TargetCalendar(
-      id: ID.fromTrustedSource(data['targetCalendar']['id']),
+      id: ID.fromString(data['targetCalendar']['id']),
       title: data['targetCalendar']['title'],
     );
 
     final timestamp = data['lastSuccessfulSync'] as Timestamp?;
 
+    late SyncProfileStatus status;
+    switch (data['status']['type']) {
+      case 'inProgress':
+        status = const SyncProfileStatus.inProgress();
+        break;
+      case 'success':
+        status = const SyncProfileStatus.success();
+        break;
+      case 'failed':
+        status = SyncProfileStatus.failed(data['status']['message'] ?? '');
+        break;
+      case 'notStarted':
+        status = const SyncProfileStatus.notStarted();
+        break;
+      default:
+        throw Exception('Unknown status: ${data['status']}');
+    }
+
     return SyncProfile(
-      id: ID.fromTrustedSource(id),
+      id: ID.fromString(id),
       title: data['title'],
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
       lastSuccessfulSync: timestamp?.toDate(),
+      status: status,
     );
   }
 

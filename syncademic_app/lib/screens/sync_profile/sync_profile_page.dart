@@ -20,11 +20,13 @@ class SyncProfilePage extends StatelessWidget {
               title: const Text('Sync Profile Details'),
             ),
             body: SafeArea(
-              child: state.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                loaded: (syncProfile) =>
-                    _SyncProfileBody(syncProfile: syncProfile),
-                notFound: () => const _NotFoundBody(),
+              child: SingleChildScrollView(
+                child: state.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loaded: (syncProfile) =>
+                      _SyncProfileBody(syncProfile: syncProfile),
+                  notFound: () => const _NotFoundBody(),
+                ),
               ),
             ),
           );

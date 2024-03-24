@@ -19,60 +19,65 @@ class LandingPage extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/syncademic-icon.svg',
-                      semanticsLabel: 'Syncademic logo',
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                      height: MediaQuery.of(context).size.height * 0.5,
-                    ),
-                    const SizedBox(height: 30),
-
-                    Text('Syncademic',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 48.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Synchronize your academic life with your digital world.',
-                      style: GoogleFonts.montserrat(
-                          fontSize: 20.0, color: Colors.white70),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Getting Started button
-                    ElevatedButton(
-                      onPressed: () {
-                        context.go('/sign-in');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/icons/syncademic-icon.svg',
+                        semanticsLabel: 'Syncademic logo',
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
                         ),
+                        height: MediaQuery.of(context).size.height * 0.5,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          'GET STARTED',
+                      const SizedBox(height: 30),
+
+                      Text('Syncademic',
                           style: GoogleFonts.montserrat(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
+                              fontSize: MediaQuery.of(context).size.width > 320
+                                  ? 48.0
+                                  : 36.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Synchronize your academic life with your digital world.',
+                        style: GoogleFonts.montserrat(
+                            fontSize: 20.0, color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Getting Started button
+                      ElevatedButton(
+                        onPressed: () {
+                          context.go('/sign-in');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            'GET STARTED',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             )));

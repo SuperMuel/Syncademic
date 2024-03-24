@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:syncademic_app/widgets/last_synchronized.dart';
+import 'last_synchronized.dart';
 import 'package:get_it/get_it.dart';
 
 import '../models/sync_profile.dart';

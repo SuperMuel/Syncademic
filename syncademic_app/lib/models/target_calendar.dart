@@ -1,6 +1,6 @@
-import 'id.dart';
-
 import 'package:freezed_annotation/freezed_annotation.dart';
+
+import 'id.dart';
 
 part 'target_calendar.freezed.dart';
 

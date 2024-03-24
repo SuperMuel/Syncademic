@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/screens/landing_page.dart';
 import 'package:syncademic_app/screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'package:syncademic_app/services/sync_profile_service.dart';
 
@@ -65,12 +66,16 @@ final _router = GoRouter(
   redirect: (context, state) async {
     final user = GetIt.I<AuthService>().currentUser;
     if (user == null) {
-      return '/sign-in';
+      return '/landing';
     }
     return null;
   },
-  initialLocation: '/',
+  initialLocation: '/landing',
   routes: [
+    GoRoute(
+      path: '/landing',
+      builder: (context, state) => const LandingPage(),
+    ),
     GoRoute(
         path: '/',
         builder: (context, state) => const HomeScreen(),

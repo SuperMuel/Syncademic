@@ -30,7 +30,6 @@ class FirebaseAuthService extends AuthService {
       return syncademicUser;
     } on FirebaseAuthException catch (e) {
       log('Error signing in with Google', error: e);
-      // TODO handle error
       rethrow;
     }
   }

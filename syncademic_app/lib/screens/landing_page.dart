@@ -13,10 +13,10 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = GetIt.I<AuthCubit>();
+    final authBloc = GetIt.I<AuthCubit>();
 
     return BlocConsumer<AuthCubit, AuthState>(
-        bloc: bloc,
+        bloc: authBloc,
         listener: (context, state) {
           state.maybeWhen(
               orElse: () {},
@@ -75,7 +75,7 @@ class LandingPage extends StatelessWidget {
 
                             // Get Started button
                             ElevatedButton(
-                              onPressed: () => bloc.signInWithGoogle(),
+                              onPressed: () => authBloc.signInWithGoogle(),
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12.0),

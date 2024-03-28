@@ -14,7 +14,6 @@ import 'firebase_options.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'screens/account/account_page.dart';
-import 'screens/google_sign_in_page/google_sign_in_page.dart';
 import 'screens/new_sync_profile/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
 import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
@@ -69,10 +68,6 @@ final _router = GoRouter(
       return null;
     }
 
-    if (state.fullPath == '/sign-in') {
-      return '/sign-in';
-    }
-
     return '/welcome';
   },
   initialLocation: '/welcome',
@@ -94,11 +89,6 @@ final _router = GoRouter(
             ),
           ),
         ]),
-    GoRoute(
-        path: '/sign-in',
-        builder: (context, state) {
-          return const GoogleSignInPage();
-        }),
     // Account page
     GoRoute(
         path: '/account',

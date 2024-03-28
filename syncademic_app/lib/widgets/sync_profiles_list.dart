@@ -37,7 +37,7 @@ class _List extends StatelessWidget {
 
   Widget _emptyList() {
     return const Center(
-      child: Text('No sync profiles found.'),
+      child: Text('No synchronisation profiles found.'),
     );
   }
 

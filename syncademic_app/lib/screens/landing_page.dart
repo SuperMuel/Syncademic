@@ -75,7 +75,7 @@ class LandingPage extends StatelessWidget {
 
                             // Get Started button
                             ElevatedButton(
-                              onPressed: () => authBloc.signInWithGoogle(),
+                              onPressed: authBloc.signInWithGoogle,
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12.0),

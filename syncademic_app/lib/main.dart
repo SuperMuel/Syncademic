@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'screens/landing_page.dart';
+import 'screens/home_page.dart';
+import 'screens/welcome_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'services/sync_profile_service.dart';
 
@@ -74,11 +75,11 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/welcome',
-      builder: (context, state) => const LandingPage(),
+      builder: (context, state) => const WelcomePage(),
     ),
     GoRoute(
-        path: '/',
-        builder: (context, state) => const HomeScreen(),
+        path: '/home',
+        builder: (context, state) => const HomePage(),
         routes: [
           GoRoute(
             path: 'syncProfile/:id',
@@ -122,42 +123,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routerConfig: _router,
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Syncademic'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () => context.push('/account'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () =>
-                GetIt.I<AuthCubit>().signOut().then((_) => context.go('/')),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SyncProfilesList(
-          onTap: (profile) => context.go('/syncProfile/${profile.id.value}'),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        onPressed: () {
-          context.push('/new-sync-profile');
-        },
-        label: const Text('New synchronization profile'),
-      ),
     );
   }
 }

@@ -32,7 +32,7 @@ class AccountPage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => GetIt.I<AuthCubit>()
                         .signOut()
-                        .then((value) => context.go('/')),
+                        .then((value) => context.go('/home')),
                     child: const Text('Sign Out'),
                   ),
                 ],

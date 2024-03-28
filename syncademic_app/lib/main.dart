@@ -68,10 +68,6 @@ final _router = GoRouter(
       return null;
     }
 
-    if (state.fullPath == '/welcome') {
-      return '/welcome';
-    }
-
     return '/welcome';
   },
   initialLocation: '/welcome',

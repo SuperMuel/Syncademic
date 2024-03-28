@@ -65,6 +65,10 @@ final _router = GoRouter(
   redirect: (context, state) async {
     final user = GetIt.I<AuthService>().currentUser;
     if (user != null) {
+      if (state.fullPath == '/welcome') {
+        // Logged in users should be redirected to the home screen if they try to access the welcome screen
+        return '/';
+      }
       return null;
     }
 

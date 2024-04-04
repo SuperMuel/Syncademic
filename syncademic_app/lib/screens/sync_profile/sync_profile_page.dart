@@ -128,6 +128,8 @@ class _SyncProfileBody extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              const _AuthorizeButton(),
+              const SizedBox(width: 16),
               _RequestSyncButton(syncProfile: syncProfile),
               const SizedBox(width: 16),
               ElevatedButton.icon(
@@ -146,6 +148,23 @@ class _SyncProfileBody extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AuthorizeButton extends StatelessWidget {
+  const _AuthorizeButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: context.read<SyncProfileCubit>().authorizeBackend,
+      icon: const Icon(Icons.lock),
+      label: const Text('Authorize Backend'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
     );
   }

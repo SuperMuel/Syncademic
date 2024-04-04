@@ -57,6 +57,7 @@ dependencies:
   cloud_functions: ^4.6.8
   flutter_svg: ^2.0.10+1
   flutter_animate: ^4.5.0
+  google_sign_in_platform_interface: ^2.4.5
 
 dev_dependencies:
   flutter_test:

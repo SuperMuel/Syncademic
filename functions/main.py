@@ -1,5 +1,8 @@
+import os
+from flask import redirect
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import Flow
 
 import logging
 from typing import Any
@@ -38,7 +41,7 @@ CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
-def get_calendar_service(access_token: str):
+def get_calendar_service(access_token: str, refresh_token: str | None = None):
     if not access_token or not isinstance(access_token, str):
         raise ValueError(f"{access_token=} : Not a valid access token")
 
@@ -46,6 +49,9 @@ def get_calendar_service(access_token: str):
     credentials = Credentials(
         client_id=CLIENT_ID.value,
         token=access_token,
+        refresh_token=refresh_token,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_secret=CLIENT_SECRET.value,
     )
 
     # Build the Google Calendar API service
@@ -102,7 +108,10 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
     doc = sync_profile_ref.get()
 
     # is synchronization in progress, do nothing
-    if doc.get("status.type") == "inProgress":
+    # TODO: If no status.type ??
+
+    status = doc.get("status")
+    if status and status.get("type") == "inProgress":
         logger.info("Synchronization is in progress, skipping")
         return
 
@@ -124,7 +133,10 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
             syncProfileId=sync_profile_id,
             icsSourceUrl=doc.get("scheduleSource.url"),
             targetCalendarId=doc.get("targetCalendar.id"),
-            service=get_calendar_service(doc.get("targetCalendar.accessToken")),
+            service=get_calendar_service(
+                doc.get("targetCalendar.accessToken"),
+                doc.get("targetCalendar.refreshToken"),
+            ),
             middlewares=[TitlePrettifier, ExamPrettifier],
         )
     except Exception as e:
@@ -149,3 +161,145 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
     )
 
     logger.info("Synchronization completed successfully")
+
+
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+from google.auth.exceptions import GoogleAuthError
+
+from firebase_functions import https_fn
+from firebase_admin import firestore
+
+
+@https_fn.on_call()
+def authorize_backend(request: https_fn.CallableRequest) -> dict:
+    if request.auth is None:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthenticated"
+        )
+
+    auth_code = request.data.get("authCode")
+
+    if not auth_code:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing authorization code"
+        )
+
+    user_id = request.auth.uid
+
+    sync_profile_id = request.data.get("syncProfileId")
+
+    if not sync_profile_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing sync profile ID"
+        )
+
+    db = firestore.client()
+
+    sync_profile_ref = (
+        db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+    )
+
+    if not sync_profile_ref.get().exists:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+        )
+
+    try:
+        os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": CLIENT_ID.value,
+                    "client_secret": CLIENT_SECRET.value,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                }
+            },
+            scopes=[
+                "https://www.googleapis.com/auth/calendar",
+            ],
+            # "email profile openid https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email","authuser"
+            redirect_uri="http://localhost:7357",
+        )
+
+        flow.fetch_token(code=auth_code)
+
+        credentials = flow.credentials
+        access_token = credentials.token
+        refresh_token = credentials.refresh_token
+    except Exception as e:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL,
+            f"An error occurred while exchanging the authorization code: {str(e)}",
+        )
+
+    sync_profile_ref.update(
+        {
+            "targetCalendar.accessToken": access_token,
+            "targetCalendar.refreshToken": refresh_token,
+        }
+    )
+
+    return {"success": True}
+
+
+# @https_fn.on_request()
+# def exchange_auth_code(request: https_fn.Request) -> https_fn.Response:
+#     if request.method != "POST":
+#         return https_fn.Response("Method not allowed", status_code=405)
+
+#     auth_code = request.form.get("code")
+#     user_id = request.form.get("userId")
+#     sync_profile_id = request.form.get("syncProfileId")
+
+#     if not auth_code or not user_id or not sync_profile_id:
+#         return https_fn.Response("Missing required parameters", status_code=400)
+
+#     try:
+#         flow = Flow.from_client_config(
+#             {
+#                 "web": {
+#                     "client_id": CLIENT_ID.value,
+#                     "client_secret": CLIENT_SECRET.value,
+#                     "redirect_uris": [REDIRECT_URI.value],
+#                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+#                     "token_uri": "https://oauth2.googleapis.com/token",
+#                 }
+#             },
+#             scopes=["https://www.googleapis.com/auth/calendar"],
+#         )
+
+#         flow.redirect_uri = REDIRECT_URI.value
+#         flow.fetch_token(code=auth_code)
+
+#         credentials = flow.credentials
+#         access_token = credentials.token
+#         refresh_token = credentials.refresh_token
+
+#         db = firestore.client()
+#         sync_profile_ref = (
+#             db.collection("users")
+#             .document(user_id)
+#             .collection("syncProfiles")
+#             .document(sync_profile_id)
+#         )
+
+#         sync_profile_ref.update(
+#             {
+#                 "targetCalendar": {
+#                     "accessToken": access_token,
+#                     "refreshToken": refresh_token,
+#                 }
+#             }
+#         )
+
+#         return https_fn.Response("Access token stored successfully", status_code=200)
+
+#     except Exception as e:
+#         return https_fn.Response(f"Error: {str(e)}", status_code=500)

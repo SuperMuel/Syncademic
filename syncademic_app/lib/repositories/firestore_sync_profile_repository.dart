@@ -23,6 +23,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
         'title': syncProfile.targetCalendar.title,
         'accessToken': syncProfile.targetCalendar.accessToken,
       },
+      'status': {'type': 'notStarted'}
     });
   }
 

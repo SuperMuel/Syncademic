@@ -27,7 +27,7 @@ class MockAuthorizationService implements AuthorizationService {
   Future<String?> get accessToken => Future.value(null);
 }
 
-final _scopes = [CalendarApi.calendarScope, CalendarApi.calendarEventsScope];
+final _scopes = [CalendarApi.calendarScope];
 
 class GoogleAuthorizationService implements AuthorizationService {
   final GoogleSignIn _googleSignIn;

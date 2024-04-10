@@ -77,7 +77,7 @@ class GoogleCalendarManager:
             timeMin=min_dt.astimezone(pytz.utc).isoformat() if min_dt else None,
         )
 
-        while request:
+        while request:  # TODO : Add a limit to avoid infinite loops
             response = request.execute()
             events_as_dict.extend(response.get("items", []))
             request = self.service.events().list_next(request, response)

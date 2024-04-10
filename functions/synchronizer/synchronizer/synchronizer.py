@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from .middleware.middleware import Middleware
@@ -21,8 +21,6 @@ def perform_synchronization(
     service,
     middlewares: Optional[List[Middleware]] = None,
 ) -> SynchronizationResult:
-    # TODO : delete previous events
-
     ics_str = UrlIcsSource(icsSourceUrl).get_ics_string()
 
     events = list(set(IcsParser().parse(ics_str)))
@@ -37,7 +35,7 @@ def perform_synchronization(
 
     calendar_manager.test_authorization()
 
-    separation_dt = datetime.now()
+    separation_dt = datetime.now(timezone.utc)
 
     future_events_ids = calendar_manager.get_events_ids_from_sync_profile(
         syncProfileId, separation_dt
@@ -45,7 +43,8 @@ def perform_synchronization(
 
     calendar_manager.delete_events(future_events_ids)
 
-    new_events = [event for event in events if event.end < separation_dt]
+    # TODO : If first synchronization, add all events. Otherwise, add only new events.
+    new_events = [event for event in events if event.end > separation_dt]
 
     calendar_manager.create_events(new_events, syncProfileId)
 

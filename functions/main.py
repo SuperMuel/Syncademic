@@ -217,7 +217,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
                 }
             },
             scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri="http://localhost:7357",
+            redirect_uri="https://syncademic-36c18.web.app",
         )
 
         flow.fetch_token(code=auth_code)

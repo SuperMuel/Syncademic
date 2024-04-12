@@ -19,7 +19,7 @@ class FirebaseBackendAuthorizationService
 
     if (authCode == null) {
       log('Authorization code is null !');
-      return;
+      throw Exception('Authorization code is null');
     }
 
     log("Got authorization code. Sending it to the backend.");

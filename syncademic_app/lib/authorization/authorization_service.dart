@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:google_sign_in_web/web_only.dart';
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:googleapis/calendar/v3.dart';
 import 'package:http/http.dart' as http;
 
@@ -46,7 +44,6 @@ class GoogleAuthorizationService implements AuthorizationService {
             GoogleSignIn(
               scopes: _scopes,
               clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
-              forceCodeForRefreshToken: true,
             );
 
   @override
@@ -57,11 +54,7 @@ class GoogleAuthorizationService implements AuthorizationService {
       return null;
     }
 
-    final authCode = await requestServerAuthCode();
-
-    log('Sucessfully got authCode');
-
-    return authCode;
+    return await requestServerAuthCode();
   }
 
   @override

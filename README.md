@@ -1,25 +1,190 @@
 # Syncademic
 
-The goal of this service is to provide students with a seamless and user-friendly way to integrate
-their university schedules into their Google Calendars. By allowing users to simply provide the URL
-of their university's schedule, the service takes care of automatically and regularly updating the 
-user's Google Calendar with their class schedules in the background, without requiring any further 
-user interaction.
-
+Syncademic effortlessly syncs your university schedule with your Google Calendar 📅. Just provide your schedule's URL, and we handle the rest—updating your calendar automatically with every class change. 🔄 Enjoy a unified view of all your commitments, color-coded events, and real-time updates, all in one place. Perfect for students who want to stay organized and ahead! 🎓✨
 
 This approach offers several key benefits:
 
-1. **Improved user experience**: Students can leverage the familiar and visually appealing interface of Google Calendar, accessible across multiple platforms, instead of relying on the often cumbersome and outdated scheduling tools provided by their universities.
+1. **Improved user experience**: Students use the familiar, multi-platform Google Calendar, avoiding clunky university tools.
+2. **Comprehensive view**: All academic, personal, and professional commitments are visible in one place for better planning and conflict avoidance.
+3. **Automation and convenience**: The service handles all aspects of schedule synchronization effortlessly.
+4. **Real-time updates**: Updates are frequent, ensuring students never miss important class changes. Updates triggered by one student benefit all users instantly.
+5. **Customization and personalization**: Offers options like color-coding and event title enhancements for better schedule visibility.
+6. **Multiple time schedules**: Ideal for students with multiple degrees or institutions, consolidating various schedules into a single Google Calendar view for easier management.
 
-2. **Comprehensive view**: With their university schedule seamlessly synchronized to their Google Calendar, students can view and manage all their commitments, whether academic, personal, or professional, in one convenient location. This comprehensive view allows for better planning and time management, and avoid conflicts. 
+# Vocabulary used
 
-3. **Automation and convenience**: Once the schedule URL is provided, the service handles the entire process of fetching, parsing, and synchronizing the schedule data with the user's Google Calendar. Our service does not add any complexity. 
+- **User :** Someone using Syncademic to synchronize a time schedule. Mostly students but can be teachers
+- **Time Schedule :** A structured list of academic events, such as lectures, seminars, and exams, organized in a calendar format.
+- **Event :** One event of a Time Schedule or an electronic agenda. Has a start and end date, a title, description and location. Can optionally have a colour.
+- **Time Schedule Source :** Identifies the source of a schedule, typically a URL from which schedule data can be imported or synchronized.
+    - **Current Format Requirement:** The URL must specifically link to an .ICS file, which is typically hosted on institution servers, such as those of a school or university.
+    - **Future Compatibility:** Plans are in place to support additional data sources for broader schedule integration capabilities.
+- **Target Calendar :** The calendar where events from the Schedule Source are to be synchronized. Typically, a Google Calendar.
+    - This does not define a Google Account, since users can have multiple calendars in the same Google Account. A target Calendar refers to a single Calendar in a user’s account.
+- **Sync Profile** : (Synchronization Profile) Defines a user configuration for a synchronisation request between a **Time Schedule** and one **Target Calendar**
+    - Users can have multiple Sync Profiles
+- **Backend Authorization** : Refers to the permissions granted to Syncademic's backend by a user to access and modify one of their electronic agenda (such as a Google Calendar). It may include an access token and a refresh token, and may specify the scope of permitted actions. The status indicates whether access is granted or denied.
+    - The Backend Authorization must lats as long as the user is not deleting the Sync Profile. It must last for months. If the authorization is revoked, the user must be alerted.
 
-4. **Real time updates** : Unlike other scheduling tools that may take hours or even days to reflect changes, our solution can automatically update users' calendars at an unrestricted rate. This ensures that any modifications to class times or locations are promptly reflected, preventing students from missing important schedule changes. Moreover, if one student triggers an update after becoming aware of a timetable alteration, all other users benefit from the change being immediately propagated to their calendars, fostering a synchronized and up-to-date experience across the entire user base.
+## Frontend
 
-5. **Customization and personalization**: The service aims to provide options for customizing the appearance and organization of the schedule events within Google Calendar, such as color-coding based on courses or improving event titles for better readability.
+The user interface (UI) for Syncademic is developed using Flutter.
 
-6. **Multiple time schedules**: This service greatly benefits students pursuing multiple degrees or attending different institutions by consolidating various schedules into a single, unified Google Calendar view. It enables these students to effortlessly manage and visualize all their commitments in one place and identifying conflicts, simplifying the process of organizing their academic lives.
+**Goal**
 
+- Authenticate users via Firebase Authentication with Google Sign-In.
+- Allow users to input the URL of their time schedule.
+- Enable users to select their Target Calendar for event synchronization.
+- Authorize the backend to modify the user's calendar autonomously.
 
+**Considerations**
 
+- To select a Target Calendar, users complete an OAuth flow, which permits the frontend to display a list of their calendars and potentially create a new one for synchronization.
+- Separate authorization processes are necessary for the frontend and backend: the frontend to display calendar options and the backend for calendar modifications. The frontend's authorization typically expires shortly after its use, as it's needed only for initial setup.
+
+**UI/UX**
+
+- The UI should simplify the synchronization process, guiding users step-by-step.
+- Visual aids and graphics should illustrate how synchronization works, enhancing user understanding and interaction.
+
+**Hosting**
+
+- The Flutter application is compiled as a web app and hosted on Firebase Hosting.
+
+**Communication with the Backend**
+
+- The app primarily interacts with Firebase Firestore for data operations.
+- For actions like manually triggering synchronization, Cloud Function calls are used.
+
+**Translation**
+
+- The app is currently available in English. A translation library should be implemented to support additional languages, and appropriate translations provided.
+
+## Backend
+
+The backend is primarily built on Firebase Cloud Functions.
+
+**Authentication**
+
+- User authentication is managed through Firebase Auth.
+
+**Database**
+
+- Data storage and management are handled by Firebase Firestore (a NoSQL database).
+
+**Synchronization Process**
+
+- The backend continuously monitors SyncProfiles to ensure they are valid and initiates synchronization for each valid profile.
+- A SyncProfile is deemed valid if the Schedule Source URL is correct and the backend has the necessary authorization to modify the Target Calendar.
+- Synchronization is automatically triggered the first time a SyncProfile becomes valid, typically right after its creation.
+
+**Authorization Handling**
+
+- The backend is responsible for converting an Authorization Code into access tokens. (See OAuth section)
+
+## Firebase Firestore
+
+### Schema
+
+`users` collection
+
+Fields of each document : 
+
+- `id`
+- `email`
+
+Sub collections
+
+- `SyncProfiles`
+    - Fields of each document :
+        - `title`
+        - `scheduleSource`
+            - `url`
+        - `status`
+            - `type`
+        - `targetCalendar`
+            - `id`
+            - `title`
+
+### Security Rules
+
+Firestore security rules must be correctly defined in order to guarantee the safety of user data.
+
+## Supported Electronic Agendas
+
+**Current Support**
+
+- Syncademic currently supports only Google Calendar. This integration is facilitated through the Google Calendar API v3, which allows efficient synchronization.
+
+**Future Plans**
+
+- We aim to extend support to a wider range of electronic agendas. Our goal is to accommodate as many target calendar platforms as possible, enhancing the versatility and reach of Syncademic.
+
+# OAuth 2.0
+
+OAuth 2.0 is a crucial protocol that enables secure authorization functionalities for our service, particularly in accessing users' Target Calendars.
+
+**Overview**
+
+- The backend requires authorization to access the user's Target Calendars for the duration that the SyncProfile is active.
+- The frontend primarily facilitates the OAuth flow, allowing users to authorize access securely.
+
+**Authorization Flow**
+
+- We utilize the "Authorization Code" flow:
+    - The frontend obtains an Authorization Code which is then sent to the backend via a function call.
+    - The backend exchanges this code for an Access Token and a Refresh Token.
+    - These tokens are subsequently stored in Firestore within the TargetCalendar field of the SyncProfile.
+
+**Security Consideration**
+
+- A current point of discussion is whether users should have access to these tokens. As it stands, tokens are accessible to users based on existing security rules.
+- Consideration is being given to storing tokens in a separate collection that only the backend can access, enhancing security and restricting direct user access to sensitive information.
+
+# Synchronization Process
+
+The synchronization of events between a user's Time Schedule and their Target Calendar is a crucial functionality facilitated by the Google Calendar API v3. This process requires a valid access token.
+
+**Synchronization Steps:**
+
+1. **Fetch Time Schedule Events:**
+    - The process begins by attempting to fetch events from the Time Schedule. If events cannot be fetched, the synchronization is halted, and an error is communicated to the user, possibly through email or a mobile notification.
+2. **Apply Customizations:**
+    - Enhancements such as improving event titles or adding colors are applied to the events before synchronization.
+3. **Update Target Calendar:**
+    - All future events in the Target Calendar are deleted and replaced with the new, customized events.
+    - To preserve the user’s personal events, only those created by Syncademic are deleted. This is achieved by marking each Syncademic event with the SyncProfile’s ID using Google Calendar's extended properties feature (`{"private": {"syncademic": sync_profile_id}}`).
+
+**Current Limitations and Future Improvements:**
+
+- Currently, the system deletes and replaces all future events during each synchronization cycle, which is not the most efficient method.
+- Moving forward, we aim to enhance efficiency by identifying and updating only those events that have changed, rather than replacing all events. This will optimize performance and reduce the load on both the server and the user's calendar.
+
+# Customization
+
+The primary goal of Syncademic is to enhance the visual appeal of time schedules for students and teachers. Traditional time schedules often lack color and can have cryptic titles, making them hard to understand and visually unattractive.
+
+**Problem Statement:**
+
+- Common time schedules may use opaque identifiers like `HU-L-S1-CMP-ANG-4--ING:TD` instead of more descriptive and straightforward titles such as `Anglais TD`.
+- These schedules typically do not utilize colors, which can help in distinguishing different types of events at a glance.
+
+**Syncademic Customizations:**
+To address these issues, Syncademic applies customization rules to events between fetching the TimeSchedule and updating the Target Calendar:
+
+**Examples of Customization Rules:**
+
+1. **Color Coding:**
+    - `If "Machine Learning" is in the description, then make the event blue.`
+    - This rule enhances the visual appeal and helps students quickly identify specific classes.
+2. **Event Filtering:**
+    - `If "Anglais" is in the description, then delete the event.`
+    - Useful for users who want to exclude irrelevant courses automatically included in their schedules.
+3. **Title Enhancement:**
+    - `Find the text between '[' and ']' in the description and place that in the title.`
+    - Improves event titles by extracting and using more descriptive text found within the event details.
+
+**Current Implementation and Future Plans:**
+
+- Currently, customization rules are hardcoded into the backend.
+- Moving forward, we aim to empower users by allowing them to choose or define their own customization rules. This flexibility will enable users to tailor their calendars to better meet their personal needs and preferences.

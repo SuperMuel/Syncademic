@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/authorization/backend_authorization_service.dart';
 import 'screens/landing_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'services/sync_profile_service.dart';
@@ -56,6 +57,10 @@ void main() async {
   );
 
   getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
+
+  getIt.registerSingleton<BackendAuthorizationService>(
+    FirebaseBackendAuthorizationService(),
+  );
 
   runApp(const MyApp());
 }

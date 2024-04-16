@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/authorization/backend_authorization_service.dart';
+import 'authorization/backend_authorization_service.dart';
+import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
 import 'screens/landing_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'services/sync_profile_service.dart';
@@ -15,7 +16,6 @@ import 'firebase_options.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'screens/account/account_page.dart';
-import 'screens/new_sync_profile/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
 import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
 import 'screens/sync_profile/sync_profile_page.dart';
@@ -36,7 +36,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Register the SyncProfileRepository
   getIt.registerSingleton<SyncProfileRepository>(
     FirestoreSyncProfileRepository(),
     // MockSyncProfileRepository()
@@ -46,6 +45,7 @@ void main() async {
   );
 
   getIt.registerSingleton<AuthService>(FirebaseAuthService());
+  //getIt.registerSingleton<AuthService>(MockAuthService());
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
@@ -112,7 +112,7 @@ final _router = GoRouter(
               BlocProvider(create: (_) => NewSyncProfileCubit()),
               BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
             ],
-            child: const NewSyncConfigPage(),
+            child: const NewSyncProfilePage(),
           );
         }),
   ],

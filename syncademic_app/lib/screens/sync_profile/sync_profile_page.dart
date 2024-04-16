@@ -3,8 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/sync_profile_status.dart';
+
 import '../../models/sync_profile.dart';
+import '../../models/sync_profile_status.dart';
 import '../../repositories/sync_profile_repository.dart';
 import 'cubit/sync_profile_cubit.dart';
 

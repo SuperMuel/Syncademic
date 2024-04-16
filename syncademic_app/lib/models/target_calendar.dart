@@ -10,5 +10,6 @@ class TargetCalendar with _$TargetCalendar {
     required ID id,
     required String title,
     String? accessToken,
+    bool? createdBySyncademic,
   }) = _TargetCalendar;
 }

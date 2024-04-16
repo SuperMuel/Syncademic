@@ -16,14 +16,16 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$NewSyncProfileState {
-  String get url => throw _privateConstructorUsedError;
+  int get currentStep => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get titleError => throw _privateConstructorUsedError;
+  String get url => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
+  TargetCalendar? get targetCalendar => throw _privateConstructorUsedError;
+  String? get backendAuthorization => throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
-  bool get isSuccess => throw _privateConstructorUsedError;
-  String? get errorMessage => throw _privateConstructorUsedError;
-  TargetCalendar? get selectedCalendar => throw _privateConstructorUsedError;
+  String? get submitError => throw _privateConstructorUsedError;
+  bool get submittedSuccessfully => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $NewSyncProfileStateCopyWith<NewSyncProfileState> get copyWith =>
@@ -37,16 +39,18 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       _$NewSyncProfileStateCopyWithImpl<$Res, NewSyncProfileState>;
   @useResult
   $Res call(
-      {String url,
+      {int currentStep,
       String title,
       String? titleError,
+      String url,
       String? urlError,
+      TargetCalendar? targetCalendar,
+      String? backendAuthorization,
       bool isSubmitting,
-      bool isSuccess,
-      String? errorMessage,
-      TargetCalendar? selectedCalendar});
+      String? submitError,
+      bool submittedSuccessfully});
 
-  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
+  $TargetCalendarCopyWith<$Res>? get targetCalendar;
 }
 
 /// @nodoc
@@ -62,20 +66,22 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? url = null,
+    Object? currentStep = null,
     Object? title = null,
     Object? titleError = freezed,
+    Object? url = null,
     Object? urlError = freezed,
+    Object? targetCalendar = freezed,
+    Object? backendAuthorization = freezed,
     Object? isSubmitting = null,
-    Object? isSuccess = null,
-    Object? errorMessage = freezed,
-    Object? selectedCalendar = freezed,
+    Object? submitError = freezed,
+    Object? submittedSuccessfully = null,
   }) {
     return _then(_value.copyWith(
-      url: null == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
-              as String,
+      currentStep: null == currentStep
+          ? _value.currentStep
+          : currentStep // ignore: cast_nullable_to_non_nullable
+              as int,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -84,38 +90,46 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.titleError
           : titleError // ignore: cast_nullable_to_non_nullable
               as String?,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
       urlError: freezed == urlError
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
+              as String?,
+      targetCalendar: freezed == targetCalendar
+          ? _value.targetCalendar
+          : targetCalendar // ignore: cast_nullable_to_non_nullable
+              as TargetCalendar?,
+      backendAuthorization: freezed == backendAuthorization
+          ? _value.backendAuthorization
+          : backendAuthorization // ignore: cast_nullable_to_non_nullable
               as String?,
       isSubmitting: null == isSubmitting
           ? _value.isSubmitting
           : isSubmitting // ignore: cast_nullable_to_non_nullable
               as bool,
-      isSuccess: null == isSuccess
-          ? _value.isSuccess
-          : isSuccess // ignore: cast_nullable_to_non_nullable
-              as bool,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
+      submitError: freezed == submitError
+          ? _value.submitError
+          : submitError // ignore: cast_nullable_to_non_nullable
               as String?,
-      selectedCalendar: freezed == selectedCalendar
-          ? _value.selectedCalendar
-          : selectedCalendar // ignore: cast_nullable_to_non_nullable
-              as TargetCalendar?,
+      submittedSuccessfully: null == submittedSuccessfully
+          ? _value.submittedSuccessfully
+          : submittedSuccessfully // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 
   @override
   @pragma('vm:prefer-inline')
-  $TargetCalendarCopyWith<$Res>? get selectedCalendar {
-    if (_value.selectedCalendar == null) {
+  $TargetCalendarCopyWith<$Res>? get targetCalendar {
+    if (_value.targetCalendar == null) {
       return null;
     }
 
-    return $TargetCalendarCopyWith<$Res>(_value.selectedCalendar!, (value) {
-      return _then(_value.copyWith(selectedCalendar: value) as $Val);
+    return $TargetCalendarCopyWith<$Res>(_value.targetCalendar!, (value) {
+      return _then(_value.copyWith(targetCalendar: value) as $Val);
     });
   }
 }
@@ -129,17 +143,19 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String url,
+      {int currentStep,
       String title,
       String? titleError,
+      String url,
       String? urlError,
+      TargetCalendar? targetCalendar,
+      String? backendAuthorization,
       bool isSubmitting,
-      bool isSuccess,
-      String? errorMessage,
-      TargetCalendar? selectedCalendar});
+      String? submitError,
+      bool submittedSuccessfully});
 
   @override
-  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
+  $TargetCalendarCopyWith<$Res>? get targetCalendar;
 }
 
 /// @nodoc
@@ -153,20 +169,22 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? url = null,
+    Object? currentStep = null,
     Object? title = null,
     Object? titleError = freezed,
+    Object? url = null,
     Object? urlError = freezed,
+    Object? targetCalendar = freezed,
+    Object? backendAuthorization = freezed,
     Object? isSubmitting = null,
-    Object? isSuccess = null,
-    Object? errorMessage = freezed,
-    Object? selectedCalendar = freezed,
+    Object? submitError = freezed,
+    Object? submittedSuccessfully = null,
   }) {
     return _then(_$NewSyncProfileStateImpl(
-      url: null == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
-              as String,
+      currentStep: null == currentStep
+          ? _value.currentStep
+          : currentStep // ignore: cast_nullable_to_non_nullable
+              as int,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -175,26 +193,34 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.titleError
           : titleError // ignore: cast_nullable_to_non_nullable
               as String?,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
       urlError: freezed == urlError
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
+              as String?,
+      targetCalendar: freezed == targetCalendar
+          ? _value.targetCalendar
+          : targetCalendar // ignore: cast_nullable_to_non_nullable
+              as TargetCalendar?,
+      backendAuthorization: freezed == backendAuthorization
+          ? _value.backendAuthorization
+          : backendAuthorization // ignore: cast_nullable_to_non_nullable
               as String?,
       isSubmitting: null == isSubmitting
           ? _value.isSubmitting
           : isSubmitting // ignore: cast_nullable_to_non_nullable
               as bool,
-      isSuccess: null == isSuccess
-          ? _value.isSuccess
-          : isSuccess // ignore: cast_nullable_to_non_nullable
-              as bool,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
+      submitError: freezed == submitError
+          ? _value.submitError
+          : submitError // ignore: cast_nullable_to_non_nullable
               as String?,
-      selectedCalendar: freezed == selectedCalendar
-          ? _value.selectedCalendar
-          : selectedCalendar // ignore: cast_nullable_to_non_nullable
-              as TargetCalendar?,
+      submittedSuccessfully: null == submittedSuccessfully
+          ? _value.submittedSuccessfully
+          : submittedSuccessfully // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -203,44 +229,47 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
 
 class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   const _$NewSyncProfileStateImpl(
-      {this.url = '',
+      {this.currentStep = 0,
       this.title = '',
-      this.titleError = null,
-      this.urlError = null,
+      this.titleError,
+      this.url = '',
+      this.urlError,
+      this.targetCalendar,
+      this.backendAuthorization,
       this.isSubmitting = false,
-      this.isSuccess = false,
-      this.errorMessage = null,
-      this.selectedCalendar = null})
+      this.submitError,
+      this.submittedSuccessfully = false})
       : super._();
 
   @override
   @JsonKey()
-  final String url;
+  final int currentStep;
   @override
   @JsonKey()
   final String title;
   @override
-  @JsonKey()
   final String? titleError;
   @override
   @JsonKey()
+  final String url;
+  @override
   final String? urlError;
+  @override
+  final TargetCalendar? targetCalendar;
+  @override
+  final String? backendAuthorization;
   @override
   @JsonKey()
   final bool isSubmitting;
   @override
-  @JsonKey()
-  final bool isSuccess;
+  final String? submitError;
   @override
   @JsonKey()
-  final String? errorMessage;
-  @override
-  @JsonKey()
-  final TargetCalendar? selectedCalendar;
+  final bool submittedSuccessfully;
 
   @override
   String toString() {
-    return 'NewSyncProfileState(url: $url, title: $title, titleError: $titleError, urlError: $urlError, isSubmitting: $isSubmitting, isSuccess: $isSuccess, errorMessage: $errorMessage, selectedCalendar: $selectedCalendar)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, backendAuthorization: $backendAuthorization, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -248,25 +277,39 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$NewSyncProfileStateImpl &&
-            (identical(other.url, url) || other.url == url) &&
+            (identical(other.currentStep, currentStep) ||
+                other.currentStep == currentStep) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.titleError, titleError) ||
                 other.titleError == titleError) &&
+            (identical(other.url, url) || other.url == url) &&
             (identical(other.urlError, urlError) ||
                 other.urlError == urlError) &&
+            (identical(other.targetCalendar, targetCalendar) ||
+                other.targetCalendar == targetCalendar) &&
+            (identical(other.backendAuthorization, backendAuthorization) ||
+                other.backendAuthorization == backendAuthorization) &&
             (identical(other.isSubmitting, isSubmitting) ||
                 other.isSubmitting == isSubmitting) &&
-            (identical(other.isSuccess, isSuccess) ||
-                other.isSuccess == isSuccess) &&
-            (identical(other.errorMessage, errorMessage) ||
-                other.errorMessage == errorMessage) &&
-            (identical(other.selectedCalendar, selectedCalendar) ||
-                other.selectedCalendar == selectedCalendar));
+            (identical(other.submitError, submitError) ||
+                other.submitError == submitError) &&
+            (identical(other.submittedSuccessfully, submittedSuccessfully) ||
+                other.submittedSuccessfully == submittedSuccessfully));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, url, title, titleError, urlError,
-      isSubmitting, isSuccess, errorMessage, selectedCalendar);
+  int get hashCode => Object.hash(
+      runtimeType,
+      currentStep,
+      title,
+      titleError,
+      url,
+      urlError,
+      targetCalendar,
+      backendAuthorization,
+      isSubmitting,
+      submitError,
+      submittedSuccessfully);
 
   @JsonKey(ignore: true)
   @override
@@ -278,32 +321,38 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
 abstract class _NewSyncProfileState extends NewSyncProfileState {
   const factory _NewSyncProfileState(
-      {final String url,
+      {final int currentStep,
       final String title,
       final String? titleError,
+      final String url,
       final String? urlError,
+      final TargetCalendar? targetCalendar,
+      final String? backendAuthorization,
       final bool isSubmitting,
-      final bool isSuccess,
-      final String? errorMessage,
-      final TargetCalendar? selectedCalendar}) = _$NewSyncProfileStateImpl;
+      final String? submitError,
+      final bool submittedSuccessfully}) = _$NewSyncProfileStateImpl;
   const _NewSyncProfileState._() : super._();
 
   @override
-  String get url;
+  int get currentStep;
   @override
   String get title;
   @override
   String? get titleError;
   @override
+  String get url;
+  @override
   String? get urlError;
+  @override
+  TargetCalendar? get targetCalendar;
+  @override
+  String? get backendAuthorization;
   @override
   bool get isSubmitting;
   @override
-  bool get isSuccess;
+  String? get submitError;
   @override
-  String? get errorMessage;
-  @override
-  TargetCalendar? get selectedCalendar;
+  bool get submittedSuccessfully;
   @override
   @JsonKey(ignore: true)
   _$$NewSyncProfileStateImplCopyWith<_$NewSyncProfileStateImpl> get copyWith =>

@@ -8,8 +8,11 @@ class StepperState with _$StepperState {
     String? titleError,
     @Default('') String url,
     String? urlError,
-    @Default(null) TargetCalendar? targetCalendar,
-    @Default(null) String? backendAuthorization,
+    TargetCalendar? targetCalendar,
+    String? backendAuthorization,
+    @Default(false) bool isSubmitting,
+    String? submitError,
+    @Default(false) bool submittedSuccessfully,
   }) = _StepperState;
 
   const StepperState._();

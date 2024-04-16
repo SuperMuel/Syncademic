@@ -72,9 +72,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
 
     try {
       await repo.createSyncProfile(syncProfile);
-      emit(state.copyWith(isSuccess: true));
+      emit(state.copyWith(isSuccess: true, isSubmitting: false));
     } catch (e) {
-      emit(state.copyWith(errorMessage: e.toString()));
+      emit(state.copyWith(
+          errorMessage: e.toString(), isSubmitting: false, isSuccess: false));
     }
   }
 

@@ -1,7 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/models/id.dart';
+import 'package:syncademic_app/models/schedule_source.dart';
+import 'package:syncademic_app/models/sync_profile.dart';
 import 'package:syncademic_app/models/target_calendar.dart';
+import 'package:syncademic_app/repositories/sync_profile_repository.dart';
 import 'package:validators/validators.dart';
 
 part 'stepper_state.dart';
@@ -56,14 +61,44 @@ class StepperCubit extends Cubit<StepperState> {
   void next() {
     if (state.canContinue) {
       emit(state.copyWith(currentStep: state.currentStep + 1));
-    } else {
-      print('StepperCubit: next: cannot continue');
     }
   }
 
   void previous() {
     if (state.canGoBack) {
       emit(state.copyWith(currentStep: state.currentStep - 1));
+    }
+  }
+
+  Future<void> submit() async {
+    if (isBlank(state.title) ||
+        isBlank(state.url) ||
+        state.targetCalendar == null ||
+        state.titleError != null ||
+        state.urlError != null) {
+      throw StateError('Cannot submit with invalid data');
+    }
+
+    emit(state.copyWith(isSubmitting: true));
+
+    final scheduleSource = ScheduleSource(
+      url: state.url,
+    );
+
+    final syncProfile = SyncProfile(
+      id: ID(),
+      title: state.title,
+      scheduleSource: scheduleSource,
+      targetCalendar: state.targetCalendar!,
+    );
+
+    final repo = GetIt.I<SyncProfileRepository>();
+
+    try {
+      await repo.createSyncProfile(syncProfile);
+      emit(state.copyWith(submittedSuccessfully: true));
+    } catch (e) {
+      emit(state.copyWith(submitError: e.toString()));
     }
   }
 }

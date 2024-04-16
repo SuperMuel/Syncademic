@@ -23,6 +23,9 @@ mixin _$StepperState {
   String? get urlError => throw _privateConstructorUsedError;
   TargetCalendar? get targetCalendar => throw _privateConstructorUsedError;
   String? get backendAuthorization => throw _privateConstructorUsedError;
+  bool get isSubmitting => throw _privateConstructorUsedError;
+  String? get submitError => throw _privateConstructorUsedError;
+  bool get submittedSuccessfully => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $StepperStateCopyWith<StepperState> get copyWith =>
@@ -42,7 +45,10 @@ abstract class $StepperStateCopyWith<$Res> {
       String url,
       String? urlError,
       TargetCalendar? targetCalendar,
-      String? backendAuthorization});
+      String? backendAuthorization,
+      bool isSubmitting,
+      String? submitError,
+      bool submittedSuccessfully});
 
   $TargetCalendarCopyWith<$Res>? get targetCalendar;
 }
@@ -67,6 +73,9 @@ class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
     Object? urlError = freezed,
     Object? targetCalendar = freezed,
     Object? backendAuthorization = freezed,
+    Object? isSubmitting = null,
+    Object? submitError = freezed,
+    Object? submittedSuccessfully = null,
   }) {
     return _then(_value.copyWith(
       currentStep: null == currentStep
@@ -97,6 +106,18 @@ class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
           ? _value.backendAuthorization
           : backendAuthorization // ignore: cast_nullable_to_non_nullable
               as String?,
+      isSubmitting: null == isSubmitting
+          ? _value.isSubmitting
+          : isSubmitting // ignore: cast_nullable_to_non_nullable
+              as bool,
+      submitError: freezed == submitError
+          ? _value.submitError
+          : submitError // ignore: cast_nullable_to_non_nullable
+              as String?,
+      submittedSuccessfully: null == submittedSuccessfully
+          ? _value.submittedSuccessfully
+          : submittedSuccessfully // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 
@@ -128,7 +149,10 @@ abstract class _$$StepperStateImplCopyWith<$Res>
       String url,
       String? urlError,
       TargetCalendar? targetCalendar,
-      String? backendAuthorization});
+      String? backendAuthorization,
+      bool isSubmitting,
+      String? submitError,
+      bool submittedSuccessfully});
 
   @override
   $TargetCalendarCopyWith<$Res>? get targetCalendar;
@@ -152,6 +176,9 @@ class __$$StepperStateImplCopyWithImpl<$Res>
     Object? urlError = freezed,
     Object? targetCalendar = freezed,
     Object? backendAuthorization = freezed,
+    Object? isSubmitting = null,
+    Object? submitError = freezed,
+    Object? submittedSuccessfully = null,
   }) {
     return _then(_$StepperStateImpl(
       currentStep: null == currentStep
@@ -182,6 +209,18 @@ class __$$StepperStateImplCopyWithImpl<$Res>
           ? _value.backendAuthorization
           : backendAuthorization // ignore: cast_nullable_to_non_nullable
               as String?,
+      isSubmitting: null == isSubmitting
+          ? _value.isSubmitting
+          : isSubmitting // ignore: cast_nullable_to_non_nullable
+              as bool,
+      submitError: freezed == submitError
+          ? _value.submitError
+          : submitError // ignore: cast_nullable_to_non_nullable
+              as String?,
+      submittedSuccessfully: null == submittedSuccessfully
+          ? _value.submittedSuccessfully
+          : submittedSuccessfully // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -195,8 +234,11 @@ class _$StepperStateImpl extends _StepperState {
       this.titleError,
       this.url = '',
       this.urlError,
-      this.targetCalendar = null,
-      this.backendAuthorization = null})
+      this.targetCalendar,
+      this.backendAuthorization,
+      this.isSubmitting = false,
+      this.submitError,
+      this.submittedSuccessfully = false})
       : super._();
 
   @override
@@ -213,15 +255,21 @@ class _$StepperStateImpl extends _StepperState {
   @override
   final String? urlError;
   @override
-  @JsonKey()
   final TargetCalendar? targetCalendar;
   @override
-  @JsonKey()
   final String? backendAuthorization;
+  @override
+  @JsonKey()
+  final bool isSubmitting;
+  @override
+  final String? submitError;
+  @override
+  @JsonKey()
+  final bool submittedSuccessfully;
 
   @override
   String toString() {
-    return 'StepperState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, backendAuthorization: $backendAuthorization)';
+    return 'StepperState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, backendAuthorization: $backendAuthorization, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -240,12 +288,28 @@ class _$StepperStateImpl extends _StepperState {
             (identical(other.targetCalendar, targetCalendar) ||
                 other.targetCalendar == targetCalendar) &&
             (identical(other.backendAuthorization, backendAuthorization) ||
-                other.backendAuthorization == backendAuthorization));
+                other.backendAuthorization == backendAuthorization) &&
+            (identical(other.isSubmitting, isSubmitting) ||
+                other.isSubmitting == isSubmitting) &&
+            (identical(other.submitError, submitError) ||
+                other.submitError == submitError) &&
+            (identical(other.submittedSuccessfully, submittedSuccessfully) ||
+                other.submittedSuccessfully == submittedSuccessfully));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, currentStep, title, titleError,
-      url, urlError, targetCalendar, backendAuthorization);
+  int get hashCode => Object.hash(
+      runtimeType,
+      currentStep,
+      title,
+      titleError,
+      url,
+      urlError,
+      targetCalendar,
+      backendAuthorization,
+      isSubmitting,
+      submitError,
+      submittedSuccessfully);
 
   @JsonKey(ignore: true)
   @override
@@ -262,7 +326,10 @@ abstract class _StepperState extends StepperState {
       final String url,
       final String? urlError,
       final TargetCalendar? targetCalendar,
-      final String? backendAuthorization}) = _$StepperStateImpl;
+      final String? backendAuthorization,
+      final bool isSubmitting,
+      final String? submitError,
+      final bool submittedSuccessfully}) = _$StepperStateImpl;
   const _StepperState._() : super._();
 
   @override
@@ -279,6 +346,12 @@ abstract class _StepperState extends StepperState {
   TargetCalendar? get targetCalendar;
   @override
   String? get backendAuthorization;
+  @override
+  bool get isSubmitting;
+  @override
+  String? get submitError;
+  @override
+  bool get submittedSuccessfully;
   @override
   @JsonKey(ignore: true)
   _$$StepperStateImplCopyWith<_$StepperStateImpl> get copyWith =>

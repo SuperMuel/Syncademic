@@ -21,9 +21,11 @@ class TargetCalendarCard extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              const Icon(
-                Icons.calendar_today,
-                size: 40,
+              //image icon
+              Image.asset(
+                "assets/icons/google_calendar_icon_1024x1024.png",
+                width: 48,
+                height: 48,
               ),
               const SizedBox(width: 16),
               Expanded(

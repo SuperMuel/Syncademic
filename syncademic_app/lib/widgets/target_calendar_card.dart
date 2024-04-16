@@ -27,22 +27,15 @@ class TargetCalendarCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      targetCalendar.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Tap to change',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                child: Text(
+                  targetCalendar.title,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              const Icon(Icons.chevron_right),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: onPressed,
+              ),
             ],
           ),
         ),

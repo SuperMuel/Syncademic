@@ -1,12 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:syncademic_app/screens/new_sync_profile/stepper_cubit/stepper_cubit.dart';
 import '../../models/target_calendar.dart';
 import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 import '../../widgets/target_calendar_card.dart';
 import 'target_calendar_selector/target_calendar_selector.dart';
 
 import 'new_sync_profile_cubit.dart';
+
+class NewSyncProfilePage extends StatelessWidget {
+  const NewSyncProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('New synchronization'),
+      ),
+      body: BlocBuilder<StepperCubit, StepperState>(
+        builder: (context, state) {
+          return Stepper(
+            currentStep: state.index,
+            onStepContinue:
+                state.canContinue ? context.read<StepperCubit>().next : null,
+            onStepCancel:
+                state.canCancel ? context.read<StepperCubit>().previous : null,
+            steps: const [
+              Step(
+                title: Text('Title'),
+                content: TitleStepContent(),
+              ),
+              Step(
+                title: Text('URL'),
+                content: UrlStepContent(),
+              ),
+              Step(
+                title: Text('Target calendar'),
+                content: TargetCalendarStepContent(),
+              ),
+              Step(
+                title: Text('Backend Authorization'),
+                content: BackendAuthorizationStepContent(),
+              ),
+              Step(
+                title: Text('Summary'),
+                content: Text('Review your configuration'),
+              )
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class UrlStepContent extends StatelessWidget {
+  const UrlStepContent({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const TextField(
+      decoration: InputDecoration(
+        labelText: 'Calendar url',
+        border: OutlineInputBorder(),
+        counterText: '',
+      ),
+      maxLength: null,
+    );
+  }
+}
+
+class TitleStepContent extends StatelessWidget {
+  const TitleStepContent({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const TextField(
+      decoration: InputDecoration(
+        labelText: 'Title',
+        border: OutlineInputBorder(),
+        hintText: 'L3 - Biologie - 2023-2024',
+      ),
+      maxLength: 50,
+    );
+  }
+}
+
+class TargetCalendarStepContent extends StatelessWidget {
+  const TargetCalendarStepContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      icon: const Icon(Icons.calendar_month),
+      onPressed: () {
+        // Show dialog
+        showDialog<TargetCalendar?>(
+          context: context,
+          builder: (_) => Dialog(
+            child: BlocProvider(
+              create: (_) => TargetCalendarSelectorCubit(),
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: TargetCalendarSelector(),
+              ),
+            ),
+          ),
+        );
+      },
+      label: const Text('Select target calendar'),
+    );
+  }
+}
+
+class BackendAuthorizationStepContent extends StatelessWidget {
+  const BackendAuthorizationStepContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
 
 class NewSyncConfigPage extends StatelessWidget {
   const NewSyncConfigPage({super.key});

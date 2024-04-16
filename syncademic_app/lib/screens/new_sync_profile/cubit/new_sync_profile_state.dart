@@ -27,7 +27,7 @@ class NewSyncProfileState with _$NewSyncProfileState {
     }
 
     if (currentStep == 2) {
-      return true; //TODO
+      return targetCalendar != null;
     }
 
     if (currentStep == 3) {

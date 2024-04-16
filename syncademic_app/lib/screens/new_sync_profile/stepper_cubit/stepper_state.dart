@@ -8,7 +8,7 @@ class StepperState with _$StepperState {
     String? titleError,
     @Default('') String url,
     String? urlError,
-    @Default(null) TargetCalendar? selectedCalendar,
+    @Default(null) TargetCalendar? targetCalendar,
     @Default(null) String? backendAuthorization,
   }) = _StepperState;
 
@@ -16,11 +16,6 @@ class StepperState with _$StepperState {
 
   bool get canContinue {
     if (currentStep == 0) {
-      print(
-          'StepperState: canContinue: titleError: $titleError, title: $title');
-      print("Title error : $titleError");
-      print("Title : $title");
-      print("isBlank(title) : ${isBlank(title)}");
       return titleError == null && !isBlank(title);
     }
 

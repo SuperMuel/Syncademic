@@ -46,7 +46,7 @@ class StepperCubit extends Cubit<StepperState> {
     if (calendar == null) {
       return;
     }
-    emit(state.copyWith(selectedCalendar: calendar));
+    emit(state.copyWith(targetCalendar: calendar));
   }
 
   void backendAuthorizationChanged(String backendAuthorization) {

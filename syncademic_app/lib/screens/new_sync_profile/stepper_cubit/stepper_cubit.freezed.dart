@@ -21,7 +21,7 @@ mixin _$StepperState {
   String? get titleError => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
-  TargetCalendar? get selectedCalendar => throw _privateConstructorUsedError;
+  TargetCalendar? get targetCalendar => throw _privateConstructorUsedError;
   String? get backendAuthorization => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -41,10 +41,10 @@ abstract class $StepperStateCopyWith<$Res> {
       String? titleError,
       String url,
       String? urlError,
-      TargetCalendar? selectedCalendar,
+      TargetCalendar? targetCalendar,
       String? backendAuthorization});
 
-  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
+  $TargetCalendarCopyWith<$Res>? get targetCalendar;
 }
 
 /// @nodoc
@@ -65,7 +65,7 @@ class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
     Object? titleError = freezed,
     Object? url = null,
     Object? urlError = freezed,
-    Object? selectedCalendar = freezed,
+    Object? targetCalendar = freezed,
     Object? backendAuthorization = freezed,
   }) {
     return _then(_value.copyWith(
@@ -89,9 +89,9 @@ class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
               as String?,
-      selectedCalendar: freezed == selectedCalendar
-          ? _value.selectedCalendar
-          : selectedCalendar // ignore: cast_nullable_to_non_nullable
+      targetCalendar: freezed == targetCalendar
+          ? _value.targetCalendar
+          : targetCalendar // ignore: cast_nullable_to_non_nullable
               as TargetCalendar?,
       backendAuthorization: freezed == backendAuthorization
           ? _value.backendAuthorization
@@ -102,13 +102,13 @@ class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
 
   @override
   @pragma('vm:prefer-inline')
-  $TargetCalendarCopyWith<$Res>? get selectedCalendar {
-    if (_value.selectedCalendar == null) {
+  $TargetCalendarCopyWith<$Res>? get targetCalendar {
+    if (_value.targetCalendar == null) {
       return null;
     }
 
-    return $TargetCalendarCopyWith<$Res>(_value.selectedCalendar!, (value) {
-      return _then(_value.copyWith(selectedCalendar: value) as $Val);
+    return $TargetCalendarCopyWith<$Res>(_value.targetCalendar!, (value) {
+      return _then(_value.copyWith(targetCalendar: value) as $Val);
     });
   }
 }
@@ -127,11 +127,11 @@ abstract class _$$StepperStateImplCopyWith<$Res>
       String? titleError,
       String url,
       String? urlError,
-      TargetCalendar? selectedCalendar,
+      TargetCalendar? targetCalendar,
       String? backendAuthorization});
 
   @override
-  $TargetCalendarCopyWith<$Res>? get selectedCalendar;
+  $TargetCalendarCopyWith<$Res>? get targetCalendar;
 }
 
 /// @nodoc
@@ -150,7 +150,7 @@ class __$$StepperStateImplCopyWithImpl<$Res>
     Object? titleError = freezed,
     Object? url = null,
     Object? urlError = freezed,
-    Object? selectedCalendar = freezed,
+    Object? targetCalendar = freezed,
     Object? backendAuthorization = freezed,
   }) {
     return _then(_$StepperStateImpl(
@@ -174,9 +174,9 @@ class __$$StepperStateImplCopyWithImpl<$Res>
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
               as String?,
-      selectedCalendar: freezed == selectedCalendar
-          ? _value.selectedCalendar
-          : selectedCalendar // ignore: cast_nullable_to_non_nullable
+      targetCalendar: freezed == targetCalendar
+          ? _value.targetCalendar
+          : targetCalendar // ignore: cast_nullable_to_non_nullable
               as TargetCalendar?,
       backendAuthorization: freezed == backendAuthorization
           ? _value.backendAuthorization
@@ -195,7 +195,7 @@ class _$StepperStateImpl extends _StepperState {
       this.titleError,
       this.url = '',
       this.urlError,
-      this.selectedCalendar = null,
+      this.targetCalendar = null,
       this.backendAuthorization = null})
       : super._();
 
@@ -214,14 +214,14 @@ class _$StepperStateImpl extends _StepperState {
   final String? urlError;
   @override
   @JsonKey()
-  final TargetCalendar? selectedCalendar;
+  final TargetCalendar? targetCalendar;
   @override
   @JsonKey()
   final String? backendAuthorization;
 
   @override
   String toString() {
-    return 'StepperState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, selectedCalendar: $selectedCalendar, backendAuthorization: $backendAuthorization)';
+    return 'StepperState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, backendAuthorization: $backendAuthorization)';
   }
 
   @override
@@ -237,15 +237,15 @@ class _$StepperStateImpl extends _StepperState {
             (identical(other.url, url) || other.url == url) &&
             (identical(other.urlError, urlError) ||
                 other.urlError == urlError) &&
-            (identical(other.selectedCalendar, selectedCalendar) ||
-                other.selectedCalendar == selectedCalendar) &&
+            (identical(other.targetCalendar, targetCalendar) ||
+                other.targetCalendar == targetCalendar) &&
             (identical(other.backendAuthorization, backendAuthorization) ||
                 other.backendAuthorization == backendAuthorization));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, currentStep, title, titleError,
-      url, urlError, selectedCalendar, backendAuthorization);
+      url, urlError, targetCalendar, backendAuthorization);
 
   @JsonKey(ignore: true)
   @override
@@ -261,7 +261,7 @@ abstract class _StepperState extends StepperState {
       final String? titleError,
       final String url,
       final String? urlError,
-      final TargetCalendar? selectedCalendar,
+      final TargetCalendar? targetCalendar,
       final String? backendAuthorization}) = _$StepperStateImpl;
   const _StepperState._() : super._();
 
@@ -276,7 +276,7 @@ abstract class _StepperState extends StepperState {
   @override
   String? get urlError;
   @override
-  TargetCalendar? get selectedCalendar;
+  TargetCalendar? get targetCalendar;
   @override
   String? get backendAuthorization;
   @override

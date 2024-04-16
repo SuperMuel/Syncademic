@@ -135,10 +135,19 @@ class TargetCalendarStepContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //TODO : add explanations about what the calendar is used for
-    return ElevatedButton.icon(
-      icon: const Icon(Icons.calendar_month),
-      onPressed: () => _onPressed(context),
-      label: const Text('Select target calendar'),
+    return BlocBuilder<StepperCubit, StepperState>(
+      builder: (context, state) {
+        return state.targetCalendar == null
+            ? ElevatedButton.icon(
+                icon: const Icon(Icons.calendar_month),
+                onPressed: () => _onPressed(context),
+                label: const Text('Select target calendar'),
+              )
+            : TargetCalendarCard(
+                targetCalendar: state.targetCalendar!,
+                onPressed: () => _onPressed(context),
+              );
+      },
     );
   }
 }
@@ -214,7 +223,7 @@ class NewSyncConfigPage extends StatelessWidget {
                   onChanged: cubit.urlChanged,
                 ),
                 const Gap(16),
-                _SelectedTargetCalendar(state),
+                //_SelectedTargetCalendar(state),
                 const Spacer(),
                 ElevatedButton.icon(
                   onPressed: state.canSubmit ? cubit.submit : null,
@@ -226,44 +235,6 @@ class NewSyncConfigPage extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _SelectedTargetCalendar extends StatelessWidget {
-  const _SelectedTargetCalendar(this.state);
-
-  final NewSyncProfileState state;
-
-  @override
-  Widget build(BuildContext context) => state.selectedCalendar == null
-      ? const _SelectTargetCalendar()
-      : TargetCalendarCard(targetCalendar: state.selectedCalendar!);
-}
-
-class _SelectTargetCalendar extends StatelessWidget {
-  const _SelectTargetCalendar();
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      icon: const Icon(Icons.calendar_month),
-      onPressed: () {
-        // Show dialog
-        showDialog<TargetCalendar?>(
-          context: context,
-          builder: (_) => Dialog(
-            child: BlocProvider(
-              create: (_) => TargetCalendarSelectorCubit(),
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: TargetCalendarSelector(),
-              ),
-            ),
-          ),
-        ).then(context.read<NewSyncProfileCubit>().calendarSelected);
-      },
-      label: const Text('Select target calendar'),
     );
   }
 }

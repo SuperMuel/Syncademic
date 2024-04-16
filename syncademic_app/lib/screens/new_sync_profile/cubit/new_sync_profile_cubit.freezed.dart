@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'stepper_cubit.dart';
+part of 'new_sync_profile_cubit.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -15,7 +15,7 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$StepperState {
+mixin _$NewSyncProfileState {
   int get currentStep => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get titleError => throw _privateConstructorUsedError;
@@ -28,15 +28,15 @@ mixin _$StepperState {
   bool get submittedSuccessfully => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $StepperStateCopyWith<StepperState> get copyWith =>
+  $NewSyncProfileStateCopyWith<NewSyncProfileState> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $StepperStateCopyWith<$Res> {
-  factory $StepperStateCopyWith(
-          StepperState value, $Res Function(StepperState) then) =
-      _$StepperStateCopyWithImpl<$Res, StepperState>;
+abstract class $NewSyncProfileStateCopyWith<$Res> {
+  factory $NewSyncProfileStateCopyWith(
+          NewSyncProfileState value, $Res Function(NewSyncProfileState) then) =
+      _$NewSyncProfileStateCopyWithImpl<$Res, NewSyncProfileState>;
   @useResult
   $Res call(
       {int currentStep,
@@ -54,9 +54,9 @@ abstract class $StepperStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
-    implements $StepperStateCopyWith<$Res> {
-  _$StepperStateCopyWithImpl(this._value, this._then);
+class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
+    implements $NewSyncProfileStateCopyWith<$Res> {
+  _$NewSyncProfileStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -135,11 +135,11 @@ class _$StepperStateCopyWithImpl<$Res, $Val extends StepperState>
 }
 
 /// @nodoc
-abstract class _$$StepperStateImplCopyWith<$Res>
-    implements $StepperStateCopyWith<$Res> {
-  factory _$$StepperStateImplCopyWith(
-          _$StepperStateImpl value, $Res Function(_$StepperStateImpl) then) =
-      __$$StepperStateImplCopyWithImpl<$Res>;
+abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
+    implements $NewSyncProfileStateCopyWith<$Res> {
+  factory _$$NewSyncProfileStateImplCopyWith(_$NewSyncProfileStateImpl value,
+          $Res Function(_$NewSyncProfileStateImpl) then) =
+      __$$NewSyncProfileStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -159,11 +159,11 @@ abstract class _$$StepperStateImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$StepperStateImplCopyWithImpl<$Res>
-    extends _$StepperStateCopyWithImpl<$Res, _$StepperStateImpl>
-    implements _$$StepperStateImplCopyWith<$Res> {
-  __$$StepperStateImplCopyWithImpl(
-      _$StepperStateImpl _value, $Res Function(_$StepperStateImpl) _then)
+class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
+    extends _$NewSyncProfileStateCopyWithImpl<$Res, _$NewSyncProfileStateImpl>
+    implements _$$NewSyncProfileStateImplCopyWith<$Res> {
+  __$$NewSyncProfileStateImplCopyWithImpl(_$NewSyncProfileStateImpl _value,
+      $Res Function(_$NewSyncProfileStateImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -180,7 +180,7 @@ class __$$StepperStateImplCopyWithImpl<$Res>
     Object? submitError = freezed,
     Object? submittedSuccessfully = null,
   }) {
-    return _then(_$StepperStateImpl(
+    return _then(_$NewSyncProfileStateImpl(
       currentStep: null == currentStep
           ? _value.currentStep
           : currentStep // ignore: cast_nullable_to_non_nullable
@@ -227,8 +227,8 @@ class __$$StepperStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$StepperStateImpl extends _StepperState {
-  const _$StepperStateImpl(
+class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
+  const _$NewSyncProfileStateImpl(
       {this.currentStep = 0,
       this.title = '',
       this.titleError,
@@ -269,14 +269,14 @@ class _$StepperStateImpl extends _StepperState {
 
   @override
   String toString() {
-    return 'StepperState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, backendAuthorization: $backendAuthorization, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, backendAuthorization: $backendAuthorization, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$StepperStateImpl &&
+            other is _$NewSyncProfileStateImpl &&
             (identical(other.currentStep, currentStep) ||
                 other.currentStep == currentStep) &&
             (identical(other.title, title) || other.title == title) &&
@@ -314,12 +314,13 @@ class _$StepperStateImpl extends _StepperState {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$StepperStateImplCopyWith<_$StepperStateImpl> get copyWith =>
-      __$$StepperStateImplCopyWithImpl<_$StepperStateImpl>(this, _$identity);
+  _$$NewSyncProfileStateImplCopyWith<_$NewSyncProfileStateImpl> get copyWith =>
+      __$$NewSyncProfileStateImplCopyWithImpl<_$NewSyncProfileStateImpl>(
+          this, _$identity);
 }
 
-abstract class _StepperState extends StepperState {
-  const factory _StepperState(
+abstract class _NewSyncProfileState extends NewSyncProfileState {
+  const factory _NewSyncProfileState(
       {final int currentStep,
       final String title,
       final String? titleError,
@@ -329,8 +330,8 @@ abstract class _StepperState extends StepperState {
       final String? backendAuthorization,
       final bool isSubmitting,
       final String? submitError,
-      final bool submittedSuccessfully}) = _$StepperStateImpl;
-  const _StepperState._() : super._();
+      final bool submittedSuccessfully}) = _$NewSyncProfileStateImpl;
+  const _NewSyncProfileState._() : super._();
 
   @override
   int get currentStep;
@@ -354,6 +355,6 @@ abstract class _StepperState extends StepperState {
   bool get submittedSuccessfully;
   @override
   @JsonKey(ignore: true)
-  _$$StepperStateImplCopyWith<_$StepperStateImpl> get copyWith =>
+  _$$NewSyncProfileStateImplCopyWith<_$NewSyncProfileStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

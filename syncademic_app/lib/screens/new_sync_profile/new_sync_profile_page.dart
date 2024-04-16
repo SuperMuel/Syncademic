@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:syncademic_app/screens/new_sync_profile/stepper_cubit/stepper_cubit.dart';
+import 'cubit/new_sync_profile_cubit.dart';
 import '../../models/target_calendar.dart';
 import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 import '../../widgets/target_calendar_card.dart';
@@ -12,7 +12,7 @@ class NewSyncProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<StepperCubit, StepperState>(
+    return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
       listener: (context, state) {
         if (state.submittedSuccessfully) {
           Navigator.of(context).pop();
@@ -40,10 +40,12 @@ class NewSyncProfilePage extends StatelessWidget {
         ),
         body: Stepper(
           currentStep: state.currentStep,
-          onStepContinue:
-              state.canContinue ? context.read<StepperCubit>().next : null,
-          onStepCancel:
-              state.canGoBack ? context.read<StepperCubit>().previous : null,
+          onStepContinue: state.canContinue
+              ? context.read<NewSyncProfileCubit>().next
+              : null,
+          onStepCancel: state.canGoBack
+              ? context.read<NewSyncProfileCubit>().previous
+              : null,
           steps: const [
             Step(
               title: Text('Give a title to your synchronization'),
@@ -88,17 +90,16 @@ class TitleStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StepperCubit, StepperState>(
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
         return TextField(
           decoration: InputDecoration(
-            labelText: 'Title',
             border: const OutlineInputBorder(),
-            hintText: 'L3 - Biologie - 2023-2024',
+            hintText: 'INSA Lyon - 2023-2024',
             errorText: state.titleError,
           ),
           maxLength: 50,
-          onChanged: context.read<StepperCubit>().titleChanged,
+          onChanged: context.read<NewSyncProfileCubit>().titleChanged,
         );
       },
     );
@@ -112,7 +113,7 @@ class UrlStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StepperCubit, StepperState>(
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
         return TextField(
           decoration: InputDecoration(
@@ -122,7 +123,7 @@ class UrlStepContent extends StatelessWidget {
             errorText: state.urlError,
           ),
           maxLength: 4000,
-          onChanged: context.read<StepperCubit>().urlChanged,
+          onChanged: context.read<NewSyncProfileCubit>().urlChanged,
         );
       },
     );
@@ -133,7 +134,7 @@ class TargetCalendarStepContent extends StatelessWidget {
   const TargetCalendarStepContent({super.key});
 
   void _onPressed(BuildContext context) async {
-    final cubit = context.read<StepperCubit>();
+    final cubit = context.read<NewSyncProfileCubit>();
     final selectedCalendar = await showDialog<TargetCalendar?>(
       context: context,
       builder: (_) => Dialog(
@@ -152,7 +153,7 @@ class TargetCalendarStepContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //TODO : add explanations about what the calendar is used for
-    return BlocBuilder<StepperCubit, StepperState>(
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
         return state.targetCalendar == null
             ? ElevatedButton.icon(
@@ -183,22 +184,58 @@ class SummaryStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StepperCubit, StepperState>(
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
-        return Column(
-          children: [
-            Text('Title: ${state.title}'),
-            const Gap(8),
-            Text('URL: ${state.url}'),
-            const Gap(8),
-            Text('Calendar: ${state.targetCalendar?.title ?? 'Not selected'}'),
-            const Gap(8),
-            ElevatedButton(
-              onPressed: context.read<StepperCubit>().submit,
-              child: const Text('Submit'),
-            ),
-            if (state.isSubmitting) const CircularProgressIndicator()
-          ],
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Synchronization title :',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const Gap(8),
+                    Text(state.title),
+                    const Gap(16),
+                    Text(
+                      'Time schedule URL :',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const Gap(8),
+                    Text(state.url),
+                    const Gap(16),
+                    Text(
+                      'Google Calendar :',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const Gap(8),
+                    Text(state.targetCalendar?.title ?? 'Not selected'),
+                  ],
+                ),
+              ),
+              const Gap(24),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.all(24.0)),
+                onPressed: state.isSubmitting
+                    ? null
+                    : context.read<NewSyncProfileCubit>().submit,
+                icon: state.isSubmitting
+                    ? const CircularProgressIndicator(strokeWidth: 2)
+                    : const Icon(Icons.check),
+                label: Text(
+                  'Create synchronization',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

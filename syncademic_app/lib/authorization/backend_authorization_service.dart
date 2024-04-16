@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:get_it/get_it.dart';
-import 'package:syncademic_app/authorization/authorization_service.dart';
+import 'authorization_service.dart';
 
 abstract class BackendAuthorizationService {
   Future<void> authorizeBackend(String syncProfileId);

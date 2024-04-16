@@ -2,18 +2,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
-import 'package:syncademic_app/models/id.dart';
-import 'package:syncademic_app/models/schedule_source.dart';
-import 'package:syncademic_app/models/sync_profile.dart';
-import 'package:syncademic_app/models/target_calendar.dart';
-import 'package:syncademic_app/repositories/sync_profile_repository.dart';
+import '../../../models/id.dart';
+import '../../../models/schedule_source.dart';
+import '../../../models/sync_profile.dart';
+import '../../../models/target_calendar.dart';
+import '../../../repositories/sync_profile_repository.dart';
 import 'package:validators/validators.dart';
 
-part 'stepper_state.dart';
-part 'stepper_cubit.freezed.dart';
+part 'new_sync_profile_state.dart';
+part 'new_sync_profile_cubit.freezed.dart';
 
-class StepperCubit extends Cubit<StepperState> {
-  StepperCubit() : super(const StepperState());
+class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
+  NewSyncProfileCubit() : super(const NewSyncProfileState());
 
   void titleChanged(String title) {
     if (isBlank(title)) {

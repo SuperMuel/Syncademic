@@ -1,8 +1,8 @@
-part of 'stepper_cubit.dart';
+part of 'new_sync_profile_cubit.dart';
 
 @freezed
-class StepperState with _$StepperState {
-  const factory StepperState({
+class NewSyncProfileState with _$NewSyncProfileState {
+  const factory NewSyncProfileState({
     @Default(0) int currentStep,
     @Default('') String title,
     String? titleError,
@@ -13,9 +13,9 @@ class StepperState with _$StepperState {
     @Default(false) bool isSubmitting,
     String? submitError,
     @Default(false) bool submittedSuccessfully,
-  }) = _StepperState;
+  }) = _NewSyncProfileState;
 
-  const StepperState._();
+  const NewSyncProfileState._();
 
   bool get canContinue {
     if (currentStep == 0) {

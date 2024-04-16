@@ -28,19 +28,19 @@ class NewSyncProfilePage extends StatelessWidget {
                 state.canCancel ? context.read<StepperCubit>().previous : null,
             steps: const [
               Step(
-                title: Text('Title'),
+                title: Text('Give a title to your synchronization'),
                 content: TitleStepContent(),
               ),
               Step(
-                title: Text('URL'),
+                title: Text('Provide your time schedule url'),
                 content: UrlStepContent(),
               ),
               Step(
-                title: Text('Target calendar'),
+                title: Text('Select your Google Calendar'),
                 content: TargetCalendarStepContent(),
               ),
               Step(
-                title: Text('Backend Authorization'),
+                title: Text('Grant Syncademic Permissions'),
                 content: BackendAuthorizationStepContent(),
               ),
               Step(

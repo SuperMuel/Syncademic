@@ -112,7 +112,7 @@ final _router = GoRouter(
               BlocProvider(create: (_) => NewSyncProfileCubit()),
               BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
             ],
-            child: const NewSyncConfigPage(),
+            child: const NewSyncProfilePage(),
           );
         }),
   ],

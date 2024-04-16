@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:syncademic_app/screens/new_sync_profile/stepper_cubit/stepper_cubit.dart';
+import 'package:syncademic_app/screens/new_sync_profile/title_cubit/title_cubit.dart';
 import '../../models/target_calendar.dart';
 import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 import '../../widgets/target_calendar_card.dart';
@@ -80,13 +81,19 @@ class TitleStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const TextField(
-      decoration: InputDecoration(
-        labelText: 'Title',
-        border: OutlineInputBorder(),
-        hintText: 'L3 - Biologie - 2023-2024',
-      ),
-      maxLength: 50,
+    return BlocBuilder<TitleCubit, TitleState>(
+      builder: (context, state) {
+        return TextField(
+          decoration: InputDecoration(
+            labelText: 'Title',
+            border: const OutlineInputBorder(),
+            hintText: 'L3 - Biologie - 2023-2024',
+            errorText: state.error,
+          ),
+          maxLength: 50,
+          onChanged: context.read<TitleCubit>().titleChanged,
+        );
+      },
     );
   }
 }

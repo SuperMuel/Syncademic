@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syncademic_app/authorization/backend_authorization_service.dart';
 import 'package:syncademic_app/screens/new_sync_profile/stepper_cubit/stepper_cubit.dart';
+import 'package:syncademic_app/screens/new_sync_profile/title_cubit/title_cubit.dart';
 import 'screens/landing_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'services/sync_profile_service.dart';
@@ -111,7 +112,7 @@ final _router = GoRouter(
           return MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => StepperCubit()),
-              BlocProvider(create: (_) => NewSyncProfileCubit()),
+              BlocProvider(create: (_) => TitleCubit()),
               BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
             ],
             child: const NewSyncProfilePage(),

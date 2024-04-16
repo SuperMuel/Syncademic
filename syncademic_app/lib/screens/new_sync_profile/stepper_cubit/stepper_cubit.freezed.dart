@@ -18,7 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$StepperState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() title,
+    required TResult Function(String title, String? error) title,
     required TResult Function() url,
     required TResult Function() targetCalendar,
     required TResult Function() backendAuthorization,
@@ -27,7 +27,7 @@ mixin _$StepperState {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? title,
+    TResult? Function(String title, String? error)? title,
     TResult? Function()? url,
     TResult? Function()? targetCalendar,
     TResult? Function()? backendAuthorization,
@@ -36,7 +36,7 @@ mixin _$StepperState {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? title,
+    TResult Function(String title, String? error)? title,
     TResult Function()? url,
     TResult Function()? targetCalendar,
     TResult Function()? backendAuthorization,
@@ -97,6 +97,8 @@ abstract class _$$TitleImplCopyWith<$Res> {
   factory _$$TitleImplCopyWith(
           _$TitleImpl value, $Res Function(_$TitleImpl) then) =
       __$$TitleImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String title, String? error});
 }
 
 /// @nodoc
@@ -106,55 +108,88 @@ class __$$TitleImplCopyWithImpl<$Res>
   __$$TitleImplCopyWithImpl(
       _$TitleImpl _value, $Res Function(_$TitleImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? title = null,
+    Object? error = freezed,
+  }) {
+    return _then(_$TitleImpl(
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      error: freezed == error
+          ? _value.error
+          : error // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$TitleImpl extends _Title {
-  const _$TitleImpl() : super._();
+  const _$TitleImpl({this.title = '', this.error}) : super._();
+
+  @override
+  @JsonKey()
+  final String title;
+  @override
+  final String? error;
 
   @override
   String toString() {
-    return 'StepperState.title()';
+    return 'StepperState.title(title: $title, error: $error)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$TitleImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$TitleImpl &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.error, error) || other.error == error));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, title, error);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TitleImplCopyWith<_$TitleImpl> get copyWith =>
+      __$$TitleImplCopyWithImpl<_$TitleImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() title,
+    required TResult Function(String title, String? error) title,
     required TResult Function() url,
     required TResult Function() targetCalendar,
     required TResult Function() backendAuthorization,
     required TResult Function() summary,
   }) {
-    return title();
+    return title(this.title, error);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? title,
+    TResult? Function(String title, String? error)? title,
     TResult? Function()? url,
     TResult? Function()? targetCalendar,
     TResult? Function()? backendAuthorization,
     TResult? Function()? summary,
   }) {
-    return title?.call();
+    return title?.call(this.title, error);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? title,
+    TResult Function(String title, String? error)? title,
     TResult Function()? url,
     TResult Function()? targetCalendar,
     TResult Function()? backendAuthorization,
@@ -162,7 +197,7 @@ class _$TitleImpl extends _Title {
     required TResult orElse(),
   }) {
     if (title != null) {
-      return title();
+      return title(this.title, error);
     }
     return orElse();
   }
@@ -209,8 +244,14 @@ class _$TitleImpl extends _Title {
 }
 
 abstract class _Title extends StepperState {
-  const factory _Title() = _$TitleImpl;
+  const factory _Title({final String title, final String? error}) = _$TitleImpl;
   const _Title._() : super._();
+
+  String get title;
+  String? get error;
+  @JsonKey(ignore: true)
+  _$$TitleImplCopyWith<_$TitleImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -249,7 +290,7 @@ class _$UrlImpl extends _Url {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() title,
+    required TResult Function(String title, String? error) title,
     required TResult Function() url,
     required TResult Function() targetCalendar,
     required TResult Function() backendAuthorization,
@@ -261,7 +302,7 @@ class _$UrlImpl extends _Url {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? title,
+    TResult? Function(String title, String? error)? title,
     TResult? Function()? url,
     TResult? Function()? targetCalendar,
     TResult? Function()? backendAuthorization,
@@ -273,7 +314,7 @@ class _$UrlImpl extends _Url {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? title,
+    TResult Function(String title, String? error)? title,
     TResult Function()? url,
     TResult Function()? targetCalendar,
     TResult Function()? backendAuthorization,
@@ -370,7 +411,7 @@ class _$TargetCalendarImpl extends _TargetCalendar {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() title,
+    required TResult Function(String title, String? error) title,
     required TResult Function() url,
     required TResult Function() targetCalendar,
     required TResult Function() backendAuthorization,
@@ -382,7 +423,7 @@ class _$TargetCalendarImpl extends _TargetCalendar {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? title,
+    TResult? Function(String title, String? error)? title,
     TResult? Function()? url,
     TResult? Function()? targetCalendar,
     TResult? Function()? backendAuthorization,
@@ -394,7 +435,7 @@ class _$TargetCalendarImpl extends _TargetCalendar {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? title,
+    TResult Function(String title, String? error)? title,
     TResult Function()? url,
     TResult Function()? targetCalendar,
     TResult Function()? backendAuthorization,
@@ -492,7 +533,7 @@ class _$BackendAuthorizationImpl extends _BackendAuthorization {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() title,
+    required TResult Function(String title, String? error) title,
     required TResult Function() url,
     required TResult Function() targetCalendar,
     required TResult Function() backendAuthorization,
@@ -504,7 +545,7 @@ class _$BackendAuthorizationImpl extends _BackendAuthorization {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? title,
+    TResult? Function(String title, String? error)? title,
     TResult? Function()? url,
     TResult? Function()? targetCalendar,
     TResult? Function()? backendAuthorization,
@@ -516,7 +557,7 @@ class _$BackendAuthorizationImpl extends _BackendAuthorization {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? title,
+    TResult Function(String title, String? error)? title,
     TResult Function()? url,
     TResult Function()? targetCalendar,
     TResult Function()? backendAuthorization,
@@ -613,7 +654,7 @@ class _$SummaryImpl extends _Summary {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() title,
+    required TResult Function(String title, String? error) title,
     required TResult Function() url,
     required TResult Function() targetCalendar,
     required TResult Function() backendAuthorization,
@@ -625,7 +666,7 @@ class _$SummaryImpl extends _Summary {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? title,
+    TResult? Function(String title, String? error)? title,
     TResult? Function()? url,
     TResult? Function()? targetCalendar,
     TResult? Function()? backendAuthorization,
@@ -637,7 +678,7 @@ class _$SummaryImpl extends _Summary {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? title,
+    TResult Function(String title, String? error)? title,
     TResult Function()? url,
     TResult Function()? targetCalendar,
     TResult Function()? backendAuthorization,

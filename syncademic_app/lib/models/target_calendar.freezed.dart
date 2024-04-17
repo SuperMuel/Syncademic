@@ -19,6 +19,7 @@ mixin _$TargetCalendar {
   ID get id => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get accessToken => throw _privateConstructorUsedError;
+  bool? get createdBySyncademic => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $TargetCalendarCopyWith<TargetCalendar> get copyWith =>
@@ -31,7 +32,8 @@ abstract class $TargetCalendarCopyWith<$Res> {
           TargetCalendar value, $Res Function(TargetCalendar) then) =
       _$TargetCalendarCopyWithImpl<$Res, TargetCalendar>;
   @useResult
-  $Res call({ID id, String title, String? accessToken});
+  $Res call(
+      {ID id, String title, String? accessToken, bool? createdBySyncademic});
 }
 
 /// @nodoc
@@ -50,6 +52,7 @@ class _$TargetCalendarCopyWithImpl<$Res, $Val extends TargetCalendar>
     Object? id = null,
     Object? title = null,
     Object? accessToken = freezed,
+    Object? createdBySyncademic = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -64,6 +67,10 @@ class _$TargetCalendarCopyWithImpl<$Res, $Val extends TargetCalendar>
           ? _value.accessToken
           : accessToken // ignore: cast_nullable_to_non_nullable
               as String?,
+      createdBySyncademic: freezed == createdBySyncademic
+          ? _value.createdBySyncademic
+          : createdBySyncademic // ignore: cast_nullable_to_non_nullable
+              as bool?,
     ) as $Val);
   }
 }
@@ -76,7 +83,8 @@ abstract class _$$TargetCalendarImplCopyWith<$Res>
       __$$TargetCalendarImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({ID id, String title, String? accessToken});
+  $Res call(
+      {ID id, String title, String? accessToken, bool? createdBySyncademic});
 }
 
 /// @nodoc
@@ -93,6 +101,7 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
     Object? id = null,
     Object? title = null,
     Object? accessToken = freezed,
+    Object? createdBySyncademic = freezed,
   }) {
     return _then(_$TargetCalendarImpl(
       id: null == id
@@ -107,6 +116,10 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
           ? _value.accessToken
           : accessToken // ignore: cast_nullable_to_non_nullable
               as String?,
+      createdBySyncademic: freezed == createdBySyncademic
+          ? _value.createdBySyncademic
+          : createdBySyncademic // ignore: cast_nullable_to_non_nullable
+              as bool?,
     ));
   }
 }
@@ -115,7 +128,10 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
 
 class _$TargetCalendarImpl implements _TargetCalendar {
   const _$TargetCalendarImpl(
-      {required this.id, required this.title, this.accessToken});
+      {required this.id,
+      required this.title,
+      this.accessToken,
+      this.createdBySyncademic});
 
   @override
   final ID id;
@@ -123,10 +139,12 @@ class _$TargetCalendarImpl implements _TargetCalendar {
   final String title;
   @override
   final String? accessToken;
+  @override
+  final bool? createdBySyncademic;
 
   @override
   String toString() {
-    return 'TargetCalendar(id: $id, title: $title, accessToken: $accessToken)';
+    return 'TargetCalendar(id: $id, title: $title, accessToken: $accessToken, createdBySyncademic: $createdBySyncademic)';
   }
 
   @override
@@ -137,11 +155,14 @@ class _$TargetCalendarImpl implements _TargetCalendar {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.accessToken, accessToken) ||
-                other.accessToken == accessToken));
+                other.accessToken == accessToken) &&
+            (identical(other.createdBySyncademic, createdBySyncademic) ||
+                other.createdBySyncademic == createdBySyncademic));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, title, accessToken);
+  int get hashCode =>
+      Object.hash(runtimeType, id, title, accessToken, createdBySyncademic);
 
   @JsonKey(ignore: true)
   @override
@@ -155,7 +176,8 @@ abstract class _TargetCalendar implements TargetCalendar {
   const factory _TargetCalendar(
       {required final ID id,
       required final String title,
-      final String? accessToken}) = _$TargetCalendarImpl;
+      final String? accessToken,
+      final bool? createdBySyncademic}) = _$TargetCalendarImpl;
 
   @override
   ID get id;
@@ -163,6 +185,8 @@ abstract class _TargetCalendar implements TargetCalendar {
   String get title;
   @override
   String? get accessToken;
+  @override
+  bool? get createdBySyncademic;
   @override
   @JsonKey(ignore: true)
   _$$TargetCalendarImplCopyWith<_$TargetCalendarImpl> get copyWith =>

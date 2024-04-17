@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_time_ago/get_time_ago.dart';
 

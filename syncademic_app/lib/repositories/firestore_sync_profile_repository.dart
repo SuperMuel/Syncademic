@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
-import '../models/sync_profile_status.dart';
-import '../models/target_calendar.dart';
+
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
-import 'sync_profile_repository.dart';
+import '../models/sync_profile_status.dart';
+import '../models/target_calendar.dart';
 import '../services/auth_service.dart';
+import 'sync_profile_repository.dart';
 
 class FirestoreSyncProfileRepository implements SyncProfileRepository {
   final _db = FirebaseFirestore.instance;

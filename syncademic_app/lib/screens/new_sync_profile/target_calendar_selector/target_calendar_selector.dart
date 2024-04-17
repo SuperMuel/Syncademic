@@ -71,9 +71,7 @@ class TargetCalendarList extends StatelessWidget {
         final calendar = calendars[index];
         return ListTile(
           title: Text(calendar.title),
-          onTap: () {
-            Navigator.of(context).pop(calendar);
-          },
+          onTap: () => Navigator.of(context).pop(calendar),
         );
       },
     );

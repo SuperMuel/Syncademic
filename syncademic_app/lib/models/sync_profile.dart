@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'sync_profile_status.dart';
 
 import 'id.dart';
 import 'schedule_source.dart';
+import 'sync_profile_status.dart';
 import 'target_calendar.dart';
 
 part 'sync_profile.freezed.dart';

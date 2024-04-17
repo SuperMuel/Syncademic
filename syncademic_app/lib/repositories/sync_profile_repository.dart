@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import '../models/sync_profile_status.dart';
-
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
+import '../models/sync_profile_status.dart';
 import '../models/target_calendar.dart';
 
 abstract class SyncProfileRepository {
@@ -67,6 +66,7 @@ class MockSyncProfileRepository implements SyncProfileRepository {
     final targetCalendar = TargetCalendar(
       id: ID.fromString('target-google-calendar-${id.value}'),
       title: 'Calendar ${id.value}',
+      accountOwnerUserId: 'accountOwnerUserId',
     );
 
     int seconds = Random().nextInt(60);

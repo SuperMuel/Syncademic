@@ -133,7 +133,7 @@ class UrlStepContent extends StatelessWidget {
 class TargetCalendarStepContent extends StatelessWidget {
   const TargetCalendarStepContent({super.key});
 
-  void _onPressed(BuildContext context) async {
+  void _openCalendarSelector(BuildContext context) async {
     final cubit = context.read<NewSyncProfileCubit>();
     final selectedCalendar = await showDialog<TargetCalendar?>(
       context: context,
@@ -153,17 +153,27 @@ class TargetCalendarStepContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //TODO : add explanations about what the calendar is used for
-    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+    return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
+      listener: (context, state) {
+        if (state.backendAuthorizationError != null) {
+          ScaffoldMessenger.of(context)
+            ..removeCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+              content: Text('Error: ${state.backendAuthorizationError}'),
+              backgroundColor: Colors.red,
+            ));
+        }
+      },
       builder: (context, state) {
         return state.targetCalendar == null
             ? ElevatedButton.icon(
                 icon: const Icon(Icons.calendar_month),
-                onPressed: () => _onPressed(context),
+                onPressed: () => _openCalendarSelector(context),
                 label: const Text('Select target calendar'),
               )
             : TargetCalendarCard(
                 targetCalendar: state.targetCalendar!,
-                onPressed: () => _onPressed(context),
+                onPressed: () => _openCalendarSelector(context),
               );
       },
     );
@@ -175,7 +185,46 @@ class BackendAuthorizationStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+      builder: (context, state) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'To synchronize your schedule, Syncademic needs to access your Google Calendar.',
+              ),
+              const Gap(16),
+              state.hasAuthorizedBackend
+                  ? const Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green),
+                        Gap(8),
+                        Text('Authorization successful'),
+                      ],
+                    )
+                  : ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(24.0)),
+                      onPressed: state.isAuthorizingBackend
+                          ? null
+                          : context
+                              .read<NewSyncProfileCubit>()
+                              .authorizeBackend,
+                      icon: state.isAuthorizingBackend
+                          ? const CircularProgressIndicator(strokeWidth: 2)
+                          : const Icon(Icons.lock_open),
+                      label: Text(
+                        'Authorize Syncademic',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

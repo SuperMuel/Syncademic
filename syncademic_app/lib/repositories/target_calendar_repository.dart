@@ -8,8 +8,11 @@ abstract class TargetCalendarRepository {
 class MockTargetCalendarRepository implements TargetCalendarRepository {
   @override
   Future<List<TargetCalendar>> getCalendars() async => List.generate(
-      10,
-      (index) => TargetCalendar(
+        10,
+        (index) => TargetCalendar(
           id: ID.fromString('target-google-calendar-$index'),
-          title: 'Calendar $index'));
+          title: 'Calendar $index',
+          accountOwnerUserId: 'accountOwnerUserId',
+        ),
+      );
 }

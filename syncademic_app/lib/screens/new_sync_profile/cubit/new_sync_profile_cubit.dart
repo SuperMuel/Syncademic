@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import '../../../authorization/backend_authorization_service.dart';
 import '../../../models/id.dart';
 import '../../../models/schedule_source.dart';
 import '../../../models/sync_profile.dart';
@@ -54,8 +55,28 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(targetCalendar: calendar));
   }
 
-  void backendAuthorizationChanged(String backendAuthorization) {
-    emit(state.copyWith(backendAuthorization: backendAuthorization));
+  void authorizeBackend() async {
+    emit(state.copyWith(
+        isAuthorizingBackend: true,
+        backendAuthorizationError: null,
+        hasAuthorizedBackend: false));
+
+    try {
+      await GetIt.I<BackendAuthorizationService>().authorizeBackend();
+    } catch (e) {
+      emit(state.copyWith(
+        isAuthorizingBackend: false,
+        hasAuthorizedBackend: false,
+        backendAuthorizationError: e.toString(),
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      isAuthorizingBackend: false,
+      hasAuthorizedBackend: true,
+      backendAuthorizationError: null,
+    ));
   }
 
   void next() {

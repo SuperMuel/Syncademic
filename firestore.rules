@@ -8,7 +8,11 @@ service cloud.firestore {
     }
   	
     match /users/{userId}/syncProfiles/{syncProfileId}{
-    allow create, read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, read, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /backendAuthorizations/{document=**} {
+      allow read, write: if false;
     }
   }
 }

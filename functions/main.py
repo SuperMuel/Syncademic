@@ -1,11 +1,12 @@
 import os
 from google.oauth2.credentials import Credentials
+from google.oauth2.id_token import verify_oauth2_token
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
 import logging
 from typing import Any
-from firebase_functions import https_fn
+from firebase_functions import https_fn, logger
 
 from firebase_functions.firestore_fn import (
     on_document_created,
@@ -26,6 +27,8 @@ from google.oauth2.credentials import Credentials
 
 from firebase_functions import https_fn
 from firebase_admin import firestore
+
+from google.auth.transport import requests
 from synchronizer.synchronizer.synchronizer import perform_synchronization
 
 #   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,15 +47,35 @@ CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
-def get_calendar_service(access_token: str, refresh_token: str | None = None):
-    if not access_token or not isinstance(access_token, str):
-        raise ValueError(f"{access_token=} : Not a valid access token")
+def get_calendar_service(user_id: str, sync_profile_id: str):
+    db = firestore.client()
+
+    sync_profile = (
+        db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+    ).get()
+
+    if not sync_profile.exists:
+        raise ValueError("Sync profile not found")
+
+    account_owner_user_id = sync_profile.get("targetCalendar.accountOwnerUserId")
+
+    backend_authorization = (
+        db.collection("backendAuthorizations")
+        .document(user_id + account_owner_user_id)
+        .get()
+    )
+
+    if not backend_authorization.exists:
+        raise ValueError("Target calendar is not authorized")
 
     # Construct a Credentials object from the access token
     credentials = Credentials(
         client_id=CLIENT_ID.value,
-        token=access_token,
-        refresh_token=refresh_token,
+        token=backend_authorization.get("accessToken"),
+        refresh_token=backend_authorization.get("refreshToken"),
         token_uri="https://oauth2.googleapis.com/token",
         client_secret=CLIENT_SECRET.value,
     )
@@ -95,6 +118,20 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
         )
 
+    syncProfile = (
+        firestore.client()
+        .collection("users")
+        .document(req.auth.uid)
+        .collection("syncProfiles")
+        .document(syncProfileId)
+        .get()
+    )
+
+    if not syncProfile.exists:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+        )
+
     _synchronize_now(req.auth.uid, syncProfileId)
 
 
@@ -110,7 +147,6 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
 
     doc = sync_profile_ref.get()
 
-    # is synchronization in progress, do nothing
     # TODO: If no status.type ??
 
     status = doc.get("status")
@@ -132,14 +168,28 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
     # and avoid doing it in the synchronization function
 
     try:
+        service = get_calendar_service(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+        )
+    except Exception as e:
+        sync_profile_ref.update(
+            {
+                "status": {
+                    "type": "failed",  # TODO : Specify that it failed because of authorization
+                    "message": str(e),
+                }
+            }
+        )
+        logger.info(f"Failed to get calendar service: {e}")
+        return
+
+    try:
         perform_synchronization(
             syncProfileId=sync_profile_id,
             icsSourceUrl=doc.get("scheduleSource.url"),
             targetCalendarId=doc.get("targetCalendar.id"),
-            service=get_calendar_service(
-                doc.get("targetCalendar.accessToken"),
-                doc.get("targetCalendar.refreshToken"),
-            ),
+            service=service,
             middlewares=[TitlePrettifier, ExamPrettifier],
         )
     except Exception as e:
@@ -182,28 +232,16 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
 
     user_id = request.auth.uid
 
-    sync_profile_id = request.data.get("syncProfileId")
-
-    if not sync_profile_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing sync profile ID"
-        )
-
     db = firestore.client()
 
-    sync_profile_ref = (
-        db.collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    )
-
-    if not sync_profile_ref.get().exists:
+    # verify that the user exists in firestore
+    user_ref = db.collection("users").document(user_id)
+    if not user_ref.get().exists:
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+            https_fn.FunctionsErrorCode.NOT_FOUND, "User document not found"
         )
 
-    # https://www.reddit.com/r/webdev/comments/11w1e36/warning_oauth_scope_has_changed_from/
+    # https://www.reddit.com/r/webdev/comments/11w1e36/warning_oauth_scope_has_changed_from (Workaround)
     os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
     try:
@@ -217,25 +255,59 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
                 }
             },
             scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri="https://syncademic-36c18.web.app",
+            redirect_uri="https://syncademic.io",
         )
 
         flow.fetch_token(code=auth_code)
 
         credentials = flow.credentials
-        access_token = credentials.token
-        refresh_token = credentials.refresh_token
     except Exception as e:
+        logger.error(
+            f"An error occurred while exchanging the authorization code: {str(e)}"
+        )
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
             f"An error occurred while exchanging the authorization code: {str(e)}",
         )
 
-    # TODO: Move this information to a separate collection only accessible by the backend and not the user
-    sync_profile_ref.update(
+    # The logged-in user (request.auth.uid) can authorize the backend on multiple google accounts.
+    # Thus we need to get the unique identifier of the authorized google account
+    # We can get this from the ID token
+
+    id_token = credentials.id_token  # type: ignore
+
+    if not id_token:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, "ID token not found"
+        )
+
+    try:
+        id_info = verify_oauth2_token(
+            id_token, requests.Request(), audience=CLIENT_ID.value
+        )
+
+    except Exception as e:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL,
+            f"An error occurred while verifying the ID token: {str(e)}",
+        )
+
+    google_user_id = id_info.get("sub")
+    if not google_user_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, "Google user ID not found"
+        )
+
+    access_token = credentials.token
+    refresh_token = credentials.refresh_token
+
+    db.collection("backendAuthorizations").document(user_id + google_user_id).set(
         {
-            "targetCalendar.accessToken": access_token,
-            "targetCalendar.refreshToken": refresh_token,
+            "userId": user_id,
+            "accountOwnerUserId": google_user_id,
+            "accessToken": access_token,
+            "refreshToken": refresh_token,
+            "expirationDate": credentials.expiry,
         }
     )
 

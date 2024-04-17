@@ -13,11 +13,13 @@ import 'target_calendar_repository.dart';
 
 class GoogleTargetCalendarRepository implements TargetCalendarRepository {
   final CalendarApi _client;
-  final String? accessToken;
+  final String _accountOwnerUserId;
 
-  GoogleTargetCalendarRepository(
-      {required http.Client authorizedClient, this.accessToken})
-      : _client = CalendarApi(authorizedClient);
+  GoogleTargetCalendarRepository({
+    required http.Client authorizedClient,
+    required accountOwnerUserId,
+  })  : _client = CalendarApi(authorizedClient),
+        _accountOwnerUserId = accountOwnerUserId;
 
   @override
   Future<List<TargetCalendar>> getCalendars() async {
@@ -25,8 +27,8 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
     return calendarList.items!
         .map((calendarListEntry) => TargetCalendar(
               id: ID.fromString(calendarListEntry.id!),
-              title: calendarListEntry.summary!,
-              accessToken: accessToken,
+              title: calendarListEntry.summary ?? 'Unnamed calendar',
+              accountOwnerUserId: _accountOwnerUserId,
             ))
         .toList();
   }

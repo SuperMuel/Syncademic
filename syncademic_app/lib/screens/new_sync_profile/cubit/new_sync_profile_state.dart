@@ -9,7 +9,9 @@ class NewSyncProfileState with _$NewSyncProfileState {
     @Default('') String url,
     String? urlError,
     TargetCalendar? targetCalendar,
-    String? backendAuthorization,
+    @Default(false) bool isAuthorizingBackend,
+    @Default(false) bool hasAuthorizedBackend,
+    String? backendAuthorizationError,
     @Default(false) bool isSubmitting,
     String? submitError,
     @Default(false) bool submittedSuccessfully,
@@ -18,20 +20,24 @@ class NewSyncProfileState with _$NewSyncProfileState {
   const NewSyncProfileState._();
 
   bool get canContinue {
+    // Step 0: Title
     if (currentStep == 0) {
       return titleError == null && !isBlank(title);
     }
 
+    // Step 1: URL
     if (currentStep == 1) {
       return urlError == null && !isBlank(url);
     }
 
+    // Step 2: Target calendar
     if (currentStep == 2) {
       return targetCalendar != null;
     }
 
+    // Step 3: Authorize backend
     if (currentStep == 3) {
-      return true; //TODO
+      return hasAuthorizedBackend;
     }
 
     return false;

@@ -118,6 +118,20 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
         )
 
+    syncProfile = (
+        firestore.client()
+        .collection("users")
+        .document(req.auth.uid)
+        .collection("syncProfiles")
+        .document(syncProfileId)
+        .get()
+    )
+
+    if not syncProfile.exists:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+        )
+
     _synchronize_now(req.auth.uid, syncProfileId)
 
 
@@ -133,7 +147,6 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
 
     doc = sync_profile_ref.get()
 
-    # is synchronization in progress, do nothing
     # TODO: If no status.type ??
 
     status = doc.get("status")
@@ -242,7 +255,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
                 }
             },
             scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri="http://localhost:7357",
+            redirect_uri="https://syncademic.io",
         )
 
         flow.fetch_token(code=auth_code)

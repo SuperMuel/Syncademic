@@ -53,7 +53,7 @@ def ExamPrettifier(events: List[Event]) -> List[Event]:
 
 
 def _add_exam_emoji(event: Event) -> Event:
-    """
+    r"""
     SUMMARY:IF:4:S2::AFQL:EV::IF-4-S2-GR-CM
     LOCATION:501.212 - TD 212\,501.329 - TD 329\,501.331 - TD 331\,5020002 -
     Pierre-Gilles de Gennes

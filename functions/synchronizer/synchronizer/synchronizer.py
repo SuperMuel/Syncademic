@@ -1,17 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 from typing import List, Optional
-
 from .middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
 
 
-@dataclass(frozen=True)
-class SynchronizationResult:
-    success: bool
-    error: Optional[str] = None
+logger = logging.getLogger(__name__)  # TODO: get logger from cloud functions
 
 
 def perform_synchronization(
@@ -20,16 +17,30 @@ def perform_synchronization(
     targetCalendarId: str,
     service,
     middlewares: Optional[List[Middleware]] = None,
-) -> SynchronizationResult:
-    ics_str = UrlIcsSource(icsSourceUrl).get_ics_string()
+) -> None:
+    try:
+        ics_str = UrlIcsSource(icsSourceUrl).get_ics_string()
+    except Exception as e:
+        logger.error(f"Failed to get ics string: {e}")
+        raise e
 
-    events = list(set(IcsParser().parse(ics_str)))
+    try:
+        events = list(set(IcsParser().parse(ics_str)))
+    except Exception as e:
+        logger.error(f"Failed to parse ics: {e}")
+        raise e
 
-    if middlewares:
-        for middleware in middlewares:
-            events = middleware(events)
+    try:
+        if middlewares:
+            for middleware in middlewares:
+                events = middleware(events)
+    except Exception as e:
+        logger.error(f"Failed to apply middlewares: {e}")
+        raise e
 
-    # TODO : Check if there are events to synchronize. If not, issue a warning and return. Do not delete events.
+    if not events:
+        logger.warning("No events to synchronize")
+        return
 
     calendar_manager = GoogleCalendarManager(service, targetCalendarId)
 
@@ -47,6 +58,3 @@ def perform_synchronization(
     new_events = [event for event in events if event.end > separation_dt]
 
     calendar_manager.create_events(new_events, syncProfileId)
-
-    # TODO : improve synchronization result
-    return SynchronizationResult(success=True)

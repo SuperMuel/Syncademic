@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import '../models/sync_profile_status.dart';
-
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
+import '../models/sync_profile_status.dart';
 import '../models/target_calendar.dart';
 
 abstract class SyncProfileRepository {

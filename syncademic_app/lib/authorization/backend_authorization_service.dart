@@ -2,16 +2,17 @@ import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:get_it/get_it.dart';
+
 import 'authorization_service.dart';
 
 abstract class BackendAuthorizationService {
-  Future<void> authorizeBackend(String syncProfileId);
+  Future<void> authorizeBackend();
 }
 
 class FirebaseBackendAuthorizationService
     implements BackendAuthorizationService {
   @override
-  Future<void> authorizeBackend(String syncProfileId) async {
+  Future<void> authorizeBackend() async {
     log("Authorizing the backend using Firebase");
 
     final authCode =
@@ -27,7 +28,6 @@ class FirebaseBackendAuthorizationService
     try {
       await FirebaseFunctions.instance.httpsCallable('authorize_backend').call({
         'authCode': authCode,
-        'syncProfileId': syncProfileId,
       });
     } on FirebaseFunctionsException catch (e) {
       log('Error authorizing backend: ${e.code}, ${e.details}, ${e.message}');

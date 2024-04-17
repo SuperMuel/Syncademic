@@ -20,8 +20,9 @@ class FirebaseAccountService extends AccountService {
 
   @override
   Future<void> createAccount(User user) async {
+    // TODO: Move this behavior to a cloud function for safety.
+
     if (await accountExists(user.id)) {
-      // TODO : or use Merge option to update the user document
       return;
     }
     try {

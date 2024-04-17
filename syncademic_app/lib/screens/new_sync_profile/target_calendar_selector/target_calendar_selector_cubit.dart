@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
-import '../../../repositories/google_target_calendar_repository.dart';
-import '../../../models/target_calendar.dart';
-import '../../../authorization/authorization_service.dart';
 
-part 'target_calendar_selector_state.dart';
+import '../../../authorization/authorization_service.dart';
+import '../../../models/target_calendar.dart';
+import '../../../repositories/google_target_calendar_repository.dart';
+
 part 'target_calendar_selector_cubit.freezed.dart';
+part 'target_calendar_selector_state.dart';
 
 class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
   TargetCalendarSelectorCubit() : super(const TargetCalendarSelectorState());

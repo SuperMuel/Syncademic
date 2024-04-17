@@ -13,6 +13,13 @@ abstract class AuthorizationService {
   Future<bool> authorize();
   Future<http.Client?> get authorizedClient;
   Future<String?> get accessToken;
+
+  /// Returns the user ID of the currently authorized user.
+  ///
+  /// Note that this ID may not match the ID of the currently signed-in user.
+  /// This is because a single user can establish multiple sync profiles,
+  /// each potentially associated with a different calendar service.
+  Future<String?> get userId;
   Future<String?> getAuthorizationCode();
 }
 
@@ -31,6 +38,9 @@ class MockAuthorizationService implements AuthorizationService {
 
   @override
   Future<String?> getAuthorizationCode() => Future.value('mocked_auth_code');
+
+  @override
+  Future<String?> get userId => Future.value('mocked_user_id');
 }
 
 final _scopes = [CalendarApi.calendarScope];
@@ -82,4 +92,7 @@ class GoogleAuthorizationService implements AuthorizationService {
   @override
   Future<http.Client?> get authorizedClient =>
       _googleSignIn.authenticatedClient();
+
+  @override
+  Future<String?> get userId async => _currentUser?.id;
 }

@@ -47,15 +47,35 @@ CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
-def get_calendar_service(access_token: str, refresh_token: str | None = None):
-    if not access_token or not isinstance(access_token, str):
-        raise ValueError(f"{access_token=} : Not a valid access token")
+def get_calendar_service(user_id: str, sync_profile_id: str):
+    db = firestore.client()
+
+    sync_profile = (
+        db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+    ).get()
+
+    if not sync_profile.exists:
+        raise ValueError("Sync profile not found")
+
+    account_owner_user_id = sync_profile.get("targetCalendar.accountOwnerUserId")
+
+    backend_authorization = (
+        db.collection("backendAuthorizations")
+        .document(user_id + account_owner_user_id)
+        .get()
+    )
+
+    if not backend_authorization.exists:
+        raise ValueError("Target calendar is not authorized")
 
     # Construct a Credentials object from the access token
     credentials = Credentials(
         client_id=CLIENT_ID.value,
-        token=access_token,
-        refresh_token=refresh_token,
+        token=backend_authorization.get("accessToken"),
+        refresh_token=backend_authorization.get("refreshToken"),
         token_uri="https://oauth2.googleapis.com/token",
         client_secret=CLIENT_SECRET.value,
     )
@@ -135,14 +155,28 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
     # and avoid doing it in the synchronization function
 
     try:
+        service = get_calendar_service(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+        )
+    except Exception as e:
+        sync_profile_ref.update(
+            {
+                "status": {
+                    "type": "failed",  # TODO : Specify that it failed because of authorization
+                    "message": str(e),
+                }
+            }
+        )
+        logger.info(f"Failed to get calendar service: {e}")
+        return
+
+    try:
         perform_synchronization(
             syncProfileId=sync_profile_id,
             icsSourceUrl=doc.get("scheduleSource.url"),
             targetCalendarId=doc.get("targetCalendar.id"),
-            service=get_calendar_service(
-                doc.get("targetCalendar.accessToken"),
-                doc.get("targetCalendar.refreshToken"),
-            ),
+            service=service,
             middlewares=[TitlePrettifier, ExamPrettifier],
         )
     except Exception as e:
@@ -208,7 +242,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
                 }
             },
             scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri="https://syncademic-36c18.web.app",
+            redirect_uri="http://localhost:7357",
         )
 
         flow.fetch_token(code=auth_code)
@@ -257,7 +291,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
     db.collection("backendAuthorizations").document(user_id + google_user_id).set(
         {
             "userId": user_id,
-            "googleUserId": google_user_id,
+            "accountOwnerUserId": google_user_id,
             "accessToken": access_token,
             "refreshToken": refresh_token,
             "expirationDate": credentials.expiry,

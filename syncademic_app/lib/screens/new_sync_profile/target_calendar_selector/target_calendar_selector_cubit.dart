@@ -16,7 +16,9 @@ class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
 
   Future<void> authorize() async {
     final authorizationService = GetIt.I<AuthorizationService>();
+
     emit(state.copyWith(authorizationStatus: AuthorizationStatus.authorizing));
+
     final isAuthorized = await authorizationService.authorize();
 
     if (!isAuthorized) {
@@ -43,7 +45,7 @@ class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
 
     final calendars = await GoogleTargetCalendarRepository(
       authorizedClient: authorizedClient,
-      accessToken: accessToken,
+      accountOwnerUserId: await authorizationService.userId,
     ).getCalendars();
 
     emit(state.copyWith(calendars: calendars));

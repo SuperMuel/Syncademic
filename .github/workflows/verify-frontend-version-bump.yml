@@ -1,0 +1,25 @@
+name: Verify version bump
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "syncademic_app/**"
+jobs:
+  verify-version-bump:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: syncademic_app
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Get version changes
+        run: |
+          old_version=$(git show HEAD~1:pubspec.yaml | awk '/^version:/ {print $2}')
+          new_version=$(awk '/^version:/ {print $2}' pubspec.yaml)
+          if [ "$old_version" = "$new_version" ]; then
+            echo "Version not incremented"
+            exit 1
+          fi

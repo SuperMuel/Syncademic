@@ -4,12 +4,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syncademic_app/firebase_options.dart';
+import 'package:syncademic_app/repositories/google_target_calendar_repository.dart';
 import 'package:syncademic_app/services/firebase_auth_service.dart';
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
 import 'authorization/backend_authorization_service.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'repositories/target_calendar_repository.dart';
+import 'repositories/firestore_sync_profile_repository.dart';
+import 'authorization/firebase_backend_authorization_service.dart';
+
 import 'screens/account/account_page.dart';
 import 'screens/landing_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
@@ -41,24 +45,26 @@ void main() async {
     MockSyncProfileService(),
   );
   getIt.registerSingleton<SyncProfileRepository>(
-    // FirestoreSyncProfileRepository(),
-    MockSyncProfileRepository()
-      ..createRandomData(10)
-      ..addFailedProfile()
-      ..addInProgressProfile(),
+    FirestoreSyncProfileRepository(),
+    // MockSyncProfileRepository()
+    //   ..createRandomData(10)
+    //   ..addFailedProfile()
+    //   ..addInProgressProfile(),
   );
   getIt.registerSingleton<BackendAuthorizationService>(
-    //FirebaseBackendAuthorizationService(),
-    MockBackendAuthorizationService(),
+    FirebaseBackendAuthorizationService(),
+    //MockBackendAuthorizationService(),
   );
 
   getIt.registerSingleton<AuthorizationService>(
+    //GoogleAuthorizationService(),
     MockAuthorizationService(),
   );
 
   getIt.registerSingleton<TargetCalendarRepository>(
-    MockTargetCalendarRepository(),
-  );
+      GoogleTargetCalendarRepository()
+      //MockTargetCalendarRepository(),
+      );
 
   runApp(const MyApp());
 }

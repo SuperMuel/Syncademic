@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
-import 'package:syncademic_app/authorization/backend_authorization_service.dart';
+import '../../../authorization/backend_authorization_service.dart';
 import '../../../models/id.dart';
 import '../../../models/sync_profile.dart';
 import '../../../services/sync_profile_service.dart';
@@ -23,8 +23,22 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
             : SyncProfileState.loaded(syncProfile)));
   }
 
-  Future<void> requestSync() =>
-      GetIt.I<SyncProfileService>().requestSync(syncProfileId);
+  Future<void> requestSync() async {
+    try {
+      await GetIt.I<SyncProfileService>().requestSync(syncProfileId);
+
+      state.maybeMap(
+        loaded: (loaded) => emit(loaded.copyWith(requestSyncError: null)),
+        orElse: () {},
+      );
+    } catch (e) {
+      state.maybeMap(
+        loaded: (loaded) =>
+            emit(loaded.copyWith(requestSyncError: e.toString())),
+        orElse: () {},
+      );
+    }
+  }
 
   Future<void> authorizeBackend() =>
       GetIt.I<BackendAuthorizationService>().authorizeBackend();

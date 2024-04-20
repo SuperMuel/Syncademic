@@ -67,19 +67,23 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
     final timestamp = data['lastSuccessfulSync'] as Timestamp?;
 
-    late SyncProfileStatus status;
+    late SyncProfileStatus status; //TODO : Refactor this crap
     switch (data['status']['type']) {
       case 'inProgress':
-        status = const SyncProfileStatus.inProgress();
+        status = SyncProfileStatus.inProgress(
+            syncTrigger: data['status']['syncTrigger']);
         break;
       case 'success':
-        status = const SyncProfileStatus.success();
+        status = SyncProfileStatus.success(
+            syncTrigger: data['status']['syncTrigger']);
         break;
       case 'failed':
-        status = SyncProfileStatus.failed(data['status']['message'] ?? '');
+        status = SyncProfileStatus.failed(data['status']['message'] ?? '',
+            syncTrigger: data['status']['syncTrigger']);
         break;
       case 'notStarted':
-        status = const SyncProfileStatus.notStarted();
+        status = SyncProfileStatus.notStarted(
+            syncTrigger: data['status']['syncTrigger']);
         break;
       default:
         throw Exception('Unknown status: ${data['status']}');

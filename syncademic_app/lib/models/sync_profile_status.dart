@@ -6,8 +6,11 @@ part 'sync_profile_status.freezed.dart';
 class SyncProfileStatus with _$SyncProfileStatus {
   const SyncProfileStatus._();
 
-  const factory SyncProfileStatus.success() = _Success;
-  const factory SyncProfileStatus.inProgress() = _InProgress;
-  const factory SyncProfileStatus.failed(String message) = _Failed;
-  const factory SyncProfileStatus.notStarted() = _NotStarted;
+  const factory SyncProfileStatus.success({String? syncTrigger}) = _Success;
+  const factory SyncProfileStatus.inProgress({String? syncTrigger}) =
+      _InProgress;
+  const factory SyncProfileStatus.failed(String message,
+      {String? syncTrigger}) = _Failed;
+  const factory SyncProfileStatus.notStarted({String? syncTrigger}) =
+      _NotStarted;
 }

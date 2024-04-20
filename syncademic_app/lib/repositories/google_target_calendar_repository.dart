@@ -1,5 +1,6 @@
+import 'package:get_it/get_it.dart';
 import 'package:googleapis/calendar/v3.dart';
-import 'package:http/http.dart' as http;
+import '../authorization/authorization_service.dart';
 
 import '../models/id.dart';
 import '../models/target_calendar.dart';
@@ -12,24 +13,42 @@ import 'target_calendar_repository.dart';
 // and handle access token elsewhere
 
 class GoogleTargetCalendarRepository implements TargetCalendarRepository {
-  final CalendarApi _client;
-  final String _accountOwnerUserId;
-
-  GoogleTargetCalendarRepository({
-    required http.Client authorizedClient,
-    required accountOwnerUserId,
-  })  : _client = CalendarApi(authorizedClient),
-        _accountOwnerUserId = accountOwnerUserId;
+  GoogleTargetCalendarRepository();
 
   @override
   Future<List<TargetCalendar>> getCalendars() async {
-    final calendarList = await _client.calendarList.list();
+    final api = await _getApi();
+
+    String? accountOwnerUserId = await _getAccountOwnerUserId();
+
+    final calendarList = await api.calendarList.list();
     return calendarList.items!
         .map((calendarListEntry) => TargetCalendar(
               id: ID.fromString(calendarListEntry.id!),
               title: calendarListEntry.summary ?? 'Unnamed calendar',
-              accountOwnerUserId: _accountOwnerUserId,
+              accountOwnerUserId: accountOwnerUserId,
             ))
         .toList();
+  }
+
+  Future<CalendarApi> _getApi() async {
+    final authorizedClient =
+        await GetIt.I<AuthorizationService>().authorizedClient;
+
+    if (authorizedClient == null) {
+      throw Exception(
+          "Could not get an authorized client from the AuthorizationService");
+    }
+
+    return CalendarApi(authorizedClient);
+  }
+
+  Future<String> _getAccountOwnerUserId() async {
+    final accountOwnerUserId = await GetIt.I<AuthorizationService>().userId;
+    if (accountOwnerUserId == null) {
+      throw Exception(
+          "Could not get the user ID from the AuthorizationService");
+    }
+    return accountOwnerUserId;
   }
 }

@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncademic_app/authentication/cubit/auth_cubit.dart';
-import 'package:syncademic_app/authorization/backend_authorization_service.dart';
-import 'package:syncademic_app/repositories/sync_profile_repository.dart';
-import 'package:syncademic_app/screens/account/account_page.dart';
-import 'package:syncademic_app/screens/landing_page.dart';
-import 'package:syncademic_app/screens/sync_profile/cubit/sync_profile_cubit.dart';
-import 'package:syncademic_app/screens/sync_profile/sync_profile_page.dart';
-import 'package:syncademic_app/services/auth_service.dart';
-import 'package:syncademic_app/services/sync_profile_service.dart';
-import 'package:syncademic_app/widgets/sync_profiles_list.dart';
+import 'authentication/cubit/auth_cubit.dart';
+import 'authorization/authorization_service.dart';
+import 'authorization/backend_authorization_service.dart';
+import 'repositories/sync_profile_repository.dart';
+import 'repositories/target_calendar_repository.dart';
+import 'screens/account/account_page.dart';
+import 'screens/landing_page.dart';
+import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
+import 'screens/new_sync_profile/new_sync_profile_page.dart';
+import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
+import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
+import 'screens/sync_profile/sync_profile_page.dart';
+import 'services/auth_service.dart';
+import 'services/sync_profile_service.dart';
+import 'widgets/sync_profiles_list.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +43,14 @@ void main() async {
   getIt.registerSingleton<BackendAuthorizationService>(
     //FirebaseBackendAuthorizationService(),
     MockBackendAuthorizationService(),
+  );
+
+  getIt.registerSingleton<AuthorizationService>(
+    MockAuthorizationService(),
+  );
+
+  getIt.registerSingleton<TargetCalendarRepository>(
+    MockTargetCalendarRepository(),
   );
 
   runApp(const MyApp());
@@ -82,17 +95,17 @@ final _router = GoRouter(
         builder: (context, state) {
           return const AccountPage();
         }),
-    // GoRoute(
-    //     path: '/new-sync-profile',
-    //     builder: (_, __) {
-    //       return MultiBlocProvider(
-    //         providers: [
-    //           BlocProvider(create: (_) => NewSyncProfileCubit()),
-    //           BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
-    //         ],
-    //         child: const NewSyncProfilePage(),
-    //       );
-    //     }),
+    GoRoute(
+        path: '/new-sync-profile',
+        builder: (_, __) {
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => NewSyncProfileCubit()),
+              BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
+            ],
+            child: const NewSyncProfilePage(),
+          );
+        }),
   ],
 );
 

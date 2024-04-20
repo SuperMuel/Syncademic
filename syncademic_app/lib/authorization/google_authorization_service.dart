@@ -20,6 +20,7 @@ class GoogleAuthorizationService implements AuthorizationService {
 
   @override
   Future<String?> getAuthorizationCode() async {
+    //TODO: Check if signIn is necessary. If so, write it here.
     _currentUser = await _googleSignIn.signIn();
     if (_currentUser == null) {
       log('User not logged in');
@@ -31,25 +32,13 @@ class GoogleAuthorizationService implements AuthorizationService {
 
   @override
   Future<bool> authorize() async {
+    //TODO : check if canAccessScopes before authorizing again
     _currentUser = await _googleSignIn.signIn();
     return _currentUser != null;
   }
 
   @override
   Future<bool> isAuthorized() => _googleSignIn.canAccessScopes(scopes);
-
-  @override
-  Future<String?> get accessToken async {
-    if (_currentUser == null) {
-      // TODO(SuperMuel) Log error
-      return null;
-    }
-
-    final headers = await _currentUser!.authHeaders;
-
-    // strip the "Bearer " prefix
-    return headers['Authorization']?.substring(7);
-  }
 
   @override
   Future<http.Client?> get authorizedClient =>

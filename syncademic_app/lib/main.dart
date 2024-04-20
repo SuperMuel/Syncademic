@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/authorization/firebase_backend_authorization_service.dart';
+import 'package:syncademic_app/authorization/google_authorization_service.dart';
+import 'package:syncademic_app/services/firebase_sync_profile_service.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';

@@ -7,10 +7,10 @@ class TargetCalendarCard extends StatelessWidget {
   final VoidCallback onPressed;
 
   const TargetCalendarCard({
-    Key? key,
+    super.key,
     required this.targetCalendar,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

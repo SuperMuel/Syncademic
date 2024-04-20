@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:googleapis/calendar/v3.dart';
-import '../authorization/authorization_service.dart';
 
+import '../authorization/authorization_service.dart';
 import '../models/id.dart';
 import '../models/target_calendar.dart';
 import 'target_calendar_repository.dart';

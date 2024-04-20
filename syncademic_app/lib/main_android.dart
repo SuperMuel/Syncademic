@@ -1,7 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/firebase_options.dart';
+import 'package:syncademic_app/services/firebase_auth_service.dart';
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
 import 'authorization/backend_authorization_service.dart';
@@ -21,10 +24,14 @@ import 'widgets/sync_profiles_list.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   final getIt = GetIt.instance;
   getIt.registerSingleton<AuthService>(
-    //FirebaseAuthService(),
-    MockAuthService(),
+    FirebaseAuthService(),
+    //MockAuthService(),
   );
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());

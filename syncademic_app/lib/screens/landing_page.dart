@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../authentication/cubit/auth_cubit.dart';
 
 class LandingPage extends StatelessWidget {
-  const LandingPage({Key? key}) : super(key: key);
+  const LandingPage({super.key});
 
   @override
   Widget build(BuildContext context) {

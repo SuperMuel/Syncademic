@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'cubit/new_sync_profile_cubit.dart';
+
 import '../../models/target_calendar.dart';
-import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 import '../../widgets/target_calendar_card.dart';
+import 'cubit/new_sync_profile_cubit.dart';
 import 'target_calendar_selector/target_calendar_selector.dart';
+import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 
 class NewSyncProfilePage extends StatelessWidget {
   const NewSyncProfilePage({super.key});

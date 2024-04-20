@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "776699153814",
+    "project_id": "syncademic-36c18",
+    "storage_bucket": "syncademic-36c18.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776699153814:android:cb442ac940431f8c1721b7",
+        "android_client_info": {
+          "package_name": "io.syncademic.syncademic_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "776699153814-fqlr8rl50mst6pco4eaf8cr881jkjdps.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDbARqEHhMx4zjQd02NfUmxzFSkkOK7-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "776699153814-fqlr8rl50mst6pco4eaf8cr881jkjdps.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "776699153814-7ontd7bgpbkabkgkhbfq1d2kp0umg09v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "fr.syncademic.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

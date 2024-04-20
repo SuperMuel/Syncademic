@@ -142,27 +142,30 @@ class _SyncProfileBody extends StatelessWidget {
 
           const SizedBox(height: 32),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const _AuthorizeButton(),
-              const SizedBox(width: 16),
-              _RequestSyncButton(syncProfile: syncProfile),
-              const SizedBox(width: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  GetIt.I<SyncProfileRepository>()
-                      .deleteSyncProfile(syncProfile.id);
-                  context.pop();
-                },
-                icon: const Icon(Icons.delete),
-                label: const Text('Delete'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const _AuthorizeButton(),
+                const SizedBox(width: 16),
+                _RequestSyncButton(syncProfile: syncProfile),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    GetIt.I<SyncProfileRepository>()
+                        .deleteSyncProfile(syncProfile.id);
+                    context.pop();
+                  },
+                  icon: const Icon(Icons.delete),
+                  label: const Text('Delete'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

@@ -14,6 +14,8 @@ part 'target_calendar_selector_state.dart';
 class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
   TargetCalendarSelectorCubit() : super(const TargetCalendarSelectorState());
 
+  //TODO : add a method that verifies if the user is authorized, and skip the authorization process if so
+
   Future<void> authorize() async {
     final authorizationService = GetIt.I<AuthorizationService>();
 

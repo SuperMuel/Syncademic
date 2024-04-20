@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syncademic_app/repositories/google_target_calendar_repository.dart';
+import 'package:syncademic_app/repositories/target_calendar_repository.dart';
 import 'authorization/firebase_backend_authorization_service.dart';
-import 'authorization/google_authorization_service.dart';
+import 'authorization/google_authorization/google_authorization_service.dart';
 import 'services/firebase_sync_profile_service.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
@@ -63,6 +65,11 @@ void main() async {
 
   getIt.registerSingleton<BackendAuthorizationService>(
     FirebaseBackendAuthorizationService(),
+  );
+
+  getIt.registerSingleton<TargetCalendarRepository>(
+    GoogleTargetCalendarRepository(),
+    //MockTargetCalendarRepository(),
   );
 
   runApp(const MyApp());
@@ -150,11 +157,13 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.account_circle),
             onPressed: () => context.push('/account'),
+            tooltip: "Account",
           ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () =>
                 GetIt.I<AuthCubit>().signOut().then((_) => context.go('/')),
+            tooltip: "Sign out",
           ),
         ],
       ),

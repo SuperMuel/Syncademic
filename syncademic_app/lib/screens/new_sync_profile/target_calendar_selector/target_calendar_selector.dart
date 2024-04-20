@@ -37,6 +37,8 @@ class TargetCalendarSelector extends StatelessWidget {
 class _UnauthorizedBody extends StatelessWidget {
   const _UnauthorizedBody();
 
+  //TODO : on initial load, check if the user is already authorized and skip this screen if so
+
   @override
   Widget build(BuildContext context) {
     return Column(

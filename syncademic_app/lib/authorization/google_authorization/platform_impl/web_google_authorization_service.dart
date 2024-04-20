@@ -3,18 +3,23 @@ import 'dart:developer';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:google_sign_in_web/web_only.dart';
-import 'package:http/http.dart' as http;
-import 'authorization_service.dart';
 
-class GoogleAuthorizationService implements AuthorizationService {
+import 'package:google_sign_in_web/web_only.dart';
+
+import 'package:http/http.dart' as http;
+
+import '../../authorization_service.dart';
+
+class GoogleAuthorizationServiceImpl implements AuthorizationService {
   final GoogleSignIn _googleSignIn;
   GoogleSignInAccount? _currentUser;
 
-  GoogleAuthorizationService({GoogleSignIn? googleSignIn})
+  GoogleAuthorizationServiceImpl({GoogleSignIn? googleSignIn})
       : _googleSignIn = googleSignIn ??
             GoogleSignIn(
               scopes: scopes,
+
+              // TODO : check if necessary on web (it's necessary on mobile)
               clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
             );
 

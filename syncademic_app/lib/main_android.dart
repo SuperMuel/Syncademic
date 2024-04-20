@@ -1,14 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syncademic_app/firebase_options.dart';
 import 'package:syncademic_app/repositories/google_target_calendar_repository.dart';
+import 'package:syncademic_app/services/account_service.dart';
 import 'package:syncademic_app/services/firebase_auth_service.dart';
+import 'package:syncademic_app/services/firestore_account_service.dart';
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
 import 'authorization/backend_authorization_service.dart';
+import 'authorization/google_authorization/google_authorization_service.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
@@ -26,6 +30,7 @@ import 'services/sync_profile_service.dart';
 import 'widgets/sync_profiles_list.dart';
 
 void main() async {
+  await dotenv.load(fileName: "dotenv");
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
@@ -57,14 +62,16 @@ void main() async {
   );
 
   getIt.registerSingleton<AuthorizationService>(
-    //GoogleAuthorizationService(),
-    MockAuthorizationService(),
+    GoogleAuthorizationService(),
+    //MockAuthorizationService(),
   );
 
   getIt.registerSingleton<TargetCalendarRepository>(
       GoogleTargetCalendarRepository()
       //MockTargetCalendarRepository(),
       );
+
+  getIt.registerSingleton<AccountService>(FirebaseAccountService());
 
   runApp(const MyApp());
 }

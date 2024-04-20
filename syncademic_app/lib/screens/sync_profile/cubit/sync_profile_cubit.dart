@@ -23,8 +23,22 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
             : SyncProfileState.loaded(syncProfile)));
   }
 
-  Future<void> requestSync() =>
-      GetIt.I<SyncProfileService>().requestSync(syncProfileId);
+  Future<void> requestSync() async {
+    try {
+      await GetIt.I<SyncProfileService>().requestSync(syncProfileId);
+
+      state.maybeMap(
+        loaded: (loaded) => emit(loaded.copyWith(requestSyncError: null)),
+        orElse: () {},
+      );
+    } catch (e) {
+      state.maybeMap(
+        loaded: (loaded) =>
+            emit(loaded.copyWith(requestSyncError: e.toString())),
+        orElse: () {},
+      );
+    }
+  }
 
   Future<void> authorizeBackend() =>
       GetIt.I<BackendAuthorizationService>().authorizeBackend();

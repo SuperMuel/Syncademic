@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
 import logging
-from typing import Any
+from typing import Any, Literal
 from firebase_functions import https_fn, logger
 
 from firebase_functions.firestore_fn import (
@@ -20,7 +20,7 @@ from firebase_functions.firestore_fn import (
 from firebase_admin import initialize_app, firestore
 from firebase_functions.params import StringParam
 
-from firebase_functions import https_fn, logger
+from firebase_functions import https_fn, logger, scheduler_fn
 
 
 from google.oauth2.credentials import Credentials
@@ -86,7 +86,9 @@ def get_calendar_service(user_id: str, sync_profile_id: str):
     return service
 
 
-@on_document_created(document="users/{userId}/syncProfiles/{syncProfileId}")  # type: ignore
+@on_document_created(
+    document="users/{userId}/syncProfiles/{syncProfileId}"
+)  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]):
     logging.info(f"Sync profile created: {event.data}")
 
@@ -101,6 +103,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     _synchronize_now(
         event.params["userId"],
         event.params["syncProfileId"],
+        sync_trigger="on_create",
     )
 
 
@@ -111,9 +114,9 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
         )
 
-    syncProfileId = req.data.get("syncProfileId")
+    sync_profile_id = req.data.get("syncProfileId")
 
-    if not syncProfileId:
+    if not sync_profile_id:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
         )
@@ -123,7 +126,7 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
         .collection("users")
         .document(req.auth.uid)
         .collection("syncProfiles")
-        .document(syncProfileId)
+        .document(sync_profile_id)
         .get()
     )
 
@@ -132,10 +135,32 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
         )
 
-    _synchronize_now(req.auth.uid, syncProfileId)
+    logger.info(f"Starting manual synchronization for {req.auth.uid}/{sync_profile_id}")
+
+    _synchronize_now(req.auth.uid, sync_profile_id, sync_trigger="manual")
 
 
-def _synchronize_now(user_id: str, sync_profile_id: str):
+# Every day at 2:00 AM UTC
+@scheduler_fn.on_schedule(schedule="0 2 * * *")
+def scheduled_sync(event: Any):
+    db = firestore.client()
+
+    for sync_profile in db.collection_group("syncProfiles").stream():
+        sync_profile_id = sync_profile.id
+        user_id = sync_profile.reference.parent.parent.id
+
+        logger.info(f"Synchronizing {user_id}/{sync_profile_id}")
+        try:
+            _synchronize_now(user_id, sync_profile_id, sync_trigger="scheduled")
+        except Exception as e:
+            logger.error(f"Failed to synchronize {user_id}/{sync_profile_id}: {e}")
+
+
+def _synchronize_now(
+    user_id: str,
+    sync_profile_id: str,
+    sync_trigger: Literal["on_create", "manual", "scheduled"],
+):
     db = firestore.client()
 
     sync_profile_ref = (
@@ -160,6 +185,7 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
         {
             "status": {
                 "type": "inProgress",
+                "syncTrigger": sync_trigger,
             }
         }
     )
@@ -178,6 +204,7 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
                 "status": {
                     "type": "failed",  # TODO : Specify that it failed because of authorization
                     "message": str(e),
+                    "syncTrigger": sync_trigger,
                 }
             }
         )
@@ -198,6 +225,7 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
                 "status": {
                     "type": "failed",
                     "message": str(e),
+                    "syncTrigger": sync_trigger,
                 }
             }
         )
@@ -208,6 +236,7 @@ def _synchronize_now(user_id: str, sync_profile_id: str):
         {
             "status": {
                 "type": "success",
+                "syncTrigger": sync_trigger,
             },
             "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
         }

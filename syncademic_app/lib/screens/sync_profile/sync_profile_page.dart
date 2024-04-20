@@ -14,7 +14,23 @@ class SyncProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      BlocBuilder<SyncProfileCubit, SyncProfileState>(
+      BlocConsumer<SyncProfileCubit, SyncProfileState>(
+        listener: (context, state) {
+          state.maybeMap(
+            loaded: (loaded) {
+              if (loaded.requestSyncError != null) {
+                ScaffoldMessenger.of(context)
+                  ..clearSnackBars()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(loaded.requestSyncError!),
+                    ),
+                  );
+              }
+            },
+            orElse: () {},
+          );
+        },
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
@@ -25,7 +41,7 @@ class SyncProfilePage extends StatelessWidget {
                 child: state.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  loaded: (syncProfile) =>
+                  loaded: (syncProfile, _) =>
                       _SyncProfileBody(syncProfile: syncProfile),
                   notFound: () => const _NotFoundBody(),
                 ),

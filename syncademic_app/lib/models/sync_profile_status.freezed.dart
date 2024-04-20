@@ -16,28 +16,29 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$SyncProfileStatus {
+  String? get syncTrigger => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() success,
-    required TResult Function() inProgress,
-    required TResult Function(String message) failed,
-    required TResult Function() notStarted,
+    required TResult Function(String? syncTrigger) success,
+    required TResult Function(String? syncTrigger) inProgress,
+    required TResult Function(String message, String? syncTrigger) failed,
+    required TResult Function(String? syncTrigger) notStarted,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? success,
-    TResult? Function()? inProgress,
-    TResult? Function(String message)? failed,
-    TResult? Function()? notStarted,
+    TResult? Function(String? syncTrigger)? success,
+    TResult? Function(String? syncTrigger)? inProgress,
+    TResult? Function(String message, String? syncTrigger)? failed,
+    TResult? Function(String? syncTrigger)? notStarted,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? success,
-    TResult Function()? inProgress,
-    TResult Function(String message)? failed,
-    TResult Function()? notStarted,
+    TResult Function(String? syncTrigger)? success,
+    TResult Function(String? syncTrigger)? inProgress,
+    TResult Function(String message, String? syncTrigger)? failed,
+    TResult Function(String? syncTrigger)? notStarted,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -66,6 +67,10 @@ mixin _$SyncProfileStatus {
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $SyncProfileStatusCopyWith<SyncProfileStatus> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -73,6 +78,8 @@ abstract class $SyncProfileStatusCopyWith<$Res> {
   factory $SyncProfileStatusCopyWith(
           SyncProfileStatus value, $Res Function(SyncProfileStatus) then) =
       _$SyncProfileStatusCopyWithImpl<$Res, SyncProfileStatus>;
+  @useResult
+  $Res call({String? syncTrigger});
 }
 
 /// @nodoc
@@ -84,13 +91,30 @@ class _$SyncProfileStatusCopyWithImpl<$Res, $Val extends SyncProfileStatus>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? syncTrigger = freezed,
+  }) {
+    return _then(_value.copyWith(
+      syncTrigger: freezed == syncTrigger
+          ? _value.syncTrigger
+          : syncTrigger // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
 }
 
 /// @nodoc
-abstract class _$$SuccessImplCopyWith<$Res> {
+abstract class _$$SuccessImplCopyWith<$Res>
+    implements $SyncProfileStatusCopyWith<$Res> {
   factory _$$SuccessImplCopyWith(
           _$SuccessImpl value, $Res Function(_$SuccessImpl) then) =
       __$$SuccessImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? syncTrigger});
 }
 
 /// @nodoc
@@ -100,60 +124,85 @@ class __$$SuccessImplCopyWithImpl<$Res>
   __$$SuccessImplCopyWithImpl(
       _$SuccessImpl _value, $Res Function(_$SuccessImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? syncTrigger = freezed,
+  }) {
+    return _then(_$SuccessImpl(
+      syncTrigger: freezed == syncTrigger
+          ? _value.syncTrigger
+          : syncTrigger // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$SuccessImpl extends _Success {
-  const _$SuccessImpl() : super._();
+  const _$SuccessImpl({this.syncTrigger}) : super._();
+
+  @override
+  final String? syncTrigger;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.success()';
+    return 'SyncProfileStatus.success(syncTrigger: $syncTrigger)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$SuccessImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$SuccessImpl &&
+            (identical(other.syncTrigger, syncTrigger) ||
+                other.syncTrigger == syncTrigger));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, syncTrigger);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SuccessImplCopyWith<_$SuccessImpl> get copyWith =>
+      __$$SuccessImplCopyWithImpl<_$SuccessImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() success,
-    required TResult Function() inProgress,
-    required TResult Function(String message) failed,
-    required TResult Function() notStarted,
+    required TResult Function(String? syncTrigger) success,
+    required TResult Function(String? syncTrigger) inProgress,
+    required TResult Function(String message, String? syncTrigger) failed,
+    required TResult Function(String? syncTrigger) notStarted,
   }) {
-    return success();
+    return success(syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? success,
-    TResult? Function()? inProgress,
-    TResult? Function(String message)? failed,
-    TResult? Function()? notStarted,
+    TResult? Function(String? syncTrigger)? success,
+    TResult? Function(String? syncTrigger)? inProgress,
+    TResult? Function(String message, String? syncTrigger)? failed,
+    TResult? Function(String? syncTrigger)? notStarted,
   }) {
-    return success?.call();
+    return success?.call(syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? success,
-    TResult Function()? inProgress,
-    TResult Function(String message)? failed,
-    TResult Function()? notStarted,
+    TResult Function(String? syncTrigger)? success,
+    TResult Function(String? syncTrigger)? inProgress,
+    TResult Function(String message, String? syncTrigger)? failed,
+    TResult Function(String? syncTrigger)? notStarted,
     required TResult orElse(),
   }) {
     if (success != null) {
-      return success();
+      return success(syncTrigger);
     }
     return orElse();
   }
@@ -197,15 +246,26 @@ class _$SuccessImpl extends _Success {
 }
 
 abstract class _Success extends SyncProfileStatus {
-  const factory _Success() = _$SuccessImpl;
+  const factory _Success({final String? syncTrigger}) = _$SuccessImpl;
   const _Success._() : super._();
+
+  @override
+  String? get syncTrigger;
+  @override
+  @JsonKey(ignore: true)
+  _$$SuccessImplCopyWith<_$SuccessImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$InProgressImplCopyWith<$Res> {
+abstract class _$$InProgressImplCopyWith<$Res>
+    implements $SyncProfileStatusCopyWith<$Res> {
   factory _$$InProgressImplCopyWith(
           _$InProgressImpl value, $Res Function(_$InProgressImpl) then) =
       __$$InProgressImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? syncTrigger});
 }
 
 /// @nodoc
@@ -215,60 +275,85 @@ class __$$InProgressImplCopyWithImpl<$Res>
   __$$InProgressImplCopyWithImpl(
       _$InProgressImpl _value, $Res Function(_$InProgressImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? syncTrigger = freezed,
+  }) {
+    return _then(_$InProgressImpl(
+      syncTrigger: freezed == syncTrigger
+          ? _value.syncTrigger
+          : syncTrigger // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$InProgressImpl extends _InProgress {
-  const _$InProgressImpl() : super._();
+  const _$InProgressImpl({this.syncTrigger}) : super._();
+
+  @override
+  final String? syncTrigger;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.inProgress()';
+    return 'SyncProfileStatus.inProgress(syncTrigger: $syncTrigger)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$InProgressImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$InProgressImpl &&
+            (identical(other.syncTrigger, syncTrigger) ||
+                other.syncTrigger == syncTrigger));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, syncTrigger);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$InProgressImplCopyWith<_$InProgressImpl> get copyWith =>
+      __$$InProgressImplCopyWithImpl<_$InProgressImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() success,
-    required TResult Function() inProgress,
-    required TResult Function(String message) failed,
-    required TResult Function() notStarted,
+    required TResult Function(String? syncTrigger) success,
+    required TResult Function(String? syncTrigger) inProgress,
+    required TResult Function(String message, String? syncTrigger) failed,
+    required TResult Function(String? syncTrigger) notStarted,
   }) {
-    return inProgress();
+    return inProgress(syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? success,
-    TResult? Function()? inProgress,
-    TResult? Function(String message)? failed,
-    TResult? Function()? notStarted,
+    TResult? Function(String? syncTrigger)? success,
+    TResult? Function(String? syncTrigger)? inProgress,
+    TResult? Function(String message, String? syncTrigger)? failed,
+    TResult? Function(String? syncTrigger)? notStarted,
   }) {
-    return inProgress?.call();
+    return inProgress?.call(syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? success,
-    TResult Function()? inProgress,
-    TResult Function(String message)? failed,
-    TResult Function()? notStarted,
+    TResult Function(String? syncTrigger)? success,
+    TResult Function(String? syncTrigger)? inProgress,
+    TResult Function(String message, String? syncTrigger)? failed,
+    TResult Function(String? syncTrigger)? notStarted,
     required TResult orElse(),
   }) {
     if (inProgress != null) {
-      return inProgress();
+      return inProgress(syncTrigger);
     }
     return orElse();
   }
@@ -312,17 +397,26 @@ class _$InProgressImpl extends _InProgress {
 }
 
 abstract class _InProgress extends SyncProfileStatus {
-  const factory _InProgress() = _$InProgressImpl;
+  const factory _InProgress({final String? syncTrigger}) = _$InProgressImpl;
   const _InProgress._() : super._();
+
+  @override
+  String? get syncTrigger;
+  @override
+  @JsonKey(ignore: true)
+  _$$InProgressImplCopyWith<_$InProgressImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$FailedImplCopyWith<$Res> {
+abstract class _$$FailedImplCopyWith<$Res>
+    implements $SyncProfileStatusCopyWith<$Res> {
   factory _$$FailedImplCopyWith(
           _$FailedImpl value, $Res Function(_$FailedImpl) then) =
       __$$FailedImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({String message});
+  $Res call({String message, String? syncTrigger});
 }
 
 /// @nodoc
@@ -337,12 +431,17 @@ class __$$FailedImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? message = null,
+    Object? syncTrigger = freezed,
   }) {
     return _then(_$FailedImpl(
       null == message
           ? _value.message
           : message // ignore: cast_nullable_to_non_nullable
               as String,
+      syncTrigger: freezed == syncTrigger
+          ? _value.syncTrigger
+          : syncTrigger // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -350,14 +449,16 @@ class __$$FailedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$FailedImpl extends _Failed {
-  const _$FailedImpl(this.message) : super._();
+  const _$FailedImpl(this.message, {this.syncTrigger}) : super._();
 
   @override
   final String message;
+  @override
+  final String? syncTrigger;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.failed(message: $message)';
+    return 'SyncProfileStatus.failed(message: $message, syncTrigger: $syncTrigger)';
   }
 
   @override
@@ -365,11 +466,13 @@ class _$FailedImpl extends _Failed {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$FailedImpl &&
-            (identical(other.message, message) || other.message == message));
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.syncTrigger, syncTrigger) ||
+                other.syncTrigger == syncTrigger));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, message);
+  int get hashCode => Object.hash(runtimeType, message, syncTrigger);
 
   @JsonKey(ignore: true)
   @override
@@ -380,36 +483,36 @@ class _$FailedImpl extends _Failed {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() success,
-    required TResult Function() inProgress,
-    required TResult Function(String message) failed,
-    required TResult Function() notStarted,
+    required TResult Function(String? syncTrigger) success,
+    required TResult Function(String? syncTrigger) inProgress,
+    required TResult Function(String message, String? syncTrigger) failed,
+    required TResult Function(String? syncTrigger) notStarted,
   }) {
-    return failed(message);
+    return failed(message, syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? success,
-    TResult? Function()? inProgress,
-    TResult? Function(String message)? failed,
-    TResult? Function()? notStarted,
+    TResult? Function(String? syncTrigger)? success,
+    TResult? Function(String? syncTrigger)? inProgress,
+    TResult? Function(String message, String? syncTrigger)? failed,
+    TResult? Function(String? syncTrigger)? notStarted,
   }) {
-    return failed?.call(message);
+    return failed?.call(message, syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? success,
-    TResult Function()? inProgress,
-    TResult Function(String message)? failed,
-    TResult Function()? notStarted,
+    TResult Function(String? syncTrigger)? success,
+    TResult Function(String? syncTrigger)? inProgress,
+    TResult Function(String message, String? syncTrigger)? failed,
+    TResult Function(String? syncTrigger)? notStarted,
     required TResult orElse(),
   }) {
     if (failed != null) {
-      return failed(message);
+      return failed(message, syncTrigger);
     }
     return orElse();
   }
@@ -453,20 +556,28 @@ class _$FailedImpl extends _Failed {
 }
 
 abstract class _Failed extends SyncProfileStatus {
-  const factory _Failed(final String message) = _$FailedImpl;
+  const factory _Failed(final String message, {final String? syncTrigger}) =
+      _$FailedImpl;
   const _Failed._() : super._();
 
   String get message;
+  @override
+  String? get syncTrigger;
+  @override
   @JsonKey(ignore: true)
   _$$FailedImplCopyWith<_$FailedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$NotStartedImplCopyWith<$Res> {
+abstract class _$$NotStartedImplCopyWith<$Res>
+    implements $SyncProfileStatusCopyWith<$Res> {
   factory _$$NotStartedImplCopyWith(
           _$NotStartedImpl value, $Res Function(_$NotStartedImpl) then) =
       __$$NotStartedImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? syncTrigger});
 }
 
 /// @nodoc
@@ -476,60 +587,85 @@ class __$$NotStartedImplCopyWithImpl<$Res>
   __$$NotStartedImplCopyWithImpl(
       _$NotStartedImpl _value, $Res Function(_$NotStartedImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? syncTrigger = freezed,
+  }) {
+    return _then(_$NotStartedImpl(
+      syncTrigger: freezed == syncTrigger
+          ? _value.syncTrigger
+          : syncTrigger // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$NotStartedImpl extends _NotStarted {
-  const _$NotStartedImpl() : super._();
+  const _$NotStartedImpl({this.syncTrigger}) : super._();
+
+  @override
+  final String? syncTrigger;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.notStarted()';
+    return 'SyncProfileStatus.notStarted(syncTrigger: $syncTrigger)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$NotStartedImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$NotStartedImpl &&
+            (identical(other.syncTrigger, syncTrigger) ||
+                other.syncTrigger == syncTrigger));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, syncTrigger);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$NotStartedImplCopyWith<_$NotStartedImpl> get copyWith =>
+      __$$NotStartedImplCopyWithImpl<_$NotStartedImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() success,
-    required TResult Function() inProgress,
-    required TResult Function(String message) failed,
-    required TResult Function() notStarted,
+    required TResult Function(String? syncTrigger) success,
+    required TResult Function(String? syncTrigger) inProgress,
+    required TResult Function(String message, String? syncTrigger) failed,
+    required TResult Function(String? syncTrigger) notStarted,
   }) {
-    return notStarted();
+    return notStarted(syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? success,
-    TResult? Function()? inProgress,
-    TResult? Function(String message)? failed,
-    TResult? Function()? notStarted,
+    TResult? Function(String? syncTrigger)? success,
+    TResult? Function(String? syncTrigger)? inProgress,
+    TResult? Function(String message, String? syncTrigger)? failed,
+    TResult? Function(String? syncTrigger)? notStarted,
   }) {
-    return notStarted?.call();
+    return notStarted?.call(syncTrigger);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? success,
-    TResult Function()? inProgress,
-    TResult Function(String message)? failed,
-    TResult Function()? notStarted,
+    TResult Function(String? syncTrigger)? success,
+    TResult Function(String? syncTrigger)? inProgress,
+    TResult Function(String message, String? syncTrigger)? failed,
+    TResult Function(String? syncTrigger)? notStarted,
     required TResult orElse(),
   }) {
     if (notStarted != null) {
-      return notStarted();
+      return notStarted(syncTrigger);
     }
     return orElse();
   }
@@ -573,6 +709,13 @@ class _$NotStartedImpl extends _NotStarted {
 }
 
 abstract class _NotStarted extends SyncProfileStatus {
-  const factory _NotStarted() = _$NotStartedImpl;
+  const factory _NotStarted({final String? syncTrigger}) = _$NotStartedImpl;
   const _NotStarted._() : super._();
+
+  @override
+  String? get syncTrigger;
+  @override
+  @JsonKey(ignore: true)
+  _$$NotStartedImplCopyWith<_$NotStartedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

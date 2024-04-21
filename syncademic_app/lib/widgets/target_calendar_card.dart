@@ -9,10 +9,12 @@ class TargetCalendarCard extends StatelessWidget {
   final TargetCalendar targetCalendar;
   final VoidCallback? onPressed;
 
+  final bool showEditIcon;
   const TargetCalendarCard({
     super.key,
     required this.targetCalendar,
     this.onPressed,
+    this.showEditIcon = false,
   });
 
   @override
@@ -38,6 +40,7 @@ class TargetCalendarCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      // TODO : stack the icon button instead of aligning it to the right to prevent UI jank
                       children: [
                         Flexible(
                           child: Text(
@@ -45,10 +48,11 @@ class TargetCalendarCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: onPressed,
-                        ),
+                        if (showEditIcon)
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: onPressed,
+                          ),
                       ],
                     ),
                     if (targetCalendar.description != null) ...[

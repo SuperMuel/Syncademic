@@ -27,7 +27,17 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
           state.copyWith(title: title, titleError: 'Title is too long'));
     }
 
-    emit(state.copyWith(title: title, titleError: null));
+    emit(state.copyWith(
+      title: title,
+      titleError: null,
+      newCalendarCreated: TargetCalendar(
+        id: ID(),
+        title: title,
+        providerAccountId: '',
+        createdBySyncademic: true,
+        description: "Calendar created by Syncademic.io}",
+      ),
+    ));
   }
 
   void urlChanged(String url) {
@@ -59,10 +69,11 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     if (calendar == null) {
       return;
     }
-    emit(state.copyWith(targetCalendar: calendar));
+    emit(state.copyWith(existingCalendarSelected: calendar));
   }
 
   void authorizeBackend() async {
+    //TODO : in this step, retrieve the user's providerAccountId in case we need it to create a new calendar.
     emit(state.copyWith(
         isAuthorizingBackend: true,
         backendAuthorizationError: null,
@@ -79,6 +90,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return;
     }
 
+    //TODO : check if providerAccountId is valid
     emit(state.copyWith(
       isAuthorizingBackend: false,
       hasAuthorizedBackend: true,
@@ -99,15 +111,21 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   Future<void> submit() async {
+    //TODO : extract this to a separate method
     if (isBlank(state.title) ||
         isBlank(state.url) ||
-        state.targetCalendar == null ||
+        (state.targetCalendarChoice == TargetCalendarChoice.useExisting &&
+            state.existingCalendarSelected == null) ||
+        (state.targetCalendarChoice == TargetCalendarChoice.createNew &&
+            state.newCalendarCreated == null) ||
         state.titleError != null ||
         state.urlError != null) {
       throw StateError('Cannot submit with invalid data');
     }
 
     emit(state.copyWith(isSubmitting: true));
+
+    //TODO : try to create new calendar if targetCalendarChoice is createNew
 
     final scheduleSource = ScheduleSource(
       url: state.url,
@@ -117,7 +135,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       id: ID(),
       title: state.title,
       scheduleSource: scheduleSource,
-      targetCalendar: state.targetCalendar!,
+      targetCalendar:
+          state.targetCalendarChoice == TargetCalendarChoice.createNew
+              ? state.newCalendarCreated!
+              : state.existingCalendarSelected!,
     );
 
     final repo = GetIt.I<SyncProfileRepository>();

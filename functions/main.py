@@ -259,6 +259,12 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing authorization code"
         )
 
+    redirect_uri = request.data.get("redirectUri", "https://syncademic.io")
+    if redirect_uri not in ["https://syncademic.io", "http://localhost:7357"]:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid redirect URI"
+        )
+
     user_id = request.auth.uid
 
     db = firestore.client()
@@ -284,7 +290,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
                 }
             },
             scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri="https://syncademic.io",
+            redirect_uri=redirect_uri,
         )
 
         flow.fetch_token(code=auth_code)

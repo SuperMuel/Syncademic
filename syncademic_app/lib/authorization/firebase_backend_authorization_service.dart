@@ -7,6 +7,11 @@ import 'backend_authorization_service.dart';
 
 class FirebaseBackendAuthorizationService
     implements BackendAuthorizationService {
+  final String redirectUri;
+
+  FirebaseBackendAuthorizationService(
+      {this.redirectUri = 'https://syncademic.io'});
+
   @override
   Future<void> authorizeBackend() async {
     log("Authorizing the backend using Firebase");
@@ -24,6 +29,7 @@ class FirebaseBackendAuthorizationService
     try {
       await FirebaseFunctions.instance.httpsCallable('authorize_backend').call({
         'authCode': authCode,
+        'redirectUri': redirectUri,
       });
     } on FirebaseFunctionsException catch (e) {
       log('Error authorizing backend: ${e.code}, ${e.details}, ${e.message}');

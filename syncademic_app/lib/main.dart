@@ -49,27 +49,35 @@ void main() async {
     //   ..addInProgressProfile(),
   );
 
-  getIt.registerSingleton<AuthService>(FirebaseAuthService());
-  //getIt.registerSingleton<AuthService>(MockAuthService());
+  getIt.registerSingleton<AuthService>(
+    //MockAuthService(),
+    FirebaseAuthService(),
+  );
 
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
   getIt.registerSingleton<AccountService>(FirebaseAccountService());
 
   getIt.registerSingleton<AuthorizationService>(
-    //MockAuthorizationService(),
+    // MockAuthorizationService(),
     GoogleAuthorizationService(),
   );
 
   getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
 
   getIt.registerSingleton<BackendAuthorizationService>(
+    // MockBackendAuthorizationService(),
+    //
+    // Local :
+    // FirebaseBackendAuthorizationService(redirectUri: 'http://localhost:7357'),
+    //
+    // Production :
     FirebaseBackendAuthorizationService(),
   );
 
   getIt.registerSingleton<TargetCalendarRepository>(
-    GoogleTargetCalendarRepository(),
     //MockTargetCalendarRepository(),
+    GoogleTargetCalendarRepository(),
   );
 
   runApp(const MyApp());

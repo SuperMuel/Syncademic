@@ -62,4 +62,24 @@ class NewSyncProfileState with _$NewSyncProfileState {
         return existingCalendarSelected;
     }
   }
+
+  bool get isUrlValid => urlError == null && !isBlank(url);
+
+  bool get isTitleValid => titleError == null && !isBlank(title);
+
+  bool canSubmit() {
+    if (!isTitleValid || !isUrlValid) {
+      return false;
+    }
+
+    if (targetCalendarSelected == null) {
+      return false;
+    }
+
+    if (isBlank(targetCalendarSelected!.providerAccountId)) {
+      return false;
+    }
+
+    return true;
+  }
 }

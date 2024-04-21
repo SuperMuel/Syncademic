@@ -59,25 +59,19 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
 
     //TODO : handle timezone information
     final calendar = Calendar(
-      id: targetCalendar.id.value,
       summary: targetCalendar.title,
       description: targetCalendar.description,
     );
 
     final createdCalendar = await api.calendars.insert(calendar);
 
-    if (createdCalendar.id != targetCalendar.id.value) {
-      log("Created calendar ID does not match the requested ID");
-    }
-
     if (createdCalendar.id == null) {
       throw Exception("Created calendar ID is null");
     }
 
-    return TargetCalendar(
+    return targetCalendar.copyWith(
       id: ID.fromString(createdCalendar.id!),
-      title: createdCalendar.summary ?? 'Unnamed calendar',
-      providerAccountId: targetCalendar.providerAccountId,
+      createdBySyncademic: true,
     );
   }
 }

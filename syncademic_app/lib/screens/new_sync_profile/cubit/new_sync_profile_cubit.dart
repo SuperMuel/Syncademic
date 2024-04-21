@@ -1,7 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/authorization/authorization_service.dart';
+import 'package:syncademic_app/repositories/target_calendar_repository.dart';
 import '../../../authorization/backend_authorization_service.dart';
 import '../../../models/id.dart';
 import '../../../models/schedule_source.dart';
@@ -31,11 +35,11 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       title: title,
       titleError: null,
       newCalendarCreated: TargetCalendar(
-        id: ID(),
+        id: ID(), // Will be overwritten by the calendar API
         title: title,
         providerAccountId: '',
         createdBySyncademic: true,
-        description: "Calendar created by Syncademic.io}",
+        description: "Calendar created by Syncademic.io",
       ),
     ));
   }
@@ -73,7 +77,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   void authorizeBackend() async {
-    //TODO : in this step, retrieve the user's providerAccountId in case we need it to create a new calendar.
     emit(state.copyWith(
         isAuthorizingBackend: true,
         backendAuthorizationError: null,
@@ -90,11 +93,35 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return;
     }
 
-    //TODO : check if providerAccountId is valid
+    final providerAccountId = await GetIt.I<AuthorizationService>().userId;
+
+    if (providerAccountId == null) {
+      return emit(state.copyWith(
+        isAuthorizingBackend: false,
+        hasAuthorizedBackend: false,
+        backendAuthorizationError:
+            'Provider account ID is null. If this issue persists, please contact support.',
+      ));
+    }
+
+    _updateProviderAccountId(providerAccountId);
+
     emit(state.copyWith(
       isAuthorizingBackend: false,
       hasAuthorizedBackend: true,
       backendAuthorizationError: null,
+    ));
+  }
+
+  /// This method is called when the user has successfully authorized the backend, and we have the providerAccountId.
+  void _updateProviderAccountId(String providerAccountId) {
+    emit(state.copyWith(
+      existingCalendarSelected: state.existingCalendarSelected?.copyWith(
+        providerAccountId: providerAccountId,
+      ),
+      newCalendarCreated: state.newCalendarCreated?.copyWith(
+        providerAccountId: providerAccountId,
+      ),
     ));
   }
 
@@ -111,21 +138,24 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   Future<void> submit() async {
-    //TODO : extract this to a separate method
-    if (isBlank(state.title) ||
-        isBlank(state.url) ||
-        (state.targetCalendarChoice == TargetCalendarChoice.useExisting &&
-            state.existingCalendarSelected == null) ||
-        (state.targetCalendarChoice == TargetCalendarChoice.createNew &&
-            state.newCalendarCreated == null) ||
-        state.titleError != null ||
-        state.urlError != null) {
-      throw StateError('Cannot submit with invalid data');
+    if (!state.canSubmit()) {
+      return emit(state.copyWith(
+        submitError:
+            'Cannot submit invalid form. Please check each step again. If the issue persists, please contact support.',
+        isSubmitting: false,
+      ));
     }
 
     emit(state.copyWith(isSubmitting: true));
 
-    //TODO : try to create new calendar if targetCalendarChoice is createNew
+    late TargetCalendar createdCalendar;
+    try {
+      createdCalendar = await GetIt.I<TargetCalendarRepository>()
+          .createCalendar(state.newCalendarCreated!);
+    } catch (e) {
+      return emit(
+          state.copyWith(submitError: e.toString(), isSubmitting: false));
+    }
 
     final scheduleSource = ScheduleSource(
       url: state.url,
@@ -135,19 +165,16 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       id: ID(),
       title: state.title,
       scheduleSource: scheduleSource,
-      targetCalendar:
-          state.targetCalendarChoice == TargetCalendarChoice.createNew
-              ? state.newCalendarCreated!
-              : state.existingCalendarSelected!,
+      targetCalendar: createdCalendar,
     );
 
     final repo = GetIt.I<SyncProfileRepository>();
 
     try {
       await repo.createSyncProfile(syncProfile);
-      emit(state.copyWith(submittedSuccessfully: true));
+      emit(state.copyWith(submittedSuccessfully: true, isSubmitting: false));
     } catch (e) {
-      emit(state.copyWith(submitError: e.toString()));
+      emit(state.copyWith(submitError: e.toString(), isSubmitting: false));
     }
   }
 }

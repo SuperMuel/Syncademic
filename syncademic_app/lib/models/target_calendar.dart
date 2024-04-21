@@ -15,6 +15,9 @@ class TargetCalendar with _$TargetCalendar {
     /// The title of the calendar, as provided by the calendar service.
     required String title,
 
+    /// The description of the calendar, as provided by the calendar service.
+    String? description,
+
     /// The unique identifier for the user account that owns the calendar.
     ///
     /// This identifier represents the specific user account associated with the calendar,

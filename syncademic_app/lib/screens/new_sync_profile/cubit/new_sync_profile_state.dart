@@ -1,5 +1,7 @@
 part of 'new_sync_profile_cubit.dart';
 
+enum TargetCalendarChoice { createNew, useExisting }
+
 @freezed
 class NewSyncProfileState with _$NewSyncProfileState {
   const factory NewSyncProfileState({
@@ -8,7 +10,10 @@ class NewSyncProfileState with _$NewSyncProfileState {
     String? titleError,
     @Default('') String url,
     String? urlError,
-    TargetCalendar? targetCalendar,
+    TargetCalendar? existingCalendarSelected,
+    TargetCalendar? newCalendarCreated,
+    @Default(TargetCalendarChoice.createNew)
+    TargetCalendarChoice targetCalendarChoice,
     @Default(false) bool isAuthorizingBackend,
     @Default(false) bool hasAuthorizedBackend,
     String? backendAuthorizationError,
@@ -32,7 +37,7 @@ class NewSyncProfileState with _$NewSyncProfileState {
 
     // Step 2: Target calendar
     if (currentStep == 2) {
-      return targetCalendar != null;
+      return targetCalendarSelected != null;
     }
 
     // Step 3: Authorize backend
@@ -44,4 +49,37 @@ class NewSyncProfileState with _$NewSyncProfileState {
   }
 
   bool get canGoBack => currentStep > 0;
+
+  /// The target calendar that the user has selected.
+  ///
+  /// If the user has selected to create a new calendar, this will be the new calendar.
+  /// If the user has selected to use an existing calendar, this will be the existing calendar.
+  TargetCalendar? get targetCalendarSelected {
+    switch (targetCalendarChoice) {
+      case TargetCalendarChoice.createNew:
+        return newCalendarCreated;
+      case TargetCalendarChoice.useExisting:
+        return existingCalendarSelected;
+    }
+  }
+
+  bool get isUrlValid => urlError == null && !isBlank(url);
+
+  bool get isTitleValid => titleError == null && !isBlank(title);
+
+  bool canSubmit() {
+    if (!isTitleValid || !isUrlValid) {
+      return false;
+    }
+
+    if (targetCalendarSelected == null) {
+      return false;
+    }
+
+    if (isBlank(targetCalendarSelected!.providerAccountId)) {
+      return false;
+    }
+
+    return true;
+  }
 }

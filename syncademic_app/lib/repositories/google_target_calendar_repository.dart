@@ -3,6 +3,7 @@ import 'package:googleapis/calendar/v3.dart';
 
 import '../authorization/authorization_service.dart';
 import '../models/id.dart';
+import 'dart:developer';
 import '../models/target_calendar.dart';
 import 'target_calendar_repository.dart';
 
@@ -50,5 +51,27 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
           "Could not get the user ID from the AuthorizationService");
     }
     return providerAccountId;
+  }
+
+  @override
+  Future<TargetCalendar> createCalendar(TargetCalendar targetCalendar) async {
+    final api = await _getApi();
+
+    //TODO : handle timezone information
+    final calendar = Calendar(
+      summary: targetCalendar.title,
+      description: targetCalendar.description,
+    );
+
+    final createdCalendar = await api.calendars.insert(calendar);
+
+    if (createdCalendar.id == null) {
+      throw Exception("Created calendar ID is null");
+    }
+
+    return targetCalendar.copyWith(
+      id: ID.fromString(createdCalendar.id!),
+      createdBySyncademic: true,
+    );
   }
 }

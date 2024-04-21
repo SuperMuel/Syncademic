@@ -93,14 +93,16 @@ class TitleStepContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
-        return TextField(
+        return TextFormField(
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
             hintText: 'INSA Lyon - 2023-2024',
             errorText: state.titleError,
           ),
+          initialValue: state.title,
           maxLength: 50,
           onChanged: context.read<NewSyncProfileCubit>().titleChanged,
+          onEditingComplete: context.read<NewSyncProfileCubit>().next,
         );
       },
     );
@@ -116,15 +118,17 @@ class UrlStepContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
-        return TextField(
+        return TextFormField(
           decoration: InputDecoration(
             labelText: 'Calendar url',
             border: const OutlineInputBorder(),
             counterText: '',
             errorText: state.urlError,
           ),
+          initialValue: state.url,
           maxLength: 4000,
           onChanged: context.read<NewSyncProfileCubit>().urlChanged,
+          onEditingComplete: context.read<NewSyncProfileCubit>().next,
         );
       },
     );
@@ -148,7 +152,7 @@ class TargetCalendarStepContent extends StatelessWidget {
         ),
       ),
     );
-    cubit.selectCalendar(selectedCalendar);
+    cubit.selectExistingCalendar(selectedCalendar);
   }
 
   @override
@@ -166,16 +170,66 @@ class TargetCalendarStepContent extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return state.targetCalendar == null
-            ? ElevatedButton.icon(
+        return Column(
+          children: [
+            //TODO: add info box
+            SegmentedButton<TargetCalendarChoice>(
+              onSelectionChanged: context
+                  .read<NewSyncProfileCubit>()
+                  .targetCalendarChoiceChanged,
+              multiSelectionEnabled: false,
+              style: SegmentedButton.styleFrom(
+                alignment: Alignment.center,
+              ),
+              segments: const [
+                ButtonSegment(
+                    value: TargetCalendarChoice.createNew,
+                    label: Text(
+                      'New calendar',
+                      textAlign: TextAlign.center,
+                    )),
+                ButtonSegment(
+                    value: TargetCalendarChoice.useExisting,
+                    label: Text(
+                      'Select existing',
+                      textAlign: TextAlign.center,
+                    )),
+              ],
+              selected: {state.targetCalendarChoice},
+            ),
+            const Gap(32),
+
+            if (state.targetCalendarSelected != null) ...[
+              //TODO extract widget
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  state.targetCalendarChoice == TargetCalendarChoice.createNew
+                      ? 'Google Calendar to be created :'
+                      : 'Your selected calendar :',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              const Gap(8),
+              TargetCalendarCard(
+                targetCalendar: state.targetCalendarSelected!,
+                onPressed: state.targetCalendarChoice ==
+                        TargetCalendarChoice.useExisting
+                    ? () => _openCalendarSelector(context)
+                    : null,
+                showEditIcon: state.targetCalendarChoice ==
+                    TargetCalendarChoice.useExisting,
+              ),
+            ],
+            if (state.existingCalendarSelected == null &&
+                state.targetCalendarChoice == TargetCalendarChoice.useExisting)
+              ElevatedButton.icon(
                 icon: const Icon(Icons.calendar_month),
                 onPressed: () => _openCalendarSelector(context),
                 label: const Text('Select target calendar'),
-              )
-            : TargetCalendarCard(
-                targetCalendar: state.targetCalendar!,
-                onPressed: () => _openCalendarSelector(context),
-              );
+              ),
+          ],
+        );
       },
     );
   }
@@ -265,7 +319,16 @@ class SummaryStepContent extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const Gap(8),
-                    Text(state.targetCalendar?.title ?? 'Not selected'),
+                    Text(
+                      state.targetCalendarSelected?.title ??
+                          'No calendar selected',
+                    ),
+                    Text(
+                      state.targetCalendarChoice ==
+                              TargetCalendarChoice.createNew
+                          ? 'This calendar will be created'
+                          : 'This calendar already exists',
+                    )
                   ],
                 ),
               ),

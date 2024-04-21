@@ -1,7 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import '../../../authorization/authorization_service.dart';
+import '../../../repositories/target_calendar_repository.dart';
 import '../../../authorization/backend_authorization_service.dart';
 import '../../../models/id.dart';
 import '../../../models/schedule_source.dart';
@@ -27,7 +31,17 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
           state.copyWith(title: title, titleError: 'Title is too long'));
     }
 
-    emit(state.copyWith(title: title, titleError: null));
+    emit(state.copyWith(
+      title: title,
+      titleError: null,
+      newCalendarCreated: TargetCalendar(
+        id: ID(), // Will be overwritten by the calendar API
+        title: title,
+        providerAccountId: '',
+        createdBySyncademic: true,
+        description: "Calendar created by Syncademic.io",
+      ),
+    ));
   }
 
   void urlChanged(String url) {
@@ -48,11 +62,18 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
-  void selectCalendar(TargetCalendar? calendar) {
+  void targetCalendarChoiceChanged(Set<TargetCalendarChoice> choice) {
+    if (choice.length != 1) {
+      throw ArgumentError('Exactly one choice must be selected');
+    }
+    emit(state.copyWith(targetCalendarChoice: choice.first));
+  }
+
+  void selectExistingCalendar(TargetCalendar? calendar) {
     if (calendar == null) {
       return;
     }
-    emit(state.copyWith(targetCalendar: calendar));
+    emit(state.copyWith(existingCalendarSelected: calendar));
   }
 
   void authorizeBackend() async {
@@ -72,10 +93,35 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return;
     }
 
+    final providerAccountId = await GetIt.I<AuthorizationService>().userId;
+
+    if (providerAccountId == null) {
+      return emit(state.copyWith(
+        isAuthorizingBackend: false,
+        hasAuthorizedBackend: false,
+        backendAuthorizationError:
+            'Provider account ID is null. If this issue persists, please contact support.',
+      ));
+    }
+
+    _updateProviderAccountId(providerAccountId);
+
     emit(state.copyWith(
       isAuthorizingBackend: false,
       hasAuthorizedBackend: true,
       backendAuthorizationError: null,
+    ));
+  }
+
+  /// This method is called when the user has successfully authorized the backend, and we have the providerAccountId.
+  void _updateProviderAccountId(String providerAccountId) {
+    emit(state.copyWith(
+      existingCalendarSelected: state.existingCalendarSelected?.copyWith(
+        providerAccountId: providerAccountId,
+      ),
+      newCalendarCreated: state.newCalendarCreated?.copyWith(
+        providerAccountId: providerAccountId,
+      ),
     ));
   }
 
@@ -92,15 +138,28 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   Future<void> submit() async {
-    if (isBlank(state.title) ||
-        isBlank(state.url) ||
-        state.targetCalendar == null ||
-        state.titleError != null ||
-        state.urlError != null) {
-      throw StateError('Cannot submit with invalid data');
+    if (!state.canSubmit()) {
+      return emit(state.copyWith(
+        submitError:
+            'Cannot submit invalid form. Please check each step again. If the issue persists, please contact support.',
+        isSubmitting: false,
+      ));
     }
 
     emit(state.copyWith(isSubmitting: true));
+
+    late TargetCalendar targetCalendar;
+    if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
+      try {
+        targetCalendar = await GetIt.I<TargetCalendarRepository>()
+            .createCalendar(state.newCalendarCreated!);
+      } catch (e) {
+        return emit(
+            state.copyWith(submitError: e.toString(), isSubmitting: false));
+      }
+    } else {
+      targetCalendar = state.existingCalendarSelected!;
+    }
 
     final scheduleSource = ScheduleSource(
       url: state.url,
@@ -110,16 +169,16 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       id: ID(),
       title: state.title,
       scheduleSource: scheduleSource,
-      targetCalendar: state.targetCalendar!,
+      targetCalendar: targetCalendar,
     );
 
     final repo = GetIt.I<SyncProfileRepository>();
 
     try {
       await repo.createSyncProfile(syncProfile);
-      emit(state.copyWith(submittedSuccessfully: true));
+      emit(state.copyWith(submittedSuccessfully: true, isSubmitting: false));
     } catch (e) {
-      emit(state.copyWith(submitError: e.toString()));
+      emit(state.copyWith(submitError: e.toString(), isSubmitting: false));
     }
   }
 }

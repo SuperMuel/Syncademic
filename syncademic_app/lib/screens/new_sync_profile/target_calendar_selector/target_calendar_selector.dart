@@ -73,6 +73,12 @@ class TargetCalendarList extends StatelessWidget {
         final calendar = calendars[index];
         return ListTile(
           title: Text(calendar.title),
+          subtitle: calendar.description != null
+              ? Text(calendar.description!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall)
+              : null,
           onTap: () => Navigator.of(context).pop(calendar),
         );
       },

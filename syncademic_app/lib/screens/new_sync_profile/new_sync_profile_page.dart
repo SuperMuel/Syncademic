@@ -101,6 +101,7 @@ class TitleStepContent extends StatelessWidget {
           ),
           maxLength: 50,
           onChanged: context.read<NewSyncProfileCubit>().titleChanged,
+          onEditingComplete: context.read<NewSyncProfileCubit>().next,
         );
       },
     );
@@ -125,6 +126,7 @@ class UrlStepContent extends StatelessWidget {
           ),
           maxLength: 4000,
           onChanged: context.read<NewSyncProfileCubit>().urlChanged,
+          onEditingComplete: context.read<NewSyncProfileCubit>().next,
         );
       },
     );

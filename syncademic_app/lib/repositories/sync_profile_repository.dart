@@ -66,6 +66,7 @@ class MockSyncProfileRepository implements SyncProfileRepository {
     final targetCalendar = TargetCalendar(
       id: ID.fromString('target-google-calendar-${id.value}'),
       title: 'Calendar ${id.value}',
+      description: 'Description of calendar ${id.value}',
       providerAccountId: 'providerAccountId',
     );
 

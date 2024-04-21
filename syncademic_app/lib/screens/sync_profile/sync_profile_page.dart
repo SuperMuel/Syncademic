@@ -107,6 +107,11 @@ class _SyncProfileBody extends StatelessWidget {
             'Title: ${syncProfile.targetCalendar.title}',
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
+          const SizedBox(height: 8),
+          SelectableText(
+            'Description: ${syncProfile.targetCalendar.description}',
+            style: GoogleFonts.montserrat(fontSize: 16),
+          ),
           const SizedBox(height: 32),
 
           // Last synchronized

@@ -24,6 +24,9 @@ mixin _$TargetCalendar {
   /// The title of the calendar, as provided by the calendar service.
   String get title => throw _privateConstructorUsedError;
 
+  /// The description of the calendar, as provided by the calendar service.
+  String? get description => throw _privateConstructorUsedError;
+
   /// The unique identifier for the user account that owns the calendar.
   ///
   /// This identifier represents the specific user account associated with the calendar,
@@ -55,6 +58,7 @@ abstract class $TargetCalendarCopyWith<$Res> {
   $Res call(
       {ID id,
       String title,
+      String? description,
       String providerAccountId,
       bool? createdBySyncademic});
 }
@@ -74,6 +78,7 @@ class _$TargetCalendarCopyWithImpl<$Res, $Val extends TargetCalendar>
   $Res call({
     Object? id = null,
     Object? title = null,
+    Object? description = freezed,
     Object? providerAccountId = null,
     Object? createdBySyncademic = freezed,
   }) {
@@ -86,6 +91,10 @@ class _$TargetCalendarCopyWithImpl<$Res, $Val extends TargetCalendar>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
       providerAccountId: null == providerAccountId
           ? _value.providerAccountId
           : providerAccountId // ignore: cast_nullable_to_non_nullable
@@ -109,6 +118,7 @@ abstract class _$$TargetCalendarImplCopyWith<$Res>
   $Res call(
       {ID id,
       String title,
+      String? description,
       String providerAccountId,
       bool? createdBySyncademic});
 }
@@ -126,6 +136,7 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? title = null,
+    Object? description = freezed,
     Object? providerAccountId = null,
     Object? createdBySyncademic = freezed,
   }) {
@@ -138,6 +149,10 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
       providerAccountId: null == providerAccountId
           ? _value.providerAccountId
           : providerAccountId // ignore: cast_nullable_to_non_nullable
@@ -156,6 +171,7 @@ class _$TargetCalendarImpl implements _TargetCalendar {
   const _$TargetCalendarImpl(
       {required this.id,
       required this.title,
+      this.description,
       required this.providerAccountId,
       this.createdBySyncademic});
 
@@ -168,6 +184,10 @@ class _$TargetCalendarImpl implements _TargetCalendar {
   /// The title of the calendar, as provided by the calendar service.
   @override
   final String title;
+
+  /// The description of the calendar, as provided by the calendar service.
+  @override
+  final String? description;
 
   /// The unique identifier for the user account that owns the calendar.
   ///
@@ -190,7 +210,7 @@ class _$TargetCalendarImpl implements _TargetCalendar {
 
   @override
   String toString() {
-    return 'TargetCalendar(id: $id, title: $title, providerAccountId: $providerAccountId, createdBySyncademic: $createdBySyncademic)';
+    return 'TargetCalendar(id: $id, title: $title, description: $description, providerAccountId: $providerAccountId, createdBySyncademic: $createdBySyncademic)';
   }
 
   @override
@@ -200,6 +220,8 @@ class _$TargetCalendarImpl implements _TargetCalendar {
             other is _$TargetCalendarImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.title, title) || other.title == title) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
             (identical(other.providerAccountId, providerAccountId) ||
                 other.providerAccountId == providerAccountId) &&
             (identical(other.createdBySyncademic, createdBySyncademic) ||
@@ -207,8 +229,8 @@ class _$TargetCalendarImpl implements _TargetCalendar {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, title, providerAccountId, createdBySyncademic);
+  int get hashCode => Object.hash(runtimeType, id, title, description,
+      providerAccountId, createdBySyncademic);
 
   @JsonKey(ignore: true)
   @override
@@ -222,6 +244,7 @@ abstract class _TargetCalendar implements TargetCalendar {
   const factory _TargetCalendar(
       {required final ID id,
       required final String title,
+      final String? description,
       required final String providerAccountId,
       final bool? createdBySyncademic}) = _$TargetCalendarImpl;
 
@@ -235,6 +258,10 @@ abstract class _TargetCalendar implements TargetCalendar {
 
   /// The title of the calendar, as provided by the calendar service.
   String get title;
+  @override
+
+  /// The description of the calendar, as provided by the calendar service.
+  String? get description;
   @override
 
   /// The unique identifier for the user account that owns the calendar.

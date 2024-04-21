@@ -22,6 +22,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       'targetCalendar': {
         'id': syncProfile.targetCalendar.id.value,
         'title': syncProfile.targetCalendar.title,
+        'description': syncProfile.targetCalendar.description,
         'providerAccountId': syncProfile.targetCalendar.providerAccountId,
       },
       'status': {'type': 'notStarted'}
@@ -64,6 +65,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       id: ID.fromString(data['targetCalendar']['id']),
       title: data['targetCalendar']['title'],
       providerAccountId: data['targetCalendar']['providerAccountId'],
+      description: data['targetCalendar']['description'],
     );
 
     final timestamp = data['lastSuccessfulSync'] as Timestamp?;

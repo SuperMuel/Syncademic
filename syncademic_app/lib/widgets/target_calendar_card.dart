@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 
 import '../models/target_calendar.dart';
 
@@ -20,25 +21,36 @@ class TargetCalendarCard extends StatelessWidget {
         onTap: onPressed,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Row(
+          child: Column(
             children: [
-              //image icon
-              Image.asset(
-                "assets/icons/google_calendar_icon_1024x1024.png",
-                width: 48,
-                height: 48,
+              Row(
+                children: [
+                  //image icon
+                  Image.asset(
+                    "assets/icons/google_calendar_icon_1024x1024.png",
+                    width: 48,
+                    height: 48,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      targetCalendar.title,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: onPressed,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  targetCalendar.title,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: onPressed,
-              ),
+              if (targetCalendar.description != null) ...[
+                const Gap(8),
+                Text(
+                  targetCalendar.description!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              ]
             ],
           ),
         ),

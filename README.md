@@ -17,14 +17,14 @@ This approach offers several key benefits:
 - **Time Schedule :** A structured list of academic events, such as lectures, seminars, and exams, organized in a calendar format.
 - **Event :** One event of a Time Schedule or an electronic agenda. Has a start and end date, a title, description and location. Can optionally have a colour.
 - **Time Schedule Source :** Identifies the source of a schedule, typically a URL from which schedule data can be imported or synchronized.
-    - **Current Format Requirement:** The URL must specifically link to an .ICS file, which is typically hosted on institution servers, such as those of a school or university.
-    - **Future Compatibility:** Plans are in place to support additional data sources for broader schedule integration capabilities.
+  - **Current Format Requirement:** The URL must specifically link to an .ICS file, which is typically hosted on institution servers, such as those of a school or university.
+  - **Future Compatibility:** Plans are in place to support additional data sources for broader schedule integration capabilities.
 - **Target Calendar :** The calendar where events from the Schedule Source are to be synchronized. Typically, a Google Calendar.
-    - This does not define a Google Account, since users can have multiple calendars in the same Google Account. A target Calendar refers to a single Calendar in a user’s account.
+  - This does not define a Google Account, since users can have multiple calendars in the same Google Account. A target Calendar refers to a single Calendar in a user’s account.
 - **Sync Profile** : (Synchronization Profile) Defines a user configuration for a synchronisation request between a **Time Schedule** and one **Target Calendar**
-    - Users can have multiple Sync Profiles
+  - Users can have multiple Sync Profiles
 - **Backend Authorization** : Refers to the permissions granted to Syncademic's backend by a user to access and modify one of their electronic agenda (such as a Google Calendar). It may include an access token and a refresh token, and may specify the scope of permitted actions. The status indicates whether access is granted or denied.
-    - The Backend Authorization must lats as long as the user is not deleting the Sync Profile. It must last for months. If the authorization is revoked, the user must be alerted.
+  - The Backend Authorization must lats as long as the user is not deleting the Sync Profile. It must last for months. If the authorization is revoked, the user must be alerted.
 
 ## Frontend
 
@@ -50,6 +50,12 @@ The user interface (UI) for Syncademic is developed using Flutter.
 **Hosting**
 
 - The Flutter application is compiled as a web app and hosted on Firebase Hosting.
+
+**Mobile apps**
+
+- The frontend is designed to be used infrequently. After the initial setup, the synchronization process should run automatically without needing any user input.
+- Because of this, a hosted website would be sufficient for our requirements.
+- However, we are also focusing on Android platforms. This is because developing on Android is simpler than web development, as Flutter's hot reload feature is available on Android but not on the web.
 
 **Communication with the Backend**
 
@@ -82,29 +88,49 @@ The backend is primarily built on Firebase Cloud Functions.
 
 - The backend is responsible for converting an Authorization Code into access tokens. (See OAuth section)
 
-## Firebase Firestore
+## Firebase Firestore Schema
 
-### Schema
+### `users` collection
 
-`users` collection
+**Fields**
 
-Fields of each document : 
+- `id` (string): Firebase Auth ID
+- `email` (string): Email of the user, given by Firebase Auth
 
-- `id`
-- `email`
+**Subcollections**
 
-Sub collections
+- `SyncProfiles` // Consider moving this to a root collection
 
-- `SyncProfiles`
-    - Fields of each document :
-        - `title`
-        - `scheduleSource`
-            - `url`
-        - `status`
-            - `type`
-        - `targetCalendar`
-            - `id`
-            - `title`
+  **Fields**
+
+  - `title` (string)
+  - `scheduleSource` (map)
+    - `url` (string): URL that points to an ICS file
+  - `status` (map)
+
+    - `type` (string): The status type of the synchronization (`inProgress`, `failed`, `success`)
+    - `message` (string): The error message if the synchronization failed
+
+    - `syncTrigger` (string): The trigger of the synchronization (`on_create`, `manual`, `scheduled`)
+
+  - `targetCalendar` (map)
+    - `id` (string): The ID of the target calendar
+    - `title` (string): The title of the target calendar, given by the calendar provider.
+    - `description` (string): The description of the target calendar, given by the calendar provider.
+    - `providerAccountId` (string): This is the unique identifier for the account that owns the target calendar. It is not the same as the Firebase Auth ID used in our app. Currently, this ID represents a Google account, but in the future, it could also represent accounts from other providers like Microsoft. This distinction is important because a single user of our app can manage multiple synchronization profiles, each targeting calendars owned by different accounts across various providers.
+  - `lastSuccessfulSync` (timestamp): The timestamp of the last successful synchronization
+
+### `backendAuthorizations` collection
+
+Document ID: `userId` + `providerAccountId`
+
+**Fields:**
+
+- `userId` (string): The ID of the user who authorized the backend
+- `providerAccountId` (string): The unique identifier of the authorized Google account
+- `accessToken` (string): The access token obtained from the OAuth2 flow
+- `refreshToken` (string): The refresh token obtained from the OAuth2 flow
+- `expirationDate` (timestamp): The expiration date of the credentials
 
 ### Security Rules
 
@@ -132,14 +158,9 @@ OAuth 2.0 is a crucial protocol that enables secure authorization functionalitie
 **Authorization Flow**
 
 - We utilize the "Authorization Code" flow:
-    - The frontend obtains an Authorization Code which is then sent to the backend via a function call.
-    - The backend exchanges this code for an Access Token and a Refresh Token.
-    - These tokens are subsequently stored in Firestore within the TargetCalendar field of the SyncProfile.
-
-**Security Consideration**
-
-- A current point of discussion is whether users should have access to these tokens. As it stands, tokens are accessible to users based on existing security rules.
-- Consideration is being given to storing tokens in a separate collection that only the backend can access, enhancing security and restricting direct user access to sensitive information.
+  - The frontend obtains an Authorization Code which is then sent to the backend via a function call.
+  - The backend exchanges this code for an Access Token and a Refresh Token.
+  - These tokens are subsequently stored in Firestore under the `backendAuthorizations` collection.
 
 # Synchronization Process
 
@@ -148,12 +169,12 @@ The synchronization of events between a user's Time Schedule and their Target Ca
 **Synchronization Steps:**
 
 1. **Fetch Time Schedule Events:**
-    - The process begins by attempting to fetch events from the Time Schedule. If events cannot be fetched, the synchronization is halted, and an error is communicated to the user, possibly through email or a mobile notification.
+   - The process begins by attempting to fetch events from the Time Schedule. If events cannot be fetched, the synchronization is halted, and an error is communicated to the user, possibly through email or a mobile notification.
 2. **Apply Customizations:**
-    - Enhancements such as improving event titles or adding colors are applied to the events before synchronization.
+   - Enhancements such as improving event titles or adding colors are applied to the events before synchronization.
 3. **Update Target Calendar:**
-    - All future events in the Target Calendar are deleted and replaced with the new, customized events.
-    - To preserve the user’s personal events, only those created by Syncademic are deleted. This is achieved by marking each Syncademic event with the SyncProfile’s ID using Google Calendar's extended properties feature (`{"private": {"syncademic": sync_profile_id}}`).
+   - All future events in the Target Calendar are deleted and replaced with the new, customized events.
+   - To preserve the user’s personal events, only those created by Syncademic are deleted. This is achieved by marking each Syncademic event with the SyncProfile’s ID using Google Calendar's extended properties feature (`{"private": {"syncademic": sync_profile_id}}`).
 
 **Current Limitations and Future Improvements:**
 
@@ -175,14 +196,14 @@ To address these issues, Syncademic applies customization rules to events betwee
 **Examples of Customization Rules:**
 
 1. **Color Coding:**
-    - `If "Machine Learning" is in the description, then make the event blue.`
-    - This rule enhances the visual appeal and helps students quickly identify specific classes.
+   - `If "Machine Learning" is in the description, then make the event blue.`
+   - This rule enhances the visual appeal and helps students quickly identify specific classes.
 2. **Event Filtering:**
-    - `If "Anglais" is in the description, then delete the event.`
-    - Useful for users who want to exclude irrelevant courses automatically included in their schedules.
+   - `If "Anglais" is in the description, then delete the event.`
+   - Useful for users who want to exclude irrelevant courses automatically included in their schedules.
 3. **Title Enhancement:**
-    - `Find the text between '[' and ']' in the description and place that in the title.`
-    - Improves event titles by extracting and using more descriptive text found within the event details.
+   - `Find the text between '[' and ']' in the description and place that in the title.`
+   - Improves event titles by extracting and using more descriptive text found within the event details.
 
 **Current Implementation and Future Plans:**
 

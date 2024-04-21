@@ -12,7 +12,7 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
         (index) => TargetCalendar(
           id: ID.fromString('target-google-calendar-$index'),
           title: 'Calendar $index',
-          accountOwnerUserId: 'accountOwnerUserId',
+          providerAccountId: 'providerAccountId',
         ),
       );
 }

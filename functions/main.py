@@ -60,11 +60,11 @@ def get_calendar_service(user_id: str, sync_profile_id: str):
     if not sync_profile.exists:
         raise ValueError("Sync profile not found")
 
-    account_owner_user_id = sync_profile.get("targetCalendar.accountOwnerUserId")
+    provider_account_id = sync_profile.get("targetCalendar.providerAccountId")
 
     backend_authorization = (
         db.collection("backendAuthorizations")
-        .document(user_id + account_owner_user_id)
+        .document(user_id + provider_account_id)
         .get()
     )
 
@@ -333,7 +333,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
     db.collection("backendAuthorizations").document(user_id + google_user_id).set(
         {
             "userId": user_id,
-            "accountOwnerUserId": google_user_id,
+            "providerAccountId": google_user_id,
             "accessToken": access_token,
             "refreshToken": refresh_token,
             "expirationDate": credentials.expiry,

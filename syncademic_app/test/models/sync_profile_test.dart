@@ -15,7 +15,7 @@ void main() {
   final targetCalendar = TargetCalendar(
     id: ID(),
     title: 'targetCalendarTitle',
-    accountOwnerUserId: 'accountOwnerUserId',
+    providerAccountId: 'providerAccountId',
   );
 
   test('should create a SyncProfile instance', () {

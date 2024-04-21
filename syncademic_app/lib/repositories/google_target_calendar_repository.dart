@@ -19,14 +19,14 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
   Future<List<TargetCalendar>> getCalendars() async {
     final api = await _getApi();
 
-    String? accountOwnerUserId = await _getAccountOwnerUserId();
+    String? providerAccountId = await _getProviderAccountId();
 
     final calendarList = await api.calendarList.list();
     return calendarList.items!
         .map((calendarListEntry) => TargetCalendar(
               id: ID.fromString(calendarListEntry.id!),
               title: calendarListEntry.summary ?? 'Unnamed calendar',
-              accountOwnerUserId: accountOwnerUserId,
+              providerAccountId: providerAccountId,
             ))
         .toList();
   }
@@ -43,12 +43,12 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
     return CalendarApi(authorizedClient);
   }
 
-  Future<String> _getAccountOwnerUserId() async {
-    final accountOwnerUserId = await GetIt.I<AuthorizationService>().userId;
-    if (accountOwnerUserId == null) {
+  Future<String> _getProviderAccountId() async {
+    final providerAccountId = await GetIt.I<AuthorizationService>().userId;
+    if (providerAccountId == null) {
       throw Exception(
           "Could not get the user ID from the AuthorizationService");
     }
-    return accountOwnerUserId;
+    return providerAccountId;
   }
 }

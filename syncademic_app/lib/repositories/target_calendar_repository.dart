@@ -23,9 +23,9 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<TargetCalendar> createCalendar(TargetCalendar calendar) {
-    final _calendar = calendar.copyWith(createdBySyncademic: true);
+    final newCalendar = calendar.copyWith(createdBySyncademic: true);
 
-    _calendars.add(_calendar);
-    return Future.value(_calendar);
+    _calendars.add(newCalendar);
+    return Future.value(newCalendar);
   }
 }

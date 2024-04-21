@@ -48,6 +48,13 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
+  void targetCalendarChoiceChanged(Set<TargetCalendarChoice> choice) {
+    if (choice.length != 1) {
+      throw ArgumentError('Exactly one choice must be selected');
+    }
+    emit(state.copyWith(targetCalendarChoice: choice.first));
+  }
+
   void selectCalendar(TargetCalendar? calendar) {
     if (calendar == null) {
       return;

@@ -22,6 +22,8 @@ mixin _$NewSyncProfileState {
   String get url => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
   TargetCalendar? get targetCalendar => throw _privateConstructorUsedError;
+  TargetCalendarChoice get targetCalendarChoice =>
+      throw _privateConstructorUsedError;
   bool get isAuthorizingBackend => throw _privateConstructorUsedError;
   bool get hasAuthorizedBackend => throw _privateConstructorUsedError;
   String? get backendAuthorizationError => throw _privateConstructorUsedError;
@@ -47,6 +49,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String url,
       String? urlError,
       TargetCalendar? targetCalendar,
+      TargetCalendarChoice targetCalendarChoice,
       bool isAuthorizingBackend,
       bool hasAuthorizedBackend,
       String? backendAuthorizationError,
@@ -76,6 +79,7 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? url = null,
     Object? urlError = freezed,
     Object? targetCalendar = freezed,
+    Object? targetCalendarChoice = null,
     Object? isAuthorizingBackend = null,
     Object? hasAuthorizedBackend = null,
     Object? backendAuthorizationError = freezed,
@@ -108,6 +112,10 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.targetCalendar
           : targetCalendar // ignore: cast_nullable_to_non_nullable
               as TargetCalendar?,
+      targetCalendarChoice: null == targetCalendarChoice
+          ? _value.targetCalendarChoice
+          : targetCalendarChoice // ignore: cast_nullable_to_non_nullable
+              as TargetCalendarChoice,
       isAuthorizingBackend: null == isAuthorizingBackend
           ? _value.isAuthorizingBackend
           : isAuthorizingBackend // ignore: cast_nullable_to_non_nullable
@@ -163,6 +171,7 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String url,
       String? urlError,
       TargetCalendar? targetCalendar,
+      TargetCalendarChoice targetCalendarChoice,
       bool isAuthorizingBackend,
       bool hasAuthorizedBackend,
       String? backendAuthorizationError,
@@ -191,6 +200,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? url = null,
     Object? urlError = freezed,
     Object? targetCalendar = freezed,
+    Object? targetCalendarChoice = null,
     Object? isAuthorizingBackend = null,
     Object? hasAuthorizedBackend = null,
     Object? backendAuthorizationError = freezed,
@@ -223,6 +233,10 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.targetCalendar
           : targetCalendar // ignore: cast_nullable_to_non_nullable
               as TargetCalendar?,
+      targetCalendarChoice: null == targetCalendarChoice
+          ? _value.targetCalendarChoice
+          : targetCalendarChoice // ignore: cast_nullable_to_non_nullable
+              as TargetCalendarChoice,
       isAuthorizingBackend: null == isAuthorizingBackend
           ? _value.isAuthorizingBackend
           : isAuthorizingBackend // ignore: cast_nullable_to_non_nullable
@@ -261,6 +275,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       this.url = '',
       this.urlError,
       this.targetCalendar,
+      this.targetCalendarChoice = TargetCalendarChoice.createNew,
       this.isAuthorizingBackend = false,
       this.hasAuthorizedBackend = false,
       this.backendAuthorizationError,
@@ -286,6 +301,9 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   final TargetCalendar? targetCalendar;
   @override
   @JsonKey()
+  final TargetCalendarChoice targetCalendarChoice;
+  @override
+  @JsonKey()
   final bool isAuthorizingBackend;
   @override
   @JsonKey()
@@ -303,7 +321,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   String toString() {
-    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, isAuthorizingBackend: $isAuthorizingBackend, hasAuthorizedBackend: $hasAuthorizedBackend, backendAuthorizationError: $backendAuthorizationError, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, targetCalendar: $targetCalendar, targetCalendarChoice: $targetCalendarChoice, isAuthorizingBackend: $isAuthorizingBackend, hasAuthorizedBackend: $hasAuthorizedBackend, backendAuthorizationError: $backendAuthorizationError, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -321,6 +339,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
                 other.urlError == urlError) &&
             (identical(other.targetCalendar, targetCalendar) ||
                 other.targetCalendar == targetCalendar) &&
+            (identical(other.targetCalendarChoice, targetCalendarChoice) ||
+                other.targetCalendarChoice == targetCalendarChoice) &&
             (identical(other.isAuthorizingBackend, isAuthorizingBackend) ||
                 other.isAuthorizingBackend == isAuthorizingBackend) &&
             (identical(other.hasAuthorizedBackend, hasAuthorizedBackend) ||
@@ -345,6 +365,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       url,
       urlError,
       targetCalendar,
+      targetCalendarChoice,
       isAuthorizingBackend,
       hasAuthorizedBackend,
       backendAuthorizationError,
@@ -368,6 +389,7 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
       final String url,
       final String? urlError,
       final TargetCalendar? targetCalendar,
+      final TargetCalendarChoice targetCalendarChoice,
       final bool isAuthorizingBackend,
       final bool hasAuthorizedBackend,
       final String? backendAuthorizationError,
@@ -388,6 +410,8 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   String? get urlError;
   @override
   TargetCalendar? get targetCalendar;
+  @override
+  TargetCalendarChoice get targetCalendarChoice;
   @override
   bool get isAuthorizingBackend;
   @override

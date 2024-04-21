@@ -1,5 +1,7 @@
 part of 'new_sync_profile_cubit.dart';
 
+enum TargetCalendarChoice { createNew, useExisting }
+
 @freezed
 class NewSyncProfileState with _$NewSyncProfileState {
   const factory NewSyncProfileState({
@@ -9,6 +11,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
     @Default('') String url,
     String? urlError,
     TargetCalendar? targetCalendar,
+    @Default(TargetCalendarChoice.createNew)
+    TargetCalendarChoice targetCalendarChoice,
     @Default(false) bool isAuthorizingBackend,
     @Default(false) bool hasAuthorizedBackend,
     String? backendAuthorizationError,

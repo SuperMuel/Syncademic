@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 
@@ -168,16 +169,51 @@ class TargetCalendarStepContent extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return state.targetCalendar == null
-            ? ElevatedButton.icon(
-                icon: const Icon(Icons.calendar_month),
-                onPressed: () => _openCalendarSelector(context),
-                label: const Text('Select target calendar'),
-              )
-            : TargetCalendarCard(
+        return Column(
+          children: [
+            //TODO: add info box
+            SegmentedButton<TargetCalendarChoice>(
+              onSelectionChanged: context
+                  .read<NewSyncProfileCubit>()
+                  .targetCalendarChoiceChanged,
+              multiSelectionEnabled: false,
+              style: SegmentedButton.styleFrom(
+                alignment: Alignment.center,
+              ),
+              segments: const [
+                ButtonSegment(
+                    value: TargetCalendarChoice.createNew,
+                    label: Text(
+                      'New calendar',
+                      textAlign: TextAlign.center,
+                    )),
+                ButtonSegment(
+                    value: TargetCalendarChoice.useExisting,
+                    label: Text(
+                      'Select existing',
+                      textAlign: TextAlign.center,
+                    )),
+              ],
+              selected: {state.targetCalendarChoice},
+            ),
+            const Gap(32),
+            if (state.targetCalendar != null)
+              TargetCalendarCard(
                 targetCalendar: state.targetCalendar!,
-                onPressed: () => _openCalendarSelector(context),
-              );
+                onPressed: state.targetCalendarChoice ==
+                        TargetCalendarChoice.useExisting
+                    ? () => _openCalendarSelector(context)
+                    : null,
+              ),
+            state.targetCalendar == null
+                ? ElevatedButton.icon(
+                    icon: const Icon(Icons.calendar_month),
+                    onPressed: () => _openCalendarSelector(context),
+                    label: const Text('Select target calendar'),
+                  )
+                : Container(),
+          ],
+        );
       },
     );
   }

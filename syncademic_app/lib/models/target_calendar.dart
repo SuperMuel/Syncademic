@@ -21,15 +21,15 @@ class TargetCalendar with _$TargetCalendar {
     /// and it varies depending on the calendar service being used.
     ///
     /// For Google Calendar:
-    /// - The `accountOwnerUserId` is the ID of the Google Account that owns the calendar.
+    /// - The `providerAccountId` is the ID of the Google Account that owns the calendar.
     ///
     /// For Microsoft Outlook:
-    /// - The `accountOwnerUserId` is the ID of the Microsoft Outlook account that owns the calendar.
+    /// - The `providerAccountId` is the ID of the Microsoft Outlook account that owns the calendar.
     ///
-    /// Note: The `accountOwnerUserId` is different from the `id` property, which represents the unique identifier
+    /// Note: The `providerAccountId` is different from the `id` property, which represents the unique identifier
     /// of the calendar itself. It is also different from the user ID that is logged in to the Syncademic app,
     /// as a user can have multiple accounts on multiple calendar services.
-    required String accountOwnerUserId,
+    required String providerAccountId,
     bool? createdBySyncademic,
   }) = _TargetCalendar;
 }

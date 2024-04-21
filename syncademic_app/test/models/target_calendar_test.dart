@@ -5,29 +5,29 @@ import 'package:syncademic_app/models/target_calendar.dart';
 void main() {
   const id = ID.fromString('test_id');
   const title = 'Test Title';
-  const accountOwnerUserId = 'accountOwnerUserId';
+  const providerAccountId = 'providerAccountId';
 
   TargetCalendar createTargetCalendar({
     ID id = id,
     String title = title,
-    String accountOwnerUserId = accountOwnerUserId,
+    String providerAccountId = providerAccountId,
   }) =>
       TargetCalendar(
         id: id,
         title: title,
-        accountOwnerUserId: accountOwnerUserId,
+        providerAccountId: providerAccountId,
       );
 
   test('should create a TargetCalendar instance', () {
     const targetCalendar = TargetCalendar(
       id: id,
       title: title,
-      accountOwnerUserId: accountOwnerUserId,
+      providerAccountId: providerAccountId,
     );
 
     expect(targetCalendar.id, id);
     expect(targetCalendar.title, title);
-    expect(targetCalendar.accountOwnerUserId, accountOwnerUserId);
+    expect(targetCalendar.providerAccountId, providerAccountId);
   });
 
   group('equals', () {
@@ -56,10 +56,10 @@ void main() {
     });
 
     test(
-        'should not be equal to another TargetCalendar with a different accountOwnerUserId',
+        'should not be equal to another TargetCalendar with a different providerAccountId',
         () {
-      final targetCalendar1 = createTargetCalendar(accountOwnerUserId: 'A');
-      final targetCalendar2 = createTargetCalendar(accountOwnerUserId: 'B');
+      final targetCalendar1 = createTargetCalendar(providerAccountId: 'A');
+      final targetCalendar2 = createTargetCalendar(providerAccountId: 'B');
 
       expect(targetCalendar1, isNot(equals(targetCalendar2)));
     });

@@ -30,15 +30,15 @@ mixin _$TargetCalendar {
   /// and it varies depending on the calendar service being used.
   ///
   /// For Google Calendar:
-  /// - The `accountOwnerUserId` is the ID of the Google Account that owns the calendar.
+  /// - The `providerAccountId` is the ID of the Google Account that owns the calendar.
   ///
   /// For Microsoft Outlook:
-  /// - The `accountOwnerUserId` is the ID of the Microsoft Outlook account that owns the calendar.
+  /// - The `providerAccountId` is the ID of the Microsoft Outlook account that owns the calendar.
   ///
-  /// Note: The `accountOwnerUserId` is different from the `id` property, which represents the unique identifier
+  /// Note: The `providerAccountId` is different from the `id` property, which represents the unique identifier
   /// of the calendar itself. It is also different from the user ID that is logged in to the Syncademic app,
   /// as a user can have multiple accounts on multiple calendar services.
-  String get accountOwnerUserId => throw _privateConstructorUsedError;
+  String get providerAccountId => throw _privateConstructorUsedError;
   bool? get createdBySyncademic => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -55,7 +55,7 @@ abstract class $TargetCalendarCopyWith<$Res> {
   $Res call(
       {ID id,
       String title,
-      String accountOwnerUserId,
+      String providerAccountId,
       bool? createdBySyncademic});
 }
 
@@ -74,7 +74,7 @@ class _$TargetCalendarCopyWithImpl<$Res, $Val extends TargetCalendar>
   $Res call({
     Object? id = null,
     Object? title = null,
-    Object? accountOwnerUserId = null,
+    Object? providerAccountId = null,
     Object? createdBySyncademic = freezed,
   }) {
     return _then(_value.copyWith(
@@ -86,9 +86,9 @@ class _$TargetCalendarCopyWithImpl<$Res, $Val extends TargetCalendar>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
-      accountOwnerUserId: null == accountOwnerUserId
-          ? _value.accountOwnerUserId
-          : accountOwnerUserId // ignore: cast_nullable_to_non_nullable
+      providerAccountId: null == providerAccountId
+          ? _value.providerAccountId
+          : providerAccountId // ignore: cast_nullable_to_non_nullable
               as String,
       createdBySyncademic: freezed == createdBySyncademic
           ? _value.createdBySyncademic
@@ -109,7 +109,7 @@ abstract class _$$TargetCalendarImplCopyWith<$Res>
   $Res call(
       {ID id,
       String title,
-      String accountOwnerUserId,
+      String providerAccountId,
       bool? createdBySyncademic});
 }
 
@@ -126,7 +126,7 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? title = null,
-    Object? accountOwnerUserId = null,
+    Object? providerAccountId = null,
     Object? createdBySyncademic = freezed,
   }) {
     return _then(_$TargetCalendarImpl(
@@ -138,9 +138,9 @@ class __$$TargetCalendarImplCopyWithImpl<$Res>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
-      accountOwnerUserId: null == accountOwnerUserId
-          ? _value.accountOwnerUserId
-          : accountOwnerUserId // ignore: cast_nullable_to_non_nullable
+      providerAccountId: null == providerAccountId
+          ? _value.providerAccountId
+          : providerAccountId // ignore: cast_nullable_to_non_nullable
               as String,
       createdBySyncademic: freezed == createdBySyncademic
           ? _value.createdBySyncademic
@@ -156,7 +156,7 @@ class _$TargetCalendarImpl implements _TargetCalendar {
   const _$TargetCalendarImpl(
       {required this.id,
       required this.title,
-      required this.accountOwnerUserId,
+      required this.providerAccountId,
       this.createdBySyncademic});
 
   /// The unique identifier for the calendar.
@@ -175,22 +175,22 @@ class _$TargetCalendarImpl implements _TargetCalendar {
   /// and it varies depending on the calendar service being used.
   ///
   /// For Google Calendar:
-  /// - The `accountOwnerUserId` is the ID of the Google Account that owns the calendar.
+  /// - The `providerAccountId` is the ID of the Google Account that owns the calendar.
   ///
   /// For Microsoft Outlook:
-  /// - The `accountOwnerUserId` is the ID of the Microsoft Outlook account that owns the calendar.
+  /// - The `providerAccountId` is the ID of the Microsoft Outlook account that owns the calendar.
   ///
-  /// Note: The `accountOwnerUserId` is different from the `id` property, which represents the unique identifier
+  /// Note: The `providerAccountId` is different from the `id` property, which represents the unique identifier
   /// of the calendar itself. It is also different from the user ID that is logged in to the Syncademic app,
   /// as a user can have multiple accounts on multiple calendar services.
   @override
-  final String accountOwnerUserId;
+  final String providerAccountId;
   @override
   final bool? createdBySyncademic;
 
   @override
   String toString() {
-    return 'TargetCalendar(id: $id, title: $title, accountOwnerUserId: $accountOwnerUserId, createdBySyncademic: $createdBySyncademic)';
+    return 'TargetCalendar(id: $id, title: $title, providerAccountId: $providerAccountId, createdBySyncademic: $createdBySyncademic)';
   }
 
   @override
@@ -200,15 +200,15 @@ class _$TargetCalendarImpl implements _TargetCalendar {
             other is _$TargetCalendarImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.title, title) || other.title == title) &&
-            (identical(other.accountOwnerUserId, accountOwnerUserId) ||
-                other.accountOwnerUserId == accountOwnerUserId) &&
+            (identical(other.providerAccountId, providerAccountId) ||
+                other.providerAccountId == providerAccountId) &&
             (identical(other.createdBySyncademic, createdBySyncademic) ||
                 other.createdBySyncademic == createdBySyncademic));
   }
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, id, title, accountOwnerUserId, createdBySyncademic);
+      runtimeType, id, title, providerAccountId, createdBySyncademic);
 
   @JsonKey(ignore: true)
   @override
@@ -222,7 +222,7 @@ abstract class _TargetCalendar implements TargetCalendar {
   const factory _TargetCalendar(
       {required final ID id,
       required final String title,
-      required final String accountOwnerUserId,
+      required final String providerAccountId,
       final bool? createdBySyncademic}) = _$TargetCalendarImpl;
 
   @override
@@ -243,15 +243,15 @@ abstract class _TargetCalendar implements TargetCalendar {
   /// and it varies depending on the calendar service being used.
   ///
   /// For Google Calendar:
-  /// - The `accountOwnerUserId` is the ID of the Google Account that owns the calendar.
+  /// - The `providerAccountId` is the ID of the Google Account that owns the calendar.
   ///
   /// For Microsoft Outlook:
-  /// - The `accountOwnerUserId` is the ID of the Microsoft Outlook account that owns the calendar.
+  /// - The `providerAccountId` is the ID of the Microsoft Outlook account that owns the calendar.
   ///
-  /// Note: The `accountOwnerUserId` is different from the `id` property, which represents the unique identifier
+  /// Note: The `providerAccountId` is different from the `id` property, which represents the unique identifier
   /// of the calendar itself. It is also different from the user ID that is logged in to the Syncademic app,
   /// as a user can have multiple accounts on multiple calendar services.
-  String get accountOwnerUserId;
+  String get providerAccountId;
   @override
   bool? get createdBySyncademic;
   @override

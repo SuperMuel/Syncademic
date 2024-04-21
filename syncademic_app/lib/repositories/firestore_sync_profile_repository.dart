@@ -22,7 +22,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       'targetCalendar': {
         'id': syncProfile.targetCalendar.id.value,
         'title': syncProfile.targetCalendar.title,
-        'accountOwnerUserId': syncProfile.targetCalendar.accountOwnerUserId,
+        'providerAccountId': syncProfile.targetCalendar.providerAccountId,
       },
       'status': {'type': 'notStarted'}
     });
@@ -49,6 +49,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
     await for (final snapshot in _syncProfilesCollection.snapshots()) {
       yield snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
+        // TODO : Handle parsing error
         return _fromData(data, doc.id);
       }).toList();
     }
@@ -62,7 +63,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
     final targetCalendar = TargetCalendar(
       id: ID.fromString(data['targetCalendar']['id']),
       title: data['targetCalendar']['title'],
-      accountOwnerUserId: data['targetCalendar']['accountOwnerUserId'],
+      providerAccountId: data['targetCalendar']['providerAccountId'],
     );
 
     final timestamp = data['lastSuccessfulSync'] as Timestamp?;

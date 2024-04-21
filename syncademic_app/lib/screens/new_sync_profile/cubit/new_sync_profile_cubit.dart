@@ -69,7 +69,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(targetCalendarChoice: choice.first));
   }
 
-  void selectCalendar(TargetCalendar? calendar) {
+  void selectExistingCalendar(TargetCalendar? calendar) {
     if (calendar == null) {
       return;
     }
@@ -148,13 +148,17 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
 
     emit(state.copyWith(isSubmitting: true));
 
-    late TargetCalendar createdCalendar;
-    try {
-      createdCalendar = await GetIt.I<TargetCalendarRepository>()
-          .createCalendar(state.newCalendarCreated!);
-    } catch (e) {
-      return emit(
-          state.copyWith(submitError: e.toString(), isSubmitting: false));
+    late TargetCalendar targetCalendar;
+    if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
+      try {
+        targetCalendar = await GetIt.I<TargetCalendarRepository>()
+            .createCalendar(state.newCalendarCreated!);
+      } catch (e) {
+        return emit(
+            state.copyWith(submitError: e.toString(), isSubmitting: false));
+      }
+    } else {
+      targetCalendar = state.existingCalendarSelected!;
     }
 
     final scheduleSource = ScheduleSource(
@@ -165,7 +169,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       id: ID(),
       title: state.title,
       scheduleSource: scheduleSource,
-      targetCalendar: createdCalendar,
+      targetCalendar: targetCalendar,
     );
 
     final repo = GetIt.I<SyncProfileRepository>();

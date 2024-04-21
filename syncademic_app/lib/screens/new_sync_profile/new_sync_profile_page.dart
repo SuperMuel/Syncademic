@@ -152,7 +152,7 @@ class TargetCalendarStepContent extends StatelessWidget {
         ),
       ),
     );
-    cubit.selectCalendar(selectedCalendar);
+    cubit.selectExistingCalendar(selectedCalendar);
   }
 
   @override
@@ -210,6 +210,7 @@ class TargetCalendarStepContent extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
+              const Gap(8),
               TargetCalendarCard(
                 targetCalendar: state.targetCalendarSelected!,
                 onPressed: state.targetCalendarChoice ==

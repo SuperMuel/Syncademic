@@ -191,7 +191,7 @@ def _synchronize_now(
     )
 
     # TODO create CalendarManager here. This will allow us to test the authorization
-    # and avoid doing it in the synchronization function
+    # and avoid doing it in the synchronization function. and report the error to the user
 
     try:
         service = get_calendar_service(
@@ -217,6 +217,7 @@ def _synchronize_now(
             icsSourceUrl=doc.get("scheduleSource.url"),
             targetCalendarId=doc.get("targetCalendar.id"),
             service=service,
+            syncTrigger=sync_trigger,
             middlewares=[TitlePrettifier, ExamPrettifier],
         )
     except Exception as e:

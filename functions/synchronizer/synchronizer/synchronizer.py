@@ -12,14 +12,18 @@ logger = logging.getLogger(__name__)  # TODO: get logger from cloud functions
 
 
 def perform_synchronization(
-    syncProfileId: str,  # hidden in events to avoid deleting user events
+    # TODO : change parameters to snake_case
+    syncProfileId: str,  # This value is inserted as a property in events to avoid deleting user events
     icsSourceUrl: str,
     targetCalendarId: str,
     service,
+    syncTrigger: str,
     middlewares: Optional[List[Middleware]] = None,
 ) -> None:
     try:
-        ics_str = UrlIcsSource(icsSourceUrl).get_ics_string()
+        ics_str = UrlIcsSource(
+            icsSourceUrl
+        ).get_ics_string()  # TODO : Add proper error when url is invalid
     except Exception as e:
         logger.error(f"Failed to get ics string: {e}")
         raise e
@@ -48,13 +52,16 @@ def perform_synchronization(
 
     separation_dt = datetime.now(timezone.utc)
 
+    if syncTrigger == "on_create":
+        return calendar_manager.create_events(events, syncProfileId)
+
+    # TODO : Only update events that have changed
     future_events_ids = calendar_manager.get_events_ids_from_sync_profile(
         syncProfileId, separation_dt
     )
 
     calendar_manager.delete_events(future_events_ids)
 
-    # TODO : If first synchronization, add all events. Otherwise, add only new events.
     new_events = [event for event in events if event.end > separation_dt]
 
     calendar_manager.create_events(new_events, syncProfileId)

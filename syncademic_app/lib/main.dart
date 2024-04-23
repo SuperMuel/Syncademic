@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'repositories/google_target_calendar_repository.dart';
@@ -29,6 +30,7 @@ import 'services/firebase_auth_service.dart';
 import 'services/firestore_account_service.dart';
 import 'services/sync_profile_service.dart';
 import 'widgets/sync_profiles_list.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() async {
   await dotenv.load(fileName: "dotenv");
@@ -153,8 +155,23 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  PackageInfo? packageInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((value) => setState(() {
+          packageInfo = value;
+        }));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,6 +179,21 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Syncademic'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () => showAboutDialog(
+              context: context,
+              applicationIcon: SvgPicture.asset(
+                'assets/icons/syncademic-icon.svg',
+                semanticsLabel: 'Syncademic logo',
+                width: 64,
+              ),
+              applicationName: 'Syncademic',
+              applicationVersion: packageInfo?.version,
+              applicationLegalese: '© 2024 Syncademic',
+            ),
+            tooltip: "About",
+          ),
           IconButton(
             icon: const Icon(Icons.account_circle),
             onPressed: () => context.push('/account'),

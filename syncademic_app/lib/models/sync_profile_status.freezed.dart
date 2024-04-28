@@ -17,28 +17,44 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$SyncProfileStatus {
   String? get syncTrigger => throw _privateConstructorUsedError;
+  DateTime? get lastSuccessfulSync => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? syncTrigger) success,
-    required TResult Function(String? syncTrigger) inProgress,
-    required TResult Function(String message, String? syncTrigger) failed,
-    required TResult Function(String? syncTrigger) notStarted,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? syncTrigger)? success,
-    TResult? Function(String? syncTrigger)? inProgress,
-    TResult? Function(String message, String? syncTrigger)? failed,
-    TResult? Function(String? syncTrigger)? notStarted,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? syncTrigger)? success,
-    TResult Function(String? syncTrigger)? inProgress,
-    TResult Function(String message, String? syncTrigger)? failed,
-    TResult Function(String? syncTrigger)? notStarted,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -79,7 +95,7 @@ abstract class $SyncProfileStatusCopyWith<$Res> {
           SyncProfileStatus value, $Res Function(SyncProfileStatus) then) =
       _$SyncProfileStatusCopyWithImpl<$Res, SyncProfileStatus>;
   @useResult
-  $Res call({String? syncTrigger});
+  $Res call({String? syncTrigger, DateTime? lastSuccessfulSync});
 }
 
 /// @nodoc
@@ -96,12 +112,17 @@ class _$SyncProfileStatusCopyWithImpl<$Res, $Val extends SyncProfileStatus>
   @override
   $Res call({
     Object? syncTrigger = freezed,
+    Object? lastSuccessfulSync = freezed,
   }) {
     return _then(_value.copyWith(
       syncTrigger: freezed == syncTrigger
           ? _value.syncTrigger
           : syncTrigger // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -114,7 +135,7 @@ abstract class _$$SuccessImplCopyWith<$Res>
       __$$SuccessImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? syncTrigger});
+  $Res call({String? syncTrigger, DateTime? lastSuccessfulSync});
 }
 
 /// @nodoc
@@ -129,12 +150,17 @@ class __$$SuccessImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? syncTrigger = freezed,
+    Object? lastSuccessfulSync = freezed,
   }) {
     return _then(_$SuccessImpl(
       syncTrigger: freezed == syncTrigger
           ? _value.syncTrigger
           : syncTrigger // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -142,14 +168,16 @@ class __$$SuccessImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SuccessImpl extends _Success {
-  const _$SuccessImpl({this.syncTrigger}) : super._();
+  const _$SuccessImpl({this.syncTrigger, this.lastSuccessfulSync}) : super._();
 
   @override
   final String? syncTrigger;
+  @override
+  final DateTime? lastSuccessfulSync;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.success(syncTrigger: $syncTrigger)';
+    return 'SyncProfileStatus.success(syncTrigger: $syncTrigger, lastSuccessfulSync: $lastSuccessfulSync)';
   }
 
   @override
@@ -158,11 +186,13 @@ class _$SuccessImpl extends _Success {
         (other.runtimeType == runtimeType &&
             other is _$SuccessImpl &&
             (identical(other.syncTrigger, syncTrigger) ||
-                other.syncTrigger == syncTrigger));
+                other.syncTrigger == syncTrigger) &&
+            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
+                other.lastSuccessfulSync == lastSuccessfulSync));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, syncTrigger);
+  int get hashCode => Object.hash(runtimeType, syncTrigger, lastSuccessfulSync);
 
   @JsonKey(ignore: true)
   @override
@@ -173,36 +203,51 @@ class _$SuccessImpl extends _Success {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? syncTrigger) success,
-    required TResult Function(String? syncTrigger) inProgress,
-    required TResult Function(String message, String? syncTrigger) failed,
-    required TResult Function(String? syncTrigger) notStarted,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
   }) {
-    return success(syncTrigger);
+    return success(syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? syncTrigger)? success,
-    TResult? Function(String? syncTrigger)? inProgress,
-    TResult? Function(String message, String? syncTrigger)? failed,
-    TResult? Function(String? syncTrigger)? notStarted,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
   }) {
-    return success?.call(syncTrigger);
+    return success?.call(syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? syncTrigger)? success,
-    TResult Function(String? syncTrigger)? inProgress,
-    TResult Function(String message, String? syncTrigger)? failed,
-    TResult Function(String? syncTrigger)? notStarted,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
     required TResult orElse(),
   }) {
     if (success != null) {
-      return success(syncTrigger);
+      return success(syncTrigger, lastSuccessfulSync);
     }
     return orElse();
   }
@@ -246,11 +291,15 @@ class _$SuccessImpl extends _Success {
 }
 
 abstract class _Success extends SyncProfileStatus {
-  const factory _Success({final String? syncTrigger}) = _$SuccessImpl;
+  const factory _Success(
+      {final String? syncTrigger,
+      final DateTime? lastSuccessfulSync}) = _$SuccessImpl;
   const _Success._() : super._();
 
   @override
   String? get syncTrigger;
+  @override
+  DateTime? get lastSuccessfulSync;
   @override
   @JsonKey(ignore: true)
   _$$SuccessImplCopyWith<_$SuccessImpl> get copyWith =>
@@ -265,7 +314,7 @@ abstract class _$$InProgressImplCopyWith<$Res>
       __$$InProgressImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? syncTrigger});
+  $Res call({String? syncTrigger, DateTime? lastSuccessfulSync});
 }
 
 /// @nodoc
@@ -280,12 +329,17 @@ class __$$InProgressImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? syncTrigger = freezed,
+    Object? lastSuccessfulSync = freezed,
   }) {
     return _then(_$InProgressImpl(
       syncTrigger: freezed == syncTrigger
           ? _value.syncTrigger
           : syncTrigger // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -293,14 +347,17 @@ class __$$InProgressImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$InProgressImpl extends _InProgress {
-  const _$InProgressImpl({this.syncTrigger}) : super._();
+  const _$InProgressImpl({this.syncTrigger, this.lastSuccessfulSync})
+      : super._();
 
   @override
   final String? syncTrigger;
+  @override
+  final DateTime? lastSuccessfulSync;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.inProgress(syncTrigger: $syncTrigger)';
+    return 'SyncProfileStatus.inProgress(syncTrigger: $syncTrigger, lastSuccessfulSync: $lastSuccessfulSync)';
   }
 
   @override
@@ -309,11 +366,13 @@ class _$InProgressImpl extends _InProgress {
         (other.runtimeType == runtimeType &&
             other is _$InProgressImpl &&
             (identical(other.syncTrigger, syncTrigger) ||
-                other.syncTrigger == syncTrigger));
+                other.syncTrigger == syncTrigger) &&
+            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
+                other.lastSuccessfulSync == lastSuccessfulSync));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, syncTrigger);
+  int get hashCode => Object.hash(runtimeType, syncTrigger, lastSuccessfulSync);
 
   @JsonKey(ignore: true)
   @override
@@ -324,36 +383,51 @@ class _$InProgressImpl extends _InProgress {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? syncTrigger) success,
-    required TResult Function(String? syncTrigger) inProgress,
-    required TResult Function(String message, String? syncTrigger) failed,
-    required TResult Function(String? syncTrigger) notStarted,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
   }) {
-    return inProgress(syncTrigger);
+    return inProgress(syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? syncTrigger)? success,
-    TResult? Function(String? syncTrigger)? inProgress,
-    TResult? Function(String message, String? syncTrigger)? failed,
-    TResult? Function(String? syncTrigger)? notStarted,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
   }) {
-    return inProgress?.call(syncTrigger);
+    return inProgress?.call(syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? syncTrigger)? success,
-    TResult Function(String? syncTrigger)? inProgress,
-    TResult Function(String message, String? syncTrigger)? failed,
-    TResult Function(String? syncTrigger)? notStarted,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
     required TResult orElse(),
   }) {
     if (inProgress != null) {
-      return inProgress(syncTrigger);
+      return inProgress(syncTrigger, lastSuccessfulSync);
     }
     return orElse();
   }
@@ -397,11 +471,15 @@ class _$InProgressImpl extends _InProgress {
 }
 
 abstract class _InProgress extends SyncProfileStatus {
-  const factory _InProgress({final String? syncTrigger}) = _$InProgressImpl;
+  const factory _InProgress(
+      {final String? syncTrigger,
+      final DateTime? lastSuccessfulSync}) = _$InProgressImpl;
   const _InProgress._() : super._();
 
   @override
   String? get syncTrigger;
+  @override
+  DateTime? get lastSuccessfulSync;
   @override
   @JsonKey(ignore: true)
   _$$InProgressImplCopyWith<_$InProgressImpl> get copyWith =>
@@ -416,7 +494,8 @@ abstract class _$$FailedImplCopyWith<$Res>
       __$$FailedImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String message, String? syncTrigger});
+  $Res call(
+      {String message, String? syncTrigger, DateTime? lastSuccessfulSync});
 }
 
 /// @nodoc
@@ -432,6 +511,7 @@ class __$$FailedImplCopyWithImpl<$Res>
   $Res call({
     Object? message = null,
     Object? syncTrigger = freezed,
+    Object? lastSuccessfulSync = freezed,
   }) {
     return _then(_$FailedImpl(
       null == message
@@ -442,6 +522,10 @@ class __$$FailedImplCopyWithImpl<$Res>
           ? _value.syncTrigger
           : syncTrigger // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -449,16 +533,19 @@ class __$$FailedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$FailedImpl extends _Failed {
-  const _$FailedImpl(this.message, {this.syncTrigger}) : super._();
+  const _$FailedImpl(this.message, {this.syncTrigger, this.lastSuccessfulSync})
+      : super._();
 
   @override
   final String message;
   @override
   final String? syncTrigger;
+  @override
+  final DateTime? lastSuccessfulSync;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.failed(message: $message, syncTrigger: $syncTrigger)';
+    return 'SyncProfileStatus.failed(message: $message, syncTrigger: $syncTrigger, lastSuccessfulSync: $lastSuccessfulSync)';
   }
 
   @override
@@ -468,11 +555,14 @@ class _$FailedImpl extends _Failed {
             other is _$FailedImpl &&
             (identical(other.message, message) || other.message == message) &&
             (identical(other.syncTrigger, syncTrigger) ||
-                other.syncTrigger == syncTrigger));
+                other.syncTrigger == syncTrigger) &&
+            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
+                other.lastSuccessfulSync == lastSuccessfulSync));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, message, syncTrigger);
+  int get hashCode =>
+      Object.hash(runtimeType, message, syncTrigger, lastSuccessfulSync);
 
   @JsonKey(ignore: true)
   @override
@@ -483,36 +573,51 @@ class _$FailedImpl extends _Failed {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? syncTrigger) success,
-    required TResult Function(String? syncTrigger) inProgress,
-    required TResult Function(String message, String? syncTrigger) failed,
-    required TResult Function(String? syncTrigger) notStarted,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
   }) {
-    return failed(message, syncTrigger);
+    return failed(message, syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? syncTrigger)? success,
-    TResult? Function(String? syncTrigger)? inProgress,
-    TResult? Function(String message, String? syncTrigger)? failed,
-    TResult? Function(String? syncTrigger)? notStarted,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
   }) {
-    return failed?.call(message, syncTrigger);
+    return failed?.call(message, syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? syncTrigger)? success,
-    TResult Function(String? syncTrigger)? inProgress,
-    TResult Function(String message, String? syncTrigger)? failed,
-    TResult Function(String? syncTrigger)? notStarted,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
     required TResult orElse(),
   }) {
     if (failed != null) {
-      return failed(message, syncTrigger);
+      return failed(message, syncTrigger, lastSuccessfulSync);
     }
     return orElse();
   }
@@ -556,13 +661,16 @@ class _$FailedImpl extends _Failed {
 }
 
 abstract class _Failed extends SyncProfileStatus {
-  const factory _Failed(final String message, {final String? syncTrigger}) =
-      _$FailedImpl;
+  const factory _Failed(final String message,
+      {final String? syncTrigger,
+      final DateTime? lastSuccessfulSync}) = _$FailedImpl;
   const _Failed._() : super._();
 
   String get message;
   @override
   String? get syncTrigger;
+  @override
+  DateTime? get lastSuccessfulSync;
   @override
   @JsonKey(ignore: true)
   _$$FailedImplCopyWith<_$FailedImpl> get copyWith =>
@@ -577,7 +685,7 @@ abstract class _$$NotStartedImplCopyWith<$Res>
       __$$NotStartedImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? syncTrigger});
+  $Res call({String? syncTrigger, DateTime? lastSuccessfulSync});
 }
 
 /// @nodoc
@@ -592,12 +700,17 @@ class __$$NotStartedImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? syncTrigger = freezed,
+    Object? lastSuccessfulSync = freezed,
   }) {
     return _then(_$NotStartedImpl(
       syncTrigger: freezed == syncTrigger
           ? _value.syncTrigger
           : syncTrigger // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -605,14 +718,17 @@ class __$$NotStartedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$NotStartedImpl extends _NotStarted {
-  const _$NotStartedImpl({this.syncTrigger}) : super._();
+  const _$NotStartedImpl({this.syncTrigger, this.lastSuccessfulSync})
+      : super._();
 
   @override
   final String? syncTrigger;
+  @override
+  final DateTime? lastSuccessfulSync;
 
   @override
   String toString() {
-    return 'SyncProfileStatus.notStarted(syncTrigger: $syncTrigger)';
+    return 'SyncProfileStatus.notStarted(syncTrigger: $syncTrigger, lastSuccessfulSync: $lastSuccessfulSync)';
   }
 
   @override
@@ -621,11 +737,13 @@ class _$NotStartedImpl extends _NotStarted {
         (other.runtimeType == runtimeType &&
             other is _$NotStartedImpl &&
             (identical(other.syncTrigger, syncTrigger) ||
-                other.syncTrigger == syncTrigger));
+                other.syncTrigger == syncTrigger) &&
+            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
+                other.lastSuccessfulSync == lastSuccessfulSync));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, syncTrigger);
+  int get hashCode => Object.hash(runtimeType, syncTrigger, lastSuccessfulSync);
 
   @JsonKey(ignore: true)
   @override
@@ -636,36 +754,51 @@ class _$NotStartedImpl extends _NotStarted {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? syncTrigger) success,
-    required TResult Function(String? syncTrigger) inProgress,
-    required TResult Function(String message, String? syncTrigger) failed,
-    required TResult Function(String? syncTrigger) notStarted,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
   }) {
-    return notStarted(syncTrigger);
+    return notStarted(syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? syncTrigger)? success,
-    TResult? Function(String? syncTrigger)? inProgress,
-    TResult? Function(String message, String? syncTrigger)? failed,
-    TResult? Function(String? syncTrigger)? notStarted,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
   }) {
-    return notStarted?.call(syncTrigger);
+    return notStarted?.call(syncTrigger, lastSuccessfulSync);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? syncTrigger)? success,
-    TResult Function(String? syncTrigger)? inProgress,
-    TResult Function(String message, String? syncTrigger)? failed,
-    TResult Function(String? syncTrigger)? notStarted,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
     required TResult orElse(),
   }) {
     if (notStarted != null) {
-      return notStarted(syncTrigger);
+      return notStarted(syncTrigger, lastSuccessfulSync);
     }
     return orElse();
   }
@@ -709,11 +842,15 @@ class _$NotStartedImpl extends _NotStarted {
 }
 
 abstract class _NotStarted extends SyncProfileStatus {
-  const factory _NotStarted({final String? syncTrigger}) = _$NotStartedImpl;
+  const factory _NotStarted(
+      {final String? syncTrigger,
+      final DateTime? lastSuccessfulSync}) = _$NotStartedImpl;
   const _NotStarted._() : super._();
 
   @override
   String? get syncTrigger;
+  @override
+  DateTime? get lastSuccessfulSync;
   @override
   @JsonKey(ignore: true)
   _$$NotStartedImplCopyWith<_$NotStartedImpl> get copyWith =>

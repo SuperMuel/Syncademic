@@ -19,7 +19,8 @@ mixin _$SyncProfileState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError)
+    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)
         loaded,
     required TResult Function() notFound,
   }) =>
@@ -27,7 +28,8 @@ mixin _$SyncProfileState {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError)?
+    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
         loaded,
     TResult? Function()? notFound,
   }) =>
@@ -35,7 +37,9 @@ mixin _$SyncProfileState {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError)? loaded,
+    TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
+        loaded,
     TResult Function()? notFound,
     required TResult orElse(),
   }) =>
@@ -100,8 +104,8 @@ class __$$LoadingImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoadingImpl implements _Loading {
-  const _$LoadingImpl();
+class _$LoadingImpl extends _Loading {
+  const _$LoadingImpl() : super._();
 
   @override
   String toString() {
@@ -121,7 +125,8 @@ class _$LoadingImpl implements _Loading {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError)
+    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)
         loaded,
     required TResult Function() notFound,
   }) {
@@ -132,7 +137,8 @@ class _$LoadingImpl implements _Loading {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError)?
+    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
         loaded,
     TResult? Function()? notFound,
   }) {
@@ -143,7 +149,9 @@ class _$LoadingImpl implements _Loading {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError)? loaded,
+    TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
+        loaded,
     TResult Function()? notFound,
     required TResult orElse(),
   }) {
@@ -188,8 +196,9 @@ class _$LoadingImpl implements _Loading {
   }
 }
 
-abstract class _Loading implements SyncProfileState {
+abstract class _Loading extends SyncProfileState {
   const factory _Loading() = _$LoadingImpl;
+  const _Loading._() : super._();
 }
 
 /// @nodoc
@@ -198,7 +207,10 @@ abstract class _$$LoadedImplCopyWith<$Res> {
           _$LoadedImpl value, $Res Function(_$LoadedImpl) then) =
       __$$LoadedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({SyncProfile syncProfile, String? requestSyncError});
+  $Res call(
+      {SyncProfile syncProfile,
+      String? requestSyncError,
+      DateTime? lastSyncRequest});
 
   $SyncProfileCopyWith<$Res> get syncProfile;
 }
@@ -216,6 +228,7 @@ class __$$LoadedImplCopyWithImpl<$Res>
   $Res call({
     Object? syncProfile = null,
     Object? requestSyncError = freezed,
+    Object? lastSyncRequest = freezed,
   }) {
     return _then(_$LoadedImpl(
       null == syncProfile
@@ -226,6 +239,10 @@ class __$$LoadedImplCopyWithImpl<$Res>
           ? _value.requestSyncError
           : requestSyncError // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastSyncRequest: freezed == lastSyncRequest
+          ? _value.lastSyncRequest
+          : lastSyncRequest // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 
@@ -240,17 +257,21 @@ class __$$LoadedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LoadedImpl implements _Loaded {
-  const _$LoadedImpl(this.syncProfile, {this.requestSyncError});
+class _$LoadedImpl extends _Loaded {
+  const _$LoadedImpl(this.syncProfile,
+      {this.requestSyncError, this.lastSyncRequest})
+      : super._();
 
   @override
   final SyncProfile syncProfile;
   @override
   final String? requestSyncError;
+  @override
+  final DateTime? lastSyncRequest;
 
   @override
   String toString() {
-    return 'SyncProfileState.loaded(syncProfile: $syncProfile, requestSyncError: $requestSyncError)';
+    return 'SyncProfileState.loaded(syncProfile: $syncProfile, requestSyncError: $requestSyncError, lastSyncRequest: $lastSyncRequest)';
   }
 
   @override
@@ -261,11 +282,14 @@ class _$LoadedImpl implements _Loaded {
             (identical(other.syncProfile, syncProfile) ||
                 other.syncProfile == syncProfile) &&
             (identical(other.requestSyncError, requestSyncError) ||
-                other.requestSyncError == requestSyncError));
+                other.requestSyncError == requestSyncError) &&
+            (identical(other.lastSyncRequest, lastSyncRequest) ||
+                other.lastSyncRequest == lastSyncRequest));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, syncProfile, requestSyncError);
+  int get hashCode =>
+      Object.hash(runtimeType, syncProfile, requestSyncError, lastSyncRequest);
 
   @JsonKey(ignore: true)
   @override
@@ -277,34 +301,38 @@ class _$LoadedImpl implements _Loaded {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError)
+    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)
         loaded,
     required TResult Function() notFound,
   }) {
-    return loaded(syncProfile, requestSyncError);
+    return loaded(syncProfile, requestSyncError, lastSyncRequest);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError)?
+    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
         loaded,
     TResult? Function()? notFound,
   }) {
-    return loaded?.call(syncProfile, requestSyncError);
+    return loaded?.call(syncProfile, requestSyncError, lastSyncRequest);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError)? loaded,
+    TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
+        loaded,
     TResult Function()? notFound,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(syncProfile, requestSyncError);
+      return loaded(syncProfile, requestSyncError, lastSyncRequest);
     }
     return orElse();
   }
@@ -344,12 +372,15 @@ class _$LoadedImpl implements _Loaded {
   }
 }
 
-abstract class _Loaded implements SyncProfileState {
+abstract class _Loaded extends SyncProfileState {
   const factory _Loaded(final SyncProfile syncProfile,
-      {final String? requestSyncError}) = _$LoadedImpl;
+      {final String? requestSyncError,
+      final DateTime? lastSyncRequest}) = _$LoadedImpl;
+  const _Loaded._() : super._();
 
   SyncProfile get syncProfile;
   String? get requestSyncError;
+  DateTime? get lastSyncRequest;
   @JsonKey(ignore: true)
   _$$LoadedImplCopyWith<_$LoadedImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -373,8 +404,8 @@ class __$$NotFoundImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$NotFoundImpl implements _NotFound {
-  const _$NotFoundImpl();
+class _$NotFoundImpl extends _NotFound {
+  const _$NotFoundImpl() : super._();
 
   @override
   String toString() {
@@ -394,7 +425,8 @@ class _$NotFoundImpl implements _NotFound {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError)
+    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)
         loaded,
     required TResult Function() notFound,
   }) {
@@ -405,7 +437,8 @@ class _$NotFoundImpl implements _NotFound {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError)?
+    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
         loaded,
     TResult? Function()? notFound,
   }) {
@@ -416,7 +449,9 @@ class _$NotFoundImpl implements _NotFound {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError)? loaded,
+    TResult Function(SyncProfile syncProfile, String? requestSyncError,
+            DateTime? lastSyncRequest)?
+        loaded,
     TResult Function()? notFound,
     required TResult orElse(),
   }) {
@@ -461,6 +496,7 @@ class _$NotFoundImpl implements _NotFound {
   }
 }
 
-abstract class _NotFound implements SyncProfileState {
+abstract class _NotFound extends SyncProfileState {
   const factory _NotFound() = _$NotFoundImpl;
+  const _NotFound._() : super._();
 }

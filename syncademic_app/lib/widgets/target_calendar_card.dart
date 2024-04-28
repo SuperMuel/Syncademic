@@ -19,6 +19,7 @@ class TargetCalendarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
+      //TODO : make it full width on small screens
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: Stack(
         children: [

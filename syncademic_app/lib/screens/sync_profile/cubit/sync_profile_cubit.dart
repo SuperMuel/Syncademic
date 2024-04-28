@@ -18,23 +18,45 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
       : super(const SyncProfileState.loading()) {
     GetIt.I<SyncProfileRepository>()
         .watchSyncProfile(ID.fromString(syncProfileId))
-        .listen((syncProfile) => emit(syncProfile == null
-            ? const SyncProfileState.notFound()
-            : SyncProfileState.loaded(syncProfile)));
+        .listen((syncProfile) {
+      emit(syncProfile == null
+          ? const SyncProfileState.notFound()
+          : state.maybeMap(
+              loaded: (loaded) => loaded.copyWith(syncProfile: syncProfile),
+              orElse: () => SyncProfileState.loaded(syncProfile),
+            ));
+    });
   }
 
   Future<void> requestSync() async {
+    final lastSyncRequest = DateTime.now();
+
+    state.maybeMap(
+      loaded: (loaded) {
+        emit(loaded.copyWith(
+          requestSyncError: null,
+          lastSyncRequest: lastSyncRequest,
+        ));
+      },
+      orElse: () {},
+    );
+
     try {
       await GetIt.I<SyncProfileService>().requestSync(syncProfileId);
 
       state.maybeMap(
-        loaded: (loaded) => emit(loaded.copyWith(requestSyncError: null)),
+        loaded: (loaded) => emit(loaded.copyWith(
+          requestSyncError: null,
+          lastSyncRequest: lastSyncRequest,
+        )),
         orElse: () {},
       );
     } catch (e) {
       state.maybeMap(
-        loaded: (loaded) =>
-            emit(loaded.copyWith(requestSyncError: e.toString())),
+        loaded: (loaded) => emit(loaded.copyWith(
+          requestSyncError: e.toString(),
+          lastSyncRequest: null,
+        )),
         orElse: () {},
       );
     }

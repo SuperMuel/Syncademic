@@ -21,7 +21,6 @@ mixin _$SyncProfile {
   TargetCalendar get targetCalendar => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   bool get enabled => throw _privateConstructorUsedError;
-  DateTime? get lastSuccessfulSync => throw _privateConstructorUsedError;
   SyncProfileStatus? get status => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -41,7 +40,6 @@ abstract class $SyncProfileCopyWith<$Res> {
       TargetCalendar targetCalendar,
       String title,
       bool enabled,
-      DateTime? lastSuccessfulSync,
       SyncProfileStatus? status});
 
   $ScheduleSourceCopyWith<$Res> get scheduleSource;
@@ -67,7 +65,6 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
     Object? targetCalendar = null,
     Object? title = null,
     Object? enabled = null,
-    Object? lastSuccessfulSync = freezed,
     Object? status = freezed,
   }) {
     return _then(_value.copyWith(
@@ -91,10 +88,6 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
           ? _value.enabled
           : enabled // ignore: cast_nullable_to_non_nullable
               as bool,
-      lastSuccessfulSync: freezed == lastSuccessfulSync
-          ? _value.lastSuccessfulSync
-          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
       status: freezed == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -145,7 +138,6 @@ abstract class _$$SyncProfileImplCopyWith<$Res>
       TargetCalendar targetCalendar,
       String title,
       bool enabled,
-      DateTime? lastSuccessfulSync,
       SyncProfileStatus? status});
 
   @override
@@ -172,7 +164,6 @@ class __$$SyncProfileImplCopyWithImpl<$Res>
     Object? targetCalendar = null,
     Object? title = null,
     Object? enabled = null,
-    Object? lastSuccessfulSync = freezed,
     Object? status = freezed,
   }) {
     return _then(_$SyncProfileImpl(
@@ -196,10 +187,6 @@ class __$$SyncProfileImplCopyWithImpl<$Res>
           ? _value.enabled
           : enabled // ignore: cast_nullable_to_non_nullable
               as bool,
-      lastSuccessfulSync: freezed == lastSuccessfulSync
-          ? _value.lastSuccessfulSync
-          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
       status: freezed == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -217,7 +204,6 @@ class _$SyncProfileImpl implements _SyncProfile {
       required this.targetCalendar,
       required this.title,
       this.enabled = false,
-      this.lastSuccessfulSync,
       this.status});
 
   @override
@@ -232,13 +218,11 @@ class _$SyncProfileImpl implements _SyncProfile {
   @JsonKey()
   final bool enabled;
   @override
-  final DateTime? lastSuccessfulSync;
-  @override
   final SyncProfileStatus? status;
 
   @override
   String toString() {
-    return 'SyncProfile(id: $id, scheduleSource: $scheduleSource, targetCalendar: $targetCalendar, title: $title, enabled: $enabled, lastSuccessfulSync: $lastSuccessfulSync, status: $status)';
+    return 'SyncProfile(id: $id, scheduleSource: $scheduleSource, targetCalendar: $targetCalendar, title: $title, enabled: $enabled, status: $status)';
   }
 
   @override
@@ -253,14 +237,12 @@ class _$SyncProfileImpl implements _SyncProfile {
                 other.targetCalendar == targetCalendar) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.enabled, enabled) || other.enabled == enabled) &&
-            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
-                other.lastSuccessfulSync == lastSuccessfulSync) &&
             (identical(other.status, status) || other.status == status));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, scheduleSource,
-      targetCalendar, title, enabled, lastSuccessfulSync, status);
+  int get hashCode => Object.hash(
+      runtimeType, id, scheduleSource, targetCalendar, title, enabled, status);
 
   @JsonKey(ignore: true)
   @override
@@ -276,7 +258,6 @@ abstract class _SyncProfile implements SyncProfile {
       required final TargetCalendar targetCalendar,
       required final String title,
       final bool enabled,
-      final DateTime? lastSuccessfulSync,
       final SyncProfileStatus? status}) = _$SyncProfileImpl;
 
   @override
@@ -289,8 +270,6 @@ abstract class _SyncProfile implements SyncProfile {
   String get title;
   @override
   bool get enabled;
-  @override
-  DateTime? get lastSuccessfulSync;
   @override
   SyncProfileStatus? get status;
   @override

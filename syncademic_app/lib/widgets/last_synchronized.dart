@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_time_ago/get_time_ago.dart';
 
-import '../models/sync_profile.dart';
-
 class LastSynchronized extends StatefulWidget {
   const LastSynchronized(
       {super.key,
-      required this.syncProfile,
+      required this.lastSync,
+      this.builder,
       this.refreshRate = const Duration(seconds: 1)});
 
-  final SyncProfile syncProfile;
+  final DateTime? lastSync;
   final Duration refreshRate;
+
+  /// A builder that is called with the current last sync time.
+  final Function(BuildContext context, String? lastSync)? builder;
 
   @override
   State<LastSynchronized> createState() => _LastSynchronizedState();
@@ -26,7 +28,7 @@ class _LastSynchronizedState extends State<LastSynchronized> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(widget.refreshRate, (timer) {
-      setState(() => updateLastSync(widget.syncProfile.lastSuccessfulSync));
+      setState(() => updateLastSync(widget.lastSync));
     });
   }
 
@@ -47,6 +49,6 @@ class _LastSynchronizedState extends State<LastSynchronized> {
 
   @override
   Widget build(BuildContext context) {
-    return Text('Last synchronized: $_lastSync');
+    return widget.builder?.call(context, _lastSync) ?? Text(_lastSync);
   }
 }

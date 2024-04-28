@@ -110,15 +110,14 @@ The backend is primarily built on Firebase Cloud Functions.
 
     - `type` (string): The status type of the synchronization (`inProgress`, `failed`, `success`)
     - `message` (string): The error message if the synchronization failed
-
     - `syncTrigger` (string): The trigger of the synchronization (`on_create`, `manual`, `scheduled`)
+    - `lastSuccessfulSync` (timestamp): The timestamp of the last successful synchronization
 
   - `targetCalendar` (map)
     - `id` (string): The ID of the target calendar
     - `title` (string): The title of the target calendar, given by the calendar provider.
     - `description` (string): The description of the target calendar, given by the calendar provider.
     - `providerAccountId` (string): This is the unique identifier for the account that owns the target calendar. It is not the same as the Firebase Auth ID used in our app. Currently, this ID represents a Google account, but in the future, it could also represent accounts from other providers like Microsoft. This distinction is important because a single user of our app can manage multiple synchronization profiles, each targeting calendars owned by different accounts across various providers.
-  - `lastSuccessfulSync` (timestamp): The timestamp of the last successful synchronization
 
 ### `backendAuthorizations` collection
 

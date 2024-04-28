@@ -15,7 +15,6 @@ class SyncProfile with _$SyncProfile {
     required TargetCalendar targetCalendar,
     required String title,
     @Default(false) bool enabled,
-    DateTime? lastSuccessfulSync,
     SyncProfileStatus? status,
   }) = _SyncProfile;
 }

@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
               applicationIcon: SvgPicture.asset(
                 'assets/icons/syncademic-icon.svg',
                 semanticsLabel: 'Syncademic logo',
-                width: 64,
+                width: 40,
               ),
               applicationName: 'Syncademic',
               applicationVersion: packageInfo?.version,

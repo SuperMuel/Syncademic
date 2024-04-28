@@ -84,9 +84,10 @@ class MockSyncProfileRepository implements SyncProfileRepository {
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
       enabled: Random().nextBool(),
-      lastSuccessfulSync:
-          DateTime.now().subtract(Duration(seconds: totalSeconds)),
-      status: const SyncProfileStatus.success(),
+      status: SyncProfileStatus.success(
+        lastSuccessfulSync:
+            DateTime.now().subtract(Duration(seconds: totalSeconds)),
+      ),
     );
   }
 
@@ -100,7 +101,8 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addInProgressProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
-      status: const SyncProfileStatus.inProgress(),
+      status: SyncProfileStatus.inProgress(),
+      lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1)),
     );
     _syncProfiles[syncProfile.id] = syncProfile;
   }
@@ -108,7 +110,8 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addFailedProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
-      status: const SyncProfileStatus.failed("Error message"),
+      status: SyncProfileStatus.failed("Error message",
+          lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1))),
     );
 
     _syncProfiles[syncProfile.id] = syncProfile;

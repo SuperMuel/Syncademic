@@ -6,13 +6,10 @@ part 'sync_profile_status.freezed.dart';
 class SyncProfileStatus with _$SyncProfileStatus {
   const SyncProfileStatus._();
 
-  const factory SyncProfileStatus.success({String? syncTrigger}) = _Success;
-  const factory SyncProfileStatus.inProgress({String? syncTrigger}) =
-      _InProgress;
-  const factory SyncProfileStatus.failed(String message,
-      {String? syncTrigger}) = _Failed;
-  const factory SyncProfileStatus.notStarted({String? syncTrigger}) =
-      _NotStarted;
+  const factory SyncProfileStatus.success({String? syncTrigger, DateTime? lastSuccessfulSync}) = _Success;
+  const factory SyncProfileStatus.inProgress({String? syncTrigger, DateTime? lastSuccessfulSync}) = _InProgress;
+  const factory SyncProfileStatus.failed(String message, {String? syncTrigger, DateTime? lastSuccessfulSync}) = _Failed;
+  const factory SyncProfileStatus.notStarted({String? syncTrigger, DateTime? lastSuccessfulSync}) = _NotStarted;
 
   bool isInProgress() => maybeMap(
         orElse: () => false,

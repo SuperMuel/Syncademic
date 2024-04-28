@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
 
@@ -68,28 +70,40 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       description: data['targetCalendar']['description'],
     );
 
-    final timestamp = data['lastSuccessfulSync'] as Timestamp?;
-
-    late SyncProfileStatus status; //TODO : Refactor this crap
+    SyncProfileStatus? status; //TODO : Refactor this crap
     switch (data['status']['type']) {
       case 'inProgress':
         status = SyncProfileStatus.inProgress(
-            syncTrigger: data['status']['syncTrigger']);
+          syncTrigger: data['status']['syncTrigger'],
+          lastSuccessfulSync:
+              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+        );
         break;
       case 'success':
         status = SyncProfileStatus.success(
-            syncTrigger: data['status']['syncTrigger']);
+          syncTrigger: data['status']['syncTrigger'],
+          lastSuccessfulSync:
+              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+        );
         break;
       case 'failed':
-        status = SyncProfileStatus.failed(data['status']['message'] ?? '',
-            syncTrigger: data['status']['syncTrigger']);
+        status = SyncProfileStatus.failed(
+          data['status']['message'] ?? '',
+          syncTrigger: data['status']['syncTrigger'],
+          lastSuccessfulSync:
+              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+        );
         break;
       case 'notStarted':
         status = SyncProfileStatus.notStarted(
-            syncTrigger: data['status']['syncTrigger']);
+          syncTrigger: data['status']['syncTrigger'],
+          lastSuccessfulSync:
+              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+        );
         break;
       default:
-        throw Exception('Unknown status: ${data['status']}');
+        // TODO : Set status to null and log error
+        log('Could not parse status: ${data['status']}');
     }
 
     return SyncProfile(
@@ -97,7 +111,6 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       title: data['title'],
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
-      lastSuccessfulSync: timestamp?.toDate(),
       status: status,
     );
   }

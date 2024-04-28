@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:syncademic_app/widgets/last_synchronized.dart';
 import 'package:syncademic_app/widgets/schedule_source_card.dart';
+import 'package:syncademic_app/widgets/sync_profile_status_card.dart';
 import '../../widgets/target_calendar_card.dart';
 
 import '../../models/sync_profile.dart';
@@ -119,26 +119,6 @@ class _SyncProfileBody extends StatelessWidget {
           TargetCalendarCard(targetCalendar: syncProfile.targetCalendar),
           const SizedBox(height: 32),
 
-          // Last synchronized
-          Text(
-            'Last Synchronized',
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          syncProfile.lastSuccessfulSync != null
-              ? LastSynchronized(
-                  lastSync: syncProfile.lastSuccessfulSync,
-                  refreshRate: const Duration(seconds: 1),
-                )
-              : Text(
-                  'Never',
-                  style: GoogleFonts.montserrat(fontSize: 16),
-                ),
-          const SizedBox(height: 32),
-
           // Status
           Text(
             'Status',
@@ -148,10 +128,7 @@ class _SyncProfileBody extends StatelessWidget {
             ),
           ),
 
-          SelectableText(
-            '${syncProfile.status}',
-            style: GoogleFonts.montserrat(fontSize: 16),
-          ),
+          SyncProfileStatusCard(status: syncProfile.status)
         ],
       ),
     );

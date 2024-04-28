@@ -19,6 +19,15 @@ class AccountPage extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Account'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () => GetIt.I<AuthCubit>()
+                    .signOut()
+                    .then((value) => context.go('/')),
+                tooltip: "Sign out",
+              ),
+            ],
           ),
           body: state.maybeMap(
             orElse: () => const Center(child: CircularProgressIndicator()),
@@ -28,13 +37,7 @@ class AccountPage extends StatelessWidget {
                 children: [
                   Text('Id : ${user.user.id}'),
                   Text('Email : ${user.user.email}'),
-                  const Gap(20),
-                  ElevatedButton(
-                    onPressed: () => GetIt.I<AuthCubit>()
-                        .signOut()
-                        .then((value) => context.go('/')),
-                    child: const Text('Sign Out'),
-                  ),
+                  //TODO : add created on
                 ],
               ),
             ),

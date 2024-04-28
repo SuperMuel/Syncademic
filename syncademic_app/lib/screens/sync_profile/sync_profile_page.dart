@@ -66,19 +66,6 @@ class _SyncProfileBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sync Profile ID',
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            syncProfile.id.value,
-            style: GoogleFonts.montserrat(fontSize: 16),
-          ),
-          const SizedBox(height: 24),
-          Text(
             'Schedule Source',
             style: GoogleFonts.montserrat(
               fontWeight: FontWeight.bold,
@@ -99,11 +86,6 @@ class _SyncProfileBody extends StatelessWidget {
             ),
           ),
           TargetCalendarCard(targetCalendar: syncProfile.targetCalendar),
-          const SizedBox(height: 8),
-          SelectableText(
-            'ID: ${syncProfile.targetCalendar.id.value}',
-            style: GoogleFonts.montserrat(fontSize: 16),
-          ),
           const SizedBox(height: 32),
 
           // Last synchronized

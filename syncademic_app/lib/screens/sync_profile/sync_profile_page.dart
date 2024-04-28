@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncademic_app/widgets/last_synchronized.dart';
+import 'package:syncademic_app/widgets/schedule_source_card.dart';
 import '../../widgets/target_calendar_card.dart';
 
 import '../../models/sync_profile.dart';
@@ -106,10 +107,7 @@ class _SyncProfileBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          SelectableText(
-            syncProfile.scheduleSource.url,
-            style: GoogleFonts.montserrat(fontSize: 16),
-          ),
+          ScheduleSourceCard(scheduleSource: syncProfile.scheduleSource),
           const SizedBox(height: 24),
           Text(
             'Target Calendar',

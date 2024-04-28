@@ -238,8 +238,8 @@ def _synchronize_now(
             "status": {
                 "type": "success",
                 "syncTrigger": sync_trigger,
+                "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
             },
-            "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
         }
     )
 

@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/target_calendar_card.dart';
 
 import '../../models/sync_profile.dart';
-import '../../models/sync_profile_status.dart';
 import '../../repositories/sync_profile_repository.dart';
 import 'cubit/sync_profile_cubit.dart';
 
@@ -35,21 +34,54 @@ class SyncProfilePage extends StatelessWidget {
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Sync Profile Details'),
+              title: state.appbarTitle,
+              actions: state.toAppbarActions(context, state),
             ),
             body: SafeArea(
               child: SingleChildScrollView(
-                child: state.when(
-                  loading: () =>
+                child: state.map(
+                  loading: (_) =>
                       const Center(child: CircularProgressIndicator()),
-                  loaded: (syncProfile, _) =>
-                      _SyncProfileBody(syncProfile: syncProfile),
-                  notFound: () => const _NotFoundBody(),
+                  loaded: (loaded) =>
+                      _SyncProfileBody(syncProfile: loaded.syncProfile),
+                  notFound: (_) => const _NotFoundBody(),
                 ),
               ),
             ),
           );
         },
+      );
+}
+
+extension on SyncProfileState {
+  List<Widget> toAppbarActions(BuildContext context, SyncProfileState state) =>
+      maybeMap(
+        loaded: (loaded) => [
+          // Synchronize now button
+          IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: "Synchronize now",
+            onPressed: state.canRequestSync
+                ? context.read<SyncProfileCubit>().requestSync
+                : null,
+          ),
+          // Delete button
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: "Delete this synchronization",
+            onPressed: () {
+              GetIt.I<SyncProfileRepository>() // TODO : move this call to cubit and show a confirmation dialog
+                  .deleteSyncProfile(loaded.syncProfile.id);
+              context.pop();
+            },
+          ),
+        ],
+        orElse: () => [],
+      );
+  Text get appbarTitle => maybeMap(
+        loaded: (loaded) => Text(loaded.syncProfile.title),
+        notFound: (_) => const Text('Sync Profile not found'),
+        orElse: () => const Text('Sync Profile Details'),
       );
 }
 
@@ -98,7 +130,8 @@ class _SyncProfileBody extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            syncProfile.lastSuccessfulSync != null
+            syncProfile.lastSuccessfulSync !=
+                    null // TODO : format date to "ago"
                 ? syncProfile.lastSuccessfulSync.toString()
                 : 'Never',
             style: GoogleFonts.montserrat(fontSize: 16),
@@ -118,77 +151,7 @@ class _SyncProfileBody extends StatelessWidget {
             '${syncProfile.status}',
             style: GoogleFonts.montserrat(fontSize: 16),
           ),
-
-          const SizedBox(height: 32),
-
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const _AuthorizeButton(),
-                const SizedBox(width: 16),
-                _RequestSyncButton(syncProfile: syncProfile),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    GetIt.I<SyncProfileRepository>()
-                        .deleteSyncProfile(syncProfile.id);
-                    context.pop();
-                  },
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Delete'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _AuthorizeButton extends StatelessWidget {
-  const _AuthorizeButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: context.read<SyncProfileCubit>().authorizeBackend,
-      icon: const Icon(Icons.lock),
-      label: const Text('Authorize Backend'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-    );
-  }
-}
-
-class _RequestSyncButton extends StatelessWidget {
-  final SyncProfile syncProfile;
-
-  const _RequestSyncButton({
-    required this.syncProfile,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final canRequestSync =
-        syncProfile.status != const SyncProfileStatus.inProgress();
-
-    return ElevatedButton.icon(
-      onPressed:
-          canRequestSync ? context.read<SyncProfileCubit>().requestSync : null,
-      icon: const Icon(Icons.sync),
-      label: const Text('Synchronize Now'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
       ),
     );
   }

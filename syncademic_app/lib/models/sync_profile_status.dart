@@ -13,4 +13,9 @@ class SyncProfileStatus with _$SyncProfileStatus {
       {String? syncTrigger}) = _Failed;
   const factory SyncProfileStatus.notStarted({String? syncTrigger}) =
       _NotStarted;
+
+  bool isInProgress() => maybeMap(
+        orElse: () => false,
+        inProgress: (_) => true,
+      );
 }

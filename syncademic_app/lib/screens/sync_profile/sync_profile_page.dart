@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:syncademic_app/widgets/last_synchronized.dart';
 import '../../widgets/target_calendar_card.dart';
 
 import '../../models/sync_profile.dart';
@@ -129,13 +130,15 @@ class _SyncProfileBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            syncProfile.lastSuccessfulSync !=
-                    null // TODO : format date to "ago"
-                ? syncProfile.lastSuccessfulSync.toString()
-                : 'Never',
-            style: GoogleFonts.montserrat(fontSize: 16),
-          ),
+          syncProfile.lastSuccessfulSync != null
+              ? LastSynchronized(
+                  lastSync: syncProfile.lastSuccessfulSync,
+                  refreshRate: const Duration(seconds: 1),
+                )
+              : Text(
+                  'Never',
+                  style: GoogleFonts.montserrat(fontSize: 16),
+                ),
           const SizedBox(height: 32),
 
           // Status

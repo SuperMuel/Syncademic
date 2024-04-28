@@ -59,7 +59,10 @@ class _List extends StatelessWidget {
                   trailing: const Icon(Icons.chevron_right),
                   subtitle: profile.lastSuccessfulSync == null
                       ? const Text('Never synced')
-                      : LastSynchronized(syncProfile: profile),
+                      : LastSynchronized(
+                          lastSync: profile.lastSuccessfulSync,
+                          builder: (_, lastSync) =>
+                              Text('Last synced: $lastSync')),
                   onTap: onTap == null ? null : () => onTap!(profile));
             },
           );

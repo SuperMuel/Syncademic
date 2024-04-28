@@ -101,8 +101,9 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addInProgressProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
-      status: SyncProfileStatus.inProgress(),
-      lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1)),
+      status: SyncProfileStatus.inProgress(
+        lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1)),
+      ),
     );
     _syncProfiles[syncProfile.id] = syncProfile;
   }

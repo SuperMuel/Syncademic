@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:syncademic_app/models/sync_profile_status.dart';
-import 'package:syncademic_app/widgets/last_synchronized.dart';
+import '../models/sync_profile_status.dart';
+import 'last_synchronized.dart';
 
 class SyncProfileStatusCard extends StatelessWidget {
   final SyncProfileStatus? status;
@@ -30,7 +30,6 @@ class SyncProfileStatusCard extends StatelessWidget {
     );
   }
 }
-//TODO : add last sync time here
 
 extension on SyncProfileStatus {
   String get title => map(

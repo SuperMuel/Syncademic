@@ -102,7 +102,6 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
         );
         break;
       default:
-        // TODO : Set status to null and log error
         log('Could not parse status: ${data['status']}');
     }
 

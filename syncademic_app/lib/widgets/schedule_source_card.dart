@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:syncademic_app/models/schedule_source.dart';
+import '../models/schedule_source.dart';
 
 //TODO : add copy to clipboard button
 

@@ -29,6 +29,25 @@ class SyncProfilePage extends StatelessWidget {
                     ),
                   );
               }
+              if (loaded.deletionError != null) {
+                ScaffoldMessenger.of(context)
+                  ..clearSnackBars()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(loaded.deletionError!),
+                    ),
+                  );
+              }
+            },
+            deleted: (value) {
+              context.pop();
+              ScaffoldMessenger.of(context)
+                ..clearSnackBars()
+                ..showSnackBar(
+                  const SnackBar(
+                    content: Text('Sync Profile deleted'),
+                  ),
+                );
             },
             orElse: () {},
           );
@@ -47,6 +66,7 @@ class SyncProfilePage extends StatelessWidget {
                   loaded: (loaded) =>
                       _SyncProfileBody(syncProfile: loaded.syncProfile),
                   notFound: (_) => const _NotFoundBody(),
+                  deleted: (_) => const _NotFoundBody(),
                 ),
               ),
             ),
@@ -71,11 +91,9 @@ extension on SyncProfileState {
           IconButton(
             icon: const Icon(Icons.delete),
             tooltip: "Delete this synchronization",
-            onPressed: () {
-              GetIt.I<SyncProfileRepository>() // TODO : move this call to cubit and show a confirmation dialog
-                  .deleteSyncProfile(loaded.syncProfile.id);
-              context.pop();
-            },
+            onPressed: state.canDelete
+                ? context.read<SyncProfileCubit>().deleteSyncProfile
+                : null,
           ),
         ],
         orElse: () => [],

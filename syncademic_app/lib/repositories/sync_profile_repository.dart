@@ -118,6 +118,25 @@ class MockSyncProfileRepository implements SyncProfileRepository {
     _syncProfiles[syncProfile.id] = syncProfile;
   }
 
+  void addNotStartedProfile() {
+    var syncProfile = createRandomProfile();
+    syncProfile = syncProfile.copyWith(
+      status: const SyncProfileStatus.notStarted(
+        lastSuccessfulSync: null,
+      ),
+    );
+
+    _syncProfiles[syncProfile.id] = syncProfile;
+  }
+
+  void addDeletionFailedProfile() {
+    var syncProfile = createRandomProfile();
+    syncProfile = syncProfile.copyWith(
+        status: const SyncProfileStatus.deletionFailed("Deletion failed"));
+
+    _syncProfiles[syncProfile.id] = syncProfile;
+  }
+
   @override
   Stream<SyncProfile?> watchSyncProfile(ID id) {
     return Stream.value(_syncProfiles[id]);
@@ -125,6 +144,11 @@ class MockSyncProfileRepository implements SyncProfileRepository {
 
   @override
   Future<void> deleteSyncProfile(ID id) async {
+    _syncProfiles[id] =
+        _syncProfiles[id]!.copyWith(status: const SyncProfileStatus.deleting());
+    _syncProfilesController.add(_syncProfiles.values.toList());
+    await Future.delayed(const Duration(seconds: 2));
+
     _syncProfiles.remove(id);
     _syncProfilesController.add(_syncProfiles.values.toList());
   }

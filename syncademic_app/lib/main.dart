@@ -48,7 +48,9 @@ void main() async {
     // MockSyncProfileRepository()
     //   ..createRandomData(10)
     //   ..addFailedProfile()
-    //   ..addInProgressProfile(),
+    //   ..addInProgressProfile()
+    //   ..addNotStartedProfile()
+    //   ..addDeletionFailedProfile(),
   );
 
   getIt.registerSingleton<AuthService>(

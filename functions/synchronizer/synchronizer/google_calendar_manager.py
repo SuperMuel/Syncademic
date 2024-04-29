@@ -60,7 +60,7 @@ class GoogleCalendarManager:
     def get_events_ids_from_sync_profile(
         self,
         sync_profile_id: str,
-        min_dt: Optional[datetime],
+        min_dt: Optional[datetime] = None,
         limit: Optional[int] = 1000,
     ) -> List[str]:
         if not sync_profile_id:

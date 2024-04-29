@@ -101,6 +101,13 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
               (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
         );
         break;
+      case 'deleting':
+        status = const SyncProfileStatus.deleting();
+        break;
+      case 'deletionFailed':
+        status =
+            SyncProfileStatus.deletionFailed(data['status']['message'] ?? '');
+        break;
       default:
         log('Could not parse status: ${data['status']}');
     }

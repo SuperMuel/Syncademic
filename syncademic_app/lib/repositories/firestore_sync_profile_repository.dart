@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
@@ -137,5 +138,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
   @override
   Future<void> deleteSyncProfile(ID id) =>
-      _syncProfilesCollection.doc(id.value).delete();
+      FirebaseFunctions.instance.httpsCallable('delete_sync_profile').call(
+        {'syncProfileId': id.value},
+      );
 }

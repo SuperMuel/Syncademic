@@ -29,7 +29,7 @@ from firebase_functions import https_fn
 from firebase_admin import firestore
 
 from google.auth.transport import requests
-from functions.synchronizer.synchronizer.google_calendar_manager import (
+from synchronizer.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
 from synchronizer.synchronizer.synchronizer import perform_synchronization

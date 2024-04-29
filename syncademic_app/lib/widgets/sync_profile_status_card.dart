@@ -22,10 +22,7 @@ class SyncProfileStatusCard extends StatelessWidget {
         title: Text(status!.title),
         leading: status!.leadingIcon,
         onTap: status!.onTap != null ? () => status!.onTap!(context) : null,
-        subtitle: LastSynchronized(
-          lastSync: status!.lastSuccessfulSync,
-          builder: (context, lastSync) => Text("Last sync: $lastSync"),
-        ),
+        subtitle: status?.subtitle,
       ),
     );
   }
@@ -36,7 +33,9 @@ extension on SyncProfileStatus {
         success: (_) => 'Synced successfully',
         inProgress: (_) => 'Synchronizing',
         failed: (_) => 'Synchronization failed',
-        notStarted: (_) => 'Synchronization will start soon',
+        notStarted: (_) => 'Synchronization will start soon...',
+        deleting: (_) => 'Deleting',
+        deletionFailed: (_) => 'Deletion failed',
       )!;
 
   Widget get leadingIcon => map(
@@ -44,18 +43,34 @@ extension on SyncProfileStatus {
         inProgress: (_) => const CircularProgressIndicator(),
         failed: (_) => const Icon(Icons.error, color: Colors.red),
         notStarted: (_) => const Icon(Icons.sync_problem),
+        deleting: (_) => const Icon(Icons.delete),
+        deletionFailed: (_) => const Icon(Icons.error, color: Colors.red),
       )!;
+
+  Widget? get subtitle => maybeMap(
+        notStarted: (_) => null,
+        orElse: () => LastSynchronized(
+          lastSync: lastSuccessfulSync,
+          builder: (context, lastSync) => Text("Last sync: $lastSync"),
+        ),
+      );
+
+  void _showSnackBarError(BuildContext context, String message) =>
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Error: $message'),
+          ),
+        );
 
   Function(BuildContext)? get onTap => maybeMap(
         orElse: () => null,
         failed: (failed) => (context) {
-          ScaffoldMessenger.of(context)
-            ..clearSnackBars()
-            ..showSnackBar(
-              SnackBar(
-                content: Text('Error: ${failed.message}'),
-              ),
-            );
+          _showSnackBarError(context, failed.message);
+        },
+        deletionFailed: (deletionFailed) => (context) {
+          _showSnackBarError(context, deletionFailed.message);
         },
       );
 }

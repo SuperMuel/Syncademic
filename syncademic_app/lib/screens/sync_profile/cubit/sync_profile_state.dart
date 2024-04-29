@@ -7,8 +7,11 @@ class SyncProfileState with _$SyncProfileState {
     SyncProfile syncProfile, {
     String? requestSyncError,
     DateTime? lastSyncRequest,
+    @Default(false) bool isDeleting,
+    String? deletionError,
   }) = _Loaded;
   const factory SyncProfileState.notFound() = _NotFound;
+  const factory SyncProfileState.deleted() = _Deleted;
 
   const SyncProfileState._();
 
@@ -37,5 +40,10 @@ class SyncProfileState with _$SyncProfileState {
 
           return diff >= kMinSyncInterval;
         },
+      );
+
+  bool get canDelete => maybeMap(
+        orElse: () => false,
+        loaded: (loaded) => !loaded.isDeleting,
       );
 }

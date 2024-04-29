@@ -29,6 +29,9 @@ from firebase_functions import https_fn
 from firebase_admin import firestore
 
 from google.auth.transport import requests
+from synchronizer.synchronizer.google_calendar_manager import (
+    GoogleCalendarManager,
+)
 from synchronizer.synchronizer.synchronizer import perform_synchronization
 
 #   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,8 +178,8 @@ def _synchronize_now(
     # TODO: If no status.type ??
 
     status = doc.get("status")
-    if status and status.get("type") == "inProgress":
-        logger.info("Synchronization is in progress, skipping")
+    if status and (status.get("type") in ["inProgress", "deleting", "deleted"]):
+        logger.info(f"Synchronization is {status.get('type')}, skipping")
         return
 
     # TODO: Check access token validity and refresh or send error if needed
@@ -203,7 +206,7 @@ def _synchronize_now(
             {
                 "status": {
                     "type": "failed",  # TODO : Specify that it failed because of authorization
-                    "message": str(e),
+                    "message": f"Autorization failed: {e}",
                     "syncTrigger": sync_trigger,
                 }
             }
@@ -225,7 +228,7 @@ def _synchronize_now(
             {
                 "status": {
                     "type": "failed",
-                    "message": str(e),
+                    "message": f"Synchronization failed: {e}",
                     "syncTrigger": sync_trigger,
                 }
             }
@@ -244,6 +247,101 @@ def _synchronize_now(
     )
 
     logger.info("Synchronization completed successfully")
+
+
+@https_fn.on_call()
+def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    sync_profile_id = req.data.get("syncProfileId")
+
+    if not sync_profile_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
+        )
+
+    sync_profile_ref = (
+        firestore.client()
+        .collection("users")
+        .document(req.auth.uid)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+    )
+
+    doc = sync_profile_ref.get()
+
+    if not doc.exists:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+        )
+
+    status = doc.get("status")
+
+    if status and (status.get("type") in ["deleting", "deleted"]):
+        logger.info(f"Sync profile is already {status.get('type')}, skipping deletion")
+        return
+
+    sync_profile_ref.update(
+        {
+            "status": {
+                "type": "deleting",
+                "syncTrigger": None,
+            }
+        }
+    )
+
+    try:
+        service = get_calendar_service(
+            user_id=req.auth.uid,
+            sync_profile_id=sync_profile_id,
+        )
+    except Exception as e:
+        logger.info(f"Failed to get calendar service: {e}. Skipping deletion")
+        sync_profile_ref.update(
+            {
+                "status": {
+                    "type": "deletionFailed",
+                    "message": f"Autorization failed: {e}",
+                }
+            }
+        )
+        return
+
+    calendar_manager = GoogleCalendarManager(service, doc.get("targetCalendar.id"))
+
+    try:
+        events = calendar_manager.get_events_ids_from_sync_profile(
+            sync_profile_id,
+        )
+        logger.info(f"Deleting {len(events)} events")
+
+        calendar_manager.delete_events(events)
+    except Exception as e:
+        logger.error(f"Failed to delete events: {e}")
+        sync_profile_ref.update(
+            {
+                "status": {
+                    "type": "deletionFailed",
+                    "message": f"Could not delete events: {e}",
+                }
+            }
+        )
+        return
+
+    sync_profile_ref.update(
+        {
+            "status": {
+                "type": "deleted",
+            }
+        }
+    )
+
+    sync_profile_ref.delete()
+
+    logger.info("Sync profile deleted successfully")
 
 
 @https_fn.on_call()

@@ -165,7 +165,7 @@ OAuth 2.0 is a crucial protocol that enables secure authorization functionalitie
 
 The synchronization of events between a user's Time Schedule and their Target Calendar is a crucial functionality facilitated by the Google Calendar API v3. This process requires a valid access token.
 
-**Synchronization Steps:**
+### Synchronization Steps:
 
 1. **Fetch Time Schedule Events:**
    - The process begins by attempting to fetch events from the Time Schedule. If events cannot be fetched, the synchronization is halted, and an error is communicated to the user, possibly through email or a mobile notification.
@@ -175,7 +175,18 @@ The synchronization of events between a user's Time Schedule and their Target Ca
    - All future events in the Target Calendar are deleted and replaced with the new, customized events.
    - To preserve the user’s personal events, only those created by Syncademic are deleted. This is achieved by marking each Syncademic event with the SyncProfile’s ID using Google Calendar's extended properties feature (`{"private": {"syncademic": sync_profile_id}}`).
 
-**Current Limitations and Future Improvements:**
+### Deletion of a sync profile
+
+There are multiple ways to handle the deletion of a sync profile.
+
+1. **Keep everything**
+   - The events created by Syncademic are kept in the target calendar. This is useful if the user wants to keep the events even after the sync profile is deleted.
+2. **Delete events** <-- Default
+   - When a sync profile is deleted, all events associated with it are deleted from the target calendar. This ensures that the user will not have to manually delete all events if they decide to stop this synchronization.
+3. **Delete the whole calendar**
+   - The target calendar is deleted when the sync profile is deleted. This is useful if the user wants to keep their main calendar clean and does not want to have a separate calendar for the events created by Syncademic.
+
+### Current Limitations and Future Improvements:
 
 - Currently, the system deletes and replaces all future events during each synchronization cycle, which is not the most efficient method.
 - Moving forward, we aim to enhance efficiency by identifying and updating only those events that have changed, rather than replacing all events. This will optimize performance and reduce the load on both the server and the user's calendar.

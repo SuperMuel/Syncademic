@@ -16,7 +16,6 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$SyncProfileStatus {
-  String? get syncTrigger => throw _privateConstructorUsedError;
   DateTime? get lastSuccessfulSync => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
@@ -29,6 +28,9 @@ mixin _$SyncProfileStatus {
         failed,
     required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
         notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -42,6 +44,9 @@ mixin _$SyncProfileStatus {
         failed,
     TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -55,6 +60,9 @@ mixin _$SyncProfileStatus {
         failed,
     TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -64,6 +72,8 @@ mixin _$SyncProfileStatus {
     required TResult Function(_InProgress value) inProgress,
     required TResult Function(_Failed value) failed,
     required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -72,6 +82,8 @@ mixin _$SyncProfileStatus {
     TResult? Function(_InProgress value)? inProgress,
     TResult? Function(_Failed value)? failed,
     TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -80,6 +92,8 @@ mixin _$SyncProfileStatus {
     TResult Function(_InProgress value)? inProgress,
     TResult Function(_Failed value)? failed,
     TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -95,7 +109,7 @@ abstract class $SyncProfileStatusCopyWith<$Res> {
           SyncProfileStatus value, $Res Function(SyncProfileStatus) then) =
       _$SyncProfileStatusCopyWithImpl<$Res, SyncProfileStatus>;
   @useResult
-  $Res call({String? syncTrigger, DateTime? lastSuccessfulSync});
+  $Res call({DateTime? lastSuccessfulSync});
 }
 
 /// @nodoc
@@ -111,14 +125,9 @@ class _$SyncProfileStatusCopyWithImpl<$Res, $Val extends SyncProfileStatus>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? syncTrigger = freezed,
     Object? lastSuccessfulSync = freezed,
   }) {
     return _then(_value.copyWith(
-      syncTrigger: freezed == syncTrigger
-          ? _value.syncTrigger
-          : syncTrigger // ignore: cast_nullable_to_non_nullable
-              as String?,
       lastSuccessfulSync: freezed == lastSuccessfulSync
           ? _value.lastSuccessfulSync
           : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
@@ -212,6 +221,9 @@ class _$SuccessImpl extends _Success {
         failed,
     required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
         notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
   }) {
     return success(syncTrigger, lastSuccessfulSync);
   }
@@ -228,6 +240,9 @@ class _$SuccessImpl extends _Success {
         failed,
     TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
   }) {
     return success?.call(syncTrigger, lastSuccessfulSync);
   }
@@ -244,6 +259,9 @@ class _$SuccessImpl extends _Success {
         failed,
     TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
     required TResult orElse(),
   }) {
     if (success != null) {
@@ -259,6 +277,8 @@ class _$SuccessImpl extends _Success {
     required TResult Function(_InProgress value) inProgress,
     required TResult Function(_Failed value) failed,
     required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
   }) {
     return success(this);
   }
@@ -270,6 +290,8 @@ class _$SuccessImpl extends _Success {
     TResult? Function(_InProgress value)? inProgress,
     TResult? Function(_Failed value)? failed,
     TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
   }) {
     return success?.call(this);
   }
@@ -281,6 +303,8 @@ class _$SuccessImpl extends _Success {
     TResult Function(_InProgress value)? inProgress,
     TResult Function(_Failed value)? failed,
     TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
     required TResult orElse(),
   }) {
     if (success != null) {
@@ -296,7 +320,6 @@ abstract class _Success extends SyncProfileStatus {
       final DateTime? lastSuccessfulSync}) = _$SuccessImpl;
   const _Success._() : super._();
 
-  @override
   String? get syncTrigger;
   @override
   DateTime? get lastSuccessfulSync;
@@ -392,6 +415,9 @@ class _$InProgressImpl extends _InProgress {
         failed,
     required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
         notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
   }) {
     return inProgress(syncTrigger, lastSuccessfulSync);
   }
@@ -408,6 +434,9 @@ class _$InProgressImpl extends _InProgress {
         failed,
     TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
   }) {
     return inProgress?.call(syncTrigger, lastSuccessfulSync);
   }
@@ -424,6 +453,9 @@ class _$InProgressImpl extends _InProgress {
         failed,
     TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
     required TResult orElse(),
   }) {
     if (inProgress != null) {
@@ -439,6 +471,8 @@ class _$InProgressImpl extends _InProgress {
     required TResult Function(_InProgress value) inProgress,
     required TResult Function(_Failed value) failed,
     required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
   }) {
     return inProgress(this);
   }
@@ -450,6 +484,8 @@ class _$InProgressImpl extends _InProgress {
     TResult? Function(_InProgress value)? inProgress,
     TResult? Function(_Failed value)? failed,
     TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
   }) {
     return inProgress?.call(this);
   }
@@ -461,6 +497,8 @@ class _$InProgressImpl extends _InProgress {
     TResult Function(_InProgress value)? inProgress,
     TResult Function(_Failed value)? failed,
     TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
     required TResult orElse(),
   }) {
     if (inProgress != null) {
@@ -476,7 +514,6 @@ abstract class _InProgress extends SyncProfileStatus {
       final DateTime? lastSuccessfulSync}) = _$InProgressImpl;
   const _InProgress._() : super._();
 
-  @override
   String? get syncTrigger;
   @override
   DateTime? get lastSuccessfulSync;
@@ -582,6 +619,9 @@ class _$FailedImpl extends _Failed {
         failed,
     required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
         notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
   }) {
     return failed(message, syncTrigger, lastSuccessfulSync);
   }
@@ -598,6 +638,9 @@ class _$FailedImpl extends _Failed {
         failed,
     TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
   }) {
     return failed?.call(message, syncTrigger, lastSuccessfulSync);
   }
@@ -614,6 +657,9 @@ class _$FailedImpl extends _Failed {
         failed,
     TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
     required TResult orElse(),
   }) {
     if (failed != null) {
@@ -629,6 +675,8 @@ class _$FailedImpl extends _Failed {
     required TResult Function(_InProgress value) inProgress,
     required TResult Function(_Failed value) failed,
     required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
   }) {
     return failed(this);
   }
@@ -640,6 +688,8 @@ class _$FailedImpl extends _Failed {
     TResult? Function(_InProgress value)? inProgress,
     TResult? Function(_Failed value)? failed,
     TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
   }) {
     return failed?.call(this);
   }
@@ -651,6 +701,8 @@ class _$FailedImpl extends _Failed {
     TResult Function(_InProgress value)? inProgress,
     TResult Function(_Failed value)? failed,
     TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
     required TResult orElse(),
   }) {
     if (failed != null) {
@@ -667,7 +719,6 @@ abstract class _Failed extends SyncProfileStatus {
   const _Failed._() : super._();
 
   String get message;
-  @override
   String? get syncTrigger;
   @override
   DateTime? get lastSuccessfulSync;
@@ -763,6 +814,9 @@ class _$NotStartedImpl extends _NotStarted {
         failed,
     required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
         notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
   }) {
     return notStarted(syncTrigger, lastSuccessfulSync);
   }
@@ -779,6 +833,9 @@ class _$NotStartedImpl extends _NotStarted {
         failed,
     TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
   }) {
     return notStarted?.call(syncTrigger, lastSuccessfulSync);
   }
@@ -795,6 +852,9 @@ class _$NotStartedImpl extends _NotStarted {
         failed,
     TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
         notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
     required TResult orElse(),
   }) {
     if (notStarted != null) {
@@ -810,6 +870,8 @@ class _$NotStartedImpl extends _NotStarted {
     required TResult Function(_InProgress value) inProgress,
     required TResult Function(_Failed value) failed,
     required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
   }) {
     return notStarted(this);
   }
@@ -821,6 +883,8 @@ class _$NotStartedImpl extends _NotStarted {
     TResult? Function(_InProgress value)? inProgress,
     TResult? Function(_Failed value)? failed,
     TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
   }) {
     return notStarted?.call(this);
   }
@@ -832,6 +896,8 @@ class _$NotStartedImpl extends _NotStarted {
     TResult Function(_InProgress value)? inProgress,
     TResult Function(_Failed value)? failed,
     TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
     required TResult orElse(),
   }) {
     if (notStarted != null) {
@@ -847,12 +913,386 @@ abstract class _NotStarted extends SyncProfileStatus {
       final DateTime? lastSuccessfulSync}) = _$NotStartedImpl;
   const _NotStarted._() : super._();
 
-  @override
   String? get syncTrigger;
   @override
   DateTime? get lastSuccessfulSync;
   @override
   @JsonKey(ignore: true)
   _$$NotStartedImplCopyWith<_$NotStartedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DeletingImplCopyWith<$Res>
+    implements $SyncProfileStatusCopyWith<$Res> {
+  factory _$$DeletingImplCopyWith(
+          _$DeletingImpl value, $Res Function(_$DeletingImpl) then) =
+      __$$DeletingImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({DateTime? lastSuccessfulSync});
+}
+
+/// @nodoc
+class __$$DeletingImplCopyWithImpl<$Res>
+    extends _$SyncProfileStatusCopyWithImpl<$Res, _$DeletingImpl>
+    implements _$$DeletingImplCopyWith<$Res> {
+  __$$DeletingImplCopyWithImpl(
+      _$DeletingImpl _value, $Res Function(_$DeletingImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? lastSuccessfulSync = freezed,
+  }) {
+    return _then(_$DeletingImpl(
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DeletingImpl extends _Deleting {
+  const _$DeletingImpl({this.lastSuccessfulSync}) : super._();
+
+  @override
+  final DateTime? lastSuccessfulSync;
+
+  @override
+  String toString() {
+    return 'SyncProfileStatus.deleting(lastSuccessfulSync: $lastSuccessfulSync)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DeletingImpl &&
+            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
+                other.lastSuccessfulSync == lastSuccessfulSync));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, lastSuccessfulSync);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DeletingImplCopyWith<_$DeletingImpl> get copyWith =>
+      __$$DeletingImplCopyWithImpl<_$DeletingImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
+  }) {
+    return deleting(lastSuccessfulSync);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
+  }) {
+    return deleting?.call(lastSuccessfulSync);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
+    required TResult orElse(),
+  }) {
+    if (deleting != null) {
+      return deleting(lastSuccessfulSync);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Success value) success,
+    required TResult Function(_InProgress value) inProgress,
+    required TResult Function(_Failed value) failed,
+    required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
+  }) {
+    return deleting(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Success value)? success,
+    TResult? Function(_InProgress value)? inProgress,
+    TResult? Function(_Failed value)? failed,
+    TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
+  }) {
+    return deleting?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Success value)? success,
+    TResult Function(_InProgress value)? inProgress,
+    TResult Function(_Failed value)? failed,
+    TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
+    required TResult orElse(),
+  }) {
+    if (deleting != null) {
+      return deleting(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _Deleting extends SyncProfileStatus {
+  const factory _Deleting({final DateTime? lastSuccessfulSync}) =
+      _$DeletingImpl;
+  const _Deleting._() : super._();
+
+  @override
+  DateTime? get lastSuccessfulSync;
+  @override
+  @JsonKey(ignore: true)
+  _$$DeletingImplCopyWith<_$DeletingImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DeletionFailedImplCopyWith<$Res>
+    implements $SyncProfileStatusCopyWith<$Res> {
+  factory _$$DeletionFailedImplCopyWith(_$DeletionFailedImpl value,
+          $Res Function(_$DeletionFailedImpl) then) =
+      __$$DeletionFailedImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String message, DateTime? lastSuccessfulSync});
+}
+
+/// @nodoc
+class __$$DeletionFailedImplCopyWithImpl<$Res>
+    extends _$SyncProfileStatusCopyWithImpl<$Res, _$DeletionFailedImpl>
+    implements _$$DeletionFailedImplCopyWith<$Res> {
+  __$$DeletionFailedImplCopyWithImpl(
+      _$DeletionFailedImpl _value, $Res Function(_$DeletionFailedImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? message = null,
+    Object? lastSuccessfulSync = freezed,
+  }) {
+    return _then(_$DeletionFailedImpl(
+      null == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String,
+      lastSuccessfulSync: freezed == lastSuccessfulSync
+          ? _value.lastSuccessfulSync
+          : lastSuccessfulSync // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DeletionFailedImpl extends _DeletionFailed {
+  const _$DeletionFailedImpl(this.message, {this.lastSuccessfulSync})
+      : super._();
+
+  @override
+  final String message;
+  @override
+  final DateTime? lastSuccessfulSync;
+
+  @override
+  String toString() {
+    return 'SyncProfileStatus.deletionFailed(message: $message, lastSuccessfulSync: $lastSuccessfulSync)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DeletionFailedImpl &&
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.lastSuccessfulSync, lastSuccessfulSync) ||
+                other.lastSuccessfulSync == lastSuccessfulSync));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, message, lastSuccessfulSync);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DeletionFailedImplCopyWith<_$DeletionFailedImpl> get copyWith =>
+      __$$DeletionFailedImplCopyWithImpl<_$DeletionFailedImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        success,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        inProgress,
+    required TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)
+        failed,
+    required TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)
+        notStarted,
+    required TResult Function(DateTime? lastSuccessfulSync) deleting,
+    required TResult Function(String message, DateTime? lastSuccessfulSync)
+        deletionFailed,
+  }) {
+    return deletionFailed(message, lastSuccessfulSync);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult? Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult? Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
+    TResult? Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult? Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
+  }) {
+    return deletionFailed?.call(message, lastSuccessfulSync);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        success,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        inProgress,
+    TResult Function(
+            String message, String? syncTrigger, DateTime? lastSuccessfulSync)?
+        failed,
+    TResult Function(String? syncTrigger, DateTime? lastSuccessfulSync)?
+        notStarted,
+    TResult Function(DateTime? lastSuccessfulSync)? deleting,
+    TResult Function(String message, DateTime? lastSuccessfulSync)?
+        deletionFailed,
+    required TResult orElse(),
+  }) {
+    if (deletionFailed != null) {
+      return deletionFailed(message, lastSuccessfulSync);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Success value) success,
+    required TResult Function(_InProgress value) inProgress,
+    required TResult Function(_Failed value) failed,
+    required TResult Function(_NotStarted value) notStarted,
+    required TResult Function(_Deleting value) deleting,
+    required TResult Function(_DeletionFailed value) deletionFailed,
+  }) {
+    return deletionFailed(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Success value)? success,
+    TResult? Function(_InProgress value)? inProgress,
+    TResult? Function(_Failed value)? failed,
+    TResult? Function(_NotStarted value)? notStarted,
+    TResult? Function(_Deleting value)? deleting,
+    TResult? Function(_DeletionFailed value)? deletionFailed,
+  }) {
+    return deletionFailed?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Success value)? success,
+    TResult Function(_InProgress value)? inProgress,
+    TResult Function(_Failed value)? failed,
+    TResult Function(_NotStarted value)? notStarted,
+    TResult Function(_Deleting value)? deleting,
+    TResult Function(_DeletionFailed value)? deletionFailed,
+    required TResult orElse(),
+  }) {
+    if (deletionFailed != null) {
+      return deletionFailed(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _DeletionFailed extends SyncProfileStatus {
+  const factory _DeletionFailed(final String message,
+      {final DateTime? lastSuccessfulSync}) = _$DeletionFailedImpl;
+  const _DeletionFailed._() : super._();
+
+  String get message;
+  @override
+  DateTime? get lastSuccessfulSync;
+  @override
+  @JsonKey(ignore: true)
+  _$$DeletionFailedImplCopyWith<_$DeletionFailedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -1,0 +1,118 @@
+{
+  "EN": {
+    "MDF": [
+      {
+        "title": "Monstrous Distributed Frameworks",
+        "teacher": "Glor'akh Kznthar"
+      },
+      {
+        "title": "Meme-Driven Frameworks",
+        "teacher": "Dankmus Memeldor"
+      }
+    ],
+    "2IMOF": {
+      "title": "Intro to Influencer Marketing on OnlyFans",
+      "teacher": "Candi Subscribble"
+    },
+    "STM": {
+      "title": "Speedrunning Techniques for Minecraft",
+      "teacher": "Steve Notchurassic"
+    },
+    "PQCNS": {
+      "title": "Post-Quantum Cryptography for Nudes Security",
+      "teacher": "Kryptina Naughtypic"
+    },
+    "VRP": {
+      "title": "Virtual Reality for Plants",
+      "teacher": "Phyllis Photosynthesia"
+    },
+    "OGP": {
+      "title": "Obfuscated Garbage Programming",
+      "teacher": "Iam Codyssey"
+    },
+    "MOM": {
+      "title": "Metaphysics of Meatballs",
+      "teacher": "Platon Spaghettiexistentialist"
+    },
+    "PEM": {
+      "title": "Prompt Engineering for Memes",
+      "teacher": "Harambe Dankmemester"
+    }
+  },
+  "FR": {
+    "EPS": [
+      {
+        "title": "Équitation sur Pingouins Sauteurs",
+        "teacher": "Tata Yéti"
+      },
+      {
+        "title": "Escrime avec Poireaux et Saucisses",
+        "teacher": "Zorro Zwiebelstock"
+      },
+      {
+        "title": "Épreuves de Plongeon Synchronisé",
+        "teacher": "Dolores Bomballplunge"
+      },
+      {
+        "title": "Escalade de Poteaux Savonnés",
+        "teacher": "Eric Glissant"
+      }
+    ],
+    "AFQL": {
+      "title": "Algèbre des Fonctions Quadratiques sur Linkedin",
+      "teacher": "Sanjay Algobrahmin"
+    },
+    "SN": [
+      {
+        "title": "Sécurité des Nudes",
+        "teacher": "Clémentine Pixelmouise"
+      },
+      {
+        "title": "Solfège Nucléaire",
+        "teacher": "Dmitri Tchernobylov"
+      }
+    ],
+    "MARS": {
+      "title": "Mécanique Appliquée des Robots Stupides",
+      "teacher": "Sergey Claptrappski"
+    },
+    "PR": {
+      "title": "Poésie des Raviolis",
+      "teacher": "Aria Linguinisonica"
+    },
+    "OGP": {
+      "title": "Origines des Gaffes et Bourdes",
+      "teacher": "Irvin Legait"
+    },
+    "BDD": {
+      "title": "Bidouillage des Données Délirantes",
+      "teacher": "Juan Dataminator"
+    },
+    "EESN": [
+      {
+        "title": "Étude des Exceptions Saugrenues en Node.js",
+        "teacher": "Elliot Noderror"
+      },
+      {
+        "title": "Étude des Émotions des Souris Ninjas",
+        "teacher": "Hanzō Musmitsu"
+      },
+      {
+        "title": "Éthique de l'Espionnage des Serpents Narcissiques",
+        "teacher": "Nagia Snekpeeper"
+      }
+    ],
+    "TLN": {
+      "title": "Théorie du Lancer de Nains",
+      "teacher": "Triston Lancepetit"
+    },
+    "ANG": {
+      "title": "Anglais",
+      "teacher": "John Doe"
+    },
+    "ALL": {
+      "title": "Allemand",
+      "teacher": "Hans Wurst"
+    }
+  }
+}

@@ -150,7 +150,9 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 def scheduled_sync(event: Any):
     db = firestore.client()
 
-    for sync_profile in db.collection_group("syncProfiles").stream():
+    for sync_profile in db.collection_group(
+        "syncProfiles"
+    ).stream():  # TODO : filter by status here
         sync_profile_id = sync_profile.id
         user_id = sync_profile.reference.parent.parent.id
 
@@ -180,7 +182,9 @@ def _synchronize_now(
     # TODO: If no status.type ??
 
     status = doc.get("status")
-    if status and (status.get("type") in ["inProgress", "deleting", "deleted"]):
+    if status and (
+        status.get("type") in ["inProgress", "deleting", "deleted", "deletionFailed"]
+    ):
         logger.info(f"Synchronization is {status.get('type')}, skipping")
         return
 

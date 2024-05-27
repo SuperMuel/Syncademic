@@ -1,15 +1,14 @@
 # Syncademic
 
-Syncademic effortlessly syncs your university schedule with your Google Calendar 📅. Just provide your schedule's URL, and we handle the rest—updating your calendar automatically with every class change. 🔄 Enjoy a unified view of all your commitments, color-coded events, and real-time updates, all in one place. Perfect for students who want to stay organized and ahead! 🎓✨
+[Syncademic.io](https://syncademic.io) is a handy tool 🛠️ that makes it easy for you to manage your university schedule by syncing it directly with your Google Calendar 📅. Just give us the URL of your schedule, and we'll update your calendar automatically 🔄 whenever there are changes to your classes.
 
-This approach offers several key benefits:
+# Key Benefits of Syncademic
 
-1. **Improved user experience**: Students use the familiar, multi-platform Google Calendar, avoiding clunky university tools.
-2. **Comprehensive view**: All academic, personal, and professional commitments are visible in one place for better planning and conflict avoidance.
-3. **Automation and convenience**: The service handles all aspects of schedule synchronization effortlessly.
-4. **Real-time updates**: Updates are frequent, ensuring students never miss important class changes. Updates triggered by one student benefit all users instantly.
-5. **Customization and personalization**: Offers options like color-coding and event title enhancements for better schedule visibility.
-6. **Multiple time schedules**: Ideal for students with multiple degrees or institutions, consolidating various schedules into a single Google Calendar view for easier management.
+1. 📱 **Improved user experience**: Students use the familiar, multi-platform Google Calendar, avoiding clunky university tools.
+2. 🌐 **Comprehensive view**: All academic, personal, and professional commitments are visible in one place for better planning and conflict avoidance.
+3. 🔄 **Real-time updates**: Updates are frequent, ensuring students never miss important class changes. Updates triggered by one student benefit all users instantly.
+4. 🖍️ **Customizable Experience**: You can personalize your calendar with color-coding and event title improvements to make it easier to read.
+5. 🗓️ **Multi-schedule Management**: Ideal for students involved in multiple programs or institutions, Syncademic merges various academic schedules into a single Google Calendar view.
 
 # Vocabulary used
 
@@ -24,7 +23,7 @@ This approach offers several key benefits:
 - **Sync Profile** : (Synchronization Profile) Defines a user configuration for a synchronisation request between a **Time Schedule** and one **Target Calendar**
   - Users can have multiple Sync Profiles
 - **Backend Authorization** : Refers to the permissions granted to Syncademic's backend by a user to access and modify one of their electronic agenda (such as a Google Calendar). It may include an access token and a refresh token, and may specify the scope of permitted actions. The status indicates whether access is granted or denied.
-  - The Backend Authorization must lats as long as the user is not deleting the Sync Profile. It must last for months. If the authorization is revoked, the user must be alerted.
+  - The Backend Authorization must last as long as the user is not deleting the Sync Profile. If the authorization is revoked, the user must be alerted.
 
 ## Frontend
 

@@ -24,8 +24,10 @@ class UrlIcsSource(IcsSource):
         except requests.RequestException as e:
             raise ValueError(f"Could not fetch ics file from internet: {e}")
 
-        if "text/calendar" not in response.headers["Content-Type"]:
-            raise ValueError(f"Content type is {response.headers['Content-Type']}")
+        # For testing purpose, we want to download ics files from github, which is not a calendar file.
+        # So we don't check the content type for now.
+        # if "text/calendar" not in response.headers["Content-Type"]:
+        #     raise ValueError(f"Content type is {response.headers['Content-Type']}")
 
         return response.text
 

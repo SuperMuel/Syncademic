@@ -16,6 +16,7 @@ from firebase_functions.firestore_fn import (
     Event,
     DocumentSnapshot,
 )
+from firebase_functions import options
 
 from firebase_admin import initialize_app, firestore
 from firebase_functions.params import StringParam
@@ -90,7 +91,8 @@ def get_calendar_service(user_id: str, sync_profile_id: str):
 
 
 @on_document_created(
-    document="users/{userId}/syncProfiles/{syncProfileId}"
+    document="users/{userId}/syncProfiles/{syncProfileId}",
+    memory=options.MemoryOption.MB_512,
 )  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]):
     logging.info(f"Sync profile created: {event.data}")
@@ -249,7 +251,7 @@ def _synchronize_now(
     logger.info("Synchronization completed successfully")
 
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.MB_512)
 def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
     if not req.auth:
         raise https_fn.HttpsError(
@@ -308,13 +310,16 @@ def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
                 }
             }
         )
-        return
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL,
+            f"Authorization failed {e}",
+        )
 
     calendar_manager = GoogleCalendarManager(service, doc.get("targetCalendar.id"))
 
     try:
         events = calendar_manager.get_events_ids_from_sync_profile(
-            sync_profile_id,
+            sync_profile_id=sync_profile_id,
         )
         logger.info(f"Deleting {len(events)} events")
 
@@ -329,7 +334,12 @@ def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
                 }
             }
         )
-        return
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL,
+            f"Failed to delete events: {e}",
+        )
+
+    sync_profile_ref.delete()
 
     sync_profile_ref.update(
         {
@@ -338,8 +348,6 @@ def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
             }
         }
     )
-
-    sync_profile_ref.delete()
 
     logger.info("Sync profile deleted successfully")
 

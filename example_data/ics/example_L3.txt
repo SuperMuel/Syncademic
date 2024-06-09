@@ -1,0 +1,114 @@
+### Monday :
+- **Calcul Différentiel et Equations Différentielles**
+  - Start Time: 08:00
+  - End Time: 09:30
+  - Location: SC36.06
+  - Color: Flamingo (#E67C73)
+- **Groupes et anneaux 1**
+  - Start Time: 09:45
+  - End Time: 11:15
+  - Location: TD36.316
+  - Color: Tangerine (#F4511E)
+- **Calcul Différentiel et Equations Différentielles**
+  - Start Time: 13:15
+  - End Time: 14:45
+  - Location: TD36.312
+  - Color: Flamingo (#E67C73)
+- **Génie logiciel**
+  - Start Time: 15:00
+  - End Time: 16:30
+  - Location: Tdinfo 36.203
+  - Color: Peacock (#039BE5)
+- **Génie logiciel**
+  - Start Time: 16:45
+  - End Time: 18:15
+  - Location: Tdinfo 36.203
+  - Color: Peacock (#039BE5)
+
+### Tuesday :
+- **Algorithmique 4**
+  - Start Time: 08:00
+  - End Time: 09:30
+  - Location: Tdinfo 36.205
+  - Color: Blueberry (#3F51B5)
+- **Algorithmique 4**
+  - Start Time: 09:45
+  - End Time: 11:15
+  - Location: Tdinfo 36.205
+  - Color: Blueberry (#3F51B5)
+- **Génie logiciel**
+  - Start Time: 13:15
+  - End Time: 14:45
+  - Location: Amphi 5.01
+  - Color: Peacock (#039BE5)
+- **HAL5011 Anglais**
+  - Start Time: 15:00
+  - End Time: 16:30
+  - Location: TD 5.019, TD 5.008
+  - Color: Basil (#0B8043)
+- **HAL5011 Anglais**
+  - Start Time: 16:45
+  - End Time: 18:15
+  - Location: TD 5.019, TD 5.008
+  - Color: Basil (#0B8043)
+
+### Wednesday :
+- **Calcul Différentiel et Equations Différentielles**
+  - Start Time: 08:00
+  - End Time: 09:30
+  - Location: SC36.06
+  - Color: Flamingo (#E67C73)
+- **Théorie des Probabilités**
+  - Start Time: 09:45
+  - End Time: 11:15
+  - Location: TD36.404
+  - Color: Banana (#F6BF26)
+- **Génie logiciel**
+  - Start Time: 13:15
+  - End Time: 14:45
+  - Location: Amphi 5.01
+  - Color: Peacock (#039BE5)
+- **Calcul formel**
+  - Start Time: 15:00
+  - End Time: 16:30
+  - Location: Tdinfo 36.203
+  - Color: Sage (#33B679)
+- **Calcul formel**
+  - Start Time: 16:45
+  - End Time: 18:15
+  - Location: Tdinfo 36.203
+  - Color: Sage (#33B679)
+
+### Thursday:
+- **Logique du premier ordre**
+  - Start Time: 08:00
+  - End Time: 09:30
+  - Location: Tdinfo 36.203
+  - Color: Grape (#8E24AA)
+- **Logique du premier ordre**
+  - Start Time: 09:45
+  - End Time: 11:15
+  - Location: Tdinfo 36.203
+  - Color: Grape (#8E24AA)
+- **Théorie des Probabilités**
+  - Start Time: 15:00
+  - End Time: 16:30
+  - Location: A36.03
+  - Color: Banana (#F6BF26)
+- **Groupes et anneaux 1**
+  - Start Time: 16:45
+  - End Time: 18:15
+  - Location: SC36.05
+  - Color: Tangerine (#F4511E)
+
+### Friday:
+- **Logique du premier ordre**
+  - Start Time: 08:00
+  - End Time: 09:30
+  - Location: Amphi 5.06
+  - Color: Grape (#8E24AA)
+- **Théorie des Probabilités**
+  - Start Time: 09:45
+  - End Time: 11:15
+  - Location: TD36.402
+  - Color: Banana (#F6BF26)

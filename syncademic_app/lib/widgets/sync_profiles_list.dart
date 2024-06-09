@@ -22,7 +22,7 @@ class SyncProfilesList extends StatelessWidget {
           }
 
           if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
+            return const Center(child: CircularProgressIndicator());
           }
           final profiles = snapshot.data as List<SyncProfile>;
           return _List(profiles: profiles, onTap: onTap);

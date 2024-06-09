@@ -20,15 +20,11 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
   Future<List<TargetCalendar>> getCalendars() async {
     String? providerAccountId = await _getProviderAccountId();
 
-    // find cloud function to get calendars
-
     final result = await FirebaseFunctions.instance
         .httpsCallable('list_user_calendars')
-        .call<Map<String, dynamic>>({
-      'providerAccountId': providerAccountId,
-    });
+        .call({'providerAccountId': providerAccountId});
 
-    final calendars = result.data['calendars'] as List<Map<String, dynamic>>;
+    final calendars = result.data['calendars'] as List<dynamic>;
 
     return calendars
         .map((calendar) => TargetCalendar(

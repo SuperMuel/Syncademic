@@ -125,13 +125,13 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
 
   void next() {
     if (state.canContinue) {
-      emit(state.copyWith(currentStep: state.currentStep + 1));
+      emit(state.copyWith(currentStep: state.currentStep.next));
     }
   }
 
   void previous() {
     if (state.canGoBack) {
-      emit(state.copyWith(currentStep: state.currentStep - 1));
+      emit(state.copyWith(currentStep: state.currentStep.previous));
     }
   }
 

@@ -129,11 +129,8 @@ final _router = GoRouter(
     GoRoute(
         path: '/new-sync-profile',
         builder: (_, __) {
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(create: (_) => NewSyncProfileCubit()),
-              BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
-            ],
+          return BlocProvider(
+            create: (_) => NewSyncProfileCubit(),
             child: const NewSyncProfilePage(),
           );
         }),

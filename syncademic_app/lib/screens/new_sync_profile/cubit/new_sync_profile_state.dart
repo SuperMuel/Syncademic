@@ -2,10 +2,27 @@ part of 'new_sync_profile_cubit.dart';
 
 enum TargetCalendarChoice { createNew, useExisting }
 
+enum NewSyncProfileStep {
+  title,
+  url,
+  //TODO : add SelectProviderAccount
+  authorizeBackend,
+  targetCalendar,
+  summary;
+
+  NewSyncProfileStep get next {
+    return NewSyncProfileStep.values[index + 1];
+  }
+
+  NewSyncProfileStep get previous {
+    return NewSyncProfileStep.values[index - 1];
+  }
+}
+
 @freezed
 class NewSyncProfileState with _$NewSyncProfileState {
   const factory NewSyncProfileState({
-    @Default(0) int currentStep,
+    @Default(NewSyncProfileStep.title) NewSyncProfileStep currentStep,
     @Default('') String title,
     String? titleError,
     @Default('') String url,
@@ -24,31 +41,15 @@ class NewSyncProfileState with _$NewSyncProfileState {
 
   const NewSyncProfileState._();
 
-  bool get canContinue {
-    // Step 0: Title
-    if (currentStep == 0) {
-      return titleError == null && !isBlank(title);
-    }
+  bool get canContinue => switch (currentStep) {
+        NewSyncProfileStep.title => titleError == null && !isBlank(title),
+        NewSyncProfileStep.url => urlError == null && !isBlank(url),
+        NewSyncProfileStep.targetCalendar => targetCalendarSelected != null,
+        NewSyncProfileStep.authorizeBackend => hasAuthorizedBackend,
+        NewSyncProfileStep.summary => false,
+      };
 
-    // Step 1: URL
-    if (currentStep == 1) {
-      return urlError == null && !isBlank(url);
-    }
-
-    // Step 2: Target calendar
-    if (currentStep == 2) {
-      return targetCalendarSelected != null;
-    }
-
-    // Step 3: Authorize backend
-    if (currentStep == 3) {
-      return hasAuthorizedBackend;
-    }
-
-    return false;
-  }
-
-  bool get canGoBack => currentStep > 0;
+  bool get canGoBack => currentStep.index > 0;
 
   /// The target calendar that the user has selected.
   ///

@@ -51,20 +51,8 @@ CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
-def get_calendar_service(user_id: str, sync_profile_id: str):
+def get_calendar_service(user_id: str, provider_account_id: str):
     db = firestore.client()
-
-    sync_profile = (
-        db.collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    ).get()
-
-    if not sync_profile.exists:
-        raise ValueError("Sync profile not found")
-
-    provider_account_id = sync_profile.get("targetCalendar.providerAccountId")
 
     backend_authorization = (
         db.collection("backendAuthorizations")
@@ -238,7 +226,7 @@ def _synchronize_now(
     try:
         service = get_calendar_service(
             user_id=user_id,
-            sync_profile_id=sync_profile_id,
+            provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
     except Exception as e:
         sync_profile_ref.update(
@@ -335,7 +323,7 @@ def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
     try:
         service = get_calendar_service(
             user_id=req.auth.uid,
-            sync_profile_id=sync_profile_id,
+            provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
     except Exception as e:
         logger.info(f"Failed to get calendar service: {e}. Skipping deletion")

@@ -16,7 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$NewSyncProfileState {
-  int get currentStep => throw _privateConstructorUsedError;
+  NewSyncProfileStep get currentStep => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get titleError => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
@@ -45,7 +45,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       _$NewSyncProfileStateCopyWithImpl<$Res, NewSyncProfileState>;
   @useResult
   $Res call(
-      {int currentStep,
+      {NewSyncProfileStep currentStep,
       String title,
       String? titleError,
       String url,
@@ -96,7 +96,7 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
       currentStep: null == currentStep
           ? _value.currentStep
           : currentStep // ignore: cast_nullable_to_non_nullable
-              as int,
+              as NewSyncProfileStep,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -187,7 +187,7 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int currentStep,
+      {NewSyncProfileStep currentStep,
       String title,
       String? titleError,
       String url,
@@ -238,7 +238,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
       currentStep: null == currentStep
           ? _value.currentStep
           : currentStep // ignore: cast_nullable_to_non_nullable
-              as int,
+              as NewSyncProfileStep,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -299,7 +299,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
 
 class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   const _$NewSyncProfileStateImpl(
-      {this.currentStep = 0,
+      {this.currentStep = NewSyncProfileStep.title,
       this.title = '',
       this.titleError,
       this.url = '',
@@ -317,7 +317,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   @JsonKey()
-  final int currentStep;
+  final NewSyncProfileStep currentStep;
   @override
   @JsonKey()
   final String title;
@@ -420,7 +420,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
 abstract class _NewSyncProfileState extends NewSyncProfileState {
   const factory _NewSyncProfileState(
-      {final int currentStep,
+      {final NewSyncProfileStep currentStep,
       final String title,
       final String? titleError,
       final String url,
@@ -437,7 +437,7 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   const _NewSyncProfileState._() : super._();
 
   @override
-  int get currentStep;
+  NewSyncProfileStep get currentStep;
   @override
   String get title;
   @override

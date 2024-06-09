@@ -40,7 +40,7 @@ class NewSyncProfilePage extends StatelessWidget {
           title: const Text('New synchronization'),
         ),
         body: Stepper(
-          currentStep: state.currentStep,
+          currentStep: state.currentStep.index,
           onStepContinue: state.canContinue
               ? context.read<NewSyncProfileCubit>().next
               : null,
@@ -63,15 +63,15 @@ class NewSyncProfilePage extends StatelessWidget {
               ),
             ),
             Step(
+              title: Text('Grant Syncademic Permissions'),
+              content: BackendAuthorizationStepContent(),
+            ),
+            Step(
               title: Text('Select your Google Calendar'),
               content: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: TargetCalendarStepContent(),
               ),
-            ),
-            Step(
-              title: Text('Grant Syncademic Permissions'),
-              content: BackendAuthorizationStepContent(),
             ),
             Step(
               title: Text('Summary'),
@@ -144,7 +144,7 @@ class TargetCalendarStepContent extends StatelessWidget {
       context: context,
       builder: (_) => Dialog(
         child: BlocProvider(
-          create: (_) => TargetCalendarSelectorCubit(),
+          create: (_) => TargetCalendarSelectorCubit()..init(),
           child: const Padding(
             padding: EdgeInsets.all(8.0),
             child: TargetCalendarSelector(),

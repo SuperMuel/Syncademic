@@ -90,6 +90,43 @@ def get_calendar_service(user_id: str, sync_profile_id: str):
     return service
 
 
+@https_fn.on_call()
+def list_user_calendars(req: https_fn.CallableRequest) -> dict:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    user_id = req.auth.uid
+
+    # Fetch provider_account_id from user's sync profile or frontend request
+    provider_account_id = req.data.get("providerAccountId")
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
+    try:
+        service = get_calendar_service(user_id, provider_account_id)
+    except Exception as e:
+        logger.error(f"Failed to get calendar service: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to get calendar service: {e}"
+        )
+
+    try:
+        # TODO : move this to GoogleCalendarManager, and handle pagination
+        calendars_result = service.calendarList().list().execute()
+        calendars = calendars_result.get("items", [])
+
+        return {"calendars": calendars}
+    except Exception as e:
+        logger.error(f"Failed to list calendars: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to list calendars: {e}"
+        )
+
+
 @on_document_created(
     document="users/{userId}/syncProfiles/{syncProfileId}",
     memory=options.MemoryOption.MB_512,

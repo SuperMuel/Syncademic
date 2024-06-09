@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:get_it/get_it.dart';
 import 'package:googleapis/calendar/v3.dart';
 
@@ -17,15 +18,23 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<List<TargetCalendar>> getCalendars() async {
-    final api = await _getApi();
-
     String? providerAccountId = await _getProviderAccountId();
 
-    final calendarList = await api.calendarList.list();
-    return calendarList.items!
-        .map((calendarListEntry) => TargetCalendar(
-              id: ID.fromString(calendarListEntry.id!),
-              title: calendarListEntry.summary ?? 'Unnamed calendar',
+    // find cloud function to get calendars
+
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('list_user_calendars')
+        .call<Map<String, dynamic>>({
+      'providerAccountId': providerAccountId,
+    });
+
+    final calendars = result.data['calendars'] as List<Map<String, dynamic>>;
+
+    return calendars
+        .map((calendar) => TargetCalendar(
+              id: ID.fromString(calendar['id']),
+              title: calendar['summary'] ?? 'Unnamed calendar',
+              description: calendar['description'],
               providerAccountId: providerAccountId,
             ))
         .toList();

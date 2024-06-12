@@ -5,9 +5,9 @@ enum TargetCalendarChoice { createNew, useExisting }
 enum NewSyncProfileStep {
   title,
   url,
-  //TODO : add SelectProviderAccount
+  selectProviderAccount,
   authorizeBackend,
-  targetCalendar,
+  selectTargetCalendar,
   summary;
 
   NewSyncProfileStep get next {
@@ -27,6 +27,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
     String? titleError,
     @Default('') String url,
     String? urlError,
+    ProviderAccount? providerAccount,
+    @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
     TargetCalendar? newCalendarCreated,
     @Default(TargetCalendarChoice.createNew)
@@ -44,7 +46,9 @@ class NewSyncProfileState with _$NewSyncProfileState {
   bool get canContinue => switch (currentStep) {
         NewSyncProfileStep.title => titleError == null && !isBlank(title),
         NewSyncProfileStep.url => urlError == null && !isBlank(url),
-        NewSyncProfileStep.targetCalendar => targetCalendarSelected != null,
+        NewSyncProfileStep.selectProviderAccount => providerAccount != null,
+        NewSyncProfileStep.selectTargetCalendar =>
+          targetCalendarSelected != null,
         NewSyncProfileStep.authorizeBackend => hasAuthorizedBackend,
         NewSyncProfileStep.summary => false,
       };

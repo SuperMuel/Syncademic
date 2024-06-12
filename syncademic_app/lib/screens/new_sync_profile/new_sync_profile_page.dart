@@ -63,6 +63,10 @@ class NewSyncProfilePage extends StatelessWidget {
               ),
             ),
             Step(
+              title: Text("Select your provider account"),
+              content: ProviderAccountStepContent(),
+            ),
+            Step(
               title: Text('Grant Syncademic Permissions'),
               content: BackendAuthorizationStepContent(),
             ),
@@ -131,6 +135,41 @@ class UrlStepContent extends StatelessWidget {
           onEditingComplete: context.read<NewSyncProfileCubit>().next,
         );
       },
+    );
+  }
+}
+
+class ProviderAccountStepContent extends StatelessWidget {
+  const ProviderAccountStepContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        //login with google button
+        TextButton(
+          onPressed: context.read<NewSyncProfileCubit>().selectProviderAccount,
+          child: const Text('Login with Google'),
+        ),
+
+        IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: context.read<NewSyncProfileCubit>().resetProviderAccount,
+        ),
+
+        // actual account selected
+        BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+          builder: (context, state) {
+            if (state.providerAccount == null) {
+              return const Text('No account selected');
+            }
+
+            return Text(
+              'Account selected : ${state.providerAccount!.providerAccountEmail}',
+            );
+          },
+        ),
+      ],
     );
   }
 }

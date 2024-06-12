@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/models/provider_account.dart';
+import 'package:syncademic_app/services/provider_account_service.dart';
 import '../../../authorization/authorization_service.dart';
 import '../../../repositories/target_calendar_repository.dart';
 import '../../../authorization/backend_authorization_service.dart';
@@ -58,6 +60,33 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     }
 
     emit(state.copyWith(url: url, urlError: null));
+  }
+
+  Future<void> selectProviderAccount() async {
+    await resetProviderAccount();
+
+    try {
+      final providerAccount = await GetIt.I<ProviderAccountService>()
+          .triggerProviderAccountSelection();
+      if (providerAccount == null) {
+        return emit(state.copyWith(
+          providerAccount: null,
+          providerAccountError: 'No provider account selected.',
+        ));
+      }
+
+      emit(state.copyWith(providerAccount: providerAccount));
+    } catch (e) {
+      return emit(state.copyWith(
+        providerAccount: null,
+        providerAccountError: "Error selecting provider account: $e",
+      ));
+    }
+  }
+
+  Future<void> resetProviderAccount() async {
+    await GetIt.I<ProviderAccountService>().reset();
+    emit(state.copyWith(providerAccount: null, providerAccountError: null));
   }
 
   void targetCalendarChoiceChanged(Set<TargetCalendarChoice> choice) {

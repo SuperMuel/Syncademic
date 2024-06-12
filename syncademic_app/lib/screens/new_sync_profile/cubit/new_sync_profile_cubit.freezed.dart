@@ -21,6 +21,8 @@ mixin _$NewSyncProfileState {
   String? get titleError => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
+  ProviderAccount? get providerAccount => throw _privateConstructorUsedError;
+  String? get providerAccountError => throw _privateConstructorUsedError;
   TargetCalendar? get existingCalendarSelected =>
       throw _privateConstructorUsedError;
   TargetCalendar? get newCalendarCreated => throw _privateConstructorUsedError;
@@ -50,6 +52,8 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String? titleError,
       String url,
       String? urlError,
+      ProviderAccount? providerAccount,
+      String? providerAccountError,
       TargetCalendar? existingCalendarSelected,
       TargetCalendar? newCalendarCreated,
       TargetCalendarChoice targetCalendarChoice,
@@ -60,6 +64,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String? submitError,
       bool submittedSuccessfully});
 
+  $ProviderAccountCopyWith<$Res>? get providerAccount;
   $TargetCalendarCopyWith<$Res>? get existingCalendarSelected;
   $TargetCalendarCopyWith<$Res>? get newCalendarCreated;
 }
@@ -82,6 +87,8 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? titleError = freezed,
     Object? url = null,
     Object? urlError = freezed,
+    Object? providerAccount = freezed,
+    Object? providerAccountError = freezed,
     Object? existingCalendarSelected = freezed,
     Object? newCalendarCreated = freezed,
     Object? targetCalendarChoice = null,
@@ -112,6 +119,14 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
       urlError: freezed == urlError
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
+              as String?,
+      providerAccount: freezed == providerAccount
+          ? _value.providerAccount
+          : providerAccount // ignore: cast_nullable_to_non_nullable
+              as ProviderAccount?,
+      providerAccountError: freezed == providerAccountError
+          ? _value.providerAccountError
+          : providerAccountError // ignore: cast_nullable_to_non_nullable
               as String?,
       existingCalendarSelected: freezed == existingCalendarSelected
           ? _value.existingCalendarSelected
@@ -154,6 +169,18 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
 
   @override
   @pragma('vm:prefer-inline')
+  $ProviderAccountCopyWith<$Res>? get providerAccount {
+    if (_value.providerAccount == null) {
+      return null;
+    }
+
+    return $ProviderAccountCopyWith<$Res>(_value.providerAccount!, (value) {
+      return _then(_value.copyWith(providerAccount: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
   $TargetCalendarCopyWith<$Res>? get existingCalendarSelected {
     if (_value.existingCalendarSelected == null) {
       return null;
@@ -192,6 +219,8 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String? titleError,
       String url,
       String? urlError,
+      ProviderAccount? providerAccount,
+      String? providerAccountError,
       TargetCalendar? existingCalendarSelected,
       TargetCalendar? newCalendarCreated,
       TargetCalendarChoice targetCalendarChoice,
@@ -202,6 +231,8 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String? submitError,
       bool submittedSuccessfully});
 
+  @override
+  $ProviderAccountCopyWith<$Res>? get providerAccount;
   @override
   $TargetCalendarCopyWith<$Res>? get existingCalendarSelected;
   @override
@@ -224,6 +255,8 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? titleError = freezed,
     Object? url = null,
     Object? urlError = freezed,
+    Object? providerAccount = freezed,
+    Object? providerAccountError = freezed,
     Object? existingCalendarSelected = freezed,
     Object? newCalendarCreated = freezed,
     Object? targetCalendarChoice = null,
@@ -254,6 +287,14 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
       urlError: freezed == urlError
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
+              as String?,
+      providerAccount: freezed == providerAccount
+          ? _value.providerAccount
+          : providerAccount // ignore: cast_nullable_to_non_nullable
+              as ProviderAccount?,
+      providerAccountError: freezed == providerAccountError
+          ? _value.providerAccountError
+          : providerAccountError // ignore: cast_nullable_to_non_nullable
               as String?,
       existingCalendarSelected: freezed == existingCalendarSelected
           ? _value.existingCalendarSelected
@@ -304,6 +345,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       this.titleError,
       this.url = '',
       this.urlError,
+      this.providerAccount,
+      this.providerAccountError = null,
       this.existingCalendarSelected,
       this.newCalendarCreated,
       this.targetCalendarChoice = TargetCalendarChoice.createNew,
@@ -328,6 +371,11 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   final String url;
   @override
   final String? urlError;
+  @override
+  final ProviderAccount? providerAccount;
+  @override
+  @JsonKey()
+  final String? providerAccountError;
   @override
   final TargetCalendar? existingCalendarSelected;
   @override
@@ -354,7 +402,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   String toString() {
-    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, targetCalendarChoice: $targetCalendarChoice, isAuthorizingBackend: $isAuthorizingBackend, hasAuthorizedBackend: $hasAuthorizedBackend, backendAuthorizationError: $backendAuthorizationError, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, targetCalendarChoice: $targetCalendarChoice, isAuthorizingBackend: $isAuthorizingBackend, hasAuthorizedBackend: $hasAuthorizedBackend, backendAuthorizationError: $backendAuthorizationError, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -370,6 +418,10 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
             (identical(other.url, url) || other.url == url) &&
             (identical(other.urlError, urlError) ||
                 other.urlError == urlError) &&
+            (identical(other.providerAccount, providerAccount) ||
+                other.providerAccount == providerAccount) &&
+            (identical(other.providerAccountError, providerAccountError) ||
+                other.providerAccountError == providerAccountError) &&
             (identical(
                     other.existingCalendarSelected, existingCalendarSelected) ||
                 other.existingCalendarSelected == existingCalendarSelected) &&
@@ -400,6 +452,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       titleError,
       url,
       urlError,
+      providerAccount,
+      providerAccountError,
       existingCalendarSelected,
       newCalendarCreated,
       targetCalendarChoice,
@@ -425,6 +479,8 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
       final String? titleError,
       final String url,
       final String? urlError,
+      final ProviderAccount? providerAccount,
+      final String? providerAccountError,
       final TargetCalendar? existingCalendarSelected,
       final TargetCalendar? newCalendarCreated,
       final TargetCalendarChoice targetCalendarChoice,
@@ -446,6 +502,10 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   String get url;
   @override
   String? get urlError;
+  @override
+  ProviderAccount? get providerAccount;
+  @override
+  String? get providerAccountError;
   @override
   TargetCalendar? get existingCalendarSelected;
   @override

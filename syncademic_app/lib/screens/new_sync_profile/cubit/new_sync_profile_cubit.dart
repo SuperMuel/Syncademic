@@ -150,7 +150,8 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
       try {
         targetCalendar = await GetIt.I<TargetCalendarRepository>()
-            .createCalendar(state.newCalendarCreated!);
+            .createCalendar(state
+                .newCalendarCreated!); //TODO : move the creation responsability to the backend
       } catch (e) {
         return emit(
             state.copyWith(submitError: e.toString(), isSubmitting: false));

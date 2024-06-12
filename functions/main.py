@@ -52,6 +52,11 @@ CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
 def get_calendar_service(user_id: str, provider_account_id: str):
+    if not user_id:
+        raise ValueError("User ID is required")
+    if not provider_account_id:
+        raise ValueError("Provider account ID is required")
+
     db = firestore.client()
 
     backend_authorization = (
@@ -112,6 +117,79 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
         logger.error(f"Failed to list calendars: {e}")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL, f"Failed to list calendars: {e}"
+        )
+
+
+@https_fn.on_call()
+def is_authorized(req: https_fn.CallableRequest) -> dict:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    user_id = req.auth.uid
+
+    provider_account_id = req.data.get("providerAccountId")
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
+    db = firestore.client()
+
+    backend_authorization = (
+        db.collection("backendAuthorizations")
+        .document(user_id + provider_account_id)
+        .get()
+    )
+
+    if not backend_authorization.exists:
+        return {"authorized": False}
+
+    # TODO : Check if the access token is still valid
+
+    return {"authorized": True}
+
+
+@https_fn.on_call()
+def create_new_calendar(req: https_fn.CallableRequest) -> dict:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    user_id = req.auth.uid
+
+    # Fetch provider_account_id from user's sync profile or frontend request
+    provider_account_id = req.data.get("providerAccountId")
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
+    try:
+        service = get_calendar_service(user_id, provider_account_id)
+    except Exception as e:
+        logger.error(f"Failed to get calendar service: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to get calendar service: {e}"
+        )
+
+    calendar_name = req.data.get("summary", "New Calendar")
+    calendar_description = req.data.get("description", "Created by Syncademic")
+    calendar_body = {
+        "summary": calendar_name,
+        "description": calendar_description,
+        # 'timeZone': 'UTC' # TODO : specify timeZone
+        # TODO : colorId
+    }
+
+    try:
+        return service.calendars().insert(body=calendar_body).execute()
+    except Exception as e:
+        logger.error(f"Failed to create calendar: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to create calendar: {e}"
         )
 
 

@@ -36,18 +36,6 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
         .toList();
   }
 
-  Future<CalendarApi> _getApi() async {
-    final authorizedClient =
-        await GetIt.I<AuthorizationService>().authorizedClient;
-
-    if (authorizedClient == null) {
-      throw Exception(
-          "Could not get an authorized client from the AuthorizationService");
-    }
-
-    return CalendarApi(authorizedClient);
-  }
-
   Future<String> _getProviderAccountId() async {
     final providerAccountId = await GetIt.I<AuthorizationService>().userId;
     if (providerAccountId == null) {
@@ -59,22 +47,16 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<TargetCalendar> createCalendar(TargetCalendar targetCalendar) async {
-    final api = await _getApi();
-
-    //TODO : handle timezone information
-    final calendar = Calendar(
-      summary: targetCalendar.title,
-      description: targetCalendar.description,
-    );
-
-    final createdCalendar = await api.calendars.insert(calendar);
-
-    if (createdCalendar.id == null) {
-      throw Exception("Created calendar ID is null");
-    }
+    final result = await FirebaseFunctions.instance
+        .httpsCallable('create_new_calendar')
+        .call({
+      'providerAccountId': await _getProviderAccountId(),
+      'summary': targetCalendar.title,
+      'description': targetCalendar.description,
+    });
 
     return targetCalendar.copyWith(
-      id: ID.fromString(createdCalendar.id!),
+      id: ID.fromString(result.data['id'] as String),
       createdBySyncademic: true,
     );
   }

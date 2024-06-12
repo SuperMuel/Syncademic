@@ -16,6 +16,15 @@ class NewSyncProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
       listener: (context, state) {
+        //TODO : when going back or forth one step, the error message is shown again. Fix this.
+        if (state.providerAccountError != null) {
+          ScaffoldMessenger.of(context)
+            ..removeCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+              content: Text(state.providerAccountError!),
+              backgroundColor: Colors.red,
+            ));
+        }
         if (state.submittedSuccessfully) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context)

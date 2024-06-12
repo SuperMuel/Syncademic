@@ -31,11 +31,11 @@ class NewSyncProfileState with _$NewSyncProfileState {
     @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
     TargetCalendar? newCalendarCreated,
-    @Default(TargetCalendarChoice.createNew)
-    TargetCalendarChoice targetCalendarChoice,
     @Default(false) bool isAuthorizingBackend,
     @Default(false) bool hasAuthorizedBackend,
     String? backendAuthorizationError,
+    @Default(TargetCalendarChoice.createNew)
+    TargetCalendarChoice targetCalendarChoice,
     @Default(false) bool isSubmitting,
     String? submitError,
     @Default(false) bool submittedSuccessfully,

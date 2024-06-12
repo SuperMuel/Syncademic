@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:syncademic_app/widgets/provider_account_card.dart';
 
 import '../../models/target_calendar.dart';
 import '../../widgets/target_calendar_card.dart';
@@ -63,7 +64,7 @@ class NewSyncProfilePage extends StatelessWidget {
               ),
             ),
             Step(
-              title: Text("Select your provider account"),
+              title: Text("Select your Google account"),
               content: ProviderAccountStepContent(),
             ),
             Step(
@@ -144,32 +145,34 @@ class ProviderAccountStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        //login with google button
-        TextButton(
-          onPressed: context.read<NewSyncProfileCubit>().selectProviderAccount,
-          child: const Text('Login with Google'),
-        ),
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+      builder: (context, state) {
+        //TODO show errors
 
-        IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: context.read<NewSyncProfileCubit>().resetProviderAccount,
-        ),
-
-        // actual account selected
-        BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
-          builder: (context, state) {
-            if (state.providerAccount == null) {
-              return const Text('No account selected');
-            }
-
-            return Text(
-              'Account selected : ${state.providerAccount!.providerAccountEmail}',
-            );
-          },
-        ),
-      ],
+        if (state.providerAccount == null) {
+          return Column(
+            children: [
+              TextButton(
+                onPressed:
+                    context.read<NewSyncProfileCubit>().selectProviderAccount,
+                child: const Text('Select your Google Account'),
+              ),
+            ],
+          );
+        } else {
+          return Stack(
+            alignment: Alignment.centerRight,
+            children: [
+              ProviderAccountCard(providerAccount: state.providerAccount!),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed:
+                    context.read<NewSyncProfileCubit>().resetProviderAccount,
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 }

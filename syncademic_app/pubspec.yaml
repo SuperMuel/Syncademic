@@ -89,6 +89,7 @@ flutter:
     - "assets/icons/syncademic-icon-600x600.png"
     - "assets/icons/syncademic-icon.svg"
     - "assets/icons/google_calendar_icon_1024x1024.png"
+    - "assets/icons/google_icon_128.png"
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

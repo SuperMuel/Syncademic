@@ -10,7 +10,14 @@ import 'id.dart';
 part 'provider_account.freezed.dart';
 
 enum Provider {
-  google,
+  google;
+
+  String get name {
+    switch (this) {
+      case Provider.google:
+        return 'Google';
+    }
+  }
 }
 
 @freezed

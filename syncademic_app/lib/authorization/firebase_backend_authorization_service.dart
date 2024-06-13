@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syncademic_app/models/provider_account.dart';
 import 'authorization_service.dart';
 import 'backend_authorization_service.dart';
 
@@ -13,7 +14,7 @@ class FirebaseBackendAuthorizationService
       {this.redirectUri = 'https://syncademic.io'});
 
   @override
-  Future<void> authorizeBackend() async {
+  Future<void> authorizeBackend(ProviderAccount providerAccount) async {
     log("Authorizing the backend using Firebase");
 
     final authCode =
@@ -28,6 +29,7 @@ class FirebaseBackendAuthorizationService
 
     try {
       await FirebaseFunctions.instance.httpsCallable('authorize_backend').call({
+        'provider': providerAccount.provider.name,
         'authCode': authCode,
         'redirectUri': redirectUri,
       });
@@ -35,5 +37,15 @@ class FirebaseBackendAuthorizationService
       log('Error authorizing backend: ${e.code}, ${e.details}, ${e.message}');
       rethrow;
     }
+  }
+
+  @override
+  Future<bool> isAuthorized(ProviderAccount providerAccount) async {
+    final result =
+        await FirebaseFunctions.instance.httpsCallable('is_authorized').call({
+      'providerAccountId': providerAccount.providerAccountId,
+    });
+
+    return result.data['authorized'];
   }
 }

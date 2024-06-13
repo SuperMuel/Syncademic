@@ -51,7 +51,8 @@ extension on SyncProfileStatus {
         notStarted: (_) => null,
         orElse: () => LastSynchronized(
           lastSync: lastSuccessfulSync,
-          builder: (context, lastSync) => Text("Last sync: $lastSync"),
+          builder: (context, lastSync) =>
+              Text("Last sync: $lastSync"), // TODO : don't use colon
         ),
       );
 

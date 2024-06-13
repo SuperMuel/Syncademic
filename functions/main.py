@@ -475,6 +475,13 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid redirect URI"
         )
 
+    provider = request.data.get("provider")
+
+    if not provider or provider.lower() not in ["google"]:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid provider"
+        )
+
     user_id = request.auth.uid
 
     db = firestore.client()
@@ -546,10 +553,13 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
     access_token = credentials.token
     refresh_token = credentials.refresh_token
 
+    # TODO : separate into two collections : backendAuthorizations and providerAccounts
     db.collection("backendAuthorizations").document(user_id + google_user_id).set(
         {
             "userId": user_id,
+            "provider": "google",
             "providerAccountId": google_user_id,
+            "providerAccountEmail": id_info.get("email"),
             "accessToken": access_token,
             "refreshToken": refresh_token,
             "expirationDate": credentials.expiry,

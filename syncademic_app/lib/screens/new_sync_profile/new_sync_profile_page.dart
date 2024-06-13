@@ -163,7 +163,7 @@ class ProviderAccountStepContent extends StatelessWidget {
             children: [
               TextButton(
                 onPressed:
-                    context.read<NewSyncProfileCubit>().selectProviderAccount,
+                    context.read<NewSyncProfileCubit>().pickProviderAccount,
                 child: const Text('Select your Google Account'),
               ),
             ],
@@ -191,11 +191,18 @@ class TargetCalendarStepContent extends StatelessWidget {
 
   void _openCalendarSelector(BuildContext context) async {
     final cubit = context.read<NewSyncProfileCubit>();
+    final providerAccount = cubit.state.providerAccount;
+
+    if (providerAccount == null) {
+      throw StateError(
+          'Provider account should not be null when selecting a calendar.');
+    }
+
     final selectedCalendar = await showDialog<TargetCalendar?>(
       context: context,
       builder: (_) => Dialog(
         child: BlocProvider(
-          create: (_) => TargetCalendarSelectorCubit()..init(),
+          create: (_) => TargetCalendarSelectorCubit(providerAccount)..init(),
           child: const Padding(
             padding: EdgeInsets.all(8.0),
             child: TargetCalendarSelector(),

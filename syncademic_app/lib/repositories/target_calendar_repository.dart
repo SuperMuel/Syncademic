@@ -2,9 +2,10 @@ import '../models/id.dart';
 import '../models/target_calendar.dart';
 
 abstract class TargetCalendarRepository {
-  Future<List<TargetCalendar>> getCalendars();
+  Future<List<TargetCalendar>> getCalendars(String providerAccountId);
 
-  Future<TargetCalendar> createCalendar(TargetCalendar calendar);
+  Future<TargetCalendar> createCalendar(
+      String providerAccountId, TargetCalendar calendar);
 }
 
 class MockTargetCalendarRepository implements TargetCalendarRepository {
@@ -19,10 +20,14 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
   );
 
   @override
-  Future<List<TargetCalendar>> getCalendars() async => _calendars;
+  Future<List<TargetCalendar>> getCalendars(
+    String providerAccountId,
+  ) async =>
+      _calendars;
 
   @override
-  Future<TargetCalendar> createCalendar(TargetCalendar calendar) {
+  Future<TargetCalendar> createCalendar(
+      String providerAccountId, TargetCalendar calendar) {
     final newCalendar = calendar.copyWith(createdBySyncademic: true);
 
     _calendars.add(newCalendar);

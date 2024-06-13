@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis/calendar/v3.dart' as gcal_api;
 import 'package:syncademic_app/services/provider_account_service.dart';
 import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/target_calendar_repository.dart';
@@ -43,6 +45,12 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  final googleSignIn = GoogleSignIn(
+    clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
+    forceCodeForRefreshToken: true,
+    scopes: [gcal_api.CalendarApi.calendarScope],
+  );
+
   getIt.registerSingleton<SyncProfileRepository>(
     FirestoreSyncProfileRepository(),
     // MockSyncProfileRepository()
@@ -64,7 +72,7 @@ void main() async {
 
   getIt.registerSingleton<AuthorizationService>(
     // MockAuthorizationService(),
-    GoogleAuthorizationService(),
+    GoogleAuthorizationService(googleSignIn: googleSignIn),
   );
 
   getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
@@ -86,7 +94,7 @@ void main() async {
 
   getIt.registerSingleton<ProviderAccountService>(
     //MockProviderAccountService(),
-    GoogleProviderAccountService(),
+    GoogleProviderAccountService(googleSignIn: googleSignIn),
   );
 
   runApp(const MyApp());

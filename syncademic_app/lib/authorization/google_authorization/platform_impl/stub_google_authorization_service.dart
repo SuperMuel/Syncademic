@@ -1,5 +1,4 @@
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
 import '../../authorization_service.dart';
 
 class GoogleAuthorizationServiceImpl implements AuthorizationService {
@@ -8,27 +7,7 @@ class GoogleAuthorizationServiceImpl implements AuthorizationService {
   }
 
   @override
-  Future<String?> getAuthorizationCode() async {
-    throw Exception('Stub method');
-  }
-
-  @override
-  Future<bool> authorize() async {
-    throw Exception('Stub method');
-  }
-
-  @override
-  Future<bool> isAuthorized() {
-    throw Exception('Stub method');
-  }
-
-  @override
-  Future<http.Client?> get authorizedClient {
-    throw Exception('Stub method');
-  }
-
-  @override
-  Future<String?> get userId async {
+  Future<String?> getAuthorizationCode(String providerAccountId) async {
     throw Exception('Stub method');
   }
 }

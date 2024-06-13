@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
 import 'package:syncademic_app/models/provider_account.dart';
 import 'package:syncademic_app/services/provider_account_service.dart';
-import '../../../authorization/authorization_service.dart';
 import '../../../repositories/target_calendar_repository.dart';
 import '../../../authorization/backend_authorization_service.dart';
 import '../../../models/id.dart';
@@ -62,7 +61,13 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
-  Future<void> selectProviderAccount() async {
+  void providerAccountSelected(ProviderAccount providerAccount) =>
+      emit(state.copyWith(
+        providerAccount: providerAccount,
+        providerAccountError: null,
+      ));
+
+  Future<void> pickProviderAccount() async {
     await resetProviderAccount();
 
     try {
@@ -75,7 +80,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
         ));
       }
 
-      emit(state.copyWith(providerAccount: providerAccount));
+      providerAccountSelected(providerAccount);
     } catch (e) {
       return emit(state.copyWith(
         providerAccount: null,
@@ -103,14 +108,21 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(existingCalendarSelected: calendar));
   }
 
+// along with this function, verify first that the backend is authorized
   void authorizeBackend() async {
+    if (state.providerAccount == null) {
+      throw StateError('Provider account must be selected before authorizing');
+    }
+
     emit(state.copyWith(
-        isAuthorizingBackend: true,
-        backendAuthorizationError: null,
-        hasAuthorizedBackend: false));
+      isAuthorizingBackend: true,
+      backendAuthorizationError: null,
+      hasAuthorizedBackend: false,
+    ));
 
     try {
-      await GetIt.I<BackendAuthorizationService>().authorizeBackend();
+      await GetIt.I<BackendAuthorizationService>()
+          .authorizeBackend(state.providerAccount!);
     } catch (e) {
       emit(state.copyWith(
         isAuthorizingBackend: false,
@@ -120,35 +132,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return;
     }
 
-    final providerAccountId = await GetIt.I<AuthorizationService>().userId;
-
-    if (providerAccountId == null) {
-      return emit(state.copyWith(
-        isAuthorizingBackend: false,
-        hasAuthorizedBackend: false,
-        backendAuthorizationError:
-            'Provider account ID is null. If this issue persists, please contact support.',
-      ));
-    }
-
-    _updateProviderAccountId(providerAccountId);
-
     emit(state.copyWith(
       isAuthorizingBackend: false,
       hasAuthorizedBackend: true,
       backendAuthorizationError: null,
-    ));
-  }
-
-  /// This method is called when the user has successfully authorized the backend, and we have the providerAccountId.
-  void _updateProviderAccountId(String providerAccountId) {
-    emit(state.copyWith(
-      existingCalendarSelected: state.existingCalendarSelected?.copyWith(
-        providerAccountId: providerAccountId,
-      ),
-      newCalendarCreated: state.newCalendarCreated?.copyWith(
-        providerAccountId: providerAccountId,
-      ),
     ));
   }
 
@@ -178,8 +165,9 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     late TargetCalendar targetCalendar;
     if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
       try {
-        targetCalendar = await GetIt.I<TargetCalendarRepository>()
-            .createCalendar(state
+        targetCalendar = await GetIt.I<TargetCalendarRepository>().createCalendar(
+            state.providerAccount!.providerAccountId,
+            state
                 .newCalendarCreated!); //TODO : move the creation responsability to the backend
       } catch (e) {
         return emit(

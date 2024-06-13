@@ -35,14 +35,13 @@ class MockProviderAccountService implements ProviderAccountService {
 }
 
 class GoogleProviderAccountService implements ProviderAccountService {
-  final GoogleSignIn _googleSignIn;
+  final GoogleSignIn googleSignIn;
 
-  GoogleProviderAccountService({GoogleSignIn? googleSignIn})
-      : _googleSignIn = googleSignIn ?? GoogleSignIn();
+  GoogleProviderAccountService({required this.googleSignIn})
 
   @override
   Future<ProviderAccount?> triggerProviderAccountSelection() async {
-    GoogleSignInAccount? user = await _googleSignIn.signIn();
+    GoogleSignInAccount? user = await googleSignIn.signIn();
 
     if (user == null) {
       return null;
@@ -65,5 +64,5 @@ class GoogleProviderAccountService implements ProviderAccountService {
   }
 
   @override
-  Future<void> reset() => _googleSignIn.signOut();
+  Future<void> reset() => googleSignIn.signOut();
 }

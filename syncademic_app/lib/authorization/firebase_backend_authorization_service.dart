@@ -17,8 +17,9 @@ class FirebaseBackendAuthorizationService
   Future<void> authorizeBackend(ProviderAccount providerAccount) async {
     log("Authorizing the backend using Firebase");
 
-    final authCode =
-        await GetIt.I.get<AuthorizationService>().getAuthorizationCode();
+    final authCode = await GetIt.I
+        .get<AuthorizationService>()
+        .getAuthorizationCode(providerAccount.providerAccountId);
 
     if (authCode == null) {
       log('Authorization code is null !');

@@ -36,11 +36,6 @@ The user interface (UI) for Syncademic is developed using Flutter.
 - Enable users to select their Target Calendar for event synchronization.
 - Authorize the backend to modify the user's calendar autonomously.
 
-**Considerations**
-
-- To select a Target Calendar, users complete an OAuth flow, which permits the frontend to display a list of their calendars and potentially create a new one for synchronization.
-- Separate authorization processes are necessary for the frontend and backend: the frontend to display calendar options and the backend for calendar modifications. The frontend's authorization typically expires shortly after its use, as it's needed only for initial setup.
-
 **UI/UX**
 
 - The UI should simplify the synchronization process, guiding users step-by-step.
@@ -56,18 +51,13 @@ The user interface (UI) for Syncademic is developed using Flutter.
 - Because of this, a hosted website would be sufficient for our requirements.
 - However, we are also focusing on Android platforms. This is because developing on Android is simpler than web development, as Flutter's hot reload feature is available on Android but not on the web.
 
-**Communication with the Backend**
-
-- The app primarily interacts with Firebase Firestore for data operations.
-- For actions like manually triggering synchronization, Cloud Function calls are used.
-
 **Translation**
 
 - The app is currently available in English. A translation library should be implemented to support additional languages, and appropriate translations provided.
 
 ## Backend
 
-The backend is primarily built on Firebase Cloud Functions.
+The backend is built on Firebase Cloud Functions.
 
 **Authentication**
 
@@ -125,7 +115,9 @@ Document ID: `userId` + `providerAccountId`
 **Fields:**
 
 - `userId` (string): The ID of the user who authorized the backend
+- `provider` (string): The provider of the authorized account. For now, it is always `google`
 - `providerAccountId` (string): The unique identifier of the authorized Google account
+- `providerAccountEmail` (string): The email of the authorized Google account
 - `accessToken` (string): The access token obtained from the OAuth2 flow
 - `refreshToken` (string): The refresh token obtained from the OAuth2 flow
 - `expirationDate` (timestamp): The expiration date of the credentials
@@ -151,7 +143,7 @@ OAuth 2.0 is a crucial protocol that enables secure authorization functionalitie
 **Overview**
 
 - The backend requires authorization to access the user's Target Calendars for the duration that the SyncProfile is active.
-- The frontend primarily facilitates the OAuth flow, allowing users to authorize access securely.
+- The frontend facilitates the OAuth flow, allowing users to authorize access securely.
 
 **Authorization Flow**
 

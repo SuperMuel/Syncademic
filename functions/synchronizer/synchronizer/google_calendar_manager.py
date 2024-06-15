@@ -3,6 +3,7 @@ from typing import List, Optional, TypeAlias, Dict
 from .event import Event
 from itertools import islice
 import pytz
+from googleapiclient.errors import HttpError
 
 
 ExtendedProperties: TypeAlias = Dict
@@ -21,6 +22,16 @@ class GoogleCalendarManager:
     def __init__(self, service, calendar_id: str):
         self.service = service
         self.calendar_id = calendar_id
+
+    def check_calendar_exists(self) -> bool:
+        try:
+            self.service.calendars().get(calendarId=self.calendar_id).execute()
+            return True
+        except HttpError as e:
+            if e.resp.status == 404:
+                return False
+            else:
+                raise e
 
     def event_to_google_event(
         self, event: Event, extended_properties: ExtendedProperties

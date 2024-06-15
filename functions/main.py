@@ -283,7 +283,7 @@ def _synchronize_now(
     # TODO: If no status.type ??
 
     status = doc.get("status")
-    if status and (status.get("type") in ["inProgress", "deleting", "deleted"]):
+    if status and (status.get("type") in ["inProgress", "deleting"]):
         logger.info(f"Synchronization is {status.get('type')}, skipping")
         return
 
@@ -422,6 +422,13 @@ def delete_sync_profile(
 
     calendar_manager = GoogleCalendarManager(service, doc.get("targetCalendar.id"))
 
+    if not calendar_manager.check_calendar_exists():
+        logger.info(
+            "Target calendar does not exist. Deleting sync profile immediately."
+        )
+        sync_profile_ref.delete()
+        return
+
     try:
         events = calendar_manager.get_events_ids_from_sync_profile(
             sync_profile_id=sync_profile_id,
@@ -445,14 +452,6 @@ def delete_sync_profile(
         )
 
     sync_profile_ref.delete()
-
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "deleted",
-            }
-        }
-    )
 
     logger.info("Sync profile deleted successfully")
 

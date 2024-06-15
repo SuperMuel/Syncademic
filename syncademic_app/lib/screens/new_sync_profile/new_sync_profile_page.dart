@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:syncademic_app/widgets/provider_account_card.dart';
+import '../../widgets/provider_account_card.dart';
 
 import '../../models/target_calendar.dart';
 import '../../widgets/target_calendar_card.dart';

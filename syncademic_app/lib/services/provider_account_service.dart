@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:quiver/strings.dart';
-import 'package:syncademic_app/models/id.dart';
-import 'package:syncademic_app/models/provider_account.dart';
+import '../models/provider_account.dart';
 
 abstract class ProviderAccountService {
   /// Opens a dialog to select a provider account.

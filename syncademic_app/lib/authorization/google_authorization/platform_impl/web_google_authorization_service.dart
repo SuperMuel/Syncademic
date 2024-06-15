@@ -1,7 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:google_sign_in_web/web_only.dart';
-import 'package:syncademic_app/authorization/google_authorization/google_authorization_service.dart';
+import '../google_authorization_service.dart';
 
 import '../../authorization_service.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:syncademic_app/models/provider_account.dart';
+import '../models/provider_account.dart';
 
 class ProviderIcon extends StatelessWidget {
   final Provider provider;

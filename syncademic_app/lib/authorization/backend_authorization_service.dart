@@ -1,6 +1,6 @@
 import 'dart:developer';
 
-import 'package:syncademic_app/models/provider_account.dart';
+import '../models/provider_account.dart';
 
 /// Thrown when the user ID of the currently signed-in user does not match the
 /// ID of the provider account associated with the sync profile that requests

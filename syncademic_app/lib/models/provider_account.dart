@@ -5,8 +5,6 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'id.dart';
-
 part 'provider_account.freezed.dart';
 
 enum Provider {

@@ -19,6 +19,13 @@ enum NewSyncProfileStep {
   }
 }
 
+enum BackendAuthorizationStatus {
+  checking,
+  notAuthorized,
+  authorizing,
+  authorized
+}
+
 @freezed
 class NewSyncProfileState with _$NewSyncProfileState {
   const factory NewSyncProfileState({
@@ -31,8 +38,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
     @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
     TargetCalendar? newCalendarCreated,
-    @Default(false) bool isAuthorizingBackend,
-    @Default(false) bool hasAuthorizedBackend,
+    @Default(BackendAuthorizationStatus.notAuthorized)
+    BackendAuthorizationStatus backendAuthorizationStatus,
     String? backendAuthorizationError,
     @Default(TargetCalendarChoice.createNew)
     TargetCalendarChoice targetCalendarChoice,
@@ -49,7 +56,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
         NewSyncProfileStep.selectProviderAccount => providerAccount != null,
         NewSyncProfileStep.selectTargetCalendar =>
           targetCalendarSelected != null,
-        NewSyncProfileStep.authorizeBackend => hasAuthorizedBackend,
+        NewSyncProfileStep.authorizeBackend =>
+          backendAuthorizationStatus == BackendAuthorizationStatus.authorized,
         NewSyncProfileStep.summary => false,
       };
 
@@ -77,11 +85,15 @@ class NewSyncProfileState with _$NewSyncProfileState {
       return false;
     }
 
-    if (targetCalendarSelected == null) {
+    if (providerAccount == null) {
       return false;
     }
 
-    if (isBlank(targetCalendarSelected!.providerAccountId)) {
+    if (backendAuthorizationStatus != BackendAuthorizationStatus.authorized) {
+      return false;
+    }
+
+    if (targetCalendarSelected == null) {
       return false;
     }
 

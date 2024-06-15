@@ -186,6 +186,66 @@ class ProviderAccountStepContent extends StatelessWidget {
   }
 }
 
+class AuthorizationStatusIndicator extends StatelessWidget {
+  const AuthorizationStatusIndicator({super.key, required this.status});
+
+  final BackendAuthorizationStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (status) {
+      BackendAuthorizationStatus.checking => const Column(
+          children: [
+            Text('Checking authorization...'),
+            Gap(8),
+            CircularProgressIndicator(),
+          ],
+        ),
+      BackendAuthorizationStatus.notAuthorized => ElevatedButton.icon(
+          onPressed: context.read<NewSyncProfileCubit>().authorizeBackend,
+          icon: const Icon(Icons.lock_open),
+          label: const Text('Authorize Syncademic'),
+        ),
+      BackendAuthorizationStatus.authorizing => const Column(
+          children: [
+            Text('Authorization in progress...'),
+            Gap(8),
+            CircularProgressIndicator(),
+          ],
+        ),
+      BackendAuthorizationStatus.authorized => const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            Gap(8),
+            Text('Authorization successful'),
+          ],
+        )
+    };
+  }
+}
+
+class BackendAuthorizationStepContent extends StatelessWidget {
+  const BackendAuthorizationStepContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            const Text(
+              'To synchronize your schedule, Syncademic needs to access your Google Calendar.', //TODO : put this in info box
+            ),
+            const Gap(16),
+            AuthorizationStatusIndicator(
+                status: state.backendAuthorizationStatus),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class TargetCalendarStepContent extends StatelessWidget {
   const TargetCalendarStepContent({super.key});
 
@@ -287,54 +347,6 @@ class TargetCalendarStepContent extends StatelessWidget {
                 label: const Text('Select target calendar'),
               ),
           ],
-        );
-      },
-    );
-  }
-}
-
-class BackendAuthorizationStepContent extends StatelessWidget {
-  const BackendAuthorizationStepContent({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
-      builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'To synchronize your schedule, Syncademic needs to access your Google Calendar.',
-              ),
-              const Gap(16),
-              state.hasAuthorizedBackend
-                  ? const Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green),
-                        Gap(8),
-                        Text('Authorization successful'),
-                      ],
-                    )
-                  : ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.all(24.0)),
-                      onPressed: state.isAuthorizingBackend
-                          ? null
-                          : context
-                              .read<NewSyncProfileCubit>()
-                              .authorizeBackend,
-                      icon: state.isAuthorizingBackend
-                          ? const CircularProgressIndicator(strokeWidth: 2)
-                          : const Icon(Icons.lock_open),
-                      label: Text(
-                        'Authorize Syncademic',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-            ],
-          ),
         );
       },
     );

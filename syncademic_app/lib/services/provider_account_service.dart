@@ -37,7 +37,7 @@ class MockProviderAccountService implements ProviderAccountService {
 class GoogleProviderAccountService implements ProviderAccountService {
   final GoogleSignIn googleSignIn;
 
-  GoogleProviderAccountService({required this.googleSignIn})
+  GoogleProviderAccountService({required this.googleSignIn});
 
   @override
   Future<ProviderAccount?> triggerProviderAccountSelection() async {

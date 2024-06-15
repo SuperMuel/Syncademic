@@ -355,7 +355,9 @@ def _synchronize_now(
 
 
 @https_fn.on_call(memory=options.MemoryOption.MB_512)
-def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
+def delete_sync_profile(
+    req: https_fn.CallableRequest,
+) -> Any:  # TODO : add 'force' argument
     if not req.auth:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"

@@ -3,7 +3,10 @@ import 'dart:developer';
 import 'package:syncademic_app/models/provider_account.dart';
 
 abstract class BackendAuthorizationService {
+  /// Authorizes the backend using the given [providerAccount].
+  /// Throws an exception if the authorization fails.
   Future<void> authorizeBackend(ProviderAccount providerAccount);
+
   Future<bool> isAuthorized(ProviderAccount providerAccount);
 }
 

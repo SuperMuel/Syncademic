@@ -26,8 +26,8 @@ mixin _$NewSyncProfileState {
   TargetCalendar? get existingCalendarSelected =>
       throw _privateConstructorUsedError;
   TargetCalendar? get newCalendarCreated => throw _privateConstructorUsedError;
-  bool get isAuthorizingBackend => throw _privateConstructorUsedError;
-  bool get hasAuthorizedBackend => throw _privateConstructorUsedError;
+  BackendAuthorizationStatus get backendAuthorizationStatus =>
+      throw _privateConstructorUsedError;
   String? get backendAuthorizationError => throw _privateConstructorUsedError;
   TargetCalendarChoice get targetCalendarChoice =>
       throw _privateConstructorUsedError;
@@ -56,8 +56,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String? providerAccountError,
       TargetCalendar? existingCalendarSelected,
       TargetCalendar? newCalendarCreated,
-      bool isAuthorizingBackend,
-      bool hasAuthorizedBackend,
+      BackendAuthorizationStatus backendAuthorizationStatus,
       String? backendAuthorizationError,
       TargetCalendarChoice targetCalendarChoice,
       bool isSubmitting,
@@ -91,8 +90,7 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? providerAccountError = freezed,
     Object? existingCalendarSelected = freezed,
     Object? newCalendarCreated = freezed,
-    Object? isAuthorizingBackend = null,
-    Object? hasAuthorizedBackend = null,
+    Object? backendAuthorizationStatus = null,
     Object? backendAuthorizationError = freezed,
     Object? targetCalendarChoice = null,
     Object? isSubmitting = null,
@@ -136,14 +134,10 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.newCalendarCreated
           : newCalendarCreated // ignore: cast_nullable_to_non_nullable
               as TargetCalendar?,
-      isAuthorizingBackend: null == isAuthorizingBackend
-          ? _value.isAuthorizingBackend
-          : isAuthorizingBackend // ignore: cast_nullable_to_non_nullable
-              as bool,
-      hasAuthorizedBackend: null == hasAuthorizedBackend
-          ? _value.hasAuthorizedBackend
-          : hasAuthorizedBackend // ignore: cast_nullable_to_non_nullable
-              as bool,
+      backendAuthorizationStatus: null == backendAuthorizationStatus
+          ? _value.backendAuthorizationStatus
+          : backendAuthorizationStatus // ignore: cast_nullable_to_non_nullable
+              as BackendAuthorizationStatus,
       backendAuthorizationError: freezed == backendAuthorizationError
           ? _value.backendAuthorizationError
           : backendAuthorizationError // ignore: cast_nullable_to_non_nullable
@@ -223,8 +217,7 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String? providerAccountError,
       TargetCalendar? existingCalendarSelected,
       TargetCalendar? newCalendarCreated,
-      bool isAuthorizingBackend,
-      bool hasAuthorizedBackend,
+      BackendAuthorizationStatus backendAuthorizationStatus,
       String? backendAuthorizationError,
       TargetCalendarChoice targetCalendarChoice,
       bool isSubmitting,
@@ -259,8 +252,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? providerAccountError = freezed,
     Object? existingCalendarSelected = freezed,
     Object? newCalendarCreated = freezed,
-    Object? isAuthorizingBackend = null,
-    Object? hasAuthorizedBackend = null,
+    Object? backendAuthorizationStatus = null,
     Object? backendAuthorizationError = freezed,
     Object? targetCalendarChoice = null,
     Object? isSubmitting = null,
@@ -304,14 +296,10 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.newCalendarCreated
           : newCalendarCreated // ignore: cast_nullable_to_non_nullable
               as TargetCalendar?,
-      isAuthorizingBackend: null == isAuthorizingBackend
-          ? _value.isAuthorizingBackend
-          : isAuthorizingBackend // ignore: cast_nullable_to_non_nullable
-              as bool,
-      hasAuthorizedBackend: null == hasAuthorizedBackend
-          ? _value.hasAuthorizedBackend
-          : hasAuthorizedBackend // ignore: cast_nullable_to_non_nullable
-              as bool,
+      backendAuthorizationStatus: null == backendAuthorizationStatus
+          ? _value.backendAuthorizationStatus
+          : backendAuthorizationStatus // ignore: cast_nullable_to_non_nullable
+              as BackendAuthorizationStatus,
       backendAuthorizationError: freezed == backendAuthorizationError
           ? _value.backendAuthorizationError
           : backendAuthorizationError // ignore: cast_nullable_to_non_nullable
@@ -349,8 +337,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       this.providerAccountError = null,
       this.existingCalendarSelected,
       this.newCalendarCreated,
-      this.isAuthorizingBackend = false,
-      this.hasAuthorizedBackend = false,
+      this.backendAuthorizationStatus =
+          BackendAuthorizationStatus.notAuthorized,
       this.backendAuthorizationError,
       this.targetCalendarChoice = TargetCalendarChoice.createNew,
       this.isSubmitting = false,
@@ -382,10 +370,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   final TargetCalendar? newCalendarCreated;
   @override
   @JsonKey()
-  final bool isAuthorizingBackend;
-  @override
-  @JsonKey()
-  final bool hasAuthorizedBackend;
+  final BackendAuthorizationStatus backendAuthorizationStatus;
   @override
   final String? backendAuthorizationError;
   @override
@@ -402,7 +387,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   String toString() {
-    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, isAuthorizingBackend: $isAuthorizingBackend, hasAuthorizedBackend: $hasAuthorizedBackend, backendAuthorizationError: $backendAuthorizationError, targetCalendarChoice: $targetCalendarChoice, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, backendAuthorizationStatus: $backendAuthorizationStatus, backendAuthorizationError: $backendAuthorizationError, targetCalendarChoice: $targetCalendarChoice, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -427,10 +412,10 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
                 other.existingCalendarSelected == existingCalendarSelected) &&
             (identical(other.newCalendarCreated, newCalendarCreated) ||
                 other.newCalendarCreated == newCalendarCreated) &&
-            (identical(other.isAuthorizingBackend, isAuthorizingBackend) ||
-                other.isAuthorizingBackend == isAuthorizingBackend) &&
-            (identical(other.hasAuthorizedBackend, hasAuthorizedBackend) ||
-                other.hasAuthorizedBackend == hasAuthorizedBackend) &&
+            (identical(other.backendAuthorizationStatus,
+                    backendAuthorizationStatus) ||
+                other.backendAuthorizationStatus ==
+                    backendAuthorizationStatus) &&
             (identical(other.backendAuthorizationError,
                     backendAuthorizationError) ||
                 other.backendAuthorizationError == backendAuthorizationError) &&
@@ -456,8 +441,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       providerAccountError,
       existingCalendarSelected,
       newCalendarCreated,
-      isAuthorizingBackend,
-      hasAuthorizedBackend,
+      backendAuthorizationStatus,
       backendAuthorizationError,
       targetCalendarChoice,
       isSubmitting,
@@ -483,8 +467,7 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
       final String? providerAccountError,
       final TargetCalendar? existingCalendarSelected,
       final TargetCalendar? newCalendarCreated,
-      final bool isAuthorizingBackend,
-      final bool hasAuthorizedBackend,
+      final BackendAuthorizationStatus backendAuthorizationStatus,
       final String? backendAuthorizationError,
       final TargetCalendarChoice targetCalendarChoice,
       final bool isSubmitting,
@@ -511,9 +494,7 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   @override
   TargetCalendar? get newCalendarCreated;
   @override
-  bool get isAuthorizingBackend;
-  @override
-  bool get hasAuthorizedBackend;
+  BackendAuthorizationStatus get backendAuthorizationStatus;
   @override
   String? get backendAuthorizationError;
   @override

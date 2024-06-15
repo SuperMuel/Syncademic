@@ -16,9 +16,6 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$ProviderAccount {
-  /// The ID of the provider account, unique within Syncademic.
-  ID? get id => throw _privateConstructorUsedError;
-
   /// The provider of the account (e.g., Google).
   Provider get provider => throw _privateConstructorUsedError;
 
@@ -40,8 +37,7 @@ abstract class $ProviderAccountCopyWith<$Res> {
       _$ProviderAccountCopyWithImpl<$Res, ProviderAccount>;
   @useResult
   $Res call(
-      {ID? id,
-      Provider provider,
+      {Provider provider,
       String providerAccountId,
       String providerAccountEmail});
 }
@@ -59,16 +55,11 @@ class _$ProviderAccountCopyWithImpl<$Res, $Val extends ProviderAccount>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? provider = null,
     Object? providerAccountId = null,
     Object? providerAccountEmail = null,
   }) {
     return _then(_value.copyWith(
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as ID?,
       provider: null == provider
           ? _value.provider
           : provider // ignore: cast_nullable_to_non_nullable
@@ -94,8 +85,7 @@ abstract class _$$ProviderAccountImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {ID? id,
-      Provider provider,
+      {Provider provider,
       String providerAccountId,
       String providerAccountEmail});
 }
@@ -111,16 +101,11 @@ class __$$ProviderAccountImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? provider = null,
     Object? providerAccountId = null,
     Object? providerAccountEmail = null,
   }) {
     return _then(_$ProviderAccountImpl(
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as ID?,
       provider: null == provider
           ? _value.provider
           : provider // ignore: cast_nullable_to_non_nullable
@@ -141,15 +126,10 @@ class __$$ProviderAccountImplCopyWithImpl<$Res>
 
 class _$ProviderAccountImpl extends _ProviderAccount {
   const _$ProviderAccountImpl(
-      {required this.id,
-      required this.provider,
+      {required this.provider,
       required this.providerAccountId,
       required this.providerAccountEmail})
       : super._();
-
-  /// The ID of the provider account, unique within Syncademic.
-  @override
-  final ID? id;
 
   /// The provider of the account (e.g., Google).
   @override
@@ -165,7 +145,7 @@ class _$ProviderAccountImpl extends _ProviderAccount {
 
   @override
   String toString() {
-    return 'ProviderAccount(id: $id, provider: $provider, providerAccountId: $providerAccountId, providerAccountEmail: $providerAccountEmail)';
+    return 'ProviderAccount(provider: $provider, providerAccountId: $providerAccountId, providerAccountEmail: $providerAccountEmail)';
   }
 
   @override
@@ -173,7 +153,6 @@ class _$ProviderAccountImpl extends _ProviderAccount {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ProviderAccountImpl &&
-            (identical(other.id, id) || other.id == id) &&
             (identical(other.provider, provider) ||
                 other.provider == provider) &&
             (identical(other.providerAccountId, providerAccountId) ||
@@ -184,7 +163,7 @@ class _$ProviderAccountImpl extends _ProviderAccount {
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, id, provider, providerAccountId, providerAccountEmail);
+      runtimeType, provider, providerAccountId, providerAccountEmail);
 
   @JsonKey(ignore: true)
   @override
@@ -196,16 +175,11 @@ class _$ProviderAccountImpl extends _ProviderAccount {
 
 abstract class _ProviderAccount extends ProviderAccount {
   const factory _ProviderAccount(
-      {required final ID? id,
-      required final Provider provider,
+      {required final Provider provider,
       required final String providerAccountId,
       required final String providerAccountEmail}) = _$ProviderAccountImpl;
   const _ProviderAccount._() : super._();
 
-  @override
-
-  /// The ID of the provider account, unique within Syncademic.
-  ID? get id;
   @override
 
   /// The provider of the account (e.g., Google).

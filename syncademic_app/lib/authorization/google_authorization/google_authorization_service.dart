@@ -18,3 +18,8 @@ class GoogleAuthorizationService implements AuthorizationService {
     return _impl.getAuthorizationCode(providerAccountId);
   }
 }
+
+extension GoogleSignInAccountExtension on GoogleSignIn {
+  Future<GoogleSignInAccount?> getCurrentUserOrSignIn() async =>
+      currentUser ?? await signIn();
+}

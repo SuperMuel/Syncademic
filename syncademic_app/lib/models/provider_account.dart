@@ -30,9 +30,6 @@ class ProviderAccount with _$ProviderAccount {
   const ProviderAccount._();
 
   const factory ProviderAccount({
-    /// The ID of the provider account, unique within Syncademic.
-    required ID? id,
-
     /// The provider of the account (e.g., Google).
     required Provider provider,
 

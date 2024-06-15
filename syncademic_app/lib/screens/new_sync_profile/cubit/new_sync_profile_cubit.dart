@@ -124,6 +124,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     try {
       await GetIt.I<BackendAuthorizationService>()
           .authorizeBackend(state.providerAccount!);
+      //TODO : handle UserIdMismatchException
     } catch (e) {
       emit(state.copyWith(
         backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,

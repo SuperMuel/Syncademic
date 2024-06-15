@@ -21,7 +21,6 @@ class MockProviderAccountService implements ProviderAccountService {
   Future<ProviderAccount> triggerProviderAccountSelection() async {
     await Future.delayed(const Duration(microseconds: 1));
     return const ProviderAccount(
-      id: ID.fromString('mock-provider-account-id'),
       provider: Provider.google,
       providerAccountId: 'mock-provider-account-id',
       providerAccountEmail: 'info@syncademic.io',
@@ -56,7 +55,6 @@ class GoogleProviderAccountService implements ProviderAccountService {
     }
 
     return ProviderAccount(
-      id: null,
       provider: Provider.google,
       providerAccountId: user.id,
       providerAccountEmail: user.email,

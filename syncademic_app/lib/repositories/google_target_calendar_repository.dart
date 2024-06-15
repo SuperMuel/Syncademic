@@ -40,6 +40,7 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
     return targetCalendar.copyWith(
       id: ID.fromString(result.data['id'] as String),
       createdBySyncademic: true,
+      providerAccountId: providerAccountId,
     );
   }
 }

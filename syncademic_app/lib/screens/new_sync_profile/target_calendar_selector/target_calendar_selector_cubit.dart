@@ -20,9 +20,9 @@ class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
 
     late List<TargetCalendar> calendars;
     try {
-      calendars = await GetIt.I.get<TargetCalendarRepository>().getCalendars(
-            providerAccount.id.toString(),
-          );
+      calendars = await GetIt.I
+          .get<TargetCalendarRepository>()
+          .getCalendars(providerAccount.providerAccountId);
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
     }

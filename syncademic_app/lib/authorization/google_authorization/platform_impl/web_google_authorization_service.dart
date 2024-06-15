@@ -18,10 +18,6 @@ class GoogleAuthorizationServiceImpl implements AuthorizationService {
       throw Exception('User not logged in');
     }
 
-    if (currentUser.id != providerAccountId) {
-      throw UserIdMismatchException();
-    }
-
-    return await requestServerAuthCode();
+    return requestServerAuthCode();
   }
 }

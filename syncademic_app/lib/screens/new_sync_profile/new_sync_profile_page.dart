@@ -12,37 +12,40 @@ import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 class NewSyncProfilePage extends StatelessWidget {
   const NewSyncProfilePage({super.key});
 
+  void showSnackBar(BuildContext context, String message,
+          {bool error = false, bool success = false}) =>
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(message),
+          backgroundColor: error
+              ? Colors.red
+              : success
+                  ? Colors.green
+                  : null,
+          duration: const Duration(seconds: 5),
+        ));
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
       listener: (context, state) {
         //TODO : when going back or forth one step, the error message is shown again. Fix this.
-        if (state.providerAccountError != null) {
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              content: Text(state.providerAccountError!),
-              backgroundColor: Colors.red,
-            ));
-        }
+
         if (state.submittedSuccessfully) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(const SnackBar(
-              content: Text('Synchronization created'),
-              backgroundColor: Colors.green,
-            ));
-          return;
+          return showSnackBar(context, 'Synchronization created',
+              success: true);
         }
 
+        if (state.providerAccountError != null) {
+          showSnackBar(context, state.providerAccountError!, error: true);
+        }
+        if (state.backendAuthorizationError != null) {
+          showSnackBar(context, state.backendAuthorizationError!, error: true);
+        }
         if (state.submitError != null) {
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              content: Text('Error: ${state.submitError}'),
-              backgroundColor: Colors.red,
-            ));
+          showSnackBar(context, state.submitError!, error: true);
         }
       },
       builder: (context, state) => Scaffold(
@@ -236,6 +239,7 @@ class BackendAuthorizationStepContent extends StatelessWidget {
             const Text(
               'To synchronize your schedule, Syncademic needs to access your Google Calendar.', //TODO : put this in info box
             ),
+            //TODO : show the current account selected
             const Gap(16),
             AuthorizationStatusIndicator(
                 status: state.backendAuthorizationStatus),

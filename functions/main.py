@@ -484,6 +484,13 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid provider"
         )
 
+    provider_account_id = request.data.get("providerAccountId")
+
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
     user_id = request.auth.uid
 
     db = firestore.client()
@@ -549,7 +556,15 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
     google_user_id = id_info.get("sub")
     if not google_user_id:
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Google user ID not found"
+            https_fn.FunctionsErrorCode.INTERNAL,
+            "Oops. Say this to the developer: google_user_id not found in id_token",
+        )
+
+    # Check if the user is authorizing the backend on the correct google account
+    if google_user_id != provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.PERMISSION_DENIED,
+            "The authorized Google account does not match the providerAccountId (ProviderUserIdMismatch)",
         )
 
     access_token = credentials.token

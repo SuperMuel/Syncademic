@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/authorization/authorization_service.dart';
 import 'package:syncademic_app/models/provider_account.dart';
 import 'package:syncademic_app/services/provider_account_service.dart';
 import '../../../repositories/target_calendar_repository.dart';
@@ -125,12 +126,17 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       await GetIt.I<BackendAuthorizationService>()
           .authorizeBackend(state.providerAccount!);
       //TODO : handle UserIdMismatchException
+    } on ProviderUserIdMismatchException {
+      return emit(state.copyWith(
+        backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,
+        backendAuthorizationError:
+            'You might have selected the wrong account in the authorization popup. Please try again using your ${state.providerAccount?.providerAccountEmail} account.',
+      ));
     } catch (e) {
-      emit(state.copyWith(
+      return emit(state.copyWith(
         backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,
         backendAuthorizationError: e.toString(),
       ));
-      return;
     }
 
     emit(state.copyWith(
@@ -185,6 +191,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   void previous() {
     if (state.canGoBack) {
       emit(state.copyWith(currentStep: state.currentStep.previous));
+    }
+
+    if (state.currentStep == NewSyncProfileStep.authorizeBackend) {
+      unawaited(checkBackendAuthorization());
     }
   }
 

@@ -31,11 +31,15 @@ class FirebaseBackendAuthorizationService
     try {
       await FirebaseFunctions.instance.httpsCallable('authorize_backend').call({
         'provider': providerAccount.provider.name,
+        'providerAccountId': providerAccount.providerAccountId,
         'authCode': authCode,
         'redirectUri': redirectUri,
       });
     } on FirebaseFunctionsException catch (e) {
       log('Error authorizing backend: ${e.code}, ${e.details}, ${e.message}');
+      if (e.message != null && e.message!.contains('ProviderUserIdMismatch')) {
+        throw ProviderUserIdMismatchException();
+      }
       rethrow;
     }
   }

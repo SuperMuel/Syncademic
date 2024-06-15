@@ -17,10 +17,6 @@ class GoogleAuthorizationServiceImpl implements AuthorizationService {
           "User not logged in. Authorization code cannot be retrieved.");
     }
 
-    if (currentUser.id != providerAccountId) {
-      throw UserIdMismatchException();
-    }
-
     return currentUser.serverAuthCode;
   }
 }

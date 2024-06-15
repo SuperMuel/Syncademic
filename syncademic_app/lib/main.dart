@@ -5,6 +5,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis/calendar/v3.dart' as gcal_api;
+import 'package:syncademic_app/services/provider_account_service.dart';
 import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'authorization/firebase_backend_authorization_service.dart';
@@ -21,7 +24,6 @@ import 'screens/account/account_page.dart';
 import 'screens/landing_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
-import 'screens/new_sync_profile/target_calendar_selector/target_calendar_selector_cubit.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'screens/sync_profile/sync_profile_page.dart';
 import 'services/account_service.dart';
@@ -41,6 +43,12 @@ void main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  final googleSignIn = GoogleSignIn(
+    clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
+    forceCodeForRefreshToken: true,
+    scopes: [gcal_api.CalendarApi.calendarScope],
   );
 
   getIt.registerSingleton<SyncProfileRepository>(
@@ -64,7 +72,7 @@ void main() async {
 
   getIt.registerSingleton<AuthorizationService>(
     // MockAuthorizationService(),
-    GoogleAuthorizationService(),
+    GoogleAuthorizationService(googleSignIn: googleSignIn),
   );
 
   getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
@@ -82,6 +90,11 @@ void main() async {
   getIt.registerSingleton<TargetCalendarRepository>(
     //MockTargetCalendarRepository(),
     GoogleTargetCalendarRepository(),
+  );
+
+  getIt.registerSingleton<ProviderAccountService>(
+    //MockProviderAccountService(),
+    GoogleProviderAccountService(googleSignIn: googleSignIn),
   );
 
   runApp(const MyApp());
@@ -129,11 +142,8 @@ final _router = GoRouter(
     GoRoute(
         path: '/new-sync-profile',
         builder: (_, __) {
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(create: (_) => NewSyncProfileCubit()),
-              BlocProvider(create: (_) => TargetCalendarSelectorCubit()),
-            ],
+          return BlocProvider(
+            create: (_) => NewSyncProfileCubit(),
             child: const NewSyncProfilePage(),
           );
         }),

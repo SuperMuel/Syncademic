@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import '../../widgets/provider_account_card.dart';
 
 import '../../models/target_calendar.dart';
 import '../../widgets/target_calendar_card.dart';
@@ -11,28 +12,40 @@ import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 class NewSyncProfilePage extends StatelessWidget {
   const NewSyncProfilePage({super.key});
 
+  void showSnackBar(BuildContext context, String message,
+          {bool error = false, bool success = false}) =>
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(message),
+          backgroundColor: error
+              ? Colors.red
+              : success
+                  ? Colors.green
+                  : null,
+          duration: const Duration(seconds: 5),
+        ));
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
       listener: (context, state) {
+        //TODO : when going back or forth one step, the error message is shown again. Fix this.
+
         if (state.submittedSuccessfully) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(const SnackBar(
-              content: Text('Synchronization created'),
-              backgroundColor: Colors.green,
-            ));
-          return;
+          return showSnackBar(context, 'Synchronization created',
+              success: true);
         }
 
+        if (state.providerAccountError != null) {
+          showSnackBar(context, state.providerAccountError!, error: true);
+        }
+        if (state.backendAuthorizationError != null) {
+          showSnackBar(context, state.backendAuthorizationError!, error: true);
+        }
         if (state.submitError != null) {
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              content: Text('Error: ${state.submitError}'),
-              backgroundColor: Colors.red,
-            ));
+          showSnackBar(context, state.submitError!, error: true);
         }
       },
       builder: (context, state) => Scaffold(
@@ -40,7 +53,7 @@ class NewSyncProfilePage extends StatelessWidget {
           title: const Text('New synchronization'),
         ),
         body: Stepper(
-          currentStep: state.currentStep,
+          currentStep: state.currentStep.index,
           onStepContinue: state.canContinue
               ? context.read<NewSyncProfileCubit>().next
               : null,
@@ -63,15 +76,19 @@ class NewSyncProfilePage extends StatelessWidget {
               ),
             ),
             Step(
+              title: Text("Select your Google account"),
+              content: ProviderAccountStepContent(),
+            ),
+            Step(
+              title: Text('Grant Syncademic Permissions'),
+              content: BackendAuthorizationStepContent(),
+            ),
+            Step(
               title: Text('Select your Google Calendar'),
               content: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: TargetCalendarStepContent(),
               ),
-            ),
-            Step(
-              title: Text('Grant Syncademic Permissions'),
-              content: BackendAuthorizationStepContent(),
             ),
             Step(
               title: Text('Summary'),
@@ -135,16 +152,121 @@ class UrlStepContent extends StatelessWidget {
   }
 }
 
+class ProviderAccountStepContent extends StatelessWidget {
+  const ProviderAccountStepContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+      builder: (context, state) {
+        //TODO show errors
+
+        if (state.providerAccount == null) {
+          return Column(
+            children: [
+              TextButton(
+                onPressed:
+                    context.read<NewSyncProfileCubit>().pickProviderAccount,
+                child: const Text('Select your Google Account'),
+              ),
+            ],
+          );
+        } else {
+          return Stack(
+            alignment: Alignment.centerRight,
+            children: [
+              ProviderAccountCard(providerAccount: state.providerAccount!),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed:
+                    context.read<NewSyncProfileCubit>().resetProviderAccount,
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+}
+
+class AuthorizationStatusIndicator extends StatelessWidget {
+  const AuthorizationStatusIndicator({super.key, required this.status});
+
+  final BackendAuthorizationStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (status) {
+      BackendAuthorizationStatus.checking => const Column(
+          children: [
+            Text('Checking authorization...'),
+            Gap(8),
+            CircularProgressIndicator(),
+          ],
+        ),
+      BackendAuthorizationStatus.notAuthorized => ElevatedButton.icon(
+          onPressed: context.read<NewSyncProfileCubit>().authorizeBackend,
+          icon: const Icon(Icons.lock_open),
+          label: const Text('Authorize Syncademic'),
+        ),
+      BackendAuthorizationStatus.authorizing => const Column(
+          children: [
+            Text('Authorization in progress...'),
+            Gap(8),
+            CircularProgressIndicator(),
+          ],
+        ),
+      BackendAuthorizationStatus.authorized => const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            Gap(8),
+            Text('Authorization successful'),
+          ],
+        )
+    };
+  }
+}
+
+class BackendAuthorizationStepContent extends StatelessWidget {
+  const BackendAuthorizationStepContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            const Text(
+              'To synchronize your schedule, Syncademic needs to access your Google Calendar.', //TODO : put this in info box
+            ),
+            //TODO : show the current account selected
+            const Gap(16),
+            AuthorizationStatusIndicator(
+                status: state.backendAuthorizationStatus),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class TargetCalendarStepContent extends StatelessWidget {
   const TargetCalendarStepContent({super.key});
 
   void _openCalendarSelector(BuildContext context) async {
     final cubit = context.read<NewSyncProfileCubit>();
+    final providerAccount = cubit.state.providerAccount;
+
+    if (providerAccount == null) {
+      throw StateError(
+          'Provider account should not be null when selecting a calendar.');
+    }
+
     final selectedCalendar = await showDialog<TargetCalendar?>(
       context: context,
       builder: (_) => Dialog(
         child: BlocProvider(
-          create: (_) => TargetCalendarSelectorCubit(),
+          create: (_) => TargetCalendarSelectorCubit(providerAccount)..init(),
           child: const Padding(
             padding: EdgeInsets.all(8.0),
             child: TargetCalendarSelector(),
@@ -229,54 +351,6 @@ class TargetCalendarStepContent extends StatelessWidget {
                 label: const Text('Select target calendar'),
               ),
           ],
-        );
-      },
-    );
-  }
-}
-
-class BackendAuthorizationStepContent extends StatelessWidget {
-  const BackendAuthorizationStepContent({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
-      builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'To synchronize your schedule, Syncademic needs to access your Google Calendar.',
-              ),
-              const Gap(16),
-              state.hasAuthorizedBackend
-                  ? const Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green),
-                        Gap(8),
-                        Text('Authorization successful'),
-                      ],
-                    )
-                  : ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.all(24.0)),
-                      onPressed: state.isAuthorizingBackend
-                          ? null
-                          : context
-                              .read<NewSyncProfileCubit>()
-                              .authorizeBackend,
-                      icon: state.isAuthorizingBackend
-                          ? const CircularProgressIndicator(strokeWidth: 2)
-                          : const Icon(Icons.lock_open),
-                      label: Text(
-                        'Authorize Syncademic',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-            ],
-          ),
         );
       },
     );

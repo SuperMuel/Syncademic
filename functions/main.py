@@ -51,20 +51,13 @@ CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
 
-def get_calendar_service(user_id: str, sync_profile_id: str):
+def get_calendar_service(user_id: str, provider_account_id: str):
+    if not user_id:
+        raise ValueError("User ID is required")
+    if not provider_account_id:
+        raise ValueError("Provider account ID is required")
+
     db = firestore.client()
-
-    sync_profile = (
-        db.collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    ).get()
-
-    if not sync_profile.exists:
-        raise ValueError("Sync profile not found")
-
-    provider_account_id = sync_profile.get("targetCalendar.providerAccountId")
 
     backend_authorization = (
         db.collection("backendAuthorizations")
@@ -88,6 +81,116 @@ def get_calendar_service(user_id: str, sync_profile_id: str):
     service = build("calendar", "v3", credentials=credentials)
 
     return service
+
+
+@https_fn.on_call()
+def list_user_calendars(req: https_fn.CallableRequest) -> dict:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    user_id = req.auth.uid
+
+    # Fetch provider_account_id from user's sync profile or frontend request
+    provider_account_id = req.data.get("providerAccountId")
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
+    try:
+        service = get_calendar_service(user_id, provider_account_id)
+    except Exception as e:
+        logger.error(f"Failed to get calendar service: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to get calendar service: {e}"
+        )
+
+    try:
+        # TODO : move this to GoogleCalendarManager, and handle pagination
+        calendars_result = service.calendarList().list().execute()
+        calendars = calendars_result.get("items", [])
+
+        return {"calendars": calendars}
+    except Exception as e:
+        logger.error(f"Failed to list calendars: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to list calendars: {e}"
+        )
+
+
+@https_fn.on_call()
+def is_authorized(req: https_fn.CallableRequest) -> dict:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    user_id = req.auth.uid
+
+    provider_account_id = req.data.get("providerAccountId")
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
+    db = firestore.client()
+
+    backend_authorization = (
+        db.collection("backendAuthorizations")
+        .document(user_id + provider_account_id)
+        .get()
+    )
+
+    if not backend_authorization.exists:
+        return {"authorized": False}
+
+    # TODO : Check if the access token is still valid
+
+    return {"authorized": True}
+
+
+@https_fn.on_call()
+def create_new_calendar(req: https_fn.CallableRequest) -> dict:
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+        )
+
+    user_id = req.auth.uid
+
+    # Fetch provider_account_id from user's sync profile or frontend request
+    provider_account_id = req.data.get("providerAccountId")
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
+    try:
+        service = get_calendar_service(user_id, provider_account_id)
+    except Exception as e:
+        logger.error(f"Failed to get calendar service: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to get calendar service: {e}"
+        )
+
+    calendar_name = req.data.get("summary", "New Calendar")
+    calendar_description = req.data.get("description", "Created by Syncademic")
+    calendar_body = {
+        "summary": calendar_name,
+        "description": calendar_description,
+        # 'timeZone': 'UTC' # TODO : specify timeZone
+        # TODO : colorId
+    }
+
+    try:
+        return service.calendars().insert(body=calendar_body).execute()
+    except Exception as e:
+        logger.error(f"Failed to create calendar: {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to create calendar: {e}"
+        )
 
 
 @on_document_created(
@@ -201,7 +304,7 @@ def _synchronize_now(
     try:
         service = get_calendar_service(
             user_id=user_id,
-            sync_profile_id=sync_profile_id,
+            provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
     except Exception as e:
         sync_profile_ref.update(
@@ -252,7 +355,9 @@ def _synchronize_now(
 
 
 @https_fn.on_call(memory=options.MemoryOption.MB_512)
-def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
+def delete_sync_profile(
+    req: https_fn.CallableRequest,
+) -> Any:  # TODO : add 'force' argument
     if not req.auth:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
@@ -298,7 +403,7 @@ def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
     try:
         service = get_calendar_service(
             user_id=req.auth.uid,
-            sync_profile_id=sync_profile_id,
+            provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
     except Exception as e:
         logger.info(f"Failed to get calendar service: {e}. Skipping deletion")
@@ -372,6 +477,20 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid redirect URI"
         )
 
+    provider = request.data.get("provider")
+
+    if not provider or provider.lower() not in ["google"]:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid provider"
+        )
+
+    provider_account_id = request.data.get("providerAccountId")
+
+    if not provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
+        )
+
     user_id = request.auth.uid
 
     db = firestore.client()
@@ -437,16 +556,27 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
     google_user_id = id_info.get("sub")
     if not google_user_id:
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Google user ID not found"
+            https_fn.FunctionsErrorCode.INTERNAL,
+            "Oops. Say this to the developer: google_user_id not found in id_token",
+        )
+
+    # Check if the user is authorizing the backend on the correct google account
+    if google_user_id != provider_account_id:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.PERMISSION_DENIED,
+            "The authorized Google account does not match the providerAccountId (ProviderUserIdMismatch)",
         )
 
     access_token = credentials.token
     refresh_token = credentials.refresh_token
 
+    # TODO : separate into two collections : backendAuthorizations and providerAccounts
     db.collection("backendAuthorizations").document(user_id + google_user_id).set(
         {
             "userId": user_id,
+            "provider": "google",
             "providerAccountId": google_user_id,
+            "providerAccountEmail": id_info.get("email"),
             "accessToken": access_token,
             "refreshToken": refresh_token,
             "expirationDate": credentials.expiry,

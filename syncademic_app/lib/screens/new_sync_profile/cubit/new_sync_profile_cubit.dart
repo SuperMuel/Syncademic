@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
-import '../../../authorization/authorization_service.dart';
+import '../../../models/provider_account.dart';
+import '../../../services/provider_account_service.dart';
 import '../../../repositories/target_calendar_repository.dart';
 import '../../../authorization/backend_authorization_service.dart';
 import '../../../models/id.dart';
@@ -60,6 +64,39 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
+  void providerAccountSelected(ProviderAccount providerAccount) =>
+      emit(state.copyWith(
+        providerAccount: providerAccount,
+        providerAccountError: null,
+      ));
+
+  Future<void> pickProviderAccount() async {
+    await resetProviderAccount();
+
+    try {
+      final providerAccount = await GetIt.I<ProviderAccountService>()
+          .triggerProviderAccountSelection();
+      if (providerAccount == null) {
+        return emit(state.copyWith(
+          providerAccount: null,
+          providerAccountError: 'No provider account selected.',
+        ));
+      }
+
+      providerAccountSelected(providerAccount);
+    } catch (e) {
+      return emit(state.copyWith(
+        providerAccount: null,
+        providerAccountError: "Error selecting provider account: $e",
+      ));
+    }
+  }
+
+  Future<void> resetProviderAccount() async {
+    await GetIt.I<ProviderAccountService>().reset();
+    emit(state.copyWith(providerAccount: null, providerAccountError: null));
+  }
+
   void targetCalendarChoiceChanged(Set<TargetCalendarChoice> choice) {
     if (choice.length != 1) {
       throw ArgumentError('Exactly one choice must be selected');
@@ -75,63 +112,88 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   void authorizeBackend() async {
-    emit(state.copyWith(
-        isAuthorizingBackend: true,
-        backendAuthorizationError: null,
-        hasAuthorizedBackend: false));
-
-    try {
-      await GetIt.I<BackendAuthorizationService>().authorizeBackend();
-    } catch (e) {
-      emit(state.copyWith(
-        isAuthorizingBackend: false,
-        hasAuthorizedBackend: false,
-        backendAuthorizationError: e.toString(),
-      ));
-      return;
+    if (state.providerAccount == null) {
+      throw StateError('Provider account must be selected before authorizing');
     }
 
-    final providerAccountId = await GetIt.I<AuthorizationService>().userId;
-
-    if (providerAccountId == null) {
-      return emit(state.copyWith(
-        isAuthorizingBackend: false,
-        hasAuthorizedBackend: false,
-        backendAuthorizationError:
-            'Provider account ID is null. If this issue persists, please contact support.',
-      ));
-    }
-
-    _updateProviderAccountId(providerAccountId);
-
     emit(state.copyWith(
-      isAuthorizingBackend: false,
-      hasAuthorizedBackend: true,
+      backendAuthorizationStatus: BackendAuthorizationStatus.authorizing,
       backendAuthorizationError: null,
     ));
-  }
 
-  /// This method is called when the user has successfully authorized the backend, and we have the providerAccountId.
-  void _updateProviderAccountId(String providerAccountId) {
+    try {
+      await GetIt.I<BackendAuthorizationService>()
+          .authorizeBackend(state.providerAccount!);
+      //TODO : handle UserIdMismatchException
+    } on ProviderUserIdMismatchException {
+      return emit(state.copyWith(
+        backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,
+        backendAuthorizationError:
+            'You might have selected the wrong account in the authorization popup. Please try again using your ${state.providerAccount?.providerAccountEmail} account.',
+      ));
+    } catch (e) {
+      return emit(state.copyWith(
+        backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,
+        backendAuthorizationError: e.toString(),
+      ));
+    }
+
     emit(state.copyWith(
-      existingCalendarSelected: state.existingCalendarSelected?.copyWith(
-        providerAccountId: providerAccountId,
-      ),
-      newCalendarCreated: state.newCalendarCreated?.copyWith(
-        providerAccountId: providerAccountId,
-      ),
+      backendAuthorizationStatus: BackendAuthorizationStatus.authorized,
+      backendAuthorizationError: null,
     ));
   }
 
   void next() {
     if (state.canContinue) {
-      emit(state.copyWith(currentStep: state.currentStep + 1));
+      emit(state.copyWith(currentStep: state.currentStep.next));
+    }
+
+    if (state.currentStep == NewSyncProfileStep.authorizeBackend) {
+      unawaited(checkBackendAuthorization());
+    }
+  }
+
+  Future<void> checkBackendAuthorization() async {
+    log("Checking backend authorization");
+    final providerAccount = state.providerAccount;
+
+    if (providerAccount == null) {
+      throw StateError('Provider account must be selected before authorizing');
+    }
+
+    emit(state.copyWith(
+      backendAuthorizationStatus: BackendAuthorizationStatus.checking,
+      backendAuthorizationError: null,
+    ));
+
+    try {
+      final isAuthorized = await GetIt.I<BackendAuthorizationService>()
+          .isAuthorized(providerAccount);
+
+      log("Backend is authorized: $isAuthorized");
+
+      return emit(state.copyWith(
+        backendAuthorizationStatus: isAuthorized
+            ? BackendAuthorizationStatus.authorized
+            : BackendAuthorizationStatus.notAuthorized,
+        backendAuthorizationError: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,
+        backendAuthorizationError: e.toString(),
+      ));
     }
   }
 
   void previous() {
     if (state.canGoBack) {
-      emit(state.copyWith(currentStep: state.currentStep - 1));
+      emit(state.copyWith(currentStep: state.currentStep.previous));
+    }
+
+    if (state.currentStep == NewSyncProfileStep.authorizeBackend) {
+      unawaited(checkBackendAuthorization());
     }
   }
 
@@ -149,8 +211,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     late TargetCalendar targetCalendar;
     if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
       try {
-        targetCalendar = await GetIt.I<TargetCalendarRepository>()
-            .createCalendar(state.newCalendarCreated!);
+        targetCalendar = await GetIt.I<TargetCalendarRepository>().createCalendar(
+            state.providerAccount!.providerAccountId,
+            state
+                .newCalendarCreated!); //TODO : move the creation responsability to the backend
       } catch (e) {
         return emit(
             state.copyWith(submitError: e.toString(), isSubmitting: false));

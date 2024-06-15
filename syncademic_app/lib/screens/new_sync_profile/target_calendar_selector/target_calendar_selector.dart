@@ -15,47 +15,20 @@ class TargetCalendarSelector extends StatelessWidget {
       ),
       body: Center(
         child: BlocBuilder<TargetCalendarSelectorCubit,
-            TargetCalendarSelectorState>(
-          builder: (context, state) {
-            switch (state.authorizationStatus) {
-              case AuthorizationStatus.unauthorized:
-                return const _UnauthorizedBody();
-              case AuthorizationStatus.authorizing:
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              case AuthorizationStatus.authorized:
-                return TargetCalendarList(calendars: state.calendars);
-            }
-          },
-        ),
+            TargetCalendarSelectorState>(builder: (context, state) {
+          if (state.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.error != null) {
+            return Center(
+              child: Text(state.error!),
+            );
+          }
+
+          return TargetCalendarList(calendars: state.calendars);
+        }),
       ),
-    );
-  }
-}
-
-class _UnauthorizedBody extends StatelessWidget {
-  const _UnauthorizedBody();
-
-  //TODO : on initial load, check if the user is already authorized and skip this screen if so
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        const Text(
-          'You need to authorize Syncademic to access your calendars',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton.icon(
-          icon: const Icon(Icons.lock_open),
-          onPressed: context.read<TargetCalendarSelectorCubit>().authorize,
-          label: const Text('Authorize'),
-        ),
-      ],
     );
   }
 }

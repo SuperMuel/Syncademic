@@ -16,8 +16,8 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$TargetCalendarSelectorState {
-  AuthorizationStatus get authorizationStatus =>
-      throw _privateConstructorUsedError;
+  dynamic get loading => throw _privateConstructorUsedError;
+  String? get error => throw _privateConstructorUsedError;
   List<TargetCalendar> get calendars => throw _privateConstructorUsedError;
   TargetCalendar? get selected => throw _privateConstructorUsedError;
 
@@ -35,7 +35,8 @@ abstract class $TargetCalendarSelectorStateCopyWith<$Res> {
           TargetCalendarSelectorState>;
   @useResult
   $Res call(
-      {AuthorizationStatus authorizationStatus,
+      {dynamic loading,
+      String? error,
       List<TargetCalendar> calendars,
       TargetCalendar? selected});
 
@@ -56,15 +57,20 @@ class _$TargetCalendarSelectorStateCopyWithImpl<$Res,
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? authorizationStatus = null,
+    Object? loading = freezed,
+    Object? error = freezed,
     Object? calendars = null,
     Object? selected = freezed,
   }) {
     return _then(_value.copyWith(
-      authorizationStatus: null == authorizationStatus
-          ? _value.authorizationStatus
-          : authorizationStatus // ignore: cast_nullable_to_non_nullable
-              as AuthorizationStatus,
+      loading: freezed == loading
+          ? _value.loading
+          : loading // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      error: freezed == error
+          ? _value.error
+          : error // ignore: cast_nullable_to_non_nullable
+              as String?,
       calendars: null == calendars
           ? _value.calendars
           : calendars // ignore: cast_nullable_to_non_nullable
@@ -99,7 +105,8 @@ abstract class _$$TargetCalendarSelectorStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {AuthorizationStatus authorizationStatus,
+      {dynamic loading,
+      String? error,
       List<TargetCalendar> calendars,
       TargetCalendar? selected});
 
@@ -120,15 +127,17 @@ class __$$TargetCalendarSelectorStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? authorizationStatus = null,
+    Object? loading = freezed,
+    Object? error = freezed,
     Object? calendars = null,
     Object? selected = freezed,
   }) {
     return _then(_$TargetCalendarSelectorStateImpl(
-      authorizationStatus: null == authorizationStatus
-          ? _value.authorizationStatus
-          : authorizationStatus // ignore: cast_nullable_to_non_nullable
-              as AuthorizationStatus,
+      loading: freezed == loading ? _value.loading! : loading,
+      error: freezed == error
+          ? _value.error
+          : error // ignore: cast_nullable_to_non_nullable
+              as String?,
       calendars: null == calendars
           ? _value._calendars
           : calendars // ignore: cast_nullable_to_non_nullable
@@ -146,14 +155,17 @@ class __$$TargetCalendarSelectorStateImplCopyWithImpl<$Res>
 class _$TargetCalendarSelectorStateImpl
     implements _TargetCalendarSelectorState {
   const _$TargetCalendarSelectorStateImpl(
-      {this.authorizationStatus = AuthorizationStatus.unauthorized,
+      {this.loading = true,
+      this.error,
       final List<TargetCalendar> calendars = const [],
       this.selected})
       : _calendars = calendars;
 
   @override
   @JsonKey()
-  final AuthorizationStatus authorizationStatus;
+  final dynamic loading;
+  @override
+  final String? error;
   final List<TargetCalendar> _calendars;
   @override
   @JsonKey()
@@ -168,7 +180,7 @@ class _$TargetCalendarSelectorStateImpl
 
   @override
   String toString() {
-    return 'TargetCalendarSelectorState(authorizationStatus: $authorizationStatus, calendars: $calendars, selected: $selected)';
+    return 'TargetCalendarSelectorState(loading: $loading, error: $error, calendars: $calendars, selected: $selected)';
   }
 
   @override
@@ -176,8 +188,8 @@ class _$TargetCalendarSelectorStateImpl
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$TargetCalendarSelectorStateImpl &&
-            (identical(other.authorizationStatus, authorizationStatus) ||
-                other.authorizationStatus == authorizationStatus) &&
+            const DeepCollectionEquality().equals(other.loading, loading) &&
+            (identical(other.error, error) || other.error == error) &&
             const DeepCollectionEquality()
                 .equals(other._calendars, _calendars) &&
             (identical(other.selected, selected) ||
@@ -185,8 +197,12 @@ class _$TargetCalendarSelectorStateImpl
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, authorizationStatus,
-      const DeepCollectionEquality().hash(_calendars), selected);
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(loading),
+      error,
+      const DeepCollectionEquality().hash(_calendars),
+      selected);
 
   @JsonKey(ignore: true)
   @override
@@ -199,12 +215,15 @@ class _$TargetCalendarSelectorStateImpl
 abstract class _TargetCalendarSelectorState
     implements TargetCalendarSelectorState {
   const factory _TargetCalendarSelectorState(
-      {final AuthorizationStatus authorizationStatus,
+      {final dynamic loading,
+      final String? error,
       final List<TargetCalendar> calendars,
       final TargetCalendar? selected}) = _$TargetCalendarSelectorStateImpl;
 
   @override
-  AuthorizationStatus get authorizationStatus;
+  dynamic get loading;
+  @override
+  String? get error;
   @override
   List<TargetCalendar> get calendars;
   @override

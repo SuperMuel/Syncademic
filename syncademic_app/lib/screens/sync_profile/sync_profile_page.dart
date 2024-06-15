@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/schedule_source_card.dart';
@@ -8,7 +7,6 @@ import '../../widgets/sync_profile_status_card.dart';
 import '../../widgets/target_calendar_card.dart';
 
 import '../../models/sync_profile.dart';
-import '../../repositories/sync_profile_repository.dart';
 import 'cubit/sync_profile_cubit.dart';
 
 class SyncProfilePage extends StatelessWidget {

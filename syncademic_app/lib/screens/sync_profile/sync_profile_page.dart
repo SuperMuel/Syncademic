@@ -36,9 +36,36 @@ class SyncProfilePage extends StatelessWidget {
                     ),
                   );
               }
+
+              if (loaded.confirmingDeletion) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Sync Profile'),
+                    content: const Text(
+                        'Are you sure you want to delete this synchronization profile?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.read<SyncProfileCubit>().cancelDeletion();
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.read<SyncProfileCubit>().confirmDeletion();
+                        },
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+              }
             },
-            deleted: (value) {
-              context.pop();
+            deleted: (_) {
               ScaffoldMessenger.of(context)
                 ..clearSnackBars()
                 ..showSnackBar(
@@ -46,6 +73,7 @@ class SyncProfilePage extends StatelessWidget {
                     content: Text('Sync Profile deleted'),
                   ),
                 );
+              context.pop();
             },
             orElse: () {},
           );
@@ -90,7 +118,7 @@ extension on SyncProfileState {
             icon: const Icon(Icons.delete),
             tooltip: "Delete this synchronization",
             onPressed: state.canDelete
-                ? context.read<SyncProfileCubit>().deleteSyncProfile
+                ? context.read<SyncProfileCubit>().requestDeletion
                 : null,
           ),
         ],

@@ -19,8 +19,13 @@ mixin _$SyncProfileState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)
+    required TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)
         loaded,
     required TResult Function() notFound,
     required TResult Function() deleted,
@@ -29,8 +34,13 @@ mixin _$SyncProfileState {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult? Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult? Function()? notFound,
     TResult? Function()? deleted,
@@ -39,8 +49,13 @@ mixin _$SyncProfileState {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult Function()? notFound,
     TResult Function()? deleted,
@@ -131,8 +146,13 @@ class _$LoadingImpl extends _Loading {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)
+    required TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)
         loaded,
     required TResult Function() notFound,
     required TResult Function() deleted,
@@ -144,8 +164,13 @@ class _$LoadingImpl extends _Loading {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult? Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult? Function()? notFound,
     TResult? Function()? deleted,
@@ -157,8 +182,13 @@ class _$LoadingImpl extends _Loading {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult Function()? notFound,
     TResult Function()? deleted,
@@ -223,6 +253,7 @@ abstract class _$$LoadedImplCopyWith<$Res> {
       {SyncProfile syncProfile,
       String? requestSyncError,
       DateTime? lastSyncRequest,
+      bool confirmingDeletion,
       bool isDeleting,
       String? deletionError});
 
@@ -243,6 +274,7 @@ class __$$LoadedImplCopyWithImpl<$Res>
     Object? syncProfile = null,
     Object? requestSyncError = freezed,
     Object? lastSyncRequest = freezed,
+    Object? confirmingDeletion = null,
     Object? isDeleting = null,
     Object? deletionError = freezed,
   }) {
@@ -259,6 +291,10 @@ class __$$LoadedImplCopyWithImpl<$Res>
           ? _value.lastSyncRequest
           : lastSyncRequest // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      confirmingDeletion: null == confirmingDeletion
+          ? _value.confirmingDeletion
+          : confirmingDeletion // ignore: cast_nullable_to_non_nullable
+              as bool,
       isDeleting: null == isDeleting
           ? _value.isDeleting
           : isDeleting // ignore: cast_nullable_to_non_nullable
@@ -285,6 +321,7 @@ class _$LoadedImpl extends _Loaded {
   const _$LoadedImpl(this.syncProfile,
       {this.requestSyncError,
       this.lastSyncRequest,
+      this.confirmingDeletion = false,
       this.isDeleting = false,
       this.deletionError})
       : super._();
@@ -297,13 +334,16 @@ class _$LoadedImpl extends _Loaded {
   final DateTime? lastSyncRequest;
   @override
   @JsonKey()
+  final bool confirmingDeletion;
+  @override
+  @JsonKey()
   final bool isDeleting;
   @override
   final String? deletionError;
 
   @override
   String toString() {
-    return 'SyncProfileState.loaded(syncProfile: $syncProfile, requestSyncError: $requestSyncError, lastSyncRequest: $lastSyncRequest, isDeleting: $isDeleting, deletionError: $deletionError)';
+    return 'SyncProfileState.loaded(syncProfile: $syncProfile, requestSyncError: $requestSyncError, lastSyncRequest: $lastSyncRequest, confirmingDeletion: $confirmingDeletion, isDeleting: $isDeleting, deletionError: $deletionError)';
   }
 
   @override
@@ -317,6 +357,8 @@ class _$LoadedImpl extends _Loaded {
                 other.requestSyncError == requestSyncError) &&
             (identical(other.lastSyncRequest, lastSyncRequest) ||
                 other.lastSyncRequest == lastSyncRequest) &&
+            (identical(other.confirmingDeletion, confirmingDeletion) ||
+                other.confirmingDeletion == confirmingDeletion) &&
             (identical(other.isDeleting, isDeleting) ||
                 other.isDeleting == isDeleting) &&
             (identical(other.deletionError, deletionError) ||
@@ -325,7 +367,7 @@ class _$LoadedImpl extends _Loaded {
 
   @override
   int get hashCode => Object.hash(runtimeType, syncProfile, requestSyncError,
-      lastSyncRequest, isDeleting, deletionError);
+      lastSyncRequest, confirmingDeletion, isDeleting, deletionError);
 
   @JsonKey(ignore: true)
   @override
@@ -337,44 +379,59 @@ class _$LoadedImpl extends _Loaded {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)
+    required TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)
         loaded,
     required TResult Function() notFound,
     required TResult Function() deleted,
   }) {
-    return loaded(syncProfile, requestSyncError, lastSyncRequest, isDeleting,
-        deletionError);
+    return loaded(syncProfile, requestSyncError, lastSyncRequest,
+        confirmingDeletion, isDeleting, deletionError);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult? Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult? Function()? notFound,
     TResult? Function()? deleted,
   }) {
     return loaded?.call(syncProfile, requestSyncError, lastSyncRequest,
-        isDeleting, deletionError);
+        confirmingDeletion, isDeleting, deletionError);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult Function()? notFound,
     TResult Function()? deleted,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(syncProfile, requestSyncError, lastSyncRequest, isDeleting,
-          deletionError);
+      return loaded(syncProfile, requestSyncError, lastSyncRequest,
+          confirmingDeletion, isDeleting, deletionError);
     }
     return orElse();
   }
@@ -421,6 +478,7 @@ abstract class _Loaded extends SyncProfileState {
   const factory _Loaded(final SyncProfile syncProfile,
       {final String? requestSyncError,
       final DateTime? lastSyncRequest,
+      final bool confirmingDeletion,
       final bool isDeleting,
       final String? deletionError}) = _$LoadedImpl;
   const _Loaded._() : super._();
@@ -428,6 +486,7 @@ abstract class _Loaded extends SyncProfileState {
   SyncProfile get syncProfile;
   String? get requestSyncError;
   DateTime? get lastSyncRequest;
+  bool get confirmingDeletion;
   bool get isDeleting;
   String? get deletionError;
   @JsonKey(ignore: true)
@@ -474,8 +533,13 @@ class _$NotFoundImpl extends _NotFound {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)
+    required TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)
         loaded,
     required TResult Function() notFound,
     required TResult Function() deleted,
@@ -487,8 +551,13 @@ class _$NotFoundImpl extends _NotFound {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult? Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult? Function()? notFound,
     TResult? Function()? deleted,
@@ -500,8 +569,13 @@ class _$NotFoundImpl extends _NotFound {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult Function()? notFound,
     TResult Function()? deleted,
@@ -595,8 +669,13 @@ class _$DeletedImpl extends _Deleted {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() loading,
-    required TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)
+    required TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)
         loaded,
     required TResult Function() notFound,
     required TResult Function() deleted,
@@ -608,8 +687,13 @@ class _$DeletedImpl extends _Deleted {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? loading,
-    TResult? Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult? Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult? Function()? notFound,
     TResult? Function()? deleted,
@@ -621,8 +705,13 @@ class _$DeletedImpl extends _Deleted {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? loading,
-    TResult Function(SyncProfile syncProfile, String? requestSyncError,
-            DateTime? lastSyncRequest, bool isDeleting, String? deletionError)?
+    TResult Function(
+            SyncProfile syncProfile,
+            String? requestSyncError,
+            DateTime? lastSyncRequest,
+            bool confirmingDeletion,
+            bool isDeleting,
+            String? deletionError)?
         loaded,
     TResult Function()? notFound,
     TResult Function()? deleted,

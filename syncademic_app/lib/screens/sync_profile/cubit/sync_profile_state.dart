@@ -7,6 +7,7 @@ class SyncProfileState with _$SyncProfileState {
     SyncProfile syncProfile, {
     String? requestSyncError,
     DateTime? lastSyncRequest,
+    @Default(false) bool confirmingDeletion,
     @Default(false) bool isDeleting,
     String? deletionError,
   }) = _Loaded;

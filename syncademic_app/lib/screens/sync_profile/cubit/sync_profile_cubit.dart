@@ -61,14 +61,27 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
     }
   }
 
-  Future<void> authorizeBackend() {
-    throw UnimplementedError(); //TODO re-implement
-    // return GetIt.I<BackendAuthorizationService>().authorizeBackend();
+  void requestDeletion() {
+    state.maybeMap(
+      loaded: (loaded) => emit(loaded.copyWith(confirmingDeletion: true)),
+      orElse: () {},
+    );
   }
 
-  Future<void> deleteSyncProfile() async {
+  void cancelDeletion() {
     state.maybeMap(
-      loaded: (loaded) => emit(loaded.copyWith(isDeleting: true)),
+      loaded: (loaded) => emit(loaded.copyWith(confirmingDeletion: false)),
+      orElse: () {},
+    );
+  }
+
+  Future<void> confirmDeletion() async {
+    state.maybeMap(
+      loaded: (loaded) => emit(loaded.copyWith(
+        isDeleting: true,
+        confirmingDeletion: false,
+        deletionError: null,
+      )),
       orElse: () {},
     );
 

@@ -87,7 +87,6 @@ void main() async {
     // Production :
     FirebaseBackendAuthorizationService(
         redirectUri: dotenv.env['PRODUCTION_REDIRECT_URI']!),
-    FirebaseBackendAuthorizationService(),
   );
 
   getIt.registerSingleton<TargetCalendarRepository>(

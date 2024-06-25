@@ -1,2 +1,5 @@
-SYNCADEMIC_CLIENT_ID = '776699153814-fqlr8rl50mst6pco4eaf8cr881jkjdps.apps.googleusercontent.com'
-
+SYNCADEMIC_CLIENT_ID = (
+    "776699153814-fqlr8rl50mst6pco4eaf8cr881jkjdps.apps.googleusercontent.com"
+)
+LOCAL_REDIRECT_URI = "http://localhost:7357"
+PRODUCTION_REDIRECT_URI = "https://app.syncademic.io"

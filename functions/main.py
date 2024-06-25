@@ -50,6 +50,9 @@ initialize_app()
 CLIENT_ID = StringParam("CLIENT_ID")
 CLIENT_SECRET = StringParam("CLIENT_SECRET")
 
+LOCAL_REDIRECT_URI = StringParam("LOCAL_REDIRECT_URI")
+PRODUCTION_REDIRECT_URI = StringParam("PRODUCTION_REDIRECT_URI")
+
 
 def get_calendar_service(user_id: str, provider_account_id: str):
     if not user_id:
@@ -471,8 +474,8 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing authorization code"
         )
 
-    redirect_uri = request.data.get("redirectUri", "https://syncademic.io")
-    if redirect_uri not in ["https://syncademic.io", "http://localhost:7357"]:
+    redirect_uri = request.data.get("redirectUri", PRODUCTION_REDIRECT_URI)
+    if redirect_uri not in [PRODUCTION_REDIRECT_URI, LOCAL_REDIRECT_URI]:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid redirect URI"
         )

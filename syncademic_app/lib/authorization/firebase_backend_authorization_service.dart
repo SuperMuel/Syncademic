@@ -10,8 +10,7 @@ class FirebaseBackendAuthorizationService
     implements BackendAuthorizationService {
   final String redirectUri;
 
-  FirebaseBackendAuthorizationService(
-      {this.redirectUri = 'https://syncademic.io'});
+  FirebaseBackendAuthorizationService({required this.redirectUri});
 
   @override
   Future<void> authorizeBackend(ProviderAccount providerAccount) async {

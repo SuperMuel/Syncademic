@@ -81,9 +81,12 @@ void main() async {
     // MockBackendAuthorizationService(),
     //
     // Local :
-    // FirebaseBackendAuthorizationService(redirectUri: 'http://localhost:7357'),
+    // FirebaseBackendAuthorizationService(
+    //     redirectUri: dotenv.env['LOCAL_REDIRECT_URI']!),
     //
     // Production :
+    FirebaseBackendAuthorizationService(
+        redirectUri: dotenv.env['PRODUCTION_REDIRECT_URI']!),
     FirebaseBackendAuthorizationService(),
   );
 

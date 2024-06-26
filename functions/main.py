@@ -474,17 +474,21 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing authorization code"
         )
 
-    redirect_uri = request.data.get("redirectUri", PRODUCTION_REDIRECT_URI)
-    if redirect_uri not in [PRODUCTION_REDIRECT_URI, LOCAL_REDIRECT_URI]:
+    redirect_uri = request.data.get("redirectUri", PRODUCTION_REDIRECT_URI.value)
+    if redirect_uri not in [PRODUCTION_REDIRECT_URI.value, LOCAL_REDIRECT_URI.value]:
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid redirect URI"
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            f"{redirect_uri} is not a valid redirect URI.",
         )
 
     provider = request.data.get("provider")
 
-    if not provider or provider.lower() not in ["google"]:
+    supported_providers = ["google"]
+
+    if not provider or provider.lower() not in supported_providers:
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid provider"
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            f"Invalid provider. Supported providers are {supported_providers}",
         )
 
     provider_account_id = request.data.get("providerAccountId")
@@ -560,7 +564,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
     if not google_user_id:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
-            "Oops. Say this to the developer: google_user_id not found in id_token",
+            "google_user_id not found in id_token",
         )
 
     # Check if the user is authorizing the backend on the correct google account

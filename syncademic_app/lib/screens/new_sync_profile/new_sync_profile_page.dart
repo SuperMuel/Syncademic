@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import '../../widgets/provider_account_card.dart';
@@ -227,6 +229,38 @@ class AuthorizationStatusIndicator extends StatelessWidget {
   }
 }
 
+class _PolicyText extends StatelessWidget {
+  const _PolicyText();
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: TextSpan(
+        style: DefaultTextStyle.of(context).style,
+        children: <TextSpan>[
+          const TextSpan(
+            text:
+                "Syncademic's use and transfer to any other app of information received from Google APIs will adhere to ",
+          ),
+          TextSpan(
+            text: 'Google API Services User Data Policy',
+            style: const TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => launchUrl(Uri.parse(
+                  'https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes')),
+          ),
+          const TextSpan(
+            text: ', including the Limited Use requirements.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class BackendAuthorizationStepContent extends StatelessWidget {
   const BackendAuthorizationStepContent({super.key});
 
@@ -235,11 +269,14 @@ class BackendAuthorizationStepContent extends StatelessWidget {
     return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'To synchronize your schedule, Syncademic needs to access your Google Calendar.', //TODO : put this in info box
             ),
             //TODO : show the current account selected
+            const Gap(8),
+            const _PolicyText(),
             const Gap(16),
             AuthorizationStatusIndicator(
                 status: state.backendAuthorizationStatus),

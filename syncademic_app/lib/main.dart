@@ -7,7 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' as gcal_api;
-import 'package:syncademic_app/services/provider_account_service.dart';
+import 'services/provider_account_service.dart';
 import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'authorization/firebase_backend_authorization_service.dart';

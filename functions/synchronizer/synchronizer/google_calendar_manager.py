@@ -3,7 +3,9 @@ from typing import List, Optional, TypeAlias, Dict
 from .event import Event
 from itertools import islice
 import pytz
+import logging
 
+logger = logging.getLogger(__name__)
 
 ExtendedProperties: TypeAlias = Dict
 
@@ -42,7 +44,11 @@ class GoogleCalendarManager:
         return {"private": {"syncademic": sync_profile_id}}
 
     def create_events(self, events: List[Event], sync_profile_id: str) -> None:
-        for sublist in batched(events, 50):  # TODO : check maximum batch size
+        logger.info(f"Creating {len(events)} events.")
+
+        for i, sublist in enumerate(
+            batched(events, 50)
+        ):  # TODO : check maximum batch size
             batch = self.service.new_batch_http_request()
             for event in sublist:
                 google_event = self.event_to_google_event(
@@ -56,6 +62,7 @@ class GoogleCalendarManager:
                     )
                 )
             batch.execute()
+            logger.info(f"Inserted {i * 50 + len(sublist)}/{len(events)} events.")
 
     def get_events_ids_from_sync_profile(
         self,

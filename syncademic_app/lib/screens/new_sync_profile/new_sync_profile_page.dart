@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:syncademic_app/screens/new_sync_profile/google_sign_in_button/sign_in_button.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -166,10 +168,9 @@ class ProviderAccountStepContent extends StatelessWidget {
         if (state.providerAccount == null) {
           return Column(
             children: [
-              TextButton(
+              buildSignInButton(
                 onPressed:
                     context.read<NewSyncProfileCubit>().pickProviderAccount,
-                child: const Text('Select your Google Account'),
               ),
             ],
           );

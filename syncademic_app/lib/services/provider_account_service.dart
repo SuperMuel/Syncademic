@@ -13,6 +13,8 @@ abstract class ProviderAccountService {
   /// to [triggerProviderAccountSelection] will open the dialog instead
   /// of returning a cached value.
   Future<void> reset();
+
+  Stream<ProviderAccount?> get onCurrentUserChanged;
 }
 
 class MockProviderAccountService implements ProviderAccountService {
@@ -30,12 +32,34 @@ class MockProviderAccountService implements ProviderAccountService {
   Future<void> reset() async {
     await Future.delayed(const Duration(microseconds: 1));
   }
+
+  @override
+  Stream<ProviderAccount?> get onCurrentUserChanged =>
+      Stream.value(const ProviderAccount(
+        provider: Provider.google,
+        providerAccountId: 'mock-provider-account-id',
+        providerAccountEmail: 'info@syncademic.io',
+      ));
 }
 
 class GoogleProviderAccountService implements ProviderAccountService {
   final GoogleSignIn googleSignIn;
 
   GoogleProviderAccountService({required this.googleSignIn});
+
+  @override
+  Stream<ProviderAccount?> get onCurrentUserChanged =>
+      googleSignIn.onCurrentUserChanged.map((GoogleSignInAccount? account) {
+        if (account == null) {
+          return null;
+        }
+
+        return ProviderAccount(
+          provider: Provider.google,
+          providerAccountId: account.id,
+          providerAccountEmail: account.email,
+        );
+      });
 
   @override
   Future<ProviderAccount?> triggerProviderAccountSelection() async {

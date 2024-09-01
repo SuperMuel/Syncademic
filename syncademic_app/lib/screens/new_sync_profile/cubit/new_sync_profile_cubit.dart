@@ -20,7 +20,11 @@ part 'new_sync_profile_state.dart';
 part 'new_sync_profile_cubit.freezed.dart';
 
 class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
-  NewSyncProfileCubit() : super(const NewSyncProfileState());
+  NewSyncProfileCubit() : super(const NewSyncProfileState()) {
+    GetIt.I<ProviderAccountService>()
+        .onCurrentUserChanged
+        .listen(providerAccountSelected);
+  }
 
   void titleChanged(String title) {
     if (isBlank(title)) {
@@ -64,11 +68,19 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(url: url, urlError: null));
   }
 
-  void providerAccountSelected(ProviderAccount providerAccount) =>
-      emit(state.copyWith(
-        providerAccount: providerAccount,
-        providerAccountError: null,
+  Future<void> providerAccountSelected(ProviderAccount? providerAccount) async {
+    if (providerAccount == null) {
+      return emit(state.copyWith(
+        providerAccount: null,
+        providerAccountError: 'No provider account selected.',
       ));
+    }
+
+    emit(state.copyWith(
+      providerAccount: providerAccount,
+      providerAccountError: null,
+    ));
+  }
 
   Future<void> pickProviderAccount() async {
     await resetProviderAccount();
@@ -76,13 +88,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     try {
       final providerAccount = await GetIt.I<ProviderAccountService>()
           .triggerProviderAccountSelection();
-      if (providerAccount == null) {
-        return emit(state.copyWith(
-          providerAccount: null,
-          providerAccountError: 'No provider account selected.',
-        ));
-      }
-
       providerAccountSelected(providerAccount);
     } catch (e) {
       return emit(state.copyWith(

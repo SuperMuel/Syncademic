@@ -6,20 +6,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:googleapis/calendar/v3.dart' as gcal_api;
-import 'services/provider_account_service.dart';
-import 'repositories/google_target_calendar_repository.dart';
-import 'repositories/target_calendar_repository.dart';
-import 'authorization/firebase_backend_authorization_service.dart';
-import 'authorization/google_authorization/google_authorization_service.dart';
-import 'services/firebase_sync_profile_service.dart';
+import 'package:googleapis/calendar/v3.dart' show CalendarApi;
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
 import 'authorization/backend_authorization_service.dart';
+import 'authorization/firebase_backend_authorization_service.dart';
+import 'authorization/google_authorization/google_authorization_service.dart';
 import 'firebase_options.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
+import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/sync_profile_repository.dart';
+import 'repositories/target_calendar_repository.dart';
 import 'screens/account/account_page.dart';
 import 'screens/landing_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
@@ -29,10 +28,11 @@ import 'screens/sync_profile/sync_profile_page.dart';
 import 'services/account_service.dart';
 import 'services/auth_service.dart';
 import 'services/firebase_auth_service.dart';
+import 'services/firebase_sync_profile_service.dart';
 import 'services/firestore_account_service.dart';
+import 'services/provider_account_service.dart';
 import 'services/sync_profile_service.dart';
 import 'widgets/sync_profiles_list.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 void main() async {
   await dotenv.load(fileName: "dotenv");
@@ -48,7 +48,7 @@ void main() async {
   final googleSignIn = GoogleSignIn(
     clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
     forceCodeForRefreshToken: true,
-    scopes: [gcal_api.CalendarApi.calendarScope],
+    scopes: [CalendarApi.calendarScope],
   );
 
   getIt.registerSingleton<SyncProfileRepository>(
@@ -146,11 +146,23 @@ final _router = GoRouter(
         builder: (_, __) {
           return BlocProvider(
             create: (_) => NewSyncProfileCubit(),
+            // create: (_) => NewSyncProfileCubit()
+            //   ..titleChanged("test")
+            //   ..next()
+            //   ..urlChanged("https://www.google.com")
+            //   ..next(),
             child: const NewSyncProfilePage(),
           );
         }),
   ],
 );
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -169,23 +181,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
 class _HomeScreenState extends State<HomeScreen> {
   PackageInfo? packageInfo;
-
-  @override
-  void initState() {
-    super.initState();
-    PackageInfo.fromPlatform().then((value) => setState(() {
-          packageInfo = value;
-        }));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -234,5 +231,13 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('New synchronization profile'),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((value) => setState(() {
+          packageInfo = value;
+        }));
   }
 }

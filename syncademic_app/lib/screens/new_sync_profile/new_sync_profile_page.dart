@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:google_sign_in_web/web_only.dart' as google_sign_in_web;
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -166,11 +169,14 @@ class ProviderAccountStepContent extends StatelessWidget {
         if (state.providerAccount == null) {
           return Column(
             children: [
-              TextButton(
-                onPressed:
-                    context.read<NewSyncProfileCubit>().pickProviderAccount,
-                child: const Text('Select your Google Account'),
-              ),
+              kIsWeb
+                  ? google_sign_in_web.renderButton()
+                  : TextButton(
+                      onPressed: context
+                          .read<NewSyncProfileCubit>()
+                          .pickProviderAccount,
+                      child: const Text('Select your Google Account'),
+                    ),
             ],
           );
         } else {

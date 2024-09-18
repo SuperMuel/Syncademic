@@ -31,11 +31,15 @@ class SyncProfileState with _$SyncProfileState {
             // Synchronization is already in progress
             return false;
           }
+          if (loaded.isDeleting) {
+            return false;
+          }
           final lastSyncRequest = loaded.lastSyncRequest;
           if (lastSyncRequest == null) {
             return true;
           }
 
+          // Check if the last sync request was made at least [kMinSyncInterval] ago
           final diff = DateTime.now().difference(lastSyncRequest);
 
           return diff >= kMinSyncInterval;

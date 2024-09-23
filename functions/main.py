@@ -18,7 +18,7 @@ from firebase_functions.firestore_fn import (
 )
 from firebase_functions import options
 
-from firebase_admin import initialize_app, firestore
+from firebase_admin import initialize_app, firestore, storage
 from firebase_functions.params import StringParam
 
 from firebase_functions import https_fn, logger, scheduler_fn
@@ -324,11 +324,12 @@ def _synchronize_now(
 
     try:
         perform_synchronization(
-            syncProfileId=sync_profile_id,
-            icsSourceUrl=doc.get("scheduleSource.url"),
-            targetCalendarId=doc.get("targetCalendar.id"),
+            sync_profile_id=sync_profile_id,
+            ics_source_url=doc.get("scheduleSource.url"),
+            target_calendar_id=doc.get("targetCalendar.id"),
             service=service,
-            syncTrigger=sync_trigger,
+            sync_trigger=sync_trigger,
+            firebase_storage_bucket=storage.bucket(),
             middlewares=[TitlePrettifier, ExamPrettifier],
         )
     except Exception as e:

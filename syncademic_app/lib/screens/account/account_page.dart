@@ -68,13 +68,53 @@ class AccountPage extends StatelessWidget {
               ),
             ],
           ),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SelectableText('Id : ${user.id}'),
-                SelectableText('Email : ${user.email}'),
-              ],
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    "We don't know much about you...",
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 20),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width > 500
+                          ? 400
+                          : double.infinity,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            text:
+                                "We can only tell you that you signed up to Syncademic using your ",
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: user.email,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue),
+                              ),
+                              const TextSpan(
+                                text: " Google Account.",
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          "Note that you can synchronize your school time schedule to other google accounts, without creating another Syncademic account.",
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 
 import '../models/sync_profile.dart';
@@ -53,7 +50,7 @@ class _List extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Create a new Synchronization',
+              'Welcome to Syncademic!',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),

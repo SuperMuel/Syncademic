@@ -42,7 +42,7 @@ class AccountPage extends StatelessWidget {
                     builder: (context) => AlertDialog(
                       title: const Text('Delete account'),
                       content: const Text(
-                          "To delete your account, you'll have to send an email to info@syncademic.io. We'll delete your account shortly after receiving the email."),
+                          "To delete your account, you'll need to send an email to info@syncademic.io. We'll process the deletion after receiving your request."),
                       actions: [
                         TextButton(
                             onPressed: () => context.pop(),
@@ -75,7 +75,7 @@ class AccountPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Text(
-                    "We don't know much about you...",
+                    "We don't have too much information about you...",
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 20),
@@ -90,8 +90,7 @@ class AccountPage extends StatelessWidget {
                       children: [
                         Text.rich(
                           TextSpan(
-                            text:
-                                "We can only tell you that you signed up to Syncademic using your ",
+                            text: "You signed up for Syncademic using your ",
                             children: <TextSpan>[
                               TextSpan(
                                 text: user.email,
@@ -107,7 +106,7 @@ class AccountPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          "Note that you can synchronize your school time schedule to other google accounts, without creating another Syncademic account.",
+                          "Note that you can also synchronize your school schedule with other Google accounts without creating a new Syncademic account.",
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],

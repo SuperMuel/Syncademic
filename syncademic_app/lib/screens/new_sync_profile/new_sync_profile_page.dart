@@ -144,7 +144,8 @@ class UrlStepContent extends StatelessWidget {
           children: [
             TextFormField(
               decoration: InputDecoration(
-                labelText: 'Calendar url',
+                labelText: 'Time schedule url',
+                hintText: 'https://ade-outils.insa-lyon.fr/ADE-Cal:~...',
                 border: const OutlineInputBorder(),
                 counterText: '',
                 errorText: state.urlError,
@@ -162,10 +163,14 @@ class UrlStepContent extends StatelessWidget {
                 children: <TextSpan>[
                   TextSpan(
                     text: 'ADE Outils (insa-lyon.fr)',
-                    style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline, fontWeight: FontWeight.bold,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.bold,
                     ),
                     recognizer: TapGestureRecognizer()
-                      ..onTap = () => launchUrl(Uri.parse('https://ade-outils.insa-lyon.fr/ADE-iCal@2024-2025')),
+                      ..onTap = () => launchUrl(Uri.parse(
+                          'https://ade-outils.insa-lyon.fr/ADE-iCal@2024-2025')),
                   ),
                   const TextSpan(
                     text: '.',

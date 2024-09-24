@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:go_router/go_router.dart';
 import 'package:syncademic_app/screens/new_sync_profile/google_sign_in_button/sign_in_button.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -32,73 +33,98 @@ class NewSyncProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
-      listener: (context, state) {
-        //TODO : when going back or forth one step, the error message is shown again. Fix this.
-
-        if (state.submittedSuccessfully) {
-          Navigator.of(context).pop();
-          return showSnackBar(context, 'Synchronization created',
-              success: true);
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          return;
         }
-
-        if (state.providerAccountError != null) {
-          showSnackBar(context, state.providerAccountError!, error: true);
-        }
-        if (state.backendAuthorizationError != null) {
-          showSnackBar(context, state.backendAuthorizationError!, error: true);
-        }
-        if (state.submitError != null) {
-          showSnackBar(context, state.submitError!, error: true);
-        }
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Are you sure you want to exit?'),
+            actions: [
+              TextButton(
+                  onPressed: () => context.pop(), child: const Text('No')),
+              TextButton(
+                  onPressed: () {
+                    context.pop();
+                    context.pop();
+                  },
+                  child: const Text('Yes')),
+            ],
+          ),
+        );
       },
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(
-          title: const Text('New synchronization'),
-        ),
-        body: Stepper(
-          currentStep: state.currentStep.index,
-          onStepContinue: state.canContinue
-              ? context.read<NewSyncProfileCubit>().next
-              : null,
-          onStepCancel: state.canGoBack
-              ? context.read<NewSyncProfileCubit>().previous
-              : null,
-          steps: const [
-            Step(
-              title: Text('Give a title to your synchronization'),
-              content: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: TitleStepContent(),
+      child: BlocConsumer<NewSyncProfileCubit, NewSyncProfileState>(
+        listener: (context, state) {
+          //TODO : when going back or forth one step, the error message is shown again. Fix this.
+
+          if (state.submittedSuccessfully) {
+            Navigator.of(context).pop();
+            return showSnackBar(context, 'Synchronization created',
+                success: true);
+          }
+
+          if (state.providerAccountError != null) {
+            showSnackBar(context, state.providerAccountError!, error: true);
+          }
+          if (state.backendAuthorizationError != null) {
+            showSnackBar(context, state.backendAuthorizationError!,
+                error: true);
+          }
+          if (state.submitError != null) {
+            showSnackBar(context, state.submitError!, error: true);
+          }
+        },
+        builder: (context, state) => Scaffold(
+          appBar: AppBar(
+            title: const Text('New synchronization'),
+          ),
+          body: Stepper(
+            currentStep: state.currentStep.index,
+            onStepContinue: state.canContinue
+                ? context.read<NewSyncProfileCubit>().next
+                : null,
+            onStepCancel: state.canGoBack
+                ? context.read<NewSyncProfileCubit>().previous
+                : null,
+            steps: const [
+              Step(
+                title: Text('Give a title to your synchronization'),
+                content: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: TitleStepContent(),
+                ),
               ),
-            ),
-            Step(
-              title: Text('Provide your time schedule url'),
-              content: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: UrlStepContent(),
+              Step(
+                title: Text('Provide your time schedule url'),
+                content: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: UrlStepContent(),
+                ),
               ),
-            ),
-            Step(
-              title: Text("Select your Google account"),
-              content: ProviderAccountStepContent(),
-            ),
-            Step(
-              title: Text('Grant Syncademic Permissions'),
-              content: BackendAuthorizationStepContent(),
-            ),
-            Step(
-              title: Text('Select your Google Calendar'),
-              content: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: TargetCalendarStepContent(),
+              Step(
+                title: Text("Select your Google account"),
+                content: ProviderAccountStepContent(),
               ),
-            ),
-            Step(
-              title: Text('Summary'),
-              content: SummaryStepContent(),
-            )
-          ],
+              Step(
+                title: Text('Grant Syncademic Permissions'),
+                content: BackendAuthorizationStepContent(),
+              ),
+              Step(
+                title: Text('Select your Google Calendar'),
+                content: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: TargetCalendarStepContent(),
+                ),
+              ),
+              Step(
+                title: Text('Summary'),
+                content: SummaryStepContent(),
+              )
+            ],
+          ),
         ),
       ),
     );

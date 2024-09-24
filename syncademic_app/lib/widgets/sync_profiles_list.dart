@@ -60,9 +60,10 @@ class _List extends StatelessWidget {
             const SizedBox(height: 16),
             ConstrainedBox(
               constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width > 600
-                      ? 400
-                      : MediaQuery.of(context).size.width),
+                maxWidth: MediaQuery.of(context).size.width > 600
+                    ? 400
+                    : double.infinity,
+              ),
               child: Text(
                 'A Synchronization allows you to synchronize your university schedule with your Google Calendar. '
                 'Tap the button below to create one.',

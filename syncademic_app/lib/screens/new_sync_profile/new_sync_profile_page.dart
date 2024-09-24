@@ -139,17 +139,46 @@ class UrlStepContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
-        return TextFormField(
-          decoration: InputDecoration(
-            labelText: 'Calendar url',
-            border: const OutlineInputBorder(),
-            counterText: '',
-            errorText: state.urlError,
-          ),
-          initialValue: state.url,
-          maxLength: 4000,
-          onChanged: context.read<NewSyncProfileCubit>().urlChanged,
-          onEditingComplete: context.read<NewSyncProfileCubit>().next,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Time schedule url',
+                hintText: 'https://ade-outils.insa-lyon.fr/ADE-Cal:~...',
+                border: const OutlineInputBorder(),
+                counterText: '',
+                errorText: state.urlError,
+              ),
+              initialValue: state.url,
+              maxLength: 4000,
+              onChanged: context.read<NewSyncProfileCubit>().urlChanged,
+              onEditingComplete: context.read<NewSyncProfileCubit>().next,
+            ),
+            const SizedBox(height: 16),
+            RichText(
+              text: TextSpan(
+                text: 'Students from INSA Lyon can get their URL by visiting ',
+                style: const TextStyle(color: Colors.black),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: 'ADE Outils (insa-lyon.fr)',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => launchUrl(Uri.parse(
+                          'https://ade-outils.insa-lyon.fr/ADE-iCal@2024-2025')),
+                  ),
+                  const TextSpan(
+                    text: '.',
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );

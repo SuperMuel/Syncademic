@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 
 import '../models/sync_profile.dart';
@@ -34,17 +37,50 @@ class _List extends StatelessWidget {
   final List<SyncProfile> profiles;
   final void Function(SyncProfile)? onTap;
   const _List({required this.profiles, this.onTap});
-
-  Widget _emptyList() {
-    return const Center(
-      child: Text('No sync profiles found.'),
+  Widget _emptyList(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/illustrations/apple_devices_mockup_transparent_1600.png',
+              fit: BoxFit.cover,
+              width: MediaQuery.of(context).size.width > 600
+                  ? 400
+                  : MediaQuery.of(context).size.width,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Create a new Synchronization',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width > 600
+                    ? 400
+                    : double.infinity,
+              ),
+              child: Text(
+                'A Synchronization allows you to synchronize your university schedule with your Google Calendar. '
+                'Tap the button below to create one.',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return profiles.isEmpty
-        ? _emptyList()
+        ? _emptyList(context)
         : ListView.builder(
             itemCount: profiles.length,
             itemBuilder: (context, index) {

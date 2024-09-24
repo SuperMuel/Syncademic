@@ -50,7 +50,7 @@ class _List extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Create a new Synchronization',
+              'Welcome to Syncademic!',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),

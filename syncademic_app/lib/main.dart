@@ -228,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           context.push('/new-sync-profile');
         },
-        label: const Text('New synchronization profile'),
+        label: const Text('New Synchronization'),
       ),
     );
   }

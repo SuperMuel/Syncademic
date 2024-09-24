@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
@@ -42,27 +44,31 @@ class _List extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              'assets/icons/syncademic-icon.svg',
-              semanticsLabel: 'Syncademic logo',
-              colorFilter: const ColorFilter.mode(
-                  Color.fromARGB(255, 22, 49, 77), BlendMode.srcIn),
-              width: MediaQuery.of(context).size.width > 300
-                  ? MediaQuery.of(context).size.width / 2
-                  : 400,
+            Image.asset(
+              'assets/illustrations/apple_devices_mockup_transparent_1600.png',
+              fit: BoxFit.cover,
+              width: MediaQuery.of(context).size.width > 600
+                  ? 400
+                  : MediaQuery.of(context).size.width,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
             Text(
               'Create a new Synchronization',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            Text(
-              'A Synchronization allows you to synchronize your university schedule with your Google Calendar. '
-              'Tap the button below to create one.',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width > 600
+                      ? 400
+                      : MediaQuery.of(context).size.width),
+              child: Text(
+                'A Synchronization allows you to synchronize your university schedule with your Google Calendar. '
+                'Tap the button below to create one.',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),

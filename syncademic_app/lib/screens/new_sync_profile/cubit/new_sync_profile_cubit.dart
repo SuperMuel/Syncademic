@@ -202,6 +202,13 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     }
   }
 
+  void changeNewCalendarColor(GoogleCalendarColor? color) {
+    if (color == null) {
+      return;
+    }
+    emit(state.copyWith(targetCalendarColor: color));
+  }
+
   Future<void> submit() async {
     if (!state.canSubmit()) {
       return emit(state.copyWith(
@@ -217,9 +224,9 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
       try {
         targetCalendar = await GetIt.I<TargetCalendarRepository>().createCalendar(
-            state.providerAccount!.providerAccountId,
-            state
-                .newCalendarCreated!); //TODO : move the creation responsability to the backend
+            state.providerAccount!.providerAccountId, state.newCalendarCreated!,
+            color: state
+                .targetCalendarColor,); //TODO : move the creation responsability to the backend
       } catch (e) {
         return emit(
             state.copyWith(submitError: e.toString(), isSubmitting: false));

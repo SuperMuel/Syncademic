@@ -43,6 +43,7 @@ class NewSyncProfileState with _$NewSyncProfileState {
     String? backendAuthorizationError,
     @Default(TargetCalendarChoice.createNew)
     TargetCalendarChoice targetCalendarChoice,
+    @Default(GoogleCalendarColor.blue) GoogleCalendarColor targetCalendarColor,
     @Default(false) bool isSubmitting,
     String? submitError,
     @Default(false) bool submittedSuccessfully,

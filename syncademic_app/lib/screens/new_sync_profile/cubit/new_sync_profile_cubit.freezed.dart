@@ -31,6 +31,8 @@ mixin _$NewSyncProfileState {
   String? get backendAuthorizationError => throw _privateConstructorUsedError;
   TargetCalendarChoice get targetCalendarChoice =>
       throw _privateConstructorUsedError;
+  GoogleCalendarColor get targetCalendarColor =>
+      throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
   String? get submitError => throw _privateConstructorUsedError;
   bool get submittedSuccessfully => throw _privateConstructorUsedError;
@@ -59,6 +61,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       BackendAuthorizationStatus backendAuthorizationStatus,
       String? backendAuthorizationError,
       TargetCalendarChoice targetCalendarChoice,
+      GoogleCalendarColor targetCalendarColor,
       bool isSubmitting,
       String? submitError,
       bool submittedSuccessfully});
@@ -93,6 +96,7 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? backendAuthorizationStatus = null,
     Object? backendAuthorizationError = freezed,
     Object? targetCalendarChoice = null,
+    Object? targetCalendarColor = null,
     Object? isSubmitting = null,
     Object? submitError = freezed,
     Object? submittedSuccessfully = null,
@@ -146,6 +150,10 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.targetCalendarChoice
           : targetCalendarChoice // ignore: cast_nullable_to_non_nullable
               as TargetCalendarChoice,
+      targetCalendarColor: null == targetCalendarColor
+          ? _value.targetCalendarColor
+          : targetCalendarColor // ignore: cast_nullable_to_non_nullable
+              as GoogleCalendarColor,
       isSubmitting: null == isSubmitting
           ? _value.isSubmitting
           : isSubmitting // ignore: cast_nullable_to_non_nullable
@@ -220,6 +228,7 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       BackendAuthorizationStatus backendAuthorizationStatus,
       String? backendAuthorizationError,
       TargetCalendarChoice targetCalendarChoice,
+      GoogleCalendarColor targetCalendarColor,
       bool isSubmitting,
       String? submitError,
       bool submittedSuccessfully});
@@ -255,6 +264,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? backendAuthorizationStatus = null,
     Object? backendAuthorizationError = freezed,
     Object? targetCalendarChoice = null,
+    Object? targetCalendarColor = null,
     Object? isSubmitting = null,
     Object? submitError = freezed,
     Object? submittedSuccessfully = null,
@@ -308,6 +318,10 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.targetCalendarChoice
           : targetCalendarChoice // ignore: cast_nullable_to_non_nullable
               as TargetCalendarChoice,
+      targetCalendarColor: null == targetCalendarColor
+          ? _value.targetCalendarColor
+          : targetCalendarColor // ignore: cast_nullable_to_non_nullable
+              as GoogleCalendarColor,
       isSubmitting: null == isSubmitting
           ? _value.isSubmitting
           : isSubmitting // ignore: cast_nullable_to_non_nullable
@@ -341,6 +355,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
           BackendAuthorizationStatus.notAuthorized,
       this.backendAuthorizationError,
       this.targetCalendarChoice = TargetCalendarChoice.createNew,
+      this.targetCalendarColor = GoogleCalendarColor.blue,
       this.isSubmitting = false,
       this.submitError,
       this.submittedSuccessfully = false})
@@ -378,6 +393,9 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   final TargetCalendarChoice targetCalendarChoice;
   @override
   @JsonKey()
+  final GoogleCalendarColor targetCalendarColor;
+  @override
+  @JsonKey()
   final bool isSubmitting;
   @override
   final String? submitError;
@@ -387,7 +405,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   String toString() {
-    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, backendAuthorizationStatus: $backendAuthorizationStatus, backendAuthorizationError: $backendAuthorizationError, targetCalendarChoice: $targetCalendarChoice, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, backendAuthorizationStatus: $backendAuthorizationStatus, backendAuthorizationError: $backendAuthorizationError, targetCalendarChoice: $targetCalendarChoice, targetCalendarColor: $targetCalendarColor, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -421,6 +439,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
                 other.backendAuthorizationError == backendAuthorizationError) &&
             (identical(other.targetCalendarChoice, targetCalendarChoice) ||
                 other.targetCalendarChoice == targetCalendarChoice) &&
+            (identical(other.targetCalendarColor, targetCalendarColor) ||
+                other.targetCalendarColor == targetCalendarColor) &&
             (identical(other.isSubmitting, isSubmitting) ||
                 other.isSubmitting == isSubmitting) &&
             (identical(other.submitError, submitError) ||
@@ -444,6 +464,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       backendAuthorizationStatus,
       backendAuthorizationError,
       targetCalendarChoice,
+      targetCalendarColor,
       isSubmitting,
       submitError,
       submittedSuccessfully);
@@ -470,6 +491,7 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
       final BackendAuthorizationStatus backendAuthorizationStatus,
       final String? backendAuthorizationError,
       final TargetCalendarChoice targetCalendarChoice,
+      final GoogleCalendarColor targetCalendarColor,
       final bool isSubmitting,
       final String? submitError,
       final bool submittedSuccessfully}) = _$NewSyncProfileStateImpl;
@@ -499,6 +521,8 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   String? get backendAuthorizationError;
   @override
   TargetCalendarChoice get targetCalendarChoice;
+  @override
+  GoogleCalendarColor get targetCalendarColor;
   @override
   bool get isSubmitting;
   @override

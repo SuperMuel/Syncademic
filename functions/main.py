@@ -107,7 +107,7 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     except Exception as e:
         logger.error(f"Failed to get calendar service: {e}")
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to get calendar service: {e}"
+            https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
         )
 
     try:
@@ -119,7 +119,7 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     except Exception as e:
         logger.error(f"Failed to list calendars: {e}")
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to list calendars: {e}"
+            https_fn.FunctionsErrorCode.INTERNAL, "Failed to list calendars."
         )
 
 
@@ -163,7 +163,6 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
 
     user_id = req.auth.uid
 
-    # Fetch provider_account_id from user's sync profile or frontend request
     provider_account_id = req.data.get("providerAccountId")
     if not provider_account_id:
         raise https_fn.HttpsError(
@@ -187,7 +186,7 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     except Exception as e:
         logger.error(f"Failed to get calendar service: {e}")
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to get calendar service: {e}"
+            https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
         )
 
     calendar_name = req.data.get("summary", "New Calendar")
@@ -202,9 +201,10 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     except Exception as e:
         logger.error(f"Failed to create calendar: {e}")
         raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, f"Failed to create calendar: {e}"
+            https_fn.FunctionsErrorCode.INTERNAL, "Failed to create calendar."
         )
 
+    # Calendar color is a property of the calendar list entry, not the calendar itself
     if color_id is not None:
         try:
             service.calendarList().patch(
@@ -334,14 +334,17 @@ def _synchronize_now(
         sync_profile_ref.update(
             {
                 "status": {
-                    "type": "failed",  # TODO : Specify that it failed because of authorization
+                    "type": "failed",
                     "message": f"Autorization failed: {e}",
+                    # TODO : implement a way to re-authorize from the frontend
                     "syncTrigger": sync_trigger,
                 }
             }
         )
         logger.info(f"Failed to get calendar service: {e}")
         return
+
+    # TODO : handle the case where the ics source is not valid or not available
 
     try:
         perform_synchronization(
@@ -442,7 +445,7 @@ def delete_sync_profile(
         )
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
-            f"Authorization failed {e}",
+            "Authorization failed",
         )
 
     calendar_manager = GoogleCalendarManager(service, doc.get("targetCalendar.id"))
@@ -460,13 +463,13 @@ def delete_sync_profile(
             {
                 "status": {
                     "type": "deletionFailed",
-                    "message": f"Could not delete events: {e}",
+                    "message": "Could not delete events",
                 }
             }
         )
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
-            f"Failed to delete events: {e}",
+            "Failed to delete events",
         )
 
     sync_profile_ref.delete()
@@ -557,7 +560,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
         )
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
-            f"An error occurred while exchanging the authorization code: {str(e)}",
+            "An error occurred while exchanging the authorization code",
         )
 
     # The logged-in user (request.auth.uid) can authorize the backend on multiple google accounts.
@@ -577,9 +580,10 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
         )
 
     except Exception as e:
+        logger.error(f"An error occurred while verifying the ID token: {e}")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
-            f"An error occurred while verifying the ID token: {str(e)}",
+            "An error occurred while verifying the ID token",
         )
 
     google_user_id = id_info.get("sub")

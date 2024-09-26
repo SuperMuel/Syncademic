@@ -517,7 +517,10 @@ class SummaryStepContent extends StatelessWidget {
                     ? null
                     : context.read<NewSyncProfileCubit>().submit,
                 icon: state.isSubmitting
-                    ? const CircularProgressIndicator(strokeWidth: 2)
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.check),
                 label: const Text(
                   'Create synchronization',

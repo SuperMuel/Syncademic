@@ -36,7 +36,7 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
       'providerAccountId': providerAccountId,
       'summary': targetCalendar.title,
       'description': targetCalendar.description,
-      'colorId': color?.id,
+      'colorId': color == null ? null : int.parse(color.id),
     });
 
     return targetCalendar.copyWith(

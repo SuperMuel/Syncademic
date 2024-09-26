@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:syncademic_app/repositories/target_calendar_repository.dart';
 import 'package:syncademic_app/screens/new_sync_profile/google_sign_in_button/sign_in_button.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -344,6 +345,34 @@ class TargetCalendarStepContent extends StatelessWidget {
     cubit.selectExistingCalendar(selectedCalendar);
   }
 
+  Widget _buildColorSelector(
+      BuildContext context, GoogleCalendarColor defaultColor) {
+    // A dropdown that allows to select a color
+    return DropdownButton<GoogleCalendarColor>(
+      onChanged: context.read<NewSyncProfileCubit>().changeNewCalendarColor,
+      value: defaultColor,
+      isExpanded: true,
+      items: GoogleCalendarColor.values.map((color) {
+        return DropdownMenuItem<GoogleCalendarColor>(
+          value: color,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: color.color,
+                  maxRadius: 14,
+                ),
+                const Gap(8),
+                Text(color.name.capitalize()),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     //TODO : add explanations about what the calendar is used for
@@ -360,6 +389,7 @@ class TargetCalendarStepContent extends StatelessWidget {
       },
       builder: (context, state) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //TODO: add info box
             SegmentedButton<TargetCalendarChoice>(
@@ -410,6 +440,14 @@ class TargetCalendarStepContent extends StatelessWidget {
                     TargetCalendarChoice.useExisting,
               ),
             ],
+
+            if (state.targetCalendarChoice ==
+                TargetCalendarChoice.createNew) ...[
+              const Gap(16),
+              const Text("Calendar color :"),
+              _buildColorSelector(context, state.targetCalendarColor),
+            ],
+
             if (state.existingCalendarSelected == null &&
                 state.targetCalendarChoice == TargetCalendarChoice.useExisting)
               ElevatedButton.icon(
@@ -475,17 +513,18 @@ class SummaryStepContent extends StatelessWidget {
               ),
               const Gap(24),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(24.0)),
                 onPressed: state.isSubmitting
                     ? null
                     : context.read<NewSyncProfileCubit>().submit,
                 icon: state.isSubmitting
-                    ? const CircularProgressIndicator(strokeWidth: 2)
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.check),
-                label: Text(
+                label: const Text(
                   'Create synchronization',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -493,5 +532,11 @@ class SummaryStepContent extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }

@@ -170,6 +170,18 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
         )
 
+    # Validate colorId
+    color_id = req.data.get("colorId")
+    if (
+        color_id is not None
+        and not isinstance(color_id, int)
+        or not 1 <= color_id <= 25
+    ):
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            "Invalid colorId. Must be an integer between 1 and 25.",
+        )
+
     try:
         service = get_calendar_service(user_id, provider_account_id)
     except Exception as e:
@@ -183,17 +195,26 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     calendar_body = {
         "summary": calendar_name,
         "description": calendar_description,
-        # 'timeZone': 'UTC' # TODO : specify timeZone
-        # TODO : colorId
     }
 
     try:
-        return service.calendars().insert(body=calendar_body).execute()
+        result = service.calendars().insert(body=calendar_body).execute()
     except Exception as e:
         logger.error(f"Failed to create calendar: {e}")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL, f"Failed to create calendar: {e}"
         )
+
+    if color_id is not None:
+        try:
+            service.calendarList().patch(
+                calendarId=result.get("id"),
+                body={"colorId": color_id},
+            ).execute()
+        except Exception as e:
+            logger.error(f"Failed to patch calendar list entry: {e}")
+
+    return result
 
 
 @on_document_created(

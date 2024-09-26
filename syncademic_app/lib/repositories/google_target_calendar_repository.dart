@@ -28,13 +28,15 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<TargetCalendar> createCalendar(
-      String providerAccountId, TargetCalendar targetCalendar) async {
+      String providerAccountId, TargetCalendar targetCalendar,
+      {GoogleCalendarColor? color}) async {
     final result = await FirebaseFunctions.instance
         .httpsCallable('create_new_calendar')
         .call({
       'providerAccountId': providerAccountId,
       'summary': targetCalendar.title,
       'description': targetCalendar.description,
+      'colorId': color == null ? null : int.parse(color.id),
     });
 
     return targetCalendar.copyWith(

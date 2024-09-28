@@ -42,6 +42,7 @@ from synchronizer.synchronizer.middleware.insa_middleware import (
     Insa5IFMiddleware,
     TitlePrettifier,
     ExamPrettifier,
+    CM_TD_TP_Middleware,
 )
 
 
@@ -359,7 +360,12 @@ def _synchronize_now(
             service=service,
             sync_trigger=sync_trigger,
             firebase_storage_bucket=storage.bucket(),
-            middlewares=[TitlePrettifier, ExamPrettifier, Insa5IFMiddleware],
+            middlewares=[
+                TitlePrettifier,
+                ExamPrettifier,
+                Insa5IFMiddleware,
+                CM_TD_TP_Middleware,
+            ],
         )
     except Exception as e:
         sync_profile_ref.update(

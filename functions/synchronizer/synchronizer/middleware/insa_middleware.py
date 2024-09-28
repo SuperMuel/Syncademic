@@ -68,6 +68,19 @@ def _add_exam_emoji(event: Event) -> Event:
     return event
 
 
+def CM_TD_TP_Middleware(events: List[Event]) -> List[Event]:
+    def _edit_title(event: Event) -> Event:
+        if ":CM" in event.description:
+            return replace(event, title=f"CM - {event.title}")
+        elif ":TD" in event.description:
+            return replace(event, title=f"TD - {event.title}")
+        elif ":TP" in event.description:
+            return replace(event, title=f"TP - {event.title}")
+        return event
+
+    return [_edit_title(event) for event in events]
+
+
 def Insa5IFMiddleware(events: List[Event]) -> List[Event]:
     # if we are not in INSA 5IF, we don't apply the middleware
     # If "IF-5" is not in more than 50% of the descriptions, we don't apply the middleware

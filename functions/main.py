@@ -232,6 +232,10 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
 
     # TODO validate the document
 
+    # Add created_at field
+    sync_profile_ref = event.data.reference
+    sync_profile_ref.update({"created_at": firestore.firestore.SERVER_TIMESTAMP})
+
     _synchronize_now(
         event.params["userId"],
         event.params["syncProfileId"],

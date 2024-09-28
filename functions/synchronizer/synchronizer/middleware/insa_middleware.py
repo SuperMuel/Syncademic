@@ -115,6 +115,8 @@ def Insa5IFMiddleware(events: List[Event]) -> List[Event]:
             "Promo:EDT": GoogleEventColor.GRAPHITE,
             # Management d'équipe
             "EC-MAN": GoogleEventColor.SAGE,
+            # Séminaire Entreprises
+            "Séminaire Entreprises": GoogleEventColor.LAVENDER,
         }
         for key, value in COLORS_MAP.items():
             if key in event.description:
@@ -134,6 +136,21 @@ def Insa5IFMiddleware(events: List[Event]) -> List[Event]:
 
         if "Modélisation et simulation de systèmes" in event.description:
             return replace(event, title="Modélisation et simulation de systèmes")
+
+        if "Créneau Promo" in event.description:
+            """
+            [IF-5-S1~Promo:EDT] Créneau Promo
+            (SHS série 7)
+
+            IF:5:S1::Promo:EDT::5IF_S1_GR_CM
+
+            (Exporté le:28/09/2024 18:26)
+            """
+            # if the title is "Créneau Promo" we want to set the title to the second line of the description, the text
+            # between the first "(" and the first ")"
+            match = re.search(r"\((.*)\)", event.description)
+            if match is not None and match.group(1).strip() != "":
+                return replace(event, title=match.group(1).strip())
 
         return event
 

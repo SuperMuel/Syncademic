@@ -31,7 +31,7 @@ class GoogleCalendarManager:
         start_time_rfc3339 = event.start.format("YYYY-MM-DDTHH:mm:ssZZ")
         end_time_rfc3339 = event.end.format("YYYY-MM-DDTHH:mm:ssZZ")
 
-        return {
+        body = {
             "summary": event.title,
             "description": event.description,
             "start": {"dateTime": start_time_rfc3339},
@@ -40,7 +40,13 @@ class GoogleCalendarManager:
             "extendedProperties": extended_properties,
         }
 
+        if event.color:
+            body["colorId"] = event.color.value
+
+        return body
+
     def _get_syncademic_marker(self, sync_profile_id) -> ExtendedProperties:
+        assert sync_profile_id
         return {"private": {"syncademic": sync_profile_id}}
 
     def create_events(self, events: List[Event], sync_profile_id: str) -> None:

@@ -39,6 +39,7 @@ from synchronizer.synchronizer.synchronizer import perform_synchronization
 #   TODO: Add one more level of synchronizer
 
 from synchronizer.synchronizer.middleware.insa_middleware import (
+    Insa5IFMiddleware,
     TitlePrettifier,
     ExamPrettifier,
 )
@@ -358,7 +359,7 @@ def _synchronize_now(
             service=service,
             sync_trigger=sync_trigger,
             firebase_storage_bucket=storage.bucket(),
-            middlewares=[TitlePrettifier, ExamPrettifier],
+            middlewares=[TitlePrettifier, ExamPrettifier, Insa5IFMiddleware],
         )
     except Exception as e:
         sync_profile_ref.update(

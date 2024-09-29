@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../authentication/cubit/auth_cubit.dart';
@@ -54,19 +55,23 @@ class SignInPage extends StatelessWidget {
     return BlocConsumer<AuthCubit, AuthState>(
       bloc: authBloc,
       listener: (context, state) {
-        final errorMessage = state.maybeMap(
-          orElse: () => null,
-          unauthenticated: (state) => state.errorMessage,
+        state.maybeMap(
+          orElse: () {},
+          authenticated: (state) {
+            context.go('/');
+          },
+          unauthenticated: (state) {
+            if (state.errorMessage != null) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage!),
+                  ),
+                );
+            }
+          },
         );
-        if (errorMessage != null) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-              ),
-            );
-        }
       },
       builder: (context, state) {
         return Scaffold(

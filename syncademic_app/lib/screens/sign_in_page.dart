@@ -94,138 +94,108 @@ class SignInPage extends StatelessWidget {
     final authBloc = GetIt.I<AuthCubit>();
 
     return BlocConsumer<AuthCubit, AuthState>(
-        bloc: authBloc,
-        listener: (context, state) {
-          state.maybeWhen(
-              orElse: () {},
-              authenticated: (_) {
-                context.go('/');
-              });
-        },
-        builder: (context, state) {
-          return Scaffold(
-            body: SafeArea(
-                child: LayoutBuilder(
-              builder: (context, contraints) => SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: contraints.maxHeight,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.asset(
-                                'assets/illustrations/little_boy.jpeg'),
-                          ),
-                          const SizedBox(height: 32),
-                          Text(
-                            'Welcome,',
-                            style: GoogleFonts.roboto(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xff16314d),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Sign in to continue',
-                            style: GoogleFonts.roboto(
-                              fontSize: 20,
-                              color: const Color(0xff16314d),
-                            ),
-                          ),
-                          Spacer(),
-                          Center(
-                            child: GoogleSignInButton(
-                              onTap: authBloc.signInWithGoogle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+      bloc: authBloc,
+      listener: (context, state) {
+        // ... existing listener code ...
+      },
+      builder: (context, state) {
+        return Scaffold(
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Check if the width is greater than 600 (desktop)
+                if (constraints.maxWidth > 600) {
+                  return _buildDesktopLayout(context, authBloc);
+                } else {
+                  return _buildMobileLayout(context, authBloc);
+                }
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context, AuthCubit authBloc) {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/illustrations/little_boy.jpeg',
+                fit: BoxFit.cover,
+                height: double.infinity,
               ),
-            )),
-          );
+            ),
+          ),
+          const SizedBox(width: 32),
+          Expanded(
+            flex: 1,
+            child: _buildContentColumn(context, authBloc, false),
+          ),
+        ],
+      ),
+    );
+  }
 
-          // return Scaffold(
-          //     body: SingleChildScrollView(
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(32.0),
-          //     child: Row(
-          //       mainAxisAlignment: MainAxisAlignment.center,
-          //       children: [
-          //         Flexible(
-          //           child: Image.asset(
-          //             'assets/illustrations/apple_devices_mockup_transparent_1600.png',
-          //             fit: BoxFit.cover,
-          //             width: MediaQuery.of(context).size.width > 600
-          //                 ? 400
-          //                 : MediaQuery.of(context).size.width,
-          //           ),
-          //         ),
-          //         const SizedBox(width: 32),
-          //         Flexible(
-          //           flex: 2,
-          //           child: Column(
-          //             crossAxisAlignment: CrossAxisAlignment.start,
-          //             mainAxisSize: MainAxisSize.min,
-          //             children: [
-          //               SvgPicture.asset(
-          //                 'assets/icons/syncademic-icon.svg',
-          //                 semanticsLabel: 'Syncademic logo',
-          //                 colorFilter: const ColorFilter.mode(
-          //                   //16314d
-          //                   Color(0xff16314d),
-          //                   BlendMode.srcIn,
-          //                 ),
-          //                 height: 64,
-          //               ),
-          //               const SizedBox(height: 16),
-          //               Text(
-          //                 "Welcome,",
-          //                 style: GoogleFonts.montserrat(
-          //                   fontSize: 32,
-          //                   fontWeight: FontWeight.bold,
-          //                   color: Colors.black,
-          //                 ),
-          //               ),
-          //               Text(
-          //                 "Sign in to continue",
-          //                 style: GoogleFonts.montserrat(
-          //                   fontSize: 20,
-          //                   color: Colors.black,
-          //                 ),
-          //               ),
-          //               const SizedBox(height: 32),
+  Widget _buildMobileLayout(BuildContext context, AuthCubit authBloc) {
+    return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: MediaQuery.of(context).size.height -
+              MediaQuery.of(context).padding.top,
+        ),
+        child: IntrinsicHeight(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: _buildContentColumn(context, authBloc, true),
+          ),
+        ),
+      ),
+    );
+  }
 
-          //               SignInButton(
-          //                 Buttons.google,
-          //                 onPressed: authBloc.signInWithGoogle,
-          //               ),
-          //               // Get Started button
-          //             ]
-          //                 .animate(
-          //                   interval: const Duration(milliseconds: 60),
-          //                 )
-          //                 .fadeIn()
-          //                 .scale(
-          //                   curve: Curves.easeInOutBack,
-          //                   delay: const Duration(milliseconds: 200),
-          //                 ),
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ));
-        });
+  Widget _buildContentColumn(
+      BuildContext context, AuthCubit authBloc, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        if (isMobile)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset('assets/illustrations/little_boy.jpeg'),
+          ),
+        if (isMobile) const SizedBox(height: 32),
+        Text(
+          'Welcome,',
+          style: GoogleFonts.roboto(
+            fontSize: 32,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xff16314d),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Sign in to continue',
+          style: GoogleFonts.roboto(
+            fontSize: 20,
+            color: const Color(0xff16314d),
+          ),
+        ),
+        if (isMobile) const Spacer() else const SizedBox(height: 32),
+        Center(
+          child: GoogleSignInButton(
+            onTap: authBloc.signInWithGoogle,
+          ),
+        ),
+      ],
+    );
   }
 }

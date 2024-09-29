@@ -105,42 +105,51 @@ class SignInPage extends StatelessWidget {
         builder: (context, state) {
           return Scaffold(
             body: SafeArea(
-                child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child:
-                          Image.asset('assets/illustrations/little_boy.jpeg'),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'Welcome,',
-                      style: GoogleFonts.roboto(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xff16314d),
+                child: LayoutBuilder(
+              builder: (context, contraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: contraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                                'assets/illustrations/little_boy.jpeg'),
+                          ),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Welcome,',
+                            style: GoogleFonts.roboto(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xff16314d),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Sign in to continue',
+                            style: GoogleFonts.roboto(
+                              fontSize: 20,
+                              color: const Color(0xff16314d),
+                            ),
+                          ),
+                          Spacer(),
+                          Center(
+                            child: GoogleSignInButton(
+                              onTap: authBloc.signInWithGoogle,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Sign in to continue',
-                      style: GoogleFonts.roboto(
-                        fontSize: 20,
-                        color: const Color(0xff16314d),
-                      ),
-                    ),
-                    // Spacer(),
-                    Center(
-                      child: GoogleSignInButton(
-                        onTap: authBloc.signInWithGoogle,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             )),

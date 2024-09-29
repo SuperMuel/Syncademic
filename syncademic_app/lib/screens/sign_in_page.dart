@@ -117,26 +117,22 @@ class SignInPage extends StatelessWidget {
         padding: const EdgeInsets.all(32.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              flex: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/illustrations/little_boy.jpeg',
-                  fit: BoxFit.cover,
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/illustrations/little_boy.jpeg',
+                fit: BoxFit.cover,
+                width: MediaQuery.of(context).size.width * 0.3,
               ),
             ),
             const SizedBox(width: 50),
-            Expanded(
-              flex: 2,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.7,
-                ),
-                child: _buildContentColumn(context, authBloc, isMobile: false),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
               ),
+              child: _buildContentColumn(context, authBloc, isMobile: false),
             ),
           ],
         ),

@@ -22,7 +22,7 @@ import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'screens/account/account_page.dart';
-import 'screens/landing_page.dart';
+import 'screens/sign_in_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
@@ -130,21 +130,23 @@ void main() async {
 final _router = GoRouter(
   redirect: (context, state) async {
     final user = GetIt.I<AuthService>().currentUser;
-    if (user != null) {
-      if (state.fullPath == '/welcome') {
-        // Logged in users should be redirected to the home screen if they try to access the welcome screen
-        return '/';
-      }
-      return null;
+
+    if (user == null) {
+      return '/sign-in';
     }
 
-    return '/welcome';
+    if (state.fullPath == '/sign-in') {
+      // Logged in users should be redirected to the home screen if they try to access the sign-in screen
+      return '/';
+    }
+
+    return null; // No redirection needed
   },
-  initialLocation: '/welcome',
+  initialLocation: '/sign-in',
   routes: [
     GoRoute(
-      path: '/welcome',
-      builder: (context, state) => const LandingPage(),
+      path: '/sign-in',
+      builder: (context, state) => const SignInPage(),
     ),
     GoRoute(
         path: '/',

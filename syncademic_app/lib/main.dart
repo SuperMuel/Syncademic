@@ -22,7 +22,7 @@ import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'screens/account/account_page.dart';
-import 'screens/landing_page.dart';
+import 'screens/sign_in_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
@@ -146,7 +146,7 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) => const LandingPage(),
+      builder: (context, state) => const SignInPage(),
     ),
     GoRoute(
         path: '/',

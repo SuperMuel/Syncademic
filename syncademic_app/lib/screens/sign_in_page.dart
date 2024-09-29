@@ -10,6 +10,40 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../authentication/cubit/auth_cubit.dart';
 
+class LogoAndSyncademic extends StatelessWidget {
+  const LogoAndSyncademic({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            'assets/icons/syncademic-icon.svg',
+            semanticsLabel: 'Syncademic logo',
+            colorFilter: const ColorFilter.mode(
+              Color(0xff16314d),
+              BlendMode.srcIn,
+            ),
+            height: 48,
+          ),
+          const SizedBox(width: 16),
+          Text(
+            'Syncademic',
+            style: GoogleFonts.inter(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xff16314d),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SignInPage extends StatelessWidget {
   const SignInPage({super.key});
 
@@ -28,71 +62,96 @@ class SignInPage extends StatelessWidget {
         },
         builder: (context, state) {
           return Scaffold(
-              body: Container(
-                  height: double.infinity,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blueAccent, Colors.purpleAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/icons/syncademic-icon.svg',
-                              semanticsLabel: 'Syncademic logo',
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                              height: MediaQuery.of(context).size.height * 0.5,
-                            ),
-                            const SizedBox(height: 30),
+            body: SafeArea(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.asset('assets/illustrations/little_boy.jpeg'),
+                ),
+                const SizedBox(height: 32),
+                const LogoAndSyncademic(),
+                const SizedBox(height: 32),
+                SignInButton(
+                  Buttons.google,
+                  onPressed: authBloc.signInWithGoogle,
+                ),
+              ],
+            )),
+          );
 
-                            Text('Syncademic',
-                                style: GoogleFonts.montserrat(
-                                    fontSize:
-                                        MediaQuery.of(context).size.width > 320
-                                            ? 48.0
-                                            : 36.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white)),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Synchronize your academic life with your digital world.',
-                              style: GoogleFonts.montserrat(
-                                  fontSize: 20.0, color: Colors.white70),
-                              textAlign: TextAlign.center,
-                            ),
+          // return Scaffold(
+          //     body: SingleChildScrollView(
+          //   child: Padding(
+          //     padding: const EdgeInsets.all(32.0),
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         Flexible(
+          //           child: Image.asset(
+          //             'assets/illustrations/apple_devices_mockup_transparent_1600.png',
+          //             fit: BoxFit.cover,
+          //             width: MediaQuery.of(context).size.width > 600
+          //                 ? 400
+          //                 : MediaQuery.of(context).size.width,
+          //           ),
+          //         ),
+          //         const SizedBox(width: 32),
+          //         Flexible(
+          //           flex: 2,
+          //           child: Column(
+          //             crossAxisAlignment: CrossAxisAlignment.start,
+          //             mainAxisSize: MainAxisSize.min,
+          //             children: [
+          //               SvgPicture.asset(
+          //                 'assets/icons/syncademic-icon.svg',
+          //                 semanticsLabel: 'Syncademic logo',
+          //                 colorFilter: const ColorFilter.mode(
+          //                   //16314d
+          //                   Color(0xff16314d),
+          //                   BlendMode.srcIn,
+          //                 ),
+          //                 height: 64,
+          //               ),
+          //               const SizedBox(height: 16),
+          //               Text(
+          //                 "Welcome,",
+          //                 style: GoogleFonts.montserrat(
+          //                   fontSize: 32,
+          //                   fontWeight: FontWeight.bold,
+          //                   color: Colors.black,
+          //                 ),
+          //               ),
+          //               Text(
+          //                 "Sign in to continue",
+          //                 style: GoogleFonts.montserrat(
+          //                   fontSize: 20,
+          //                   color: Colors.black,
+          //                 ),
+          //               ),
+          //               const SizedBox(height: 32),
 
-                            const SizedBox(height: 32),
-
-                            SignInButton(
-                              Buttons.google,
-                              onPressed: authBloc.signInWithGoogle,
-                            ),
-                            // Get Started button
-                          ]
-                              .animate(
-                                interval: const Duration(milliseconds: 60),
-                              )
-                              .fadeIn()
-                              .scale(
-                                curve: Curves.easeInOutBack,
-                                delay: const Duration(milliseconds: 200),
-                              ),
-                        ),
-                      ),
-                    ),
-                  )));
+          //               SignInButton(
+          //                 Buttons.google,
+          //                 onPressed: authBloc.signInWithGoogle,
+          //               ),
+          //               // Get Started button
+          //             ]
+          //                 .animate(
+          //                   interval: const Duration(milliseconds: 60),
+          //                 )
+          //                 .fadeIn()
+          //                 .scale(
+          //                   curve: Curves.easeInOutBack,
+          //                   delay: const Duration(milliseconds: 200),
+          //                 ),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ));
         });
   }
 }

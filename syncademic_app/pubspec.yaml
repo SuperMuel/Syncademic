@@ -91,6 +91,7 @@ flutter:
     - "assets/icons/google_calendar_icon_1024x1024.png"
     - "assets/icons/google_icon_128.png"
     - "assets/illustrations/apple_devices_mockup_transparent_1600.png"
+    - "assets/illustrations/little_boy.jpeg"
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

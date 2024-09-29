@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sign_in_button/sign_in_button.dart';
 
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../authentication/cubit/auth_cubit.dart';
@@ -100,6 +97,30 @@ class SignInPage extends StatelessWidget {
       },
       builder: (context, state) {
         return Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/syncademic-icon.svg',
+                  semanticsLabel: 'Syncademic logo',
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xff16314d),
+                    BlendMode.srcIn,
+                  ),
+                  height: 40,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  'Syncademic',
+                  style: GoogleFonts.roboto(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xff16314d),
+                  ),
+                ),
+              ],
+            ),
+          ),
           body: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -118,28 +139,34 @@ class SignInPage extends StatelessWidget {
   }
 
   Widget _buildDesktopLayout(BuildContext context, AuthCubit authBloc) {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 1,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                'assets/illustrations/little_boy.jpeg',
-                fit: BoxFit.cover,
-                height: double.infinity,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/illustrations/little_boy.jpeg',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 32),
-          Expanded(
-            flex: 1,
-            child: _buildContentColumn(context, authBloc, false),
-          ),
-        ],
+            const SizedBox(width: 32),
+            Expanded(
+              flex: 1,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                ),
+                child: _buildContentColumn(context, authBloc, isMobile: false),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -154,47 +181,58 @@ class SignInPage extends StatelessWidget {
         child: IntrinsicHeight(
           child: Padding(
             padding: const EdgeInsets.all(32.0),
-            child: _buildContentColumn(context, authBloc, true),
+            child: _buildContentColumn(context, authBloc, isMobile: true),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContentColumn(
-      BuildContext context, AuthCubit authBloc, bool isMobile) {
+  Widget _buildTextAndSubtext(
+    BuildContext context,
+    AuthCubit authBloc,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
       children: [
-        if (isMobile)
+        Text('Welcome,',
+            style: GoogleFonts.roboto(
+                fontSize: 32,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xff16314d))),
+        Text('Sign in to continue',
+            style: GoogleFonts.roboto(
+                fontSize: 20, color: const Color(0xff16314d))),
+      ],
+    );
+  }
+
+  Widget _buildContentColumn(BuildContext context, AuthCubit authBloc,
+      {required bool isMobile}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isMobile) ...[
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Image.asset('assets/illustrations/little_boy.jpeg'),
           ),
-        if (isMobile) const SizedBox(height: 32),
-        Text(
-          'Welcome,',
-          style: GoogleFonts.roboto(
-            fontSize: 32,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xff16314d),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Sign in to continue',
-          style: GoogleFonts.roboto(
-            fontSize: 20,
-            color: const Color(0xff16314d),
-          ),
-        ),
-        if (isMobile) const Spacer() else const SizedBox(height: 32),
-        Center(
-          child: GoogleSignInButton(
-            onTap: authBloc.signInWithGoogle,
-          ),
-        ),
+          const SizedBox(height: 32),
+        ],
+        _buildTextAndSubtext(context, authBloc),
+        const SizedBox(height: 32),
+        !isMobile
+            ? ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: GoogleSignInButton(
+                  onTap: authBloc.signInWithGoogle,
+                ),
+              )
+            : GoogleSignInButton(
+                onTap: authBloc.signInWithGoogle,
+              ),
       ],
     );
   }

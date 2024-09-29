@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign_in_button/sign_in_button.dart';
+
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -73,25 +75,11 @@ class LandingPage extends StatelessWidget {
 
                             const SizedBox(height: 32),
 
-                            // Get Started button
-                            ElevatedButton(
+                            SignInButton(
+                              Buttons.google,
                               onPressed: authBloc.signInWithGoogle,
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Text(
-                                  'GET STARTED',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
                             ),
+                            // Get Started button
                           ]
                               .animate(
                                 interval: const Duration(milliseconds: 60),

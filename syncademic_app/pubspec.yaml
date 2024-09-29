@@ -57,6 +57,7 @@ dependencies:
   package_info_plus: ^8.0.0
   url_launcher: ^6.3.0
   firebase_app_check: ^0.2.2+7
+  sign_in_button: ^3.2.0
 
 dev_dependencies:
   flutter_test:

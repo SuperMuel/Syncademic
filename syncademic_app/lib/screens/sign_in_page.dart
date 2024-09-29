@@ -7,40 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../authentication/cubit/auth_cubit.dart';
 
-class LogoAndSyncademic extends StatelessWidget {
-  const LogoAndSyncademic({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(
-            'assets/icons/syncademic-icon.svg',
-            semanticsLabel: 'Syncademic logo',
-            colorFilter: const ColorFilter.mode(
-              Color(0xff16314d),
-              BlendMode.srcIn,
-            ),
-            height: 48,
-          ),
-          const SizedBox(width: 16),
-          Text(
-            'Login',
-            style: GoogleFonts.roboto(
-              fontSize: 32,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xff16314d),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class GoogleSignInButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -48,35 +14,30 @@ class GoogleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double
-            .infinity, // This line ensures the button takes all available width
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(32),
-        ),
+    return OutlinedButton(
+      onPressed: onTap,
+      child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment
-              .center, // This line centers the content horizontally
-          children: [
-            Image.asset(
-              'assets/icons/google_icon_128.png', // Your Google logo asset path
-              height: 20, // Adjust height as needed
-              width: 20, // Adjust width as needed
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Sign in with Google',
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black54,
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/icons/google_icon_128.png',
+                height: 20,
+                width: 20,
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Text(
+                'Sign in with Google',
+                style: GoogleFonts.roboto(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -93,7 +54,19 @@ class SignInPage extends StatelessWidget {
     return BlocConsumer<AuthCubit, AuthState>(
       bloc: authBloc,
       listener: (context, state) {
-        // ... existing listener code ...
+        final errorMessage = state.maybeMap(
+          orElse: () => null,
+          unauthenticated: (state) => state.errorMessage,
+        );
+        if (errorMessage != null) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+              ),
+            );
+        }
       },
       builder: (context, state) {
         return Scaffold(
@@ -155,9 +128,9 @@ class SignInPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 32),
+            const SizedBox(width: 50),
             Expanded(
-              flex: 1,
+              flex: 2,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.7,

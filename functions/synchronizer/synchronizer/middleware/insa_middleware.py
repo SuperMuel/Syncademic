@@ -84,6 +84,10 @@ def CM_TD_TP_Middleware(events: List[Event]) -> List[Event]:
 def Insa5IFMiddleware(events: List[Event]) -> List[Event]:
     # if we are not in INSA 5IF, we don't apply the middleware
     # If "IF-5" is not in more than 50% of the descriptions, we don't apply the middleware
+
+    if not events:
+        return events
+
     in_5if_events_count = sum(["IF-5" in event.description for event in events])
     if in_5if_events_count / len(events) < 0.5:
         return events

@@ -1,50 +1,30 @@
+import logging
 import os
+from typing import Any, Literal
+
+from firebase_admin import firestore, initialize_app, storage
+from firebase_functions import https_fn, logger, options, scheduler_fn
+from firebase_functions.firestore_fn import (
+    Event,
+    on_document_created,
+)
+from firebase_functions.params import StringParam
+from google.auth.transport import requests
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
-from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
-
-import logging
-from typing import Any, Literal
-from firebase_functions import https_fn, logger
-
-from firebase_functions.firestore_fn import (
-    on_document_created,
-    on_document_deleted,
-    on_document_updated,
-    on_document_written,
-    Event,
-    DocumentSnapshot,
-)
-from firebase_functions import options
-
-from firebase_admin import initialize_app, firestore, storage
-from firebase_functions.params import StringParam
-
-from firebase_functions import https_fn, logger, scheduler_fn
-
-
-from google.oauth2.credentials import Credentials
-
-from firebase_functions import https_fn
-from firebase_admin import firestore
-
-from google.auth.transport import requests
-from synchronizer.synchronizer.google_calendar_manager import (
+from googleapiclient.discovery import build
+from src.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
-from synchronizer.synchronizer.synchronizer import perform_synchronization
-
-#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#   TODO: Add one more level of synchronizer
-
-from synchronizer.synchronizer.middleware.insa_middleware import (
+from src.synchronizer.middleware.insa_middleware import (
+    CM_TD_TP_Middleware,
+    ExamPrettifier,
     Insa5IFMiddleware,
     TitlePrettifier,
-    ExamPrettifier,
-    CM_TD_TP_Middleware,
 )
-
+from src.synchronizer.synchronizer import perform_synchronization
 
 initialize_app()
 

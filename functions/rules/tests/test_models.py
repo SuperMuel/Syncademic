@@ -1,11 +1,12 @@
 from pydantic import ValidationError
 import pytest
+
+from shared.google_calendar_colors import GoogleEventColor
 from src.models import (
     ChangeColorAction,
     ChangeFieldAction,
     CompoundCondition,
     DeleteEventAction,
-    GoogleEventColor,
     Rule,
     Ruleset,
     TextFieldCondition,

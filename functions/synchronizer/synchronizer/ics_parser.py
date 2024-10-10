@@ -1,5 +1,6 @@
 from typing import List
-from .event import Event
+
+from shared.event import Event
 import ics
 
 

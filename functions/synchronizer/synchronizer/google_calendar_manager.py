@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import List, Optional, TypeAlias, Dict
-from .event import Event
 from itertools import islice
 import pytz
 import logging
+
+from shared.event import Event
 
 logger = logging.getLogger(__name__)
 

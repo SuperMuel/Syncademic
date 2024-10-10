@@ -1,7 +1,9 @@
 from typing import List
-from ..event import Event, GoogleEventColor
+from shared.event import Event
 import re
 from dataclasses import replace
+
+from shared.google_calendar_colors import GoogleEventColor
 
 
 def TitlePrettifier(events: List[Event]) -> List[Event]:

@@ -1,60 +1,9 @@
-from enum import Enum
+import re
+from dataclasses import replace
 from typing import List, Union, Literal, Optional
 from pydantic import BaseModel, Field
-
-
-class GoogleEventColor(str, Enum):
-    """Represents the colors used in google calendar"""
-
-    # don't use auto() here because it might cause issues with serialization/deserialization
-    # e.g if we use auto() and then change the order of the enum values, the deserialization will break
-    LAVENDER = "lavender"
-    SAGE = "sage"
-    GRAPE = "grape"
-    TANGERINE = "tangerine"
-    BANANA = "banana"
-    FLAMINGO = "flamingo"
-    PEACOCK = "peacock"
-    GRAPHITE = "graphite"
-    BLUEBERRY = "blueberry"
-    BASIL = "basil"
-    TOMATO = "tomato"
-
-    @staticmethod
-    def from_color_id(color_id: str) -> "GoogleEventColor":
-        if not color_id or not color_id.isdigit() or int(color_id) not in range(1, 12):
-            raise ValueError(f"Invalid color id: {color_id}")
-
-        color_map = {
-            "1": GoogleEventColor.LAVENDER,
-            "2": GoogleEventColor.SAGE,
-            "3": GoogleEventColor.GRAPE,
-            "4": GoogleEventColor.TANGERINE,
-            "5": GoogleEventColor.BANANA,
-            "6": GoogleEventColor.FLAMINGO,
-            "7": GoogleEventColor.PEACOCK,
-            "8": GoogleEventColor.GRAPHITE,
-            "9": GoogleEventColor.BLUEBERRY,
-            "10": GoogleEventColor.BASIL,
-            "11": GoogleEventColor.TOMATO,
-        }
-        return color_map[color_id]
-
-    def to_color_code(self) -> str:
-        m = {
-            "1": "a4bdfc",
-            "2": "7ae7bf",
-            "3": "dbadff",
-            "4": "ff887c",
-            "5": "fbd75b",
-            "6": "ffb878",
-            "7": "46d6db",
-            "8": "e1e1e1",
-            "9": "5484ed",
-            "10": "51b749",
-            "11": "dc2127",
-        }
-        return m[self.value]
+from shared.event import Event
+from shared.google_calendar_colors import GoogleEventColor
 
 
 class TextFieldCondition(BaseModel):
@@ -64,13 +13,44 @@ class TextFieldCondition(BaseModel):
     case_sensitive: Optional[bool] = True
     negate: Optional[bool] = False
 
+    def evaluate(self, event: Event) -> bool:
+        field_value = getattr(event, self.field)
+        assert isinstance(field_value, str)
+
+        condition_value = self.value
+
+        if not self.case_sensitive:
+            field_value = field_value.lower()
+            condition_value = condition_value.lower()
+
+        match self.operator:
+            case "equals":
+                result = field_value == condition_value
+            case "contains":
+                result = condition_value in field_value
+            case "starts_with":
+                result = field_value.startswith(condition_value)
+            case "ends_with":
+                result = field_value.endswith(condition_value)
+            case "regex":
+                flags = 0 if self.case_sensitive else re.IGNORECASE
+                result = bool(re.search(condition_value, field_value, flags))
+
+        return not result if self.negate else result
+
 
 class CompoundCondition(BaseModel):
     logical_operator: Literal["AND", "OR"]
-    # conditions: conlist(["ConditionType"], min_length=2)
     conditions: List["ConditionType"] = Field(..., min_length=2)
 
-    # validate that the list of conditions is not empty -
+    def evaluate(self, event: Event) -> bool:
+        match self.logical_operator:
+            case "AND":
+                return all(condition.evaluate(event) for condition in self.conditions)
+            case "OR":
+                return any(condition.evaluate(event) for condition in self.conditions)
+
+        raise ValueError(f"Unimplemented logical operator: {self.logical_operator}")
 
 
 ConditionType = Union[TextFieldCondition, CompoundCondition]
@@ -80,18 +60,40 @@ CompoundCondition.model_rebuild()
 
 class ChangeFieldAction(BaseModel):
     action: Literal["change_field"]
-    field: str
+    field: Literal["title", "description", "location"]
     method: Literal["set", "append", "prepend"]
     value: str
+
+    def apply(self, event: Event) -> Optional[Event]:
+        field_value = getattr(event, self.field)
+        assert isinstance(field_value, str)
+
+        new_value = self.value
+
+        match self.method:
+            case "set":
+                new_field_value = new_value
+            case "append":
+                new_field_value = field_value + new_value
+            case "prepend":
+                new_field_value = new_value + field_value
+
+        return replace(event, **{self.field: new_field_value})
 
 
 class ChangeColorAction(BaseModel):
     action: Literal["change_color"]
     value: GoogleEventColor
 
+    def apply(self, event: Event) -> Optional[Event]:
+        return replace(event, color=self.value)
+
 
 class DeleteEventAction(BaseModel):
     action: Literal["delete_event"]
+
+    def apply(self, event: Event) -> Optional[Event]:
+        return None
 
 
 ActionType = Union[ChangeFieldAction, ChangeColorAction, DeleteEventAction]
@@ -101,9 +103,29 @@ class Rule(BaseModel):
     condition: ConditionType
     actions: List[ActionType]
 
+    def apply(self, event: Event) -> Optional[Event]:
+        if self.condition.evaluate(event):
+            for action in self.actions:
+                result = action.apply(event)
+                if result is None:
+                    return None
+                event = result
+        return event
+
 
 class Ruleset(BaseModel):
     rules: List[Rule]
+
+    def apply(self, events: List[Event]) -> List[Event]:
+        new_events = []
+        for event in events:
+            for rule in self.rules:
+                event = rule.apply(event)
+                if event is None:
+                    break
+            if event is not None:
+                new_events.append(event)
+        return new_events
 
 
 # https://chatgpt.com/c/6704f3c6-6544-8008-844f-3bbff6df7a37

@@ -2,6 +2,7 @@
 
 
 from typing import List, TypeAlias, Callable
-from ..event import Event
+
+from shared.event import Event
 
 Middleware: TypeAlias = Callable[[List[Event]], List[Event]]

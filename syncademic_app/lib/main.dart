@@ -1,5 +1,7 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +37,9 @@ import 'services/firestore_account_service.dart';
 import 'services/provider_account_service.dart';
 import 'services/sync_profile_service.dart';
 import 'widgets/sync_profiles_list.dart';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   await dotenv.load(fileName: "dotenv");
@@ -46,6 +51,16 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  if (kDebugMode) {
+    try {
+      FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+      await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+      FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
+    } catch (e) {
+      log("Error connecting to the local Firebase emulator: $e");
+    }
+  }
 
   if (dotenv.env['RECAPTCHA_V3_SITE_KEY'] == null) {
     throw Exception('RECAPTCHA_V3_SITE_KEY environment variable is not set.');

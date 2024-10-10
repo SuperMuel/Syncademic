@@ -8,6 +8,7 @@
       "source": "functions",
       "codebase": "default",
       "ignore": [
+        ".venv",
         "venv",
         ".git",
         "firebase-debug.log",
@@ -24,6 +25,27 @@
     ],
     "frameworksBackend": {
       "region": "europe-west1"
+    }
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true,
+    "pubsub": {
+      "port": 8085
     }
   }
 }

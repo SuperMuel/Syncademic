@@ -27,7 +27,7 @@ from src.synchronizer.middleware.insa_middleware import (
     Insa5IFMiddleware,
     TitlePrettifier,
 )
-from src.synchronizer.synchronizer import SyncTrigger, perform_synchronization
+from src.synchronizer.synchronizer import SyncTrigger, perform_synchronization, SyncType
 
 initialize_app()
 
@@ -242,6 +242,13 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
         )
 
+    sync_type = req.data.get("syncType", "regular")
+
+    if sync_type not in ["regular", "full"]:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid syncType"
+        )
+
     syncProfile = (
         firestore.client()
         .collection("users")
@@ -258,7 +265,9 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 
     logger.info(f"Starting manual synchronization for {req.auth.uid}/{sync_profile_id}")
 
-    _synchronize_now(req.auth.uid, sync_profile_id, sync_trigger="manual")
+    _synchronize_now(
+        req.auth.uid, sync_profile_id, sync_trigger="manual", sync_type=sync_type
+    )
 
 
 # Every day at 2:00 AM UTC
@@ -281,6 +290,7 @@ def _synchronize_now(
     user_id: str,
     sync_profile_id: str,
     sync_trigger: SyncTrigger,
+    sync_type: SyncType = "regular",
 ):
     db = firestore.client()
 
@@ -307,12 +317,10 @@ def _synchronize_now(
             "status": {
                 "type": "inProgress",
                 "syncTrigger": sync_trigger,
+                "syncType": sync_type,
             }
         }
     )
-
-    # TODO create CalendarManager here. This will allow us to test the authorization
-    # and avoid doing it in the synchronization function. and report the error to the user
 
     try:
         service = get_calendar_service(
@@ -331,6 +339,7 @@ def _synchronize_now(
                     "message": f"Autorization failed: {e}",
                     # TODO : implement a way to re-authorize from the frontend
                     "syncTrigger": sync_trigger,
+                    "syncType": sync_type,
                 }
             }
         )
@@ -351,6 +360,7 @@ def _synchronize_now(
                 Insa5IFMiddleware,
                 CM_TD_TP_Middleware,
             ],
+            sync_type=sync_type,
         )
     except Exception as e:
         sync_profile_ref.update(
@@ -359,6 +369,7 @@ def _synchronize_now(
                     "type": "failed",
                     "message": f"Synchronization failed: {e}",
                     "syncTrigger": sync_trigger,
+                    "syncType": sync_type,
                 }
             }
         )
@@ -370,6 +381,7 @@ def _synchronize_now(
             "status": {
                 "type": "success",
                 "syncTrigger": sync_trigger,
+                "syncType": sync_type,
                 "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
             },
         }

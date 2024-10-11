@@ -39,7 +39,7 @@ class GoogleCalendarManager:
         }
 
         if event.color:
-            body["colorId"] = event.color.value
+            body["colorId"] = event.color.to_color_id()
 
         return body
 
@@ -47,14 +47,16 @@ class GoogleCalendarManager:
         assert sync_profile_id
         return {"private": {"syncademic": sync_profile_id}}
 
-    def create_events(self, events: List[Event], sync_profile_id: str) -> None:
+    def create_events(
+        self, events: List[Event], sync_profile_id: str, batch_size: int = 50
+    ) -> None:
         logger.info(f"Creating {len(events)} events.")
 
         if len(events) > 1000:
             raise Exception(f"Too many events. ({len(events)})")
 
         for i, sublist in enumerate(
-            batched(events, 50)
+            batched(events, batch_size)
         ):  # TODO : check maximum batch size
             batch = self.service.new_batch_http_request()
             for event in sublist:
@@ -98,9 +100,13 @@ class GoogleCalendarManager:
 
         return [event["id"] for event in events_as_dict]
 
-    def delete_events(self, ids: List[str]) -> None:
+    def delete_events(
+        self,
+        ids: list[str],
+        batch_size: int = 50,
+    ) -> None:
         logger.info(f"Deleting {len(ids)} events.")
-        for sublist in batched(ids, 50):
+        for sublist in batched(ids, batch_size):
             batch = self.service.new_batch_http_request()
             for id in sublist:
                 batch.add(

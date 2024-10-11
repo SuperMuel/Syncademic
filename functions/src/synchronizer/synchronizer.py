@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from firebase_functions import logger
 from typing import List, Literal, Optional
 
+from functions.src.rules.models import Ruleset
 from functions.src.synchronizer.ics_cache import IcsFileStorage
 from .middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
@@ -19,7 +20,13 @@ def perform_synchronization(
     ics_cache: IcsFileStorage,
     calendar_manager: GoogleCalendarManager,
     middlewares: Optional[List[Middleware]] = None,
+    rule_set: Ruleset | None = None,
 ) -> None:
+    # Temporary : only one of middlewares or ruleset can be provided, not both
+    assert not (
+        middlewares and rule_set
+    ), "Only one of middlewares or ruleset can be provided"
+
     try:
         ics_str = ics_source.get_ics_string()
     except Exception as e:
@@ -55,16 +62,24 @@ def perform_synchronization(
         logger.error(f"Failed to apply middlewares: {e}")
         raise e
 
+    try:
+        if rule_set:
+            logger.info(f"Applying {len(rule_set.rules)} rules")
+            events = rule_set.apply(events)
+    except Exception as e:
+        logger.error(f"Failed to apply rules: {e}")
+        raise e
+
     if not events:
         logger.warn("No events to synchronize")
         return
 
     logger.info(f"{len(events)} events after applying middlewares")
 
-    separation_dt = datetime.now(timezone.utc)
-
     if sync_trigger == "on_create":
         return calendar_manager.create_events(events, sync_profile_id)
+
+    separation_dt = datetime.now(timezone.utc)
 
     # TODO : Only update events that have changed
     future_events_ids = calendar_manager.get_events_ids_from_sync_profile(

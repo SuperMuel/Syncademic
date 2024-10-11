@@ -53,3 +53,29 @@ class GoogleEventColor(str, Enum):
             "11": "dc2127",
         }
         return m[self.value]
+
+    def to_color_id(self) -> str:
+        match self:
+            case GoogleEventColor.LAVENDER:
+                return "1"
+            case GoogleEventColor.SAGE:
+                return "2"
+            case GoogleEventColor.GRAPE:
+                return "3"
+            case GoogleEventColor.TANGERINE:
+                return "4"
+            case GoogleEventColor.BANANA:
+                return "5"
+            case GoogleEventColor.FLAMINGO:
+                return "6"
+            case GoogleEventColor.PEACOCK:
+                return "7"
+            case GoogleEventColor.GRAPHITE:
+                return "8"
+            case GoogleEventColor.BLUEBERRY:
+                return "9"
+            case GoogleEventColor.BASIL:
+                return "10"
+            case GoogleEventColor.TOMATO:
+                return "11"
+        raise ValueError(f"Unknown color: {self}")

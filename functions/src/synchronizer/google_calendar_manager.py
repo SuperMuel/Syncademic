@@ -50,6 +50,9 @@ class GoogleCalendarManager:
     def create_events(self, events: List[Event], sync_profile_id: str) -> None:
         logger.info(f"Creating {len(events)} events.")
 
+        if len(events) > 1000:
+            raise Exception(f"Too many events. ({len(events)})")
+
         for i, sublist in enumerate(
             batched(events, 50)
         ):  # TODO : check maximum batch size

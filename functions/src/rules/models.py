@@ -90,7 +90,7 @@ class ChangeColorAction(BaseModel):
 
 
 class DeleteEventAction(BaseModel):
-    action: Literal["delete_event"]
+    action: Literal["delete_event"] = "delete_event"
 
     def apply(self, event: Event) -> Optional[Event]:
         return None
@@ -126,6 +126,3 @@ class Ruleset(BaseModel):
             if event is not None:
                 new_events.append(event)
         return new_events
-
-
-# https://chatgpt.com/c/6704f3c6-6544-8008-844f-3bbff6df7a37

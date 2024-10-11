@@ -15,19 +15,19 @@ from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-from src.synchronizer.ics_cache import FirebaseIcsFileStorage
-from src.synchronizer.ics_parser import IcsParser
-from src.synchronizer.ics_source import UrlIcsSource
 from src.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
+from src.synchronizer.ics_cache import FirebaseIcsFileStorage
+from src.synchronizer.ics_parser import IcsParser
+from src.synchronizer.ics_source import UrlIcsSource
 from src.synchronizer.middleware.insa_middleware import (
     CM_TD_TP_Middleware,
     ExamPrettifier,
     Insa5IFMiddleware,
     TitlePrettifier,
 )
-from src.synchronizer.synchronizer import perform_synchronization, SyncTrigger
+from src.synchronizer.synchronizer import SyncTrigger, perform_synchronization
 
 initialize_app()
 

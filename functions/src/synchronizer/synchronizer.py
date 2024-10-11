@@ -21,6 +21,7 @@ def perform_synchronization(
     calendar_manager: GoogleCalendarManager,
     middlewares: Optional[List[Middleware]] = None,
     rule_set: Ruleset | None = None,
+    separation_dt: datetime | None = None,
 ) -> None:
     # Temporary : only one of middlewares or ruleset can be provided, not both
     assert not (
@@ -34,7 +35,7 @@ def perform_synchronization(
         raise e
 
     try:
-        events = list(set(ics_parser.parse(ics_str)))
+        events = ics_parser.parse(ics_str)
     except Exception as e:
         logger.error(f"Failed to parse ics: {e}")
         raise e
@@ -58,6 +59,7 @@ def perform_synchronization(
             logger.info(f"Applying {len(middlewares)} middlewares")
             for middleware in middlewares:
                 events = middleware(events)
+            logger.info(f"{len(events)} events after applying middlewares")
     except Exception as e:
         logger.error(f"Failed to apply middlewares: {e}")
         raise e
@@ -66,20 +68,18 @@ def perform_synchronization(
         if rule_set:
             logger.info(f"Applying {len(rule_set.rules)} rules")
             events = rule_set.apply(events)
+            logger.info(f"{len(events)} events after applying rules")
     except Exception as e:
         logger.error(f"Failed to apply rules: {e}")
         raise e
 
     if not events:
         logger.warn("No events to synchronize")
-        return
-
-    logger.info(f"{len(events)} events after applying middlewares")
 
     if sync_trigger == "on_create":
         return calendar_manager.create_events(events, sync_profile_id)
 
-    separation_dt = datetime.now(timezone.utc)
+    separation_dt = separation_dt or datetime.now(timezone.utc)
 
     # TODO : Only update events that have changed
     future_events_ids = calendar_manager.get_events_ids_from_sync_profile(
@@ -93,4 +93,5 @@ def perform_synchronization(
 
     logger.info(f"Found {len(new_events)} new events to insert")
 
-    calendar_manager.create_events(new_events, sync_profile_id)
+    if new_events:
+        calendar_manager.create_events(new_events, sync_profile_id)

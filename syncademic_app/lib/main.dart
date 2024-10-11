@@ -118,14 +118,11 @@ void main() async {
 
   getIt.registerSingleton<BackendAuthorizationService>(
     // MockBackendAuthorizationService(),
-    //
-    // Local :
-    // FirebaseBackendAuthorizationService(
-    //     redirectUri: dotenv.env['LOCAL_REDIRECT_URI']!),
-    //
-    // Production :
+
     FirebaseBackendAuthorizationService(
-        redirectUri: dotenv.env['PRODUCTION_REDIRECT_URI']!),
+      redirectUri: dotenv
+          .env[kDebugMode ? 'LOCAL_REDIRECT_URI' : 'PRODUCTION_REDIRECT_URI']!,
+    ),
   );
 
   getIt.registerSingleton<TargetCalendarRepository>(

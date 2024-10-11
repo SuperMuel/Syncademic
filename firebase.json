@@ -6,10 +6,12 @@
   "functions": [
     {
       "source": "functions",
+      "runtime": "python311",
       "codebase": "default",
       "ignore": [
-        ".venv",
         "venv",
+        ".venv",
+        "tests",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log"

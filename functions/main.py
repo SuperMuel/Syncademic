@@ -1,50 +1,33 @@
+import logging
 import os
+from typing import Any
+
+from firebase_admin import firestore, initialize_app, storage
+from firebase_functions import https_fn, logger, options, scheduler_fn
+from firebase_functions.firestore_fn import (
+    Event,
+    on_document_created,
+)
+from firebase_functions.params import StringParam
+from google.auth.transport import requests
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
-from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
-
-import logging
-from typing import Any, Literal
-from firebase_functions import https_fn, logger
-
-from firebase_functions.firestore_fn import (
-    on_document_created,
-    on_document_deleted,
-    on_document_updated,
-    on_document_written,
-    Event,
-    DocumentSnapshot,
-)
-from firebase_functions import options
-
-from firebase_admin import initialize_app, firestore, storage
-from firebase_functions.params import StringParam
-
-from firebase_functions import https_fn, logger, scheduler_fn
-
-
-from google.oauth2.credentials import Credentials
-
-from firebase_functions import https_fn
-from firebase_admin import firestore
-
-from google.auth.transport import requests
-from synchronizer.synchronizer.google_calendar_manager import (
+from googleapiclient.discovery import build
+from src.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
-from synchronizer.synchronizer.synchronizer import perform_synchronization
-
-#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#   TODO: Add one more level of synchronizer
-
-from synchronizer.synchronizer.middleware.insa_middleware import (
+from src.synchronizer.ics_cache import FirebaseIcsFileStorage
+from src.synchronizer.ics_parser import IcsParser
+from src.synchronizer.ics_source import UrlIcsSource
+from src.synchronizer.middleware.insa_middleware import (
+    CM_TD_TP_Middleware,
+    ExamPrettifier,
     Insa5IFMiddleware,
     TitlePrettifier,
-    ExamPrettifier,
-    CM_TD_TP_Middleware,
 )
-
+from src.synchronizer.synchronizer import SyncTrigger, perform_synchronization
 
 initialize_app()
 
@@ -297,7 +280,7 @@ def scheduled_sync(event: Any):
 def _synchronize_now(
     user_id: str,
     sync_profile_id: str,
-    sync_trigger: Literal["on_create", "manual", "scheduled"],
+    sync_trigger: SyncTrigger,
 ):
     db = firestore.client()
 
@@ -336,6 +319,10 @@ def _synchronize_now(
             user_id=user_id,
             provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
+        calendar_manager = GoogleCalendarManager(
+            service=service, calendar_id=doc.get("targetCalendar.id")
+        )
+        calendar_manager.test_authorization()
     except Exception as e:
         sync_profile_ref.update(
             {
@@ -350,16 +337,14 @@ def _synchronize_now(
         logger.info(f"Failed to get calendar service: {e}")
         return
 
-    # TODO : handle the case where the ics source is not valid or not available
-
     try:
         perform_synchronization(
             sync_profile_id=sync_profile_id,
-            ics_source_url=doc.get("scheduleSource.url"),
-            target_calendar_id=doc.get("targetCalendar.id"),
-            service=service,
             sync_trigger=sync_trigger,
-            firebase_storage_bucket=storage.bucket(),
+            ics_source=UrlIcsSource(doc.get("scheduleSource.url")),
+            ics_parser=IcsParser(),
+            ics_cache=FirebaseIcsFileStorage(storage.bucket()),
+            calendar_manager=calendar_manager,
             middlewares=[
                 TitlePrettifier,
                 ExamPrettifier,

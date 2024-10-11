@@ -78,12 +78,30 @@ extension on SyncProfileState {
       maybeMap(
         loaded: (loaded) => [
           // Synchronize now button
-          IconButton(
-            icon: const Icon(Icons.sync),
-            tooltip: "Synchronize now",
-            onPressed: state.canRequestSync
-                ? context.read<SyncProfileCubit>().requestSync
+          GestureDetector(
+            onLongPress: state.canRequestSync
+                ? () {
+                    context
+                        .read<SyncProfileCubit>()
+                        .requestSync(fullSync: true);
+                    ScaffoldMessenger.of(context)
+                      ..clearSnackBars()
+                      ..showSnackBar(
+                        const SnackBar(
+                          content: Text('Full synchronization requested'),
+                        ),
+                      );
+                  }
                 : null,
+            child: IconButton(
+              icon: const Icon(Icons.sync),
+              tooltip: "Synchronize now",
+              onPressed: state.canRequestSync
+                  ? () => context
+                      .read<SyncProfileCubit>()
+                      .requestSync(fullSync: false)
+                  : null,
+            ),
           ),
           // Delete button
           IconButton(

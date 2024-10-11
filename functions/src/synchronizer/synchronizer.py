@@ -10,6 +10,7 @@ from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
 
 SyncTrigger = Literal["on_create", "manual", "scheduled"]
+SyncType = Literal["full", "regular"]
 
 
 def perform_synchronization(
@@ -22,6 +23,7 @@ def perform_synchronization(
     middlewares: Optional[List[Middleware]] = None,
     rule_set: Ruleset | None = None,
     separation_dt: datetime | None = None,
+    sync_type: SyncType = "regular",
 ) -> None:
     # Temporary : only one of middlewares or ruleset can be provided, not both
     assert not (
@@ -79,19 +81,33 @@ def perform_synchronization(
     if sync_trigger == "on_create":
         return calendar_manager.create_events(events, sync_profile_id)
 
-    separation_dt = separation_dt or datetime.now(timezone.utc)
+    if sync_type == "regular":
+        logger.info("Performing regular synchronization, only updating future events")
 
-    # TODO : Only update events that have changed
-    future_events_ids = calendar_manager.get_events_ids_from_sync_profile(
-        sync_profile_id, separation_dt
-    )
-    logger.info(f"Found {len(future_events_ids)} future events to delete")
+        separation_dt = separation_dt or datetime.now(timezone.utc)
+        events_to_delete = calendar_manager.get_events_ids_from_sync_profile(
+            sync_profile_id, separation_dt
+        )
+        new_events = [event for event in events if event.end > separation_dt]
 
-    calendar_manager.delete_events(future_events_ids)
+    elif sync_type == "full":
+        logger.info("Performing full synchronization, deleting all events")
 
-    new_events = [event for event in events if event.end > separation_dt]
+        events_to_delete = calendar_manager.get_events_ids_from_sync_profile(
+            sync_profile_id, min_dt=None
+        )
+        new_events = events
+    else:
+        raise ValueError(f"Invalid sync_type: {sync_type}")
 
-    logger.info(f"Found {len(new_events)} new events to insert")
+    if events_to_delete:
+        logger.info(f"Found {len(events_to_delete)} events to delete")
+        calendar_manager.delete_events(events_to_delete)
+    else:
+        logger.info("No events to delete")
 
     if new_events:
+        logger.info(f"Found {len(new_events)} new events to insert")
         calendar_manager.create_events(new_events, sync_profile_id)
+    else:
+        logger.info("No new events to insert")

@@ -27,7 +27,7 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
     });
   }
 
-  Future<void> requestSync() async {
+  Future<void> requestSync({bool fullSync = false}) async {
     final lastSyncRequest = DateTime.now();
 
     state.maybeMap(
@@ -41,7 +41,11 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
     );
 
     try {
-      await GetIt.I<SyncProfileService>().requestSync(syncProfileId);
+      await GetIt.I<SyncProfileService>().requestSync(
+        syncProfileId,
+        synchronizationType:
+            fullSync ? SynchronizationType.full : SynchronizationType.regular,
+      );
 
       state.maybeMap(
         loaded: (loaded) => emit(loaded.copyWith(
@@ -59,11 +63,6 @@ class SyncProfileCubit extends Cubit<SyncProfileState> {
         orElse: () {},
       );
     }
-  }
-
-  Future<void> authorizeBackend() {
-    throw UnimplementedError(); //TODO re-implement
-    // return GetIt.I<BackendAuthorizationService>().authorizeBackend();
   }
 
   Future<void> deleteSyncProfile() async {

@@ -1,52 +1,47 @@
 from datetime import datetime, timezone
 from firebase_functions import logger
-from typing import List, Optional
+from typing import List, Literal, Optional
+
+from functions.src.synchronizer.ics_cache import IcsFileStorage
 from .middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
-from google.cloud import storage
+
+SyncTrigger = Literal["on_create", "manual", "scheduled"]
 
 
 def perform_synchronization(
     sync_profile_id: str,  # This value is inserted as a property in events to avoid deleting user events
-    ics_source_url: str,
-    target_calendar_id: str,
-    service,
-    sync_trigger: str,
-    firebase_storage_bucket: storage.Bucket,
+    sync_trigger: SyncTrigger,
+    ics_source: UrlIcsSource,
+    ics_parser: IcsParser,
+    ics_cache: IcsFileStorage,
+    calendar_manager: GoogleCalendarManager,
     middlewares: Optional[List[Middleware]] = None,
 ) -> None:
     try:
-        ics_str = UrlIcsSource(
-            ics_source_url
-        ).get_ics_string()  # TODO : Add proper error when url is invalid
+        ics_str = ics_source.get_ics_string()
     except Exception as e:
         logger.error(f"Failed to get ics string: {e}")
         raise e
 
     try:
-        events = list(set(IcsParser().parse(ics_str)))
+        events = list(set(ics_parser.parse(ics_str)))
     except Exception as e:
         logger.error(f"Failed to parse ics: {e}")
         raise e
 
     logger.info(f"Found {len(events)} events in ics")
 
-    # Store ics string in firebase storage
+    # Store the ics string for later use
     try:
-        filename = f"{sync_profile_id}_{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')}.ics"
-        blob = firebase_storage_bucket.blob(filename)
-
-        blob.metadata = {
-            "sourceUrl": ics_source_url,
-            "syncProfileId": sync_profile_id,
-            "syncTrigger": sync_trigger,
-            "blob_created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        blob.upload_from_string(ics_str, content_type="text/calendar")
-        logger.info(f"Stored ics string in firebase storage: {filename}")
-
+        ics_cache.save_to_cache(
+            sync_profile_id=sync_profile_id,
+            sync_trigger=sync_trigger,
+            ics_source=ics_source,
+            ics_str=ics_str,
+        )
     except Exception as e:
         logger.error(f"Failed to store ics string in firebase storage. {e}")
         # Do not raise, we want to continue the execution
@@ -65,10 +60,6 @@ def perform_synchronization(
         return
 
     logger.info(f"{len(events)} events after applying middlewares")
-
-    calendar_manager = GoogleCalendarManager(service, target_calendar_id)
-
-    calendar_manager.test_authorization()
 
     separation_dt = datetime.now(timezone.utc)
 

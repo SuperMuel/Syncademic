@@ -1,8 +1,8 @@
+import pytest
 from typing import List
+import arrow
 from src.shared.event import Event
 from src.synchronizer.ics_parser import IcsParser
-import unittest
-import arrow
 
 
 def build_ics_outline(inside: str):
@@ -44,133 +44,145 @@ event2 = Event(
 )
 
 
-class TestIcsParser(unittest.TestCase):
-    def setUp(self):
-        self.ics_parser = IcsParser()
+@pytest.fixture
+def ics_parser():
+    return IcsParser()
 
-    def test_parse(self):
-        """Test parsing a valid ics string."""
-        ics_str = build_ics([event1])
-        events = self.ics_parser.parse(ics_str)
-        self.assertEqual(events, [event1])
 
-    def test_parse_empty_string_throws(self):
-        """Test parsing an empty ics string."""
-        ics_str = ""
+def test_parse(ics_parser):
+    """Test parsing a valid ics string."""
+    ics_str = build_ics([event1])
+    events = ics_parser.parse(ics_str)
+    assert events == [event1]
 
-        with self.assertRaises(Exception):
-            self.ics_parser.parse(ics_str)
 
-    def test_parse_no_events(self):
-        """Test parsing an empty ics string."""
-        ics_str = build_ics_outline("")
-        events = self.ics_parser.parse(ics_str)
-        self.assertEqual(events, [])
+def test_parse_empty_string_throws(ics_parser):
+    """Test parsing an empty ics string."""
+    ics_str = ""
 
-    def test_parse_invalid(self):
-        """Test parsing an invalid ics string."""
-        ics_str = "invalid"
-        with self.assertRaises(Exception):
-            self.ics_parser.parse(ics_str)
+    with pytest.raises(Exception):
+        ics_parser.parse(ics_str)
 
-    def test_parse_multiple(self):
-        """Test parsing multiple events."""
-        ics_str = build_ics([event1, event2])
-        events = self.ics_parser.parse(ics_str)
 
-        self.assertTrue(events[0] == event1 or events[0] == event2)
-        self.assertTrue(events[1] == event1 or events[1] == event2)
-        self.assertNotEqual(events[0], events[1])
+def test_parse_no_events(ics_parser):
+    """Test parsing an empty ics string."""
+    ics_str = build_ics_outline("")
+    events = ics_parser.parse(ics_str)
+    assert events == []
 
-    def test_an_event_has_no_title(self):
-        """Test that an event has no title."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT
+
+def test_parse_invalid(ics_parser):
+    """Test parsing an invalid ics string."""
+    ics_str = "invalid"
+    with pytest.raises(Exception):
+        ics_parser.parse(ics_str)
+
+
+def test_parse_multiple(ics_parser):
+    """Test parsing multiple events."""
+    ics_str = build_ics([event1, event2])
+    events = ics_parser.parse(ics_str)
+
+    assert events[0] == event1 or events[0] == event2
+    assert events[1] == event1 or events[1] == event2
+    assert events[0] != events[1]
+
+
+def test_an_event_has_no_title(ics_parser):
+    """Test that an event has no title."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
 DESCRIPTION:Description
 LOCATION:Location
 DTSTART:20230101T090000
 DTEND:20230101T100000
 END:VEVENT"""
-        )
-        events = self.ics_parser.parse(ics_str)
-        self.assertEqual(events[0].title, "")
+    )
+    events = ics_parser.parse(ics_str)
+    assert events[0].title == ""
 
-    def test_an_event_has_no_description(self):
-        """Test that an event has no description."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT
+
+def test_an_event_has_no_description(ics_parser):
+    """Test that an event has no description."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
 SUMMARY:Title
 LOCATION:Location
 DTSTART:20230101T090000
 DTEND:20230101T100000
 END:VEVENT"""
-        )
-        events = self.ics_parser.parse(ics_str)
-        self.assertEqual(events[0].description, "")
+    )
+    events = ics_parser.parse(ics_str)
+    assert events[0].description == ""
 
-    def test_an_event_has_no_location(self):
-        """Test that an event has no location."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT
+
+def test_an_event_has_no_location(ics_parser):
+    """Test that an event has no location."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
 SUMMARY:Title
 DESCRIPTION:Description
 DTSTART:20230101T090000
 DTEND:20230101T100000
 END:VEVENT"""
-        )
-        events = self.ics_parser.parse(ics_str)
-        self.assertEqual(events[0].location, "")
+    )
+    events = ics_parser.parse(ics_str)
+    assert events[0].location == ""
 
-    def test_an_event_has_no_start_throws(self):
-        """Test that an event has no start."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT
+
+def test_an_event_has_no_start_throws(ics_parser):
+    """Test that an event has no start."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
 SUMMARY:Title
 DESCRIPTION:Description
 LOCATION:Location
 DTEND:20230101T100000
 END:VEVENT"""
-        )
-        with self.assertRaises(Exception):
-            self.ics_parser.parse(ics_str)
+    )
+    with pytest.raises(Exception):
+        ics_parser.parse(ics_str)
 
-    def test_an_event_has_no_end_throws(self):
-        """Test that an event has no end."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT
+
+def test_an_event_has_no_end_throws(ics_parser):
+    """Test that an event has no end."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
 SUMMARY:Title
 DESCRIPTION:Description
 LOCATION:Location
 DTSTART:20230101T090000
 END:VEVENT"""
-        )
-        with self.assertRaises(Exception):
-            self.ics_parser.parse(ics_str)
+    )
+    with pytest.raises(Exception):
+        ics_parser.parse(ics_str)
 
-    def test_an_event_has_start_after_end_throws(self):
-        """Test that an event has start after end."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT 
+
+def test_an_event_has_start_after_end_throws(ics_parser):
+    """Test that an event has start after end."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT 
 SUMMARY:Title
 DESCRIPTION:Description
 LOCATION:Location
 DTSTART:20230101T100000
 DTEND:20230101T090000
 END:VEVENT"""
-        )
-        with self.assertRaises(Exception):
-            self.ics_parser.parse(ics_str)
+    )
+    with pytest.raises(Exception):
+        ics_parser.parse(ics_str)
 
-    def test_an_event_has_start_equal_end_throws(self):
-        """Test that an event has start equal end."""
-        ics_str = build_ics_outline(
-            """BEGIN:VEVENT
+
+def test_an_event_has_start_equal_end_throws(ics_parser):
+    """Test that an event has start equal end."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
 SUMMARY:Title
 DESCRIPTION:Description
 LOCATION:Location
 DTSTART:20230101T090000
 DTEND:20230101T090000
 END:VEVENT"""
-        )
-        with self.assertRaises(Exception):
-            self.ics_parser.parse(ics_str)
+    )
+    with pytest.raises(Exception):
+        ics_parser.parse(ics_str)

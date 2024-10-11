@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Literal
+from typing import Any
 
 from firebase_admin import firestore, initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
@@ -15,6 +15,9 @@ from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from functions.src.synchronizer.ics_cache import FirebaseIcsFileStorage
+from functions.src.synchronizer.ics_parser import IcsParser
+from functions.src.synchronizer.ics_source import UrlIcsSource
 from src.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
@@ -24,7 +27,7 @@ from src.synchronizer.middleware.insa_middleware import (
     Insa5IFMiddleware,
     TitlePrettifier,
 )
-from src.synchronizer.synchronizer import perform_synchronization
+from src.synchronizer.synchronizer import perform_synchronization, SyncTrigger
 
 initialize_app()
 
@@ -277,7 +280,7 @@ def scheduled_sync(event: Any):
 def _synchronize_now(
     user_id: str,
     sync_profile_id: str,
-    sync_trigger: Literal["on_create", "manual", "scheduled"],
+    sync_trigger: SyncTrigger,
 ):
     db = firestore.client()
 
@@ -316,6 +319,10 @@ def _synchronize_now(
             user_id=user_id,
             provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
+        calendar_manager = GoogleCalendarManager(
+            service=service, calendar_id=doc.get("targetCalendar.id")
+        )
+        calendar_manager.test_authorization()
     except Exception as e:
         sync_profile_ref.update(
             {
@@ -330,16 +337,14 @@ def _synchronize_now(
         logger.info(f"Failed to get calendar service: {e}")
         return
 
-    # TODO : handle the case where the ics source is not valid or not available
-
     try:
         perform_synchronization(
             sync_profile_id=sync_profile_id,
-            ics_source_url=doc.get("scheduleSource.url"),
-            target_calendar_id=doc.get("targetCalendar.id"),
-            service=service,
             sync_trigger=sync_trigger,
-            firebase_storage_bucket=storage.bucket(),
+            ics_source=UrlIcsSource(doc.get("scheduleSource.url")),
+            ics_parser=IcsParser(),
+            ics_cache=FirebaseIcsFileStorage(storage.bucket()),
+            calendar_manager=calendar_manager,
             middlewares=[
                 TitlePrettifier,
                 ExamPrettifier,

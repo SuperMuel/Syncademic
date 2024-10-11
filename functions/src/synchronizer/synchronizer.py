@@ -2,8 +2,8 @@ from datetime import datetime, timezone
 from firebase_functions import logger
 from typing import List, Literal, Optional
 
-from functions.src.rules.models import Ruleset
-from functions.src.synchronizer.ics_cache import IcsFileStorage
+from src.rules.models import Ruleset
+from src.synchronizer.ics_cache import IcsFileStorage
 from .middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser

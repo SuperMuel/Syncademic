@@ -15,9 +15,9 @@ from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-from functions.src.synchronizer.ics_cache import FirebaseIcsFileStorage
-from functions.src.synchronizer.ics_parser import IcsParser
-from functions.src.synchronizer.ics_source import UrlIcsSource
+from src.synchronizer.ics_cache import FirebaseIcsFileStorage
+from src.synchronizer.ics_parser import IcsParser
+from src.synchronizer.ics_source import UrlIcsSource
 from src.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )

@@ -14,7 +14,7 @@ from src.rules.models import (
 )
 from src.shared.google_calendar_colors import GoogleEventColor
 
-from functions.tests.rules.constants import RulesSettings
+from tests.rules.constants import RulesSettings
 
 settings = RulesSettings()
 
@@ -600,24 +600,3 @@ def test_ruleset_max_rules():
             rules=invalid_rules,
         )
     assert "should have at most" in str(exc_info.value)
-
-
-# # Test Safe Regex Library Usage (Assuming re2 is used)
-# def test_safe_regex_library_prevents_redos():
-#     import re2 as re  # Assuming re2 is used
-
-#     condition = TextFieldCondition(
-#         field="title",
-#         operator="regex",
-#         value="(a+)+" * 10,  # Nested quantifiers to attempt ReDoS
-#     )
-#     event = Event(
-#         title="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-#         description="Description",
-#         location="Room 101",
-#         start_time=None,
-#         end_time=None,
-#     )
-#     # Should not hang or raise exception
-#     result = condition.evaluate(event)
-#     assert isinstance(result, bool)

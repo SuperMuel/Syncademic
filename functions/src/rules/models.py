@@ -4,7 +4,7 @@ from typing import Literal, Optional, Self, Union, Sequence
 
 from pydantic import BaseModel, Field, model_validator
 
-from functions.tests.rules.constants import RulesSettings
+from tests.rules.constants import RulesSettings
 from src.shared.event import Event
 from src.shared.google_calendar_colors import GoogleEventColor
 

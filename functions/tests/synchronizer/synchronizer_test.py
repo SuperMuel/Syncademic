@@ -305,7 +305,7 @@ def test_perform_synchronization_no_events_after_ruleset():
     ics_parser.parse.return_value = [past_event, future_event]
 
     # Define a rule that removes all events
-    condition = TextFieldCondition(field="title", operator="contains", value="")
+    condition = TextFieldCondition(field="title", operator="contains", value="Event")
     action = DeleteEventAction()
     rule = Rule(condition=condition, actions=[action])
     ruleset = Ruleset(rules=[rule])
@@ -383,7 +383,16 @@ def test_perform_synchronization_both_middlewares_and_ruleset():
 
     # Middleware and Ruleset
     middlewares = [lambda events: events]
-    ruleset = Ruleset(rules=[])
+    ruleset = Ruleset(
+        rules=[
+            Rule(
+                condition=TextFieldCondition(
+                    field="title", operator="contains", value="Event"
+                ),
+                actions=[DeleteEventAction()],
+            )
+        ]
+    )
 
     # Act & Assert
     with pytest.raises(

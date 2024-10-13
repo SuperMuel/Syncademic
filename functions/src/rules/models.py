@@ -1,17 +1,40 @@
 import re
 from dataclasses import replace
-from typing import List, Union, Literal, Optional
-from pydantic import BaseModel, Field
+from typing import List, Literal, Optional, Self, Union
+
+from pydantic import BaseModel, Field, model_validator
+
+from functions.tests.rules.constants import RulesSettings
 from src.shared.event import Event
 from src.shared.google_calendar_colors import GoogleEventColor
 
+settings = RulesSettings()
+
+EventTextField = Literal["title", "description", "location"]
+TextFieldConditionOperator = Literal[
+    "equals", "contains", "starts_with", "ends_with", "regex"
+]
+
 
 class TextFieldCondition(BaseModel):
-    field: Literal["title", "description", "location"]
-    operator: Literal["equals", "contains", "starts_with", "ends_with", "regex"]
-    value: str
+    field: EventTextField
+    operator: TextFieldConditionOperator
+    value: str = Field(
+        ..., min_length=1, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
+    )
     case_sensitive: Optional[bool] = True
     negate: Optional[bool] = False
+
+    @model_validator(mode="after")
+    def validate_regex(self) -> Self:
+        if self.operator == "regex":
+            try:
+                re.compile(self.value)
+            except re.error as e:
+                raise ValueError(
+                    f"Invalid regular expression: `{self.value}`, error: {e}"
+                )
+        return self
 
     def evaluate(self, event: Event) -> bool:
         field_value = getattr(event, self.field)
@@ -35,13 +58,34 @@ class TextFieldCondition(BaseModel):
             case "regex":
                 flags = 0 if self.case_sensitive else re.IGNORECASE
                 result = bool(re.search(condition_value, field_value, flags))
+            case _:
+                raise ValueError(f"Unimplemented operator: {self.operator}")
 
         return not result if self.negate else result
 
 
+CompoundConditionLogicalOperator = Literal["AND", "OR"]
+
+
 class CompoundCondition(BaseModel):
-    logical_operator: Literal["AND", "OR"]
-    conditions: List["ConditionType"] = Field(..., min_length=2)
+    logical_operator: CompoundConditionLogicalOperator
+    conditions: list["ConditionType"] = Field(
+        ..., min_length=2, max_length=settings.MAX_CONDITIONS
+    )
+
+    @model_validator(mode="after")
+    def validate_nesting_depth(self) -> Self:
+        def check_depth(condition, current_depth=1):
+            if isinstance(condition, CompoundCondition):
+                if current_depth > settings.MAX_NESTING_DEPTH:
+                    raise ValueError("Maximum nesting depth exceeded.")
+                for cond in condition.conditions:
+                    check_depth(cond, current_depth + 1)
+
+        for condition in self.conditions:
+            check_depth(condition)
+
+        return self
 
     def evaluate(self, event: Event) -> bool:
         match self.logical_operator:
@@ -59,10 +103,12 @@ CompoundCondition.model_rebuild()
 
 
 class ChangeFieldAction(BaseModel):
-    action: Literal["change_field"]
-    field: Literal["title", "description", "location"]
+    action: Literal["change_field"] = "change_field"
+    field: EventTextField
     method: Literal["set", "append", "prepend"]
-    value: str
+    value: str = Field(
+        ..., min_length=0, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
+    )
 
     def apply(self, event: Event) -> Optional[Event]:
         field_value = getattr(event, self.field)
@@ -77,12 +123,14 @@ class ChangeFieldAction(BaseModel):
                 new_field_value = field_value + new_value
             case "prepend":
                 new_field_value = new_value + field_value
+            case _:
+                raise ValueError(f"Unimplemented method: {self.method}")
 
         return replace(event, **{self.field: new_field_value})
 
 
 class ChangeColorAction(BaseModel):
-    action: Literal["change_color"]
+    action: Literal["change_color"] = "change_color"
     value: GoogleEventColor
 
     def apply(self, event: Event) -> Optional[Event]:
@@ -96,12 +144,14 @@ class DeleteEventAction(BaseModel):
         return None
 
 
-ActionType = Union[ChangeFieldAction, ChangeColorAction, DeleteEventAction]
+ActionType = ChangeFieldAction | ChangeColorAction | DeleteEventAction
 
 
 class Rule(BaseModel):
     condition: ConditionType
-    actions: List[ActionType]
+    actions: list[ActionType] = Field(
+        ..., min_length=1, max_length=settings.MAX_ACTIONS
+    )
 
     def apply(self, event: Event) -> Optional[Event]:
         if self.condition.evaluate(event):
@@ -114,7 +164,7 @@ class Rule(BaseModel):
 
 
 class Ruleset(BaseModel):
-    rules: List[Rule]
+    rules: List[Rule] = Field(..., min_length=1, max_length=settings.MAX_RULES)
 
     def apply(self, events: List[Event]) -> List[Event]:
         new_events = []

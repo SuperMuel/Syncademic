@@ -1,16 +1,22 @@
-from pydantic import ValidationError
 import pytest
-
-from src.shared.google_calendar_colors import GoogleEventColor
+from pydantic import ValidationError
 from src.rules.models import (
     ChangeColorAction,
     ChangeFieldAction,
     CompoundCondition,
+    CompoundConditionLogicalOperator,
     DeleteEventAction,
+    EventTextField,
     Rule,
     Ruleset,
     TextFieldCondition,
+    TextFieldConditionOperator,
 )
+from src.shared.google_calendar_colors import GoogleEventColor
+
+from functions.tests.rules.constants import RulesSettings
+
+settings = RulesSettings()
 
 
 def test_text_field_condition_valid():
@@ -43,14 +49,14 @@ def test_text_field_condition_valid_regex():
     assert condition.negate == False  # noqa: E712
 
 
-def test_text_field_condition_valid_fields():
-    for valid_field in ["title", "description", "location"]:
-        condition = TextFieldCondition(
-            field=valid_field,  # type: ignore
-            operator="contains",
-            value="Lecture",
-        )
-        assert condition.field == valid_field
+@pytest.mark.parametrize("field", ["title", "description", "location"])
+def test_text_field_condition_valid_fields(field):
+    condition = TextFieldCondition(
+        field=field,  # type: ignore
+        operator="contains",
+        value="Lecture",
+    )
+    assert condition.field == field
 
 
 def test_text_field_condition_invalid_field():
@@ -69,6 +75,16 @@ def test_text_field_condition_invalid_operator():
             operator="invalid_operator",  # type:ignore
             value="Lecture",
         )
+
+
+def test_text_field_condition_empty_value():
+    with pytest.raises(ValidationError) as exc_info:
+        TextFieldCondition(
+            field="title",
+            operator="contains",
+            value="",
+        )
+    assert "should have at least 1 character" in str(exc_info.value)
 
 
 def test_text_field_condition_missing_fields():
@@ -114,10 +130,25 @@ def test_compound_condition_invalid_logical_operator():
         )
 
 
+@pytest.mark.parametrize("operator", CompoundConditionLogicalOperator.__args__)
+@pytest.mark.parametrize("length", [0, 1])
+def test_invalid_compound_condition_missing_conditions(operator, length):
+    condition = TextFieldCondition(
+        field="title",
+        operator="contains",
+        value="Lecture",
+    )
+
+    with pytest.raises(ValidationError):
+        CompoundCondition(
+            logical_operator=operator,  # type: ignore
+            conditions=[condition] * length,
+        )
+
+
 # Test Actions
 def test_change_field_action_valid():
     action = ChangeFieldAction(
-        action="change_field",
         field="title",
         method="prepend",
         value="Calcul formel - ",
@@ -140,7 +171,6 @@ def test_change_field_action_invalid_action():
 
 def test_change_color_action_valid():
     action = ChangeColorAction(
-        action="change_color",
         value=GoogleEventColor.SAGE,
     )
     assert action.action == "change_color"
@@ -150,15 +180,12 @@ def test_change_color_action_valid():
 def test_change_color_action_invalid_value():
     with pytest.raises(ValidationError):
         ChangeColorAction(
-            action="change_color",
             value="INVALID_COLOR",  # type: ignore
         )
 
 
 def test_delete_event_action_valid():
-    action = DeleteEventAction(
-        action="delete_event",
-    )
+    action = DeleteEventAction()
     assert action.action == "delete_event"
 
 
@@ -196,6 +223,20 @@ def test_rule_valid():
     assert len(rule.actions) == 2
     assert rule.actions[0] == action1
     assert rule.actions[1] == action2
+
+
+def test_rule_min_actions():
+    condition = TextFieldCondition(
+        field="title",
+        operator="contains",
+        value="HAI507I",
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        Rule(
+            condition=condition,
+            actions=[],
+        )
+    assert "should have at least 1" in str(exc_info.value)
 
 
 # Test Ruleset
@@ -247,6 +288,14 @@ def test_ruleset_valid():
     assert len(ruleset.rules) == 2
     assert ruleset.rules[0] == rule1
     assert ruleset.rules[1] == rule2
+
+
+def test_ruleset_min_rules():
+    with pytest.raises(ValidationError) as exc_info:
+        Ruleset(
+            rules=[],
+        )
+    assert "should have at least 1" in str(exc_info.value)
 
 
 # Test Serialization and Deserialization
@@ -355,20 +404,221 @@ def test_color_enum_serialization_contains_name():
     assert "tangerine" in json_data.lower()
 
 
-# Additional tests for validation and error handling
+######################
+### Security tests ###
+######################
 
 
-def test_invalid_compound_condition_missing_conditions():
+def long_string(length):
+    """Helper function to generate a long string"""
+    return "a" * length
+
+
+@pytest.mark.parametrize("field", EventTextField.__args__)
+@pytest.mark.parametrize("operator", TextFieldConditionOperator.__args__)
+def test_text_field_condition_value_length_limit(field, operator):
+    valid_value = long_string(settings.MAX_TEXT_FIELD_VALUE_LENGTH)
+    condition = TextFieldCondition(
+        field=field,
+        operator=operator,
+        value=valid_value,
+    )
+    assert condition.value == valid_value
+
+    invalid_value = long_string(settings.MAX_TEXT_FIELD_VALUE_LENGTH + 1)
+    with pytest.raises(ValidationError) as exc_info:
+        TextFieldCondition(
+            field="title",
+            operator=operator,
+            value=invalid_value,
+        )
+    assert "should have at most" in str(exc_info.value)
+
+
+# Test TextFieldCondition Invalid Regex Pattern
+def test_text_field_condition_invalid_regex_pattern():
+    invalid_pattern = "[unclosed_group"
+    with pytest.raises(ValidationError) as exc_info:
+        TextFieldCondition(
+            field="title",
+            operator="regex",
+            value=invalid_pattern,
+        )
+    assert "Invalid regular expression" in str(exc_info.value)
+
+
+# Test CompoundCondition Maximum Number of Conditions
+@pytest.mark.parametrize("logical_operator", CompoundConditionLogicalOperator.__args__)
+def test_compound_condition_max_conditions(
+    logical_operator: CompoundConditionLogicalOperator,
+):
+    valid_conditions = [
+        TextFieldCondition(
+            field="title",
+            operator="contains",
+            value=f"Lecture {i}",
+        )
+        for i in range(settings.MAX_CONDITIONS)
+    ]
+    compound_condition = CompoundCondition(
+        logical_operator=logical_operator,
+        conditions=valid_conditions,
+    )
+    assert len(compound_condition.conditions) == settings.MAX_CONDITIONS
+
+    invalid_conditions = valid_conditions + [
+        TextFieldCondition(
+            field="title",
+            operator="contains",
+            value="Extra Lecture",
+        )
+    ]
+    with pytest.raises(ValidationError) as exc_info:
+        CompoundCondition(
+            logical_operator=logical_operator,
+            conditions=invalid_conditions,
+        )
+    assert "should have at most" in str(exc_info.value)
+
+
+# # Test CompoundCondition Maximum Nesting Depth
+def test_compound_condition_max_nesting_depth():
+    # Function to create nested compound conditions
+    def create_nested_condition(depth: int):
+        condition = TextFieldCondition(
+            field="title",
+            operator="contains",
+            value="Lecture",
+        )
+        for _ in range(depth):
+            condition = CompoundCondition(
+                logical_operator="AND",
+                conditions=[condition, condition],
+            )
+        return condition
+
+    # Valid nesting
+    valid_condition = create_nested_condition(settings.MAX_NESTING_DEPTH + 1)
+    assert valid_condition
+
+    # Invalid nesting
+    with pytest.raises(ValueError) as exc_info:
+        create_nested_condition(settings.MAX_NESTING_DEPTH + 2)
+    assert "Maximum nesting depth exceeded." in str(exc_info.value)
+
+
+# Test ChangeFieldAction Value Length Limit
+def test_change_field_action_value_length_limit():
+    valid_value = long_string(settings.MAX_TEXT_FIELD_VALUE_LENGTH)
+    action = ChangeFieldAction(
+        action="change_field",
+        field="title",
+        method="append",
+        value=valid_value,
+    )
+    assert action.value == valid_value
+
+    invalid_value = long_string(settings.MAX_TEXT_FIELD_VALUE_LENGTH + 1)
+    with pytest.raises(ValidationError) as exc_info:
+        ChangeFieldAction(
+            action="change_field",
+            field="title",
+            method="append",
+            value=invalid_value,
+        )
+    assert "String should have at most" in str(exc_info.value)
+
+
+# Test Rule Maximum Number of Actions
+def test_rule_max_number_of_actions():
+    valid_actions = [
+        ChangeFieldAction(
+            action="change_field",
+            field="title",
+            method="append",
+            value=f"Suffix {i}",
+        )
+        for i in range(settings.MAX_ACTIONS)
+    ]
     condition = TextFieldCondition(
         field="title",
         operator="contains",
         value="Lecture",
     )
+    rule = Rule(
+        condition=condition,
+        actions=valid_actions,
+    )
+    assert len(rule.actions) == settings.MAX_ACTIONS
 
-    for length in [0, 1]:
-        for operator in ["AND", "OR"]:
-            with pytest.raises(ValidationError):
-                CompoundCondition(
-                    logical_operator=operator,  # type: ignore
-                    conditions=[condition] * length,
-                )
+    invalid_actions = valid_actions + [
+        ChangeColorAction(
+            action="change_color",
+            value=GoogleEventColor.SAGE,
+        )
+    ]
+    with pytest.raises(ValidationError) as exc_info:
+        Rule(
+            condition=condition,
+            actions=invalid_actions,
+        )
+    assert "should have at most" in str(exc_info.value)
+
+
+# Test Ruleset Maximum Number of Rules
+def test_ruleset_max_rules():
+    condition = TextFieldCondition(
+        field="title",
+        operator="contains",
+        value="Lecture",
+    )
+    action = ChangeFieldAction(
+        action="change_field",
+        field="title",
+        method="append",
+        value=" - Suffix",
+    )
+    valid_rules = [
+        Rule(
+            condition=condition,
+            actions=[action],
+        )
+        for _ in range(settings.MAX_RULES)
+    ]
+    ruleset = Ruleset(
+        rules=valid_rules,
+    )
+    assert len(ruleset.rules) == settings.MAX_RULES
+
+    invalid_rules = valid_rules + [
+        Rule(
+            condition=condition,
+            actions=[action],
+        )
+    ]
+    with pytest.raises(ValidationError) as exc_info:
+        Ruleset(
+            rules=invalid_rules,
+        )
+    assert "should have at most" in str(exc_info.value)
+
+
+# # Test Safe Regex Library Usage (Assuming re2 is used)
+# def test_safe_regex_library_prevents_redos():
+#     import re2 as re  # Assuming re2 is used
+
+#     condition = TextFieldCondition(
+#         field="title",
+#         operator="regex",
+#         value="(a+)+" * 10,  # Nested quantifiers to attempt ReDoS
+#     )
+#     event = Event(
+#         title="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+#         description="Description",
+#         location="Room 101",
+#         start_time=None,
+#         end_time=None,
+#     )
+#     # Should not hang or raise exception
+#     result = condition.evaluate(event)
+#     assert isinstance(result, bool)

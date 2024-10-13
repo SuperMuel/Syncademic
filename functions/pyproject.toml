@@ -24,6 +24,7 @@ firebase-functions = "^0.2.0"
 functions-framework = "^3.8.1"
 google-api-python-client = "^2.120.0"
 google-auth-httplib2 = "^0.2.0"
+pydantic-settings = "^2.5.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"

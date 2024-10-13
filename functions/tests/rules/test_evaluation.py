@@ -71,6 +71,62 @@ def test_text_field_condition_evaluate():
     assert condition.evaluate(event) is True
 
 
+def test_negate():
+    event = Event(
+        title="HAI507I Lecture",
+        description="Calcul formel",
+        location="Room 101",
+        start=start,
+        end=end,
+    )
+
+    condition = TextFieldCondition(
+        field="title",
+        operator="contains",
+        value="Lecture",
+        negate=False,
+    )
+
+    assert condition.evaluate(event) is True
+
+    condition = TextFieldCondition(
+        field="title",
+        operator="contains",
+        value="Lecture",
+        negate=True,
+    )
+
+    assert condition.evaluate(event) is False
+
+
+def test_case_sensitive():
+    event = Event(
+        title="HAI507I Lecture",
+        description="Calcul formel",
+        location="Room 101",
+        start=start,
+        end=end,
+    )
+
+    case_sensitive_condition = TextFieldCondition(
+        field="description",
+        operator="contains",
+        value="calcul",
+        case_sensitive=True,
+    )
+
+    assert case_sensitive_condition.evaluate(event) is False
+
+    case_insensitive_condition = TextFieldCondition(
+        field="description",
+        operator="contains",
+        value="calcul",
+        case_sensitive=False,
+    )
+
+    assert case_insensitive_condition.evaluate(event) is True
+
+
 def test_compound_condition_evaluate():
     event = Event(
         title="HAI507I Lecture",

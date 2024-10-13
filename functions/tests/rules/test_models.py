@@ -483,7 +483,6 @@ def test_compound_condition_max_conditions(
 
 # # Test CompoundCondition Maximum Nesting Depth
 def test_compound_condition_max_nesting_depth():
-    # Function to create nested compound conditions
     def create_nested_condition(depth: int):
         condition = TextFieldCondition(
             field="title",

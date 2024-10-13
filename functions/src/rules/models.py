@@ -1,6 +1,6 @@
 import re
 from dataclasses import replace
-from typing import List, Literal, Optional, Self, Union
+from typing import Literal, Optional, Self, Union, Sequence
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -69,7 +69,7 @@ CompoundConditionLogicalOperator = Literal["AND", "OR"]
 
 class CompoundCondition(BaseModel):
     logical_operator: CompoundConditionLogicalOperator
-    conditions: list["ConditionType"] = Field(
+    conditions: Sequence["ConditionType"] = Field(
         ..., min_length=2, max_length=settings.MAX_CONDITIONS
     )
 
@@ -149,7 +149,7 @@ ActionType = ChangeFieldAction | ChangeColorAction | DeleteEventAction
 
 class Rule(BaseModel):
     condition: ConditionType
-    actions: list[ActionType] = Field(
+    actions: Sequence[ActionType] = Field(
         ..., min_length=1, max_length=settings.MAX_ACTIONS
     )
 
@@ -164,9 +164,9 @@ class Rule(BaseModel):
 
 
 class Ruleset(BaseModel):
-    rules: List[Rule] = Field(..., min_length=1, max_length=settings.MAX_RULES)
+    rules: Sequence[Rule] = Field(..., min_length=1, max_length=settings.MAX_RULES)
 
-    def apply(self, events: List[Event]) -> List[Event]:
+    def apply(self, events: Sequence[Event]) -> list[Event]:
         new_events = []
         for event in events:
             for rule in self.rules:

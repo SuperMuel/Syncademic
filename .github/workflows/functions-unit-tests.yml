@@ -1,0 +1,44 @@
+name: Test Functions
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "functions/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "functions/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Set up Python environment
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      # Install Poetry
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      # Install dependencies using Poetry
+      - name: Install dependencies
+        run: |
+          cd functions
+          poetry install
+
+      # Run unit tests
+      - name: Run unit tests
+        run: |
+          cd functions
+          poetry run pytest

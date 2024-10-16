@@ -1,7 +1,7 @@
 import arrow
 import pytest
-from src.shared.event import Event
-from src.shared.google_calendar_colors import GoogleEventColor
+from functions.shared.event import Event
+from functions.shared.google_calendar_colors import GoogleEventColor
 
 start = arrow.get("2024-03-01T10:00:00")
 end = arrow.get("2024-03-01T12:00:00")

@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import arrow
-from src.shared.event import Event
-from src.shared.google_calendar_colors import GoogleEventColor
-from src.synchronizer.google_calendar_manager import GoogleCalendarManager
+from functions.shared.event import Event
+from functions.shared.google_calendar_colors import GoogleEventColor
+from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
 
 
 def test_event_to_google_event_basic():

@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from src.rules.models import (
+from functions.rules.models import (
     ChangeColorAction,
     ChangeFieldAction,
     CompoundCondition,
@@ -12,7 +12,7 @@ from src.rules.models import (
     TextFieldCondition,
     TextFieldConditionOperator,
 )
-from src.shared.google_calendar_colors import GoogleEventColor
+from functions.shared.google_calendar_colors import GoogleEventColor
 
 from tests.rules.constants import RulesSettings
 

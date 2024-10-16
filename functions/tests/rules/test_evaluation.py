@@ -1,7 +1,7 @@
 import arrow
-from src.shared.event import Event
-from src.shared.google_calendar_colors import GoogleEventColor
-from src.rules.models import (
+from functions.shared.event import Event
+from functions.shared.google_calendar_colors import GoogleEventColor
+from functions.rules.models import (
     ChangeColorAction,
     ChangeFieldAction,
     CompoundCondition,

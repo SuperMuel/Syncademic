@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Optional
 import arrow
 
-from src.shared.google_calendar_colors import GoogleEventColor
+from functions.shared.google_calendar_colors import GoogleEventColor
 
 
 @dataclass(frozen=True)

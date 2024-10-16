@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from src.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.ics_source import UrlIcsSource
 from google.cloud import storage
 from firebase_functions import logger
 

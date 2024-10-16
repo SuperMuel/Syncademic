@@ -6,7 +6,7 @@ authors = ["Samuel Mallet  <69467005+SuperMuel@users.noreply.github.com>"]
 readme = "README.md"
 package-mode=false
 packages = [
-    { include = "src" }
+    { include = "functions", from = "." }
 ]
 
 

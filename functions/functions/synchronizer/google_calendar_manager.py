@@ -3,7 +3,7 @@ from typing import List, Optional, TypeAlias, Dict
 from itertools import islice
 import pytz
 from firebase_functions import logger
-from src.shared.event import Event
+from functions.shared.event import Event
 
 ExtendedProperties: TypeAlias = Dict
 

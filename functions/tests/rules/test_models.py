@@ -14,7 +14,7 @@ from functions.rules.models import (
 )
 from functions.shared.google_calendar_colors import GoogleEventColor
 
-from tests.rules.constants import RulesSettings
+from functions.rules.constants import RulesSettings
 
 settings = RulesSettings()
 

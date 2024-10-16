@@ -1,3 +1,4 @@
+from functions.ai.time_schedule_compresser import TimeScheduleCompressor
 from pydantic import ValidationError
 import streamlit as st
 from functions.shared.event import Event
@@ -66,35 +67,47 @@ with st.sidebar:
                     st.session_state.ruleset = ruleset
                     st.success("Ruleset loaded")
 
+if "events" not in st.session_state:
+    st.info("Please load events from an ICS file")
+    st.stop()
 
-if "events" in st.session_state:
-    apply_rules = True
+visualization_tab, compression_tab = st.tabs(["Visualization", "Compression"])
 
-    if apply_rules and "ruleset" in st.session_state:
-        ruleset = st.session_state.ruleset
-        assert isinstance(ruleset, Ruleset)
-        events = ruleset.apply(st.session_state.events)
-    else:
+with visualization_tab:
+    if "events" in st.session_state:
+        apply_rules = True
+
+        if apply_rules and "ruleset" in st.session_state:
+            ruleset = st.session_state.ruleset
+            assert isinstance(ruleset, Ruleset)
+            events = ruleset.apply(st.session_state.events)
+        else:
+            events = st.session_state.events
+
+        calendar_events = [event_to_calendar_event(event) for event in events]
+
+        calendar_options = {
+            "editable": "false",
+            "selectable": "true",
+            "headerToolbar": {
+                "left": "today prev,next",
+                "center": "title",
+                "right": "timeGridWeek",
+            },
+            "slotMinTime": "06:00:00",
+            "slotMaxTime": "18:00:00",
+            "initialView": "timeGridWeek",
+        }
+
+        # Display the calendar with events
+        calendar_display = calendar(
+            events=calendar_events,
+            options=calendar_options,
+        )
+        # st.write(calendar_display)
+
+with compression_tab:
+    if "events" in st.session_state:
         events = st.session_state.events
-
-    calendar_events = [event_to_calendar_event(event) for event in events]
-
-    calendar_options = {
-        "editable": "false",
-        "selectable": "true",
-        "headerToolbar": {
-            "left": "today prev,next",
-            "center": "title",
-            "right": "timeGridWeek",
-        },
-        "slotMinTime": "06:00:00",
-        "slotMaxTime": "18:00:00",
-        "initialView": "timeGridWeek",
-    }
-
-    # Display the calendar with events
-    calendar_display = calendar(
-        events=calendar_events,
-        options=calendar_options,
-    )
-    # st.write(calendar_display)
+        compressed_schedule = TimeScheduleCompressor().compress(events)
+        st.code(compressed_schedule)

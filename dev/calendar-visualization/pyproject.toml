@@ -10,6 +10,7 @@ python = "^3.12"
 ics = "^0.7.2"
 streamlit = "^1.39.0"
 streamlit-calendar = "^1.2.0"
+functions = {path = "../../functions", develop = true}
 
 
 [build-system]

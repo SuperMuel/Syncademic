@@ -1,7 +1,10 @@
 import arrow
 
-from src.shared.event import Event
-from src.synchronizer.middleware.insa_middleware import _add_exam_emoji, prettify_title
+from functions.shared.event import Event
+from functions.synchronizer.middleware.insa_middleware import (
+    _add_exam_emoji,
+    prettify_title,
+)
 
 
 class TestInsaMiddleware:

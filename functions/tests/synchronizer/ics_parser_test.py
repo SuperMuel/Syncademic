@@ -1,8 +1,8 @@
 import pytest
 from typing import List
 import arrow
-from src.shared.event import Event
-from src.synchronizer.ics_parser import IcsParser
+from functions.shared.event import Event
+from functions.synchronizer.ics_parser import IcsParser
 
 
 def build_ics_outline(inside: str):

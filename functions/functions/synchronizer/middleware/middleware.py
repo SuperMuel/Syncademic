@@ -3,6 +3,6 @@
 
 from typing import List, TypeAlias, Callable
 
-from src.shared.event import Event
+from functions.shared.event import Event
 
 Middleware: TypeAlias = Callable[[List[Event]], List[Event]]

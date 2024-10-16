@@ -13,6 +13,34 @@
             },
             "problemMatcher": [],
             "detail": "Runs the Firebase emulators for local development."
+        },
+        {
+            "label": "Export Cloud Functions Requirements",
+            "type": "shell",
+            "command": "poetry export --without-hashes -f requirements.txt -o requirements.txt",
+            "options": {
+                "cwd": "${workspaceFolder}/functions"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Exports the Poetry dependencies to a requirements.txt file."
+        },
+        {
+            "label": "Deploy Cloud Functions",
+            "type": "shell",
+            "command": "firebase deploy --only functions",
+            "options": {
+                "cwd": "${workspaceFolder}/functions"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Deploys the Cloud Functions using Firebase."
         }
     ]
 }

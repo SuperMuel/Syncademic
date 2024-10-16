@@ -3,13 +3,13 @@ import pytest
 from unittest.mock import Mock
 from datetime import datetime, timezone
 
-from src.synchronizer.synchronizer import perform_synchronization
-from src.synchronizer.ics_source import UrlIcsSource
-from src.synchronizer.ics_parser import IcsParser
-from src.synchronizer.ics_cache import IcsFileStorage
-from src.synchronizer.google_calendar_manager import GoogleCalendarManager
-from src.shared.event import Event
-from src.rules.models import (
+from functions.synchronizer.synchronizer import perform_synchronization
+from functions.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.ics_parser import IcsParser
+from functions.synchronizer.ics_cache import IcsFileStorage
+from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
+from functions.shared.event import Event
+from functions.rules.models import (
     DeleteEventAction,
     Ruleset,
     Rule,

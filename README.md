@@ -107,6 +107,7 @@ The backend is built on Firebase Cloud Functions.
     - `title` (string): The title of the target calendar, given by the calendar provider.
     - `description` (string): The description of the target calendar, given by the calendar provider.
     - `providerAccountId` (string): This is the unique identifier for the account that owns the target calendar. It is not the same as the Firebase Auth ID used in our app. Currently, this ID represents a Google account, but in the future, it could also represent accounts from other providers like Microsoft. This distinction is important because a single user of our app can manage multiple synchronization profiles, each targeting calendars owned by different accounts across various providers.
+  - `ruleset` (string): A valid JSON string a Ruleset to apply.
 
 ### `backendAuthorizations` collection
 

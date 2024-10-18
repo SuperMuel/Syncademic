@@ -9,6 +9,7 @@ from firebase_functions.firestore_fn import (
     on_document_created,
 )
 from firebase_functions.params import StringParam
+from functions.rules.models import Ruleset
 from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.oauth2.credentials import Credentials
@@ -307,9 +308,8 @@ def _synchronize_now(
 
     doc = sync_profile_ref.get()
 
-    # TODO: If no status.type ??
-
     status = doc.get("status")
+    assert status, f"status field is required. {status=}"
     if status and (status.get("type") in ["inProgress", "deleting", "deleted"]):
         logger.info(f"Synchronization is {status.get('type')}, skipping")
         return
@@ -350,6 +350,35 @@ def _synchronize_now(
         logger.info(f"Failed to get calendar service: {e}")
         return
 
+    customizations = {}
+
+    if ruleset_json := doc.get("ruleset"):
+        try:
+            ruleset = Ruleset.model_validate_json(ruleset_json)
+        except Exception as e:
+            logger.error(f"Failed to validate ruleset: {e}")
+            sync_profile_ref.update(
+                {
+                    "status": {
+                        "type": "failed",
+                        "message": f"Failed to validate ruleset: {e}",
+                        "syncTrigger": sync_trigger,
+                        "syncType": sync_type,
+                    }
+                }
+            )
+            return
+
+        customizations["ruleset"] = ruleset
+        logger.info(f"Found rules: {ruleset}")
+    else:
+        customizations["middlewares"] = [
+            TitlePrettifier,
+            ExamPrettifier,
+            Insa5IFMiddleware,
+            CM_TD_TP_Middleware,
+        ]
+
     try:
         perform_synchronization(
             sync_profile_id=sync_profile_id,
@@ -358,13 +387,8 @@ def _synchronize_now(
             ics_parser=IcsParser(),
             ics_cache=FirebaseIcsFileStorage(storage.bucket()),
             calendar_manager=calendar_manager,
-            middlewares=[
-                TitlePrettifier,
-                ExamPrettifier,
-                Insa5IFMiddleware,
-                CM_TD_TP_Middleware,
-            ],
             sync_type=sync_type,
+            **customizations,
         )
     except Exception as e:
         sync_profile_ref.update(

@@ -21,13 +21,13 @@ def perform_synchronization(
     ics_cache: IcsFileStorage,
     calendar_manager: GoogleCalendarManager,
     middlewares: Optional[List[Middleware]] = None,
-    rule_set: Ruleset | None = None,
+    ruleset: Ruleset | None = None,
     separation_dt: datetime | None = None,
     sync_type: SyncType = "regular",
 ) -> None:
     # Temporary : only one of middlewares or ruleset can be provided, not both
     assert not (
-        middlewares and rule_set
+        middlewares and ruleset
     ), "Only one of middlewares or ruleset can be provided"
 
     try:
@@ -67,9 +67,9 @@ def perform_synchronization(
         raise e
 
     try:
-        if rule_set:
-            logger.info(f"Applying {len(rule_set.rules)} rules")
-            events = rule_set.apply(events)
+        if ruleset:
+            logger.info(f"Applying {len(ruleset.rules)} rules")
+            events = ruleset.apply(events)
             logger.info(f"{len(events)} events after applying rules")
     except Exception as e:
         logger.error(f"Failed to apply rules: {e}")

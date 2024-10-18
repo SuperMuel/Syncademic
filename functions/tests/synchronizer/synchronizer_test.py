@@ -240,7 +240,7 @@ def test_perform_synchronization_with_ruleset():
         ics_parser=ics_parser,
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
-        rule_set=ruleset,
+        ruleset=ruleset,
     )
 
     # Assert
@@ -325,7 +325,7 @@ def test_perform_synchronization_no_events_after_ruleset():
         ics_parser=ics_parser,
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
-        rule_set=ruleset,
+        ruleset=ruleset,
     )
 
     # Assert
@@ -406,7 +406,7 @@ def test_perform_synchronization_both_middlewares_and_ruleset():
             ics_cache=ics_cache,
             calendar_manager=calendar_manager,
             middlewares=middlewares,
-            rule_set=ruleset,
+            ruleset=ruleset,
         )
 
 
@@ -657,7 +657,7 @@ def test_perform_synchronization_with_ruleset_full_sync():
         ics_parser=ics_parser,
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
-        rule_set=ruleset,
+        ruleset=ruleset,
         sync_type="full",
     )
 

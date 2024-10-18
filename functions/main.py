@@ -12,6 +12,7 @@ from firebase_functions.params import StringParam
 from functions.rules.models import Ruleset
 from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
+from google.cloud.firestore_v1.document import DocumentReference
 from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
@@ -306,7 +307,15 @@ def _synchronize_now(
         .document(sync_profile_id)
     )
 
+    assert isinstance(sync_profile_ref, DocumentReference)
+
     doc = sync_profile_ref.get()
+    if not doc.exists:
+        logger.error("Sync profile not found")
+        return
+
+    data = doc.to_dict()
+    assert data is not None
 
     status = doc.get("status")
     assert status, f"status field is required. {status=}"
@@ -352,7 +361,7 @@ def _synchronize_now(
 
     customizations = {}
 
-    if ruleset_json := doc.get("ruleset"):
+    if ruleset_json := data.get("ruleset"):
         try:
             ruleset = Ruleset.model_validate_json(ruleset_json)
         except Exception as e:

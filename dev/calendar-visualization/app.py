@@ -1,4 +1,4 @@
-from functions.ai.time_schedule_compresser import TimeScheduleCompressor
+from functions.ai.time_schedule_compressor import TimeScheduleCompressor
 from pydantic import ValidationError
 import streamlit as st
 from functions.shared.event import Event
@@ -58,14 +58,17 @@ with st.sidebar:
                 value=st.session_state.get("ruleset_json", ""),
             )
             if st.form_submit_button(label="🔧 Apply rules", use_container_width=True):
-                try:
-                    ruleset = Ruleset.model_validate_json(ruleset_json)
-                except ValidationError as e:
-                    st.error(e)
+                if not ruleset_json:
+                    st.session_state.pop("ruleset", None)
                 else:
-                    st.session_state.ruleset_json = ruleset_json
-                    st.session_state.ruleset = ruleset
-                    st.success("Ruleset loaded")
+                    try:
+                        ruleset = Ruleset.model_validate_json(ruleset_json)
+                    except ValidationError as e:
+                        st.error(e)
+                    else:
+                        st.session_state.ruleset_json = ruleset_json
+                        st.session_state.ruleset = ruleset
+                        st.success("Ruleset loaded")
 
 if "events" not in st.session_state:
     st.info("Please load events from an ICS file")
@@ -97,6 +100,8 @@ with visualization_tab:
             "slotMinTime": "06:00:00",
             "slotMaxTime": "18:00:00",
             "initialView": "timeGridWeek",
+            "firstDay": 1,
+            "initialDate": events[0].start.date().isoformat(),
         }
 
         # Display the calendar with events

@@ -68,7 +68,7 @@ class TimeScheduleCompressor:
             n_events = len(cluster_events)
 
             if i == -1:
-                output_lines.append(f"Unclustered ({n_events} events):")
+                output_lines.append(f"\nUnclustered ({n_events} events):")
             else:
                 output_lines.append(f"\nCluster {i} ({n_events} events):")
 
@@ -116,9 +116,9 @@ class TimeScheduleCompressor:
                 cluster_events, key=lambda x: len(x.description) if x.description else 0
             )
             output_lines.append("\nLongest description:")
-            output_lines.append("---")
+            output_lines.append("`" * 3)
             output_lines.append(longest_description_event.description.strip())
-            output_lines.append("---")
+            output_lines.append("`" * 3)
 
         # Join all lines into a single string
         output_str = "\n".join(output_lines)

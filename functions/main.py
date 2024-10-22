@@ -9,7 +9,6 @@ from firebase_functions.firestore_fn import (
     on_document_created,
 )
 from firebase_functions.params import StringParam
-from functions.rules.models import Ruleset
 from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.document import DocumentReference
@@ -17,6 +16,12 @@ from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from langchain.chat_models import init_chat_model
+from openai import api_key
+
+from functions.ai.ruleset_builder import RulesetBuilder
+from functions.ai.time_schedule_compressor import TimeScheduleCompressor
+from functions.rules.models import Ruleset
 from functions.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
@@ -31,8 +36,8 @@ from functions.synchronizer.middleware.insa_middleware import (
 )
 from functions.synchronizer.synchronizer import (
     SyncTrigger,
-    perform_synchronization,
     SyncType,
+    perform_synchronization,
 )
 
 initialize_app()
@@ -208,6 +213,36 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     return result
 
 
+def _create_ai_ruleset(sync_profile_ref: DocumentReference):
+    logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
+
+    gpt4o = init_chat_model("gpt-4o")
+
+    doc = sync_profile_ref.get()
+    if not doc.exists:
+        logger.error("Sync profile not found")
+        return
+
+    ics_url = doc.get("scheduleSource.url")
+    ics_str = UrlIcsSource(ics_url).get_ics_string()
+    events = IcsParser().parse(ics_str=ics_str)
+
+    compresser = TimeScheduleCompressor()
+    compressed_schedule = compresser.compress(events)
+
+    logger.info(
+        f"Compressed schedule to {len(compressed_schedule)=} ({len(compressed_schedule)/len(ics_str)*100:.2f}% of original)"
+    )
+
+    logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
+
+    ruleset_builder = RulesetBuilder(llm=gpt4o)
+
+    output = ruleset_builder.generate_ruleset(compressed_schedule)
+
+    sync_profile_ref.update({"ruleset": output.ruleset.model_dump_json()})
+
+
 @on_document_created(
     document="users/{userId}/syncProfiles/{syncProfileId}",
     memory=options.MemoryOption.MB_512,
@@ -225,7 +260,15 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
 
     # Add created_at field
     sync_profile_ref = event.data.reference
+    assert isinstance(sync_profile_ref, DocumentReference)
+
     sync_profile_ref.update({"created_at": firestore.firestore.SERVER_TIMESTAMP})
+
+    try:
+        _create_ai_ruleset(sync_profile_ref)
+    except Exception as e:
+        logger.error(f"Failed to create AI ruleset: {e}")
+        sync_profile_ref.update({"ruleset_error": str(e)})
 
     _synchronize_now(
         event.params["userId"],

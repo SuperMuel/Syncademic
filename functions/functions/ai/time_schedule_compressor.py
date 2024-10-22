@@ -14,6 +14,7 @@ class TimeScheduleCompressor:
         events: list[Event],
         min_cluster_size: int = 4,
         show_n_events_per_cluster: int = 5,
+        top_n_features: int = 5,
     ) -> str:
         """
         Compress the list of events into a summarized string representation.
@@ -56,13 +57,18 @@ class TimeScheduleCompressor:
             unique_labels, key=lambda x: sum(cluster_labels == x), reverse=True
         )
 
+        # Set the noise cluster (-1) to the last position
+        if -1 in unique_labels:
+            unique_labels.remove(-1)
+            unique_labels.append(-1)
+
         for i in unique_labels:
             cluster_events = [event for event in events if event_clusters[event] == i]
 
             n_events = len(cluster_events)
 
             if i == -1:
-                output_lines.append(f"Unclustered ({n_events} events):")
+                output_lines.append(f"\nUnclustered ({n_events} events):")
             else:
                 output_lines.append(f"\nCluster {i} ({n_events} events):")
 
@@ -91,13 +97,11 @@ class TimeScheduleCompressor:
             if i != -1:
                 cluster_indices = np.where(cluster_labels == i)[0]
                 cluster_tfidf = tfidf_matrix[cluster_indices].toarray().mean(axis=0)  # type: ignore
-                top_features_idx = cluster_tfidf.argsort()[-10:][
+                top_features_idx = cluster_tfidf.argsort()[-top_n_features:][
                     ::-1
-                ]  # Get top 10 features
+                ]  # Get top_n_features
                 top_features = [feature_names[idx] for idx in top_features_idx]
-                output_lines.append(f"\nTop terms for Cluster {i}:")
-                output_lines.append(", ".join(top_features))  # type: ignore
-                output_lines.append("")
+                output_lines.append(f"\nTop terms: {', '.join(top_features)}")  # type: ignore
 
             # Append event titles
             output_lines.append("Events:")
@@ -112,9 +116,9 @@ class TimeScheduleCompressor:
                 cluster_events, key=lambda x: len(x.description) if x.description else 0
             )
             output_lines.append("\nLongest description:")
-            output_lines.append("---")
+            output_lines.append("`" * 3)
             output_lines.append(longest_description_event.description.strip())
-            output_lines.append("---")
+            output_lines.append("`" * 3)
 
         # Join all lines into a single string
         output_str = "\n".join(output_lines)

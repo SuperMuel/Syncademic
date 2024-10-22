@@ -27,7 +27,8 @@ google-auth-httplib2 = "^0.2.0"
 pydantic-settings = "^2.5.2"
 hdbscan = "^0.8.39"
 scikit-learn = "^1.5.2"
-numpy = "^2.1.2"
+langchain = "^0.3.3"
+langchain-openai = "^0.2.2"
 
 
 

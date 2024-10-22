@@ -47,7 +47,7 @@ Longest description:
 (Réunion présentation PFE - https://insa-lyon-fr.zoom.us/j/98963419861?pwd=eUY3bko2QlhpYjY0YlZSbWZhVUpaUT09)
 
 IF:5:S1::Promo:EDT::5IF_S1_GR_CM
-Professor Al G. Bra
+MIRANDA Felipe
 
 (Exporté le:21/10/2024 16:15)
 ```
@@ -70,7 +70,7 @@ Longest description:
 (P-SAT (TD) - Choix des sujets)
 
 IF:5:S1::PSAT:CM::5IF_S1_GR_CM
-Dr. Ima Phailure
+DURAND Gillaume
 
 (Exporté le:21/10/2024 16:15)
 ```
@@ -93,8 +93,8 @@ Longest description:
 (OT 8 - Text mining)
 
 IF:5:S1::OT8:TD::5IF-OT-08
-Professor Anita Break
-Dr. Polly Tician
+RENARD Pascal-Yves
+KOVACS-ZSIGMOND Eloy
 
 (Exporté le:21/10/2024 16:15)
 ```
@@ -139,7 +139,7 @@ Longest description:
 ()
 
 CDS:EPS:S1::5A:TD::EPS-5-S1-MA16--07 (EPS-5-S1-MA16--07 #THO)
-Professor Ben Dover
+LUCAS Lio
 
 (Exporté le:21/10/2024 16:15)
 ```
@@ -162,7 +162,7 @@ Longest description:
 (TCS1 et 2 - DS)
 
 IF:5:S1::TCS2:EV::5IF_S1_GR_CM
-Dr. Ima Phailure
+DURAND Gillaume
 
 (Exporté le:21/10/2024 16:15)
 ```
@@ -185,7 +185,7 @@ Longest description:
 ()
 
 IF:5:S1::TCS1:CM::5IF_S1_GR_CM
-Dr. Frank N. Stein
+DUPRE DE DINECHIN Floran
 
 (Exporté le:21/10/2024 16:15)
 ```
@@ -208,7 +208,7 @@ Longest description:
 ()
 
 HU:0:S1::S-SERIE4:TD::SERIE4-OPT18
-Professor Hugh Jass
+LAVILLE Jean Philippe
 
 (Exporté le:21/10/2024 16:15)
 ```

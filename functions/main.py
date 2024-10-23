@@ -238,7 +238,13 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
 
     ruleset_builder = RulesetBuilder(llm=gpt4o)
 
-    output = ruleset_builder.generate_ruleset(compressed_schedule)
+    output = ruleset_builder.generate_ruleset(
+        compressed_schedule,
+        metadata={
+            "ics_url": ics_url,
+            "sync_profile_id": sync_profile_ref.id,
+        },
+    )
 
     sync_profile_ref.update({"ruleset": output.ruleset.model_dump_json()})
 

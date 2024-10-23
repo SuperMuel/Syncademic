@@ -61,7 +61,7 @@ class RulesetBuilder:
         else:
             self.llm = llm
 
-    def create_chain(self) -> Runnable[str, RulesetOutput]:
+    def create_chain(self) -> Runnable[dict, RulesetOutput]:
         llm = self.llm.with_structured_output(RulesetOutput)
 
         prompt = ChatPromptTemplate.from_messages(
@@ -83,11 +83,24 @@ class RulesetBuilder:
 
         return messages
 
-    def generate_ruleset(self, compressed_schedule: str) -> RulesetOutput:
+    def generate_ruleset(
+        self,
+        compressed_schedule: str,
+        *,
+        metadata: dict | None = None,
+    ) -> RulesetOutput:
         chain = self.create_chain()
 
         examples = self.generate_examples()
 
-        return chain.invoke(
-            {"compressed_schedule": compressed_schedule, "examples": examples}  # type: ignore
+        result = chain.invoke(
+            {
+                "compressed_schedule": compressed_schedule,
+                "examples": examples,
+            },
+            config={"metadata": metadata} if metadata else None,
         )
+
+        assert isinstance(result, RulesetOutput)
+
+        return result

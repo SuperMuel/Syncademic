@@ -278,7 +278,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     )
 
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.MB_512)
 def request_sync(req: https_fn.CallableRequest) -> Any:
     if not req.auth:
         raise https_fn.HttpsError(

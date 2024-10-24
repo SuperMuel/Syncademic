@@ -29,6 +29,7 @@ hdbscan = "^0.8.39"
 scikit-learn = "^1.5.2"
 langchain = "^0.3.3"
 langchain-openai = "^0.2.2"
+langchain-anthropic = "^0.2.3"
 
 
 

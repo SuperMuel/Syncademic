@@ -8,7 +8,6 @@ from firebase_functions.firestore_fn import (
     Event,
     on_document_created,
 )
-from firebase_functions.params import StringParam
 from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.document import DocumentReference
@@ -17,8 +16,8 @@ from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from langchain.chat_models import init_chat_model
-from openai import api_key
 
+from functions.settings import settings
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
 from functions.rules.models import Ruleset
@@ -43,13 +42,6 @@ from functions.synchronizer.synchronizer import (
 initialize_app()
 
 
-CLIENT_ID = StringParam("CLIENT_ID")
-CLIENT_SECRET = StringParam("CLIENT_SECRET")
-
-LOCAL_REDIRECT_URI = StringParam("LOCAL_REDIRECT_URI")
-PRODUCTION_REDIRECT_URI = StringParam("PRODUCTION_REDIRECT_URI")
-
-
 def get_calendar_service(user_id: str, provider_account_id: str):
     if not user_id:
         raise ValueError("User ID is required")
@@ -69,11 +61,11 @@ def get_calendar_service(user_id: str, provider_account_id: str):
 
     # Construct a Credentials object from the access token
     credentials = Credentials(
-        client_id=CLIENT_ID.value,
+        client_id=settings.CLIENT_ID,
         token=backend_authorization.get("accessToken"),
         refresh_token=backend_authorization.get("refreshToken"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_secret=CLIENT_SECRET.value,
+        client_secret=settings.CLIENT_SECRET,
     )
 
     # Build the Google Calendar API service
@@ -216,7 +208,10 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
 def _create_ai_ruleset(sync_profile_ref: DocumentReference):
     logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
 
-    gpt4o = init_chat_model("gpt-4o")
+    llm = settings.RULES_BUILDER_LLM
+
+    logger.info(f"Using {llm} model")
+    gpt4o = init_chat_model(llm)
 
     doc = sync_profile_ref.get()
     if not doc.exists:
@@ -593,8 +588,11 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing authorization code"
         )
 
-    redirect_uri = request.data.get("redirectUri", PRODUCTION_REDIRECT_URI.value)
-    if redirect_uri not in [PRODUCTION_REDIRECT_URI.value, LOCAL_REDIRECT_URI.value]:
+    redirect_uri = request.data.get("redirectUri", settings.PRODUCTION_REDIRECT_URI)
+    if redirect_uri not in [
+        settings.PRODUCTION_REDIRECT_URI,
+        settings.LOCAL_REDIRECT_URI,
+    ]:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
             f"{redirect_uri} is not a valid redirect URI.",
@@ -635,8 +633,8 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
         flow = Flow.from_client_config(
             {
                 "web": {
-                    "client_id": CLIENT_ID.value,
-                    "client_secret": CLIENT_SECRET.value,
+                    "client_id": settings.CLIENT_ID,
+                    "client_secret": settings.CLIENT_SECRET,
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                     "token_uri": "https://oauth2.googleapis.com/token",
                 }
@@ -670,7 +668,7 @@ def authorize_backend(request: https_fn.CallableRequest) -> dict:
 
     try:
         id_info = verify_oauth2_token(
-            id_token, requests.Request(), audience=CLIENT_ID.value
+            id_token, requests.Request(), audience=settings.CLIENT_ID
         )
 
     except Exception as e:

@@ -1,8 +1,10 @@
+from dataclasses import replace
 from datetime import datetime, timezone
 from firebase_functions import logger
 from typing import List, Literal, Optional
 
 from functions.rules.models import Ruleset
+from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.ics_cache import IcsFileStorage
 from .middleware.middleware import Middleware
 from .google_calendar_manager import GoogleCalendarManager
@@ -68,6 +70,12 @@ def perform_synchronization(
 
     try:
         if ruleset:
+            logger.info(
+                "Temporary : since a ruleset is provided that will probably change colors, we will first manually set all the events to grey color"
+            )
+            events = [
+                replace(event, color=GoogleEventColor.GRAPHITE) for event in events
+            ]
             logger.info(f"Applying {len(ruleset.rules)} rules")
             events = ruleset.apply(events)
             logger.info(f"{len(events)} events after applying rules")

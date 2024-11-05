@@ -367,7 +367,9 @@ def _synchronize_now(
 
     status = doc.get("status")
     assert status, f"status field is required. {status=}"
-    if status and (status.get("type") in ["inProgress", "deleting", "deleted"]):
+    if status and (
+        status.get("type") in ["inProgress", "deleting", "deleted"]
+    ):  # TODO : extract to a should_skip(status)->bool function
         logger.info(f"Synchronization is {status.get('type')}, skipping")
         return
 

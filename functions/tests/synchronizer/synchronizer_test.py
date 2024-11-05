@@ -1,23 +1,24 @@
 from dataclasses import replace
-import pytest
-from unittest.mock import Mock
 from datetime import datetime, timezone
+from unittest.mock import Mock
 
-from functions.synchronizer.synchronizer import perform_synchronization
-from functions.synchronizer.ics_source import UrlIcsSource
-from functions.synchronizer.ics_parser import IcsParser
-from functions.synchronizer.ics_cache import IcsFileStorage
-from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
-from functions.shared.event import Event
-from functions.rules.models import (
-    DeleteEventAction,
-    Ruleset,
-    Rule,
-    TextFieldCondition,
-    ChangeFieldAction,
-)
 import arrow
+import pytest
 
+from functions.rules.models import (
+    ChangeFieldAction,
+    DeleteEventAction,
+    Rule,
+    Ruleset,
+    TextFieldCondition,
+)
+from functions.shared.event import Event
+from functions.shared.google_calendar_colors import GoogleEventColor
+from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
+from functions.synchronizer.ics_cache import IcsFileStorage
+from functions.synchronizer.ics_parser import IcsParser
+from functions.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.synchronizer import perform_synchronization
 
 past_event = Event(
     start=arrow.now().shift(days=-1),
@@ -244,7 +245,11 @@ def test_perform_synchronization_with_ruleset():
     )
 
     # Assert
-    modified_event = replace(future_event, title="Modified Lecture")
+    modified_event = replace(
+        future_event,
+        title="Modified Lecture",
+        color=GoogleEventColor.GRAPHITE,  # Temporary : since a ruleset is provided that will probably change colors, we will first manually set all the events to grey color
+    )
     calendar_manager.create_events.assert_called_once_with(
         [modified_event], sync_profile_id
     )
@@ -662,8 +667,16 @@ def test_perform_synchronization_with_ruleset_full_sync():
     )
 
     # Assert
-    modified_past_event = replace(_past_event, title="Modified Lecture")
-    modified_future_event = replace(_future_event, title="Modified Lecture")
+    modified_past_event = replace(
+        _past_event,
+        title="Modified Lecture",
+        color=GoogleEventColor.GRAPHITE,  # Temporary : since a ruleset is provided that will probably change colors, we will first manually set all the events to grey color
+    )
+    modified_future_event = replace(
+        _future_event,
+        title="Modified Lecture",
+        color=GoogleEventColor.GRAPHITE,  # Temporary : since a ruleset is provided that will probably change colors, we will first manually set all the events to grey color
+    )
     calendar_manager.create_events.assert_called_once_with(
         [modified_past_event, modified_future_event], sync_profile_id
     )

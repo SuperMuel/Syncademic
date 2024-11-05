@@ -321,7 +321,11 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 
 
 # Every day at 2:00 AM UTC
-@scheduler_fn.on_schedule(schedule="0 2 * * *", memory=options.MemoryOption.MB_512)
+@scheduler_fn.on_schedule(
+    schedule="0 2 * * *",
+    memory=options.MemoryOption.MB_512,
+    timeout_sec=3600,
+)
 def scheduled_sync(event: Any):
     db = firestore.client()
 

@@ -111,7 +111,9 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
         )
 
 
-@https_fn.on_call()
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+)
 def is_authorized(req: https_fn.CallableRequest) -> dict:
     if not req.auth:
         raise https_fn.HttpsError(
@@ -142,7 +144,9 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     return {"authorized": True}
 
 
-@https_fn.on_call()
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+)
 def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     if not req.auth:
         raise https_fn.HttpsError(

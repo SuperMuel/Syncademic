@@ -5,7 +5,6 @@ import '../models/target_calendar.dart';
 class TargetCalendarCard extends StatelessWidget {
   final TargetCalendar targetCalendar;
   final VoidCallback? onPressed;
-  final double maxWidth;
 
   final bool showEditIcon;
   const TargetCalendarCard({
@@ -13,17 +12,15 @@ class TargetCalendarCard extends StatelessWidget {
     required this.targetCalendar,
     this.onPressed,
     this.showEditIcon = false,
-    this.maxWidth = 500,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      //TODO : make it full width on small screens
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Stack(
-        children: [
-          Card(
+    return Stack(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: Card(
             elevation: 2,
             child: InkWell(
               onTap: onPressed,
@@ -43,6 +40,7 @@ class TargetCalendarCard extends StatelessWidget {
                     Flexible(
                       fit: FlexFit.loose,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             targetCalendar.title,
@@ -62,17 +60,17 @@ class TargetCalendarCard extends StatelessWidget {
               ),
             ),
           ),
-          if (showEditIcon)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: onPressed,
-              ),
+        ),
+        if (showEditIcon)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: onPressed,
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

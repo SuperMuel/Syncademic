@@ -5,3 +5,5 @@ LOCAL_REDIRECT_URI = "http://localhost:7357"
 PRODUCTION_REDIRECT_URI = "https://app.syncademic.io"
 
 RECAPTCHA_V3_SITE_KEY="6LfS7k0qAAAAADJ2p3aCgt_Ai62FQsKHjBFzOIqL"
+
+SENTRY_DSN="https://a1c16c83d6bbfa0c5cbe945ca9913a64@o4508252847734784.ingest.de.sentry.io/4508252849766480"

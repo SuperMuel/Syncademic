@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     LOCAL_REDIRECT_URI: str = Field(default=...)
     PRODUCTION_REDIRECT_URI: str = Field(default=...)
 
+    MAX_ICS_SIZE_CHARS: int = Field(default=1_000_000)
+
 
 settings = Settings()
 

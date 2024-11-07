@@ -1,15 +1,18 @@
 from dataclasses import replace
 from datetime import datetime, timezone
-from firebase_functions import logger
 from typing import List, Literal, Optional
 
+from firebase_functions import logger
+
 from functions.rules.models import Ruleset
+from functions.settings import settings
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.ics_cache import IcsFileStorage
-from .middleware.middleware import Middleware
+
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
+from .middleware.middleware import Middleware
 
 SyncTrigger = Literal["on_create", "manual", "scheduled"]
 SyncType = Literal["full", "regular"]
@@ -37,6 +40,13 @@ def perform_synchronization(
     except Exception as e:
         logger.error(f"Failed to get ics string: {e}")
         raise e
+
+    # Check size of ics string
+    if len(ics_str) > settings.MAX_ICS_SIZE_CHARS:
+        logger.error(
+            f"ICS string is too large: {len(ics_str)} > {settings.MAX_ICS_SIZE_CHARS} chars"
+        )
+        raise ValueError("ICS file is too large")
 
     try:
         events = ics_parser.parse(ics_str)

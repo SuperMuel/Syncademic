@@ -20,7 +20,7 @@ jobs:
         working-directory: ./syncademic_app
 
       - name: Build
-        run: flutter build web
+        run: flutter build web --web-renderer canvaskit
         working-directory: ./syncademic_app
 
       - uses: FirebaseExtended/action-hosting-deploy@v0

@@ -20,7 +20,7 @@ jobs:
 
       - name: Build
         env:
-          FIREBASE_APPCHECK_DEBUG_TOKEN: "${{ secrets.FIREBASE_APPCHECK_DEBUG_TOKEN }}"
+          FIREBASE_APPCHECK_DEBUG_TOKEN: ${{ secrets.FIREBASE_APPCHECK_DEBUG_TOKEN }}
         run: flutter build web --web-renderer canvaskit --dart-define=FIREBASE_APPCHECK_DEBUG_TOKEN=$FIREBASE_APPCHECK_DEBUG_TOKEN
         working-directory: ./syncademic_app
 

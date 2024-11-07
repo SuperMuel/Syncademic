@@ -45,7 +45,11 @@
   <script>
     const debugToken = process.env.FIREBASE_APPCHECK_DEBUG_TOKEN;
     if (debugToken) {
+      console.log('Using debug token:', debugToken);
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    }
+    else {
+      console.log('No debug token found.');
     }
   </script>
   <script>

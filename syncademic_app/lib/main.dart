@@ -57,7 +57,7 @@ void setupFirebaseAppcheckDebugToken() {
           : null;
 
   if (firebaseAppCheckDebugToken != null) {
-    log("Setting FIREBASE_APPCHECK_DEBUG_TOKEN.");
+    log("Setting FIREBASE_APPCHECK_DEBUG_TOKEN to $firebaseAppCheckDebugToken");
     //To expone the dart variable to global js code
     js.context["FIREBASE_APPCHECK_DEBUG_TOKEN"] = firebaseAppCheckDebugToken;
   }

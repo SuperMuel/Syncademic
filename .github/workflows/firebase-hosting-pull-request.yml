@@ -19,7 +19,7 @@ jobs:
         working-directory: ./syncademic_app
 
       - name: Build
-        run: flutter build web --web-renderer canvaskit --dart-define="FIREBASE_APPCHECK_DEBUG_TOKEN"="${{ secrets.FIREBASE_APPCHECK_DEBUG_TOKEN }}"
+        run: flutter build web --web-renderer canvaskit --dart-define=FIREBASE_APPCHECK_DEBUG_TOKEN="${{ secrets.FIREBASE_APPCHECK_DEBUG_TOKEN }}"
         working-directory: ./syncademic_app
 
       - uses: FirebaseExtended/action-hosting-deploy@v0

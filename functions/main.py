@@ -518,7 +518,7 @@ def _synchronize_now(
             },
         }
     )
-    sync_stats_ref.set({"syncCount": sync_count + 1}, merge=True)
+    sync_stats_ref.set({"syncCount": firestore.firestore.Increment(1)}, merge=True)
 
     logger.info("Synchronization completed successfully")
 

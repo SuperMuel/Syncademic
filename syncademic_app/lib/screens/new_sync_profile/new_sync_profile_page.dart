@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:syncademic_app/repositories/target_calendar_repository.dart';
-import 'package:syncademic_app/screens/new_sync_profile/google_sign_in_button/sign_in_button.dart';
-
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import '../../widgets/provider_account_card.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/target_calendar.dart';
+import '../../repositories/target_calendar_repository.dart';
+import '../../widgets/feedback_icon_button.dart';
+import '../../widgets/provider_account_card.dart';
 import '../../widgets/target_calendar_card.dart';
 import 'cubit/new_sync_profile_cubit.dart';
+import 'google_sign_in_button/sign_in_button.dart';
 import 'target_calendar_selector/target_calendar_selector.dart';
 import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 
@@ -56,6 +56,7 @@ class NewSyncProfilePage extends StatelessWidget {
       builder: (context, state) => Scaffold(
         appBar: AppBar(
           title: const Text('New synchronization'),
+          actions: const [FeedbackIconButton()],
         ),
         body: Stepper(
           currentStep: state.currentStep.index,

@@ -97,5 +97,6 @@ extension on UserCredential {
   syncademic.User get toSyncademicUser => syncademic.User(
         id: user!.uid,
         email: user!.email,
+        displayName: user!.displayName,
       );
 }

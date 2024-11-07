@@ -2,9 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {    
+
     match /users/{userId} {
-			allow create, read, update: if request.auth != null && request.auth.uid == userId;
-    }
+
+      allow create, read, update: if 
+        request.auth != null && 
+        request.auth.uid == userId && 
+        (!request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['syncProfilesCount', 'syncProfilesLimit']));
+      }
   	
     match /users/{userId}/syncProfiles/{syncProfileId}{
       allow create, read, update, delete: if request.auth != null && request.auth.uid == userId;

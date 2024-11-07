@@ -254,15 +254,26 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
     memory=options.MemoryOption.MB_512,
 )  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]):
-    logging.info(f"Sync profile created: {event.data}")
-
+    logging.info(f"Sync profile creation request: {event.data}")
     doc = event.data.to_dict()
 
-    if doc is None:
-        # ? Why would this happen?
-        raise ValueError("Document has been created but is None")
+    assert doc is not None
 
-    # TODO validate the document
+    # fetch user doc and check user_doc.syncProfilesCount and user_doc.syncProfilesLimit
+    user_ref = firestore.client().collection("users").document(event.params["userId"])
+    user_data = user_ref.get().to_dict()
+    if user_data is None:
+        raise ValueError("User document not found")
+
+    sync_profiles_count = user_data.get("syncProfilesCount", 0)
+    sync_profiles_limit = user_data.get("syncProfilesLimit", settings.MAX_SYNC_PROFILES)
+
+    # Increment syncProfilesCount
+    user_ref.update({"syncProfilesCount": firestore.firestore.Increment(1)})
+
+    assert (
+        sync_profiles_count < sync_profiles_limit
+    ), "Error : Security rules didn't enforce the syncprofiles count limit correctly"
 
     # Add created_at field
     sync_profile_ref = event.data.reference
@@ -615,13 +626,9 @@ def delete_sync_profile(
 
     sync_profile_ref.delete()
 
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "deleted",
-            }
-        }
-    )
+    # Decrement syncProfilesCount
+    user_ref = firestore.client().collection("users").document(req.auth.uid)
+    user_ref.update({"syncProfilesCount": firestore.firestore.Increment(-1)})
 
     logger.info("Sync profile deleted successfully")
 

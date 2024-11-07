@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     MAX_SYNCHRONIZATIONS_PER_DAY: int = Field(
         default=24 * 5  # 24 syncs per day for 5 profiles
     )
+    MAX_SYNC_PROFILES: int = Field(default=2)
 
 
 settings = Settings()

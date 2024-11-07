@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     PRODUCTION_REDIRECT_URI: str = Field(default=...)
 
     MAX_ICS_SIZE_CHARS: int = Field(default=1_000_000)
+    MAX_SYNCHRONIZATIONS_PER_DAY: int = Field(
+        default=30  # Approx 1 per hour plus some manual ones.
+    )
 
 
 settings = Settings()

@@ -45,6 +45,27 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'dart:js' as js;
+import 'dart:html' as html;
+
+void setupFirebaseAppcheckDebugToken() {
+  // https://stackoverflow.com/questions/65647090/access-dart-define-environment-variables-inside-index-html
+
+  const firebaseAppCheckDebugToken =
+      bool.hasEnvironment("FIREBASE_APPCHECK_DEBUG_TOKEN")
+          ? String.fromEnvironment("FIREBASE_APPCHECK_DEBUG_TOKEN")
+          : null;
+
+  if (firebaseAppCheckDebugToken != null) {
+    log("Setting FIREBASE_APPCHECK_DEBUG_TOKEN.");
+    //To expone the dart variable to global js code
+    js.context["FIREBASE_APPCHECK_DEBUG_TOKEN"] = firebaseAppCheckDebugToken;
+  }
+
+  //Custom DOM event to signal to js the execution of the dart code
+  html.document.dispatchEvent(html.CustomEvent("dart_loaded"));
+}
+
 void registerDependencies() {
   final getIt = GetIt.instance;
 
@@ -107,6 +128,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  setupFirebaseAppcheckDebugToken();
 
   if (kDebugMode) {
     try {

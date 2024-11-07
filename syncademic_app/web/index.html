@@ -43,15 +43,22 @@
 
 <body>
   <script>
-    // const debugToken = process.env.FIREBASE_APPCHECK_DEBUG_TOKEN;
-    const debugToken = "90cc43c0-d555-4245-8b7c-980a104ab3be";
-    if (debugToken) {
-      console.log('Using debug token:', debugToken);
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
-    }
-    else {
-      console.log('No debug token found.');
-    }
+
+    // This script allows fetching variables from dart code.
+    document.addEventListener("dart_loaded", function () {
+      console.log("dart_loaded event");
+      const debugToken = window.FIREBASE_APPCHECK_DEBUG_TOKEN;
+
+      if (debugToken) {
+        console.log('Found Firebase App Check debug token:', debugToken);
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+      }
+      else {
+        console.log('No Firebase App Check debug token.');
+      }
+
+
+    });
   </script>
   <script>
     window.addEventListener('load', function (ev) {

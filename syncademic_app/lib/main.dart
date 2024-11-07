@@ -60,6 +60,9 @@ void setupFirebaseAppcheckDebugToken() {
     log("Setting FIREBASE_APPCHECK_DEBUG_TOKEN to $firebaseAppCheckDebugToken");
     //To expone the dart variable to global js code
     js.context["FIREBASE_APPCHECK_DEBUG_TOKEN"] = firebaseAppCheckDebugToken;
+  } else {
+    throw Exception(
+        "FIREBASE_APPCHECK_DEBUG_TOKEN environment variable is not set.");
   }
 
   //Custom DOM event to signal to js the execution of the dart code

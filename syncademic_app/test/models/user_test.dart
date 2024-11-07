@@ -4,12 +4,22 @@ import 'package:syncademic_app/models/user.dart';
 void main() {
   const id = '1';
   const email = 'test1@example.com';
+  const displayName = 'Test User';
 
   test('should create a User instance', () {
+    const user = User(id: id, email: email, displayName: displayName);
+
+    expect(user.id, id);
+    expect(user.email, email);
+    expect(user.displayName, displayName);
+  });
+
+  test('should create a User instance without displayName', () {
     const user = User(id: id, email: email);
 
     expect(user.id, id);
     expect(user.email, email);
+    expect(user.displayName, isNull);
   });
 
   group('equals', () {

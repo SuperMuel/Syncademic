@@ -1,5 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:feedback_sentry/feedback_sentry.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -14,6 +14,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' show CalendarApi;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'widgets/feedback_icon_button.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
@@ -43,12 +45,64 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-void main() async {
-  await dotenv.load(fileName: "dotenv");
-
+void registerDependencies() {
   final getIt = GetIt.instance;
 
+  final googleSignIn = GoogleSignIn(
+    clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
+    forceCodeForRefreshToken: true,
+    scopes: [CalendarApi.calendarScope],
+  );
+
+  getIt.registerSingleton<SyncProfileRepository>(
+    FirestoreSyncProfileRepository(),
+    // MockSyncProfileRepository()
+    //   ..createRandomData(10)
+    //   ..addFailedProfile()
+    //   ..addInProgressProfile()
+    //   ..addNotStartedProfile()
+    //   ..addDeletionFailedProfile(),
+  );
+
+  getIt.registerSingleton<AuthService>(
+    // MockAuthService(),
+    FirebaseAuthService(),
+  );
+
+  getIt.registerSingleton<AuthCubit>(AuthCubit());
+
+  getIt.registerSingleton<AccountService>(FirebaseAccountService());
+
+  getIt.registerSingleton<AuthorizationService>(
+    // MockAuthorizationService(),
+    GoogleAuthorizationService(googleSignIn: googleSignIn),
+  );
+
+  getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
+
+  getIt.registerSingleton<BackendAuthorizationService>(
+    // MockBackendAuthorizationService(),
+
+    FirebaseBackendAuthorizationService(
+      redirectUri: dotenv
+          .env[kDebugMode ? 'LOCAL_REDIRECT_URI' : 'PRODUCTION_REDIRECT_URI']!,
+    ),
+  );
+
+  getIt.registerSingleton<TargetCalendarRepository>(
+    // MockTargetCalendarRepository(),
+    GoogleTargetCalendarRepository(),
+  );
+
+  getIt.registerSingleton<ProviderAccountService>(
+    // MockProviderAccountService(),
+    GoogleProviderAccountService(googleSignIn: googleSignIn),
+  );
+}
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "dotenv");
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -86,56 +140,7 @@ void main() async {
     appleProvider: AppleProvider.debug,
   );
 
-  final googleSignIn = GoogleSignIn(
-    clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
-    forceCodeForRefreshToken: true,
-    scopes: [CalendarApi.calendarScope],
-  );
-
-  getIt.registerSingleton<SyncProfileRepository>(
-    FirestoreSyncProfileRepository(),
-    // MockSyncProfileRepository()
-    //   ..createRandomData(10)
-    //   ..addFailedProfile()
-    //   ..addInProgressProfile()
-    //   ..addNotStartedProfile()
-    //   ..addDeletionFailedProfile(),
-  );
-
-  getIt.registerSingleton<AuthService>(
-    //MockAuthService(),
-    FirebaseAuthService(),
-  );
-
-  getIt.registerSingleton<AuthCubit>(AuthCubit());
-
-  getIt.registerSingleton<AccountService>(FirebaseAccountService());
-
-  getIt.registerSingleton<AuthorizationService>(
-    // MockAuthorizationService(),
-    GoogleAuthorizationService(googleSignIn: googleSignIn),
-  );
-
-  getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
-
-  getIt.registerSingleton<BackendAuthorizationService>(
-    // MockBackendAuthorizationService(),
-
-    FirebaseBackendAuthorizationService(
-      redirectUri: dotenv
-          .env[kDebugMode ? 'LOCAL_REDIRECT_URI' : 'PRODUCTION_REDIRECT_URI']!,
-    ),
-  );
-
-  getIt.registerSingleton<TargetCalendarRepository>(
-    //MockTargetCalendarRepository(),
-    GoogleTargetCalendarRepository(),
-  );
-
-  getIt.registerSingleton<ProviderAccountService>(
-    //MockProviderAccountService(),
-    GoogleProviderAccountService(googleSignIn: googleSignIn),
-  );
+  registerDependencies();
 
   await SentryFlutter.init(
     (options) {
@@ -147,7 +152,9 @@ void main() async {
       // Setting to 1.0 will profile 100% of sampled transactions:
       options.profilesSampleRate = 1.0;
     },
-    appRunner: () => runApp(const MyApp()),
+    appRunner: () => runApp(
+      const BetterFeedback(child: MyApp()),
+    ),
   );
 }
 
@@ -261,12 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => context.push('/account'),
             tooltip: "Account",
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () =>
-                GetIt.I<AuthCubit>().signOut().then((_) => context.go('/')),
-            tooltip: "Sign out",
-          ),
+          const FeedbackIconButton(),
         ],
       ),
       body: SafeArea(

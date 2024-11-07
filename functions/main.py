@@ -292,6 +292,8 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 
     sync_profile_id = req.data.get("syncProfileId")
 
+    logger.info(f"Sync request received for {req.auth.uid}/{sync_profile_id}")
+
     if not sync_profile_id:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
@@ -300,9 +302,12 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     sync_type = req.data.get("syncType", "regular")
 
     if sync_type not in ["regular", "full"]:
+        logger.error(f"Invalid syncType: {sync_type}")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid syncType"
         )
+
+    logger.info(f"Sync type: {sync_type}")
 
     syncProfile = (
         firestore.client()
@@ -314,11 +319,10 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     )
 
     if not syncProfile.exists:
+        logger.error("Sync profile not found")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
         )
-
-    logger.info(f"Starting manual synchronization for {req.auth.uid}/{sync_profile_id}")
 
     _synchronize_now(
         req.auth.uid, sync_profile_id, sync_trigger="manual", sync_type=sync_type
@@ -406,6 +410,10 @@ def _synchronize_now(
         sync_count = sync_stats.get("syncCount", 0)
     else:
         sync_count = 0
+
+    assert isinstance(sync_count, int) and sync_count >= 0
+
+    logger.info(f"Sync count: {sync_count}" if sync_count else "First sync of the day")
 
     # Check if the user has reached the daily limit
     if sync_count >= settings.MAX_SYNCHRONIZATIONS_PER_DAY:

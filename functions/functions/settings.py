@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     MAX_ICS_SIZE_CHARS: int = Field(default=1_000_000)
     MAX_SYNCHRONIZATIONS_PER_DAY: int = Field(
-        default=30  # Approx 1 per hour plus some manual ones.
+        default=24 * 5  # 24 syncs per day for 5 profiles
     )
 
 

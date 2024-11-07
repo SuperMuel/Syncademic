@@ -18,13 +18,21 @@ jobs:
         run: flutter pub get
         working-directory: ./syncademic_app
 
+      - name: Set Firebase App Check Debug Token
+        # Set up the debug token for Firebase App Check to work in CI
+        run: echo "FIREBASE_APPCHECK_DEBUG_TOKEN=${{ secrets.FIREBASE_APPCHECK_DEBUG_TOKEN }}" >> $GITHUB_ENV
+
+
+
       - name: Build
-        run: flutter build web
+        run: flutter build web --web-renderer canvaskit
         working-directory: ./syncademic_app
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
+          FIREBASE_APPCHECK_DEBUG_TOKEN: ${{ secrets.FIREBASE_APPCHECK_DEBUG_TOKEN }} 
+
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SYNCADEMIC_36C18 }}"

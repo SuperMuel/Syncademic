@@ -12,7 +12,6 @@ from functions.rules.models import (
     Ruleset,
     TextFieldCondition,
 )
-from functions.settings import settings
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
@@ -690,11 +689,10 @@ def test_perform_synchronization_ics_too_large():
     # Arrange
     sync_profile_id = "test_sync_profile"
     sync_trigger = "manual"
+    MAX_ICS_SIZE_CHARS = 1000
 
     # Create a large ICS string exceeding MAX_ICS_SIZE_CHARS
-    ics_str = (
-        "BEGIN:VCALENDAR\n" + "A" * (settings.MAX_ICS_SIZE_CHARS) + "\nEND:VCALENDAR"
-    )
+    ics_str = "BEGIN:VCALENDAR\n" + "A" * (MAX_ICS_SIZE_CHARS) + "\nEND:VCALENDAR"
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -714,6 +712,7 @@ def test_perform_synchronization_ics_too_large():
             ics_parser=ics_parser,
             ics_cache=ics_cache,
             calendar_manager=calendar_manager,
+            max_ics_size_chars=MAX_ICS_SIZE_CHARS,
         )
 
     # Verify that get_ics_string was called

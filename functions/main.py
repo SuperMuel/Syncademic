@@ -75,7 +75,7 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     return service
 
 
-@https_fn.on_call()
+@https_fn.on_call(max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES)
 def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     if not req.auth:
         raise https_fn.HttpsError(
@@ -114,6 +114,7 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
 
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def is_authorized(req: https_fn.CallableRequest) -> dict:
     if not req.auth:
@@ -147,6 +148,7 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
 
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     if not req.auth:
@@ -252,6 +254,7 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
 @on_document_created(
     document="users/{userId}/syncProfiles/{syncProfileId}",
     memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]):
     logging.info(f"Sync profile created: {event.data}")
@@ -283,7 +286,10 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     )
 
 
-@https_fn.on_call(memory=options.MemoryOption.MB_512)
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+)
 def request_sync(req: https_fn.CallableRequest) -> Any:
     if not req.auth:
         raise https_fn.HttpsError(
@@ -334,6 +340,7 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     schedule="0 2 * * *",
     memory=options.MemoryOption.MB_512,
     timeout_sec=3600,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def scheduled_sync(event: Any):
     db = firestore.client()
@@ -523,7 +530,10 @@ def _synchronize_now(
     logger.info("Synchronization completed successfully")
 
 
-@https_fn.on_call(memory=options.MemoryOption.MB_512)
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+)
 def delete_sync_profile(
     req: https_fn.CallableRequest,
 ) -> Any:  # TODO : add 'force' argument
@@ -626,7 +636,7 @@ def delete_sync_profile(
     logger.info("Sync profile deleted successfully")
 
 
-@https_fn.on_call()
+@https_fn.on_call(max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES)
 def authorize_backend(request: https_fn.CallableRequest) -> dict:
     if request.auth is None:
         raise https_fn.HttpsError(

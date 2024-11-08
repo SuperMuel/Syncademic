@@ -79,6 +79,15 @@ class GoogleCalendarManager:
         min_dt: Optional[datetime] = None,
         limit: Optional[int] = 1000,
     ) -> List[str]:
+        """Get the ids of the events associated with the sync_profile_id.
+
+        Uses the privateExtendedProperty to filter the events.
+
+        Args:
+            sync_profile_id (str): The sync_profile_id to filter the events
+            min_dt (Optional[datetime], optional): The lower bound (exclusive) for an event's end time to filter by. Defaults to None.
+            limit (Optional[int], optional): The maximum number of events to return. Defaults to 1000.
+        """
         if not sync_profile_id:
             raise ValueError(f"{sync_profile_id=} is not valid")
 
@@ -90,10 +99,15 @@ class GoogleCalendarManager:
             singleEvents=True,
             orderBy="startTime",
             maxResults=limit,
+            # Lower bound (exclusive) for an event's end time to filter by. Optional.
+            # The default is not to filter by end time. Must be an RFC3339 timestamp
+            # with mandatory time zone offset, for example, 2011-06-03T10:00:00-07:00,
+            #  2011-06-03T10:00:00Z. Milliseconds may be provided but are ignored.
+            # If timeMax is set, timeMin must be smaller than timeMax.
             timeMin=min_dt.astimezone(pytz.utc).isoformat() if min_dt else None,
         )
 
-        while request:  # TODO : Add a limit to avoid infinite loops
+        while request:
             response = request.execute()
             events_as_dict.extend(response.get("items", []))
             request = self.service.events().list_next(request, response)

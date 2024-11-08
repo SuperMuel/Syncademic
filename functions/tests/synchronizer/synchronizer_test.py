@@ -717,3 +717,158 @@ def test_perform_synchronization_ics_too_large():
 
     # Verify that get_ics_string was called
     ics_source.get_ics_string.assert_called_once()
+
+
+def test_event_ending_at_separation_dt():
+    # Arrange
+    sync_profile_id = "test_sync_profile"
+    sync_trigger = "manual"
+
+    # Mock ICS source and parser
+    ics_source = Mock(spec=UrlIcsSource)
+    ics_str = "BEGIN:VCALENDAR\n...END:VCALENDAR"
+    ics_source.get_ics_string.return_value = ics_str
+
+    # Create an event that ends exactly at separation_dt
+    separation_dt = datetime.now(timezone.utc)
+    event_ending_at_separation = Event(
+        start=arrow.get(separation_dt).shift(hours=-1),
+        end=arrow.get(separation_dt),  # Ends exactly at separation_dt
+        title="Event Ending Now",
+        description="Ends at separation_dt",
+        location="Location",
+    )
+
+    ics_parser = Mock(spec=IcsParser)
+    ics_parser.parse.return_value = [event_ending_at_separation]
+
+    # Mock ICS cache
+    ics_cache = Mock(spec=IcsFileStorage)
+
+    # Mock calendar manager
+    calendar_manager = Mock(spec=GoogleCalendarManager)
+    calendar_manager.get_events_ids_from_sync_profile.return_value = []  # Google calendar do not returns events ending exactly at separation_dt
+
+    # Act
+    perform_synchronization(
+        sync_profile_id=sync_profile_id,
+        sync_trigger=sync_trigger,
+        ics_source=ics_source,
+        ics_parser=ics_parser,
+        ics_cache=ics_cache,
+        calendar_manager=calendar_manager,
+        separation_dt=separation_dt,
+        sync_type="regular",
+    )
+
+    # Assert
+    # Since event.end == separation_dt, and event.end > separation_dt is False,
+    # the event should NOT be included in new_events
+    calendar_manager.create_events.assert_not_called()
+    calendar_manager.delete_events.assert_not_called()
+
+
+def test_event_starting_at_separation_dt():
+    # Arrange
+    sync_profile_id = "test_sync_profile"
+    sync_trigger = "manual"
+
+    # Mock ICS source and parser
+    ics_source = Mock(spec=UrlIcsSource)
+    ics_str = "BEGIN:VCALENDAR\n...END:VCALENDAR"
+    ics_source.get_ics_string.return_value = ics_str
+
+    # Create an event that starts exactly at separation_dt
+    separation_dt = datetime.now(timezone.utc)
+    event_starting_at_separation = Event(
+        start=arrow.get(separation_dt),  # Starts exactly at separation_dt
+        end=arrow.get(separation_dt).shift(hours=1),
+        title="Event Starting Now",
+        description="Starts at separation_dt",
+        location="Location",
+    )
+
+    ics_parser = Mock(spec=IcsParser)
+    ics_parser.parse.return_value = [event_starting_at_separation]
+
+    # Mock ICS cache
+    ics_cache = Mock(spec=IcsFileStorage)
+
+    # Mock calendar manager
+    calendar_manager = Mock(spec=GoogleCalendarManager)
+
+    # The event is returned by Google Calendar because event.end > separation_dt
+    calendar_manager.get_events_ids_from_sync_profile.return_value = ["event_id"]
+
+    # Act
+    perform_synchronization(
+        sync_profile_id=sync_profile_id,
+        sync_trigger=sync_trigger,
+        ics_source=ics_source,
+        ics_parser=ics_parser,
+        ics_cache=ics_cache,
+        calendar_manager=calendar_manager,
+        separation_dt=separation_dt,
+        sync_type="regular",
+    )
+
+    # Assert
+    # Since event.end > separation_dt, the event should be included in new_events
+    calendar_manager.create_events.assert_called_once_with(
+        [event_starting_at_separation], sync_profile_id
+    )
+    # The old event should be deleted
+    calendar_manager.delete_events.assert_called_once_with(["event_id"])
+
+
+def test_event_spanning_separation_dt():
+    # Arrange
+    sync_profile_id = "test_sync_profile"
+    sync_trigger = "manual"
+
+    # Mock ICS source and parser
+    ics_source = Mock(spec=UrlIcsSource)
+    ics_str = "BEGIN:VCALENDAR\n...END:VCALENDAR"
+    ics_source.get_ics_string.return_value = ics_str
+
+    # Create an event that starts before and ends after separation_dt
+    separation_dt = datetime.now(timezone.utc)
+    event_spanning_separation = Event(
+        start=arrow.get(separation_dt).shift(hours=-1),
+        end=arrow.get(separation_dt).shift(hours=1),
+        title="Event Spanning Now",
+        description="Spans over separation_dt",
+        location="Location",
+    )
+
+    # ICS parser returns this event
+    ics_parser = Mock(spec=IcsParser)
+    ics_parser.parse.return_value = [event_spanning_separation]
+
+    # Mock ICS cache
+    ics_cache = Mock(spec=IcsFileStorage)
+
+    # Mock calendar manager
+    calendar_manager = Mock(spec=GoogleCalendarManager)
+    # The event is returned by Google Calendar because event.end > separation_dt
+    calendar_manager.get_events_ids_from_sync_profile.return_value = ["event_id"]
+
+    # Act
+    perform_synchronization(
+        sync_profile_id=sync_profile_id,
+        sync_trigger=sync_trigger,
+        ics_source=ics_source,
+        ics_parser=ics_parser,
+        ics_cache=ics_cache,
+        calendar_manager=calendar_manager,
+        separation_dt=separation_dt,
+        sync_type="regular",
+    )
+
+    # Assert
+    # Since event.end > separation_dt, the event should be included in new_events
+    calendar_manager.create_events.assert_called_once_with(
+        [event_spanning_separation], sync_profile_id
+    )
+    # Delete the old event
+    calendar_manager.delete_events.assert_called_once_with(["event_id"])

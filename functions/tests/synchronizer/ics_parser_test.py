@@ -2,7 +2,7 @@ import pytest
 from typing import List
 import arrow
 from functions.shared.event import Event
-from functions.synchronizer.ics_parser import IcsParser
+from functions.synchronizer.ics_parser import IcsParser, RecurringEventError
 
 
 def build_ics_outline(inside: str):
@@ -185,4 +185,46 @@ DTEND:20230101T090000
 END:VEVENT"""
     )
     with pytest.raises(Exception):
+        ics_parser.parse(ics_str)
+
+
+def test_recurring_event_with_rrule_throws(ics_parser):
+    """Test that a recurring event with RRULE raises an error. We do not support recurring events yet."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
+SUMMARY:Recurring Event
+DTSTART:20230101T090000
+DTEND:20230101T100000
+RRULE:FREQ=DAILY;COUNT=5
+END:VEVENT"""
+    )
+    with pytest.raises(RecurringEventError):
+        ics_parser.parse(ics_str)
+
+
+def test_recurring_event_with_rdate_throws(ics_parser):
+    """Test that a recurring event with RDATE raises an error. We do not support recurring events yet."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
+SUMMARY:Recurring Event
+DTSTART:20230101T090000
+DTEND:20230101T100000
+RDATE:20230102T090000,20230103T090000
+END:VEVENT"""
+    )
+    with pytest.raises(RecurringEventError):
+        ics_parser.parse(ics_str)
+
+
+def test_recurring_event_with_exdate_throws(ics_parser):
+    """Test that a recurring event with EXDATE raises an error. We do not support recurring events yet."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
+SUMMARY:Recurring Event
+DTSTART:20230101T090000
+DTEND:20230101T100000
+EXDATE:20230102T090000
+END:VEVENT"""
+    )
+    with pytest.raises(RecurringEventError):
         ics_parser.parse(ics_str)

@@ -112,6 +112,8 @@ class GoogleCalendarManager:
             events_as_dict.extend(response.get("items", []))
             request = self.service.events().list_next(request, response)
 
+        # TODO : assert here that the API respected timeMin
+
         return [event["id"] for event in events_as_dict]
 
     def delete_events(

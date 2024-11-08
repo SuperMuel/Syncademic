@@ -10,7 +10,7 @@ from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.ics_cache import IcsFileStorage
 
 from .google_calendar_manager import GoogleCalendarManager
-from .ics_parser import IcsParser
+from .ics_parser import IcsParser, RecurringEventError
 from .ics_source import UrlIcsSource
 from .middleware.middleware import Middleware
 
@@ -51,6 +51,18 @@ def perform_synchronization(
 
     try:
         events = ics_parser.parse(ics_str)
+    except RecurringEventError as recurring_event_error:
+        logger.error(
+            f"Recurring event detected in ics: {recurring_event_error}. Still saving the ics string in cache for further analysis."
+        )
+        ics_cache.save_to_cache(
+            sync_profile_id=sync_profile_id,
+            sync_trigger=sync_trigger,
+            ics_source=ics_source,
+            ics_str=ics_str,
+        )
+        raise recurring_event_error
+
     except Exception as e:
         logger.error(f"Failed to parse ics: {e}")
         raise e

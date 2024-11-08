@@ -1,21 +1,24 @@
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:feedback_sentry/feedback_sentry.dart';
-
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:feedback_sentry/feedback_sentry.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:gap/gap.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' show CalendarApi;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'widgets/feedback_icon_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'authentication/cubit/auth_cubit.dart';
 import 'authorization/authorization_service.dart';
@@ -28,9 +31,9 @@ import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'screens/account/account_page.dart';
-import 'screens/sign_in_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
+import 'screens/sign_in_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'screens/sync_profile/sync_profile_page.dart';
 import 'services/account_service.dart';
@@ -40,10 +43,8 @@ import 'services/firebase_sync_profile_service.dart';
 import 'services/firestore_account_service.dart';
 import 'services/provider_account_service.dart';
 import 'services/sync_profile_service.dart';
+import 'widgets/feedback_icon_button.dart';
 import 'widgets/sync_profiles_list.dart';
-import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 void registerDependencies() {
   final getIt = GetIt.instance;
@@ -251,16 +252,44 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.info),
             onPressed: () => showAboutDialog(
-              context: context,
-              applicationIcon: SvgPicture.asset(
-                'assets/icons/syncademic-icon.svg',
-                semanticsLabel: 'Syncademic logo',
-                width: 40,
-              ),
-              applicationName: 'Syncademic',
-              applicationVersion: packageInfo?.version,
-              applicationLegalese: '© 2024 Syncademic',
-            ),
+                context: context,
+                applicationIcon: SvgPicture.asset(
+                  'assets/icons/syncademic-icon.svg',
+                  semanticsLabel: 'Syncademic logo',
+                  width: 40,
+                ),
+                applicationName: 'Syncademic',
+                applicationVersion: packageInfo?.version,
+                applicationLegalese: '© 2024 Syncademic',
+                children: [
+                  const Gap(10),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () async {
+                        const urlString =
+                            'https://github.com/supermuel/syncademic';
+                        await launchUrl(Uri.parse(urlString));
+                      },
+                      child: const Text.rich(
+                        TextSpan(
+                          text: 'Made by ',
+                          children: [
+                            TextSpan(
+                              text: 'SuperMuel',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' 🤗',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ]),
             tooltip: "About",
           ),
           IconButton(

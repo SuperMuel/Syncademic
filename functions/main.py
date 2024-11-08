@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any
 
 from firebase_admin import firestore, initialize_app, storage
@@ -17,10 +18,10 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from langchain.chat_models import init_chat_model
 
-from functions.settings import settings
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
 from functions.rules.models import Ruleset
+from functions.settings import settings
 from functions.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
@@ -291,6 +292,8 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 
     sync_profile_id = req.data.get("syncProfileId")
 
+    logger.info(f"Sync request received for {req.auth.uid}/{sync_profile_id}")
+
     if not sync_profile_id:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
@@ -299,9 +302,12 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     sync_type = req.data.get("syncType", "regular")
 
     if sync_type not in ["regular", "full"]:
+        logger.error(f"Invalid syncType: {sync_type}")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid syncType"
         )
+
+    logger.info(f"Sync type: {sync_type}")
 
     syncProfile = (
         firestore.client()
@@ -313,11 +319,10 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     )
 
     if not syncProfile.exists:
+        logger.error("Sync profile not found")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
         )
-
-    logger.info(f"Starting manual synchronization for {req.auth.uid}/{sync_profile_id}")
 
     _synchronize_now(
         req.auth.uid, sync_profile_id, sync_trigger="manual", sync_type=sync_type
@@ -351,6 +356,8 @@ def _synchronize_now(
     sync_type: SyncType = "regular",
 ):
     db = firestore.client()
+
+    user_ref = db.collection("users").document(user_id)
 
     sync_profile_ref = (
         db.collection("users")
@@ -388,6 +395,40 @@ def _synchronize_now(
             }
         }
     )
+
+    # Check if number of sync per day is not exceeded
+    # Get current date in UTC
+    current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    sync_stats_ref = user_ref.collection("syncStats").document(current_date)
+    assert isinstance(sync_stats_ref, DocumentReference)
+
+    # Fetch today's synchronization stats
+    sync_stats_doc = sync_stats_ref.get()
+    if sync_stats_doc.exists:
+        sync_stats = sync_stats_doc.to_dict()
+        assert sync_stats is not None, "sync_stats should not be None since it exists"
+        sync_count = sync_stats.get("syncCount", 0)
+    else:
+        sync_count = 0
+
+    assert isinstance(sync_count, int) and sync_count >= 0
+
+    logger.info(f"Sync count: {sync_count}" if sync_count else "First sync of the day")
+
+    # Check if the user has reached the daily limit
+    if sync_count >= settings.MAX_SYNCHRONIZATIONS_PER_DAY:
+        logger.info(f"User {user_id} has reached the daily synchronization limit.")
+        sync_profile_ref.update(
+            {
+                "status": {
+                    "type": "failed",
+                    "message": f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
+                    "syncTrigger": sync_trigger,
+                    "syncType": sync_type,
+                }
+            }
+        )
+        return  # Exit without performing synchronization
 
     try:
         service = get_calendar_service(
@@ -477,6 +518,7 @@ def _synchronize_now(
             },
         }
     )
+    sync_stats_ref.set({"syncCount": firestore.firestore.Increment(1)}, merge=True)
 
     logger.info("Synchronization completed successfully")
 

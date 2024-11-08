@@ -683,3 +683,37 @@ def test_perform_synchronization_with_ruleset_full_sync():
     calendar_manager.delete_events.assert_called_once_with(
         ["past_event_id", "future_event_id"]
     )
+
+
+def test_perform_synchronization_ics_too_large():
+    # Arrange
+    sync_profile_id = "test_sync_profile"
+    sync_trigger = "manual"
+    MAX_ICS_SIZE_CHARS = 1000
+
+    # Create a large ICS string exceeding MAX_ICS_SIZE_CHARS
+    ics_str = "BEGIN:VCALENDAR\n" + "A" * (MAX_ICS_SIZE_CHARS) + "\nEND:VCALENDAR"
+
+    # Mock ICS source
+    ics_source = Mock(spec=UrlIcsSource)
+    ics_source.get_ics_string.return_value = ics_str
+
+    # Mock other dependencies
+    ics_parser = Mock(spec=IcsParser)
+    ics_cache = Mock(spec=IcsFileStorage)
+    calendar_manager = Mock(spec=GoogleCalendarManager)
+
+    # Act and Assert
+    with pytest.raises(ValueError, match="ICS file is too large"):
+        perform_synchronization(
+            sync_profile_id=sync_profile_id,
+            sync_trigger=sync_trigger,
+            ics_source=ics_source,
+            ics_parser=ics_parser,
+            ics_cache=ics_cache,
+            calendar_manager=calendar_manager,
+            max_ics_size_chars=MAX_ICS_SIZE_CHARS,
+        )
+
+    # Verify that get_ics_string was called
+    ics_source.get_ics_string.assert_called_once()

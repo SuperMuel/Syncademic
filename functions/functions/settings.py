@@ -1,5 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+import os
+
+IGNORE_ON_GITHUB_ACTIONS = "" if os.getenv("GITHUB_ACTIONS") else ...
 
 
 class Settings(BaseSettings):
@@ -12,11 +15,16 @@ class Settings(BaseSettings):
 
     RULES_BUILDER_LLM: str = Field(default="gpt-4o")
 
-    CLIENT_ID: str = Field(default=...)
-    CLIENT_SECRET: str = Field(default=...)
+    CLIENT_ID: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
+    CLIENT_SECRET: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
 
-    LOCAL_REDIRECT_URI: str = Field(default=...)
-    PRODUCTION_REDIRECT_URI: str = Field(default=...)
+    LOCAL_REDIRECT_URI: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
+    PRODUCTION_REDIRECT_URI: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
+
+    MAX_ICS_SIZE_CHARS: int = Field(default=1_000_000)
+    MAX_SYNCHRONIZATIONS_PER_DAY: int = Field(
+        default=24 * 5  # 24 syncs per day for 5 profiles
+    )
 
 
 settings = Settings()

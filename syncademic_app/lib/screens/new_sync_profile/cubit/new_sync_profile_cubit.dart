@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/models/sync_profile_status.dart';
 import '../../../models/provider_account.dart';
 import '../../../services/provider_account_service.dart';
 import '../../../repositories/target_calendar_repository.dart';
@@ -223,10 +224,12 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     late TargetCalendar targetCalendar;
     if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
       try {
-        targetCalendar = await GetIt.I<TargetCalendarRepository>().createCalendar(
-            state.providerAccount!.providerAccountId, state.newCalendarCreated!,
-            color: state
-                .targetCalendarColor,); //TODO : move the creation responsability to the backend
+        targetCalendar =
+            await GetIt.I<TargetCalendarRepository>().createCalendar(
+          state.providerAccount!.providerAccountId,
+          state.newCalendarCreated!,
+          color: state.targetCalendarColor,
+        ); //TODO : move the creation responsability to the backend
       } catch (e) {
         return emit(
             state.copyWith(submitError: e.toString(), isSubmitting: false));
@@ -244,6 +247,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       title: state.title,
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
+      status: const SyncProfileStatus.notStarted(),
     );
 
     final repo = GetIt.I<SyncProfileRepository>();

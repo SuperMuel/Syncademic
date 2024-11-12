@@ -20,8 +20,7 @@ mixin _$SyncProfile {
   ScheduleSource get scheduleSource => throw _privateConstructorUsedError;
   TargetCalendar get targetCalendar => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
-  bool get enabled => throw _privateConstructorUsedError;
-  SyncProfileStatus? get status => throw _privateConstructorUsedError;
+  SyncProfileStatus get status => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $SyncProfileCopyWith<SyncProfile> get copyWith =>
@@ -39,12 +38,11 @@ abstract class $SyncProfileCopyWith<$Res> {
       ScheduleSource scheduleSource,
       TargetCalendar targetCalendar,
       String title,
-      bool enabled,
-      SyncProfileStatus? status});
+      SyncProfileStatus status});
 
   $ScheduleSourceCopyWith<$Res> get scheduleSource;
   $TargetCalendarCopyWith<$Res> get targetCalendar;
-  $SyncProfileStatusCopyWith<$Res>? get status;
+  $SyncProfileStatusCopyWith<$Res> get status;
 }
 
 /// @nodoc
@@ -64,8 +62,7 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
     Object? scheduleSource = null,
     Object? targetCalendar = null,
     Object? title = null,
-    Object? enabled = null,
-    Object? status = freezed,
+    Object? status = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -84,14 +81,10 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
-      enabled: null == enabled
-          ? _value.enabled
-          : enabled // ignore: cast_nullable_to_non_nullable
-              as bool,
-      status: freezed == status
+      status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
-              as SyncProfileStatus?,
+              as SyncProfileStatus,
     ) as $Val);
   }
 
@@ -113,12 +106,8 @@ class _$SyncProfileCopyWithImpl<$Res, $Val extends SyncProfile>
 
   @override
   @pragma('vm:prefer-inline')
-  $SyncProfileStatusCopyWith<$Res>? get status {
-    if (_value.status == null) {
-      return null;
-    }
-
-    return $SyncProfileStatusCopyWith<$Res>(_value.status!, (value) {
+  $SyncProfileStatusCopyWith<$Res> get status {
+    return $SyncProfileStatusCopyWith<$Res>(_value.status, (value) {
       return _then(_value.copyWith(status: value) as $Val);
     });
   }
@@ -137,15 +126,14 @@ abstract class _$$SyncProfileImplCopyWith<$Res>
       ScheduleSource scheduleSource,
       TargetCalendar targetCalendar,
       String title,
-      bool enabled,
-      SyncProfileStatus? status});
+      SyncProfileStatus status});
 
   @override
   $ScheduleSourceCopyWith<$Res> get scheduleSource;
   @override
   $TargetCalendarCopyWith<$Res> get targetCalendar;
   @override
-  $SyncProfileStatusCopyWith<$Res>? get status;
+  $SyncProfileStatusCopyWith<$Res> get status;
 }
 
 /// @nodoc
@@ -163,8 +151,7 @@ class __$$SyncProfileImplCopyWithImpl<$Res>
     Object? scheduleSource = null,
     Object? targetCalendar = null,
     Object? title = null,
-    Object? enabled = null,
-    Object? status = freezed,
+    Object? status = null,
   }) {
     return _then(_$SyncProfileImpl(
       id: null == id
@@ -183,14 +170,10 @@ class __$$SyncProfileImplCopyWithImpl<$Res>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
-      enabled: null == enabled
-          ? _value.enabled
-          : enabled // ignore: cast_nullable_to_non_nullable
-              as bool,
-      status: freezed == status
+      status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
-              as SyncProfileStatus?,
+              as SyncProfileStatus,
     ));
   }
 }
@@ -203,8 +186,7 @@ class _$SyncProfileImpl implements _SyncProfile {
       required this.scheduleSource,
       required this.targetCalendar,
       required this.title,
-      this.enabled = false,
-      this.status});
+      required this.status});
 
   @override
   final ID id;
@@ -215,14 +197,11 @@ class _$SyncProfileImpl implements _SyncProfile {
   @override
   final String title;
   @override
-  @JsonKey()
-  final bool enabled;
-  @override
-  final SyncProfileStatus? status;
+  final SyncProfileStatus status;
 
   @override
   String toString() {
-    return 'SyncProfile(id: $id, scheduleSource: $scheduleSource, targetCalendar: $targetCalendar, title: $title, enabled: $enabled, status: $status)';
+    return 'SyncProfile(id: $id, scheduleSource: $scheduleSource, targetCalendar: $targetCalendar, title: $title, status: $status)';
   }
 
   @override
@@ -236,13 +215,12 @@ class _$SyncProfileImpl implements _SyncProfile {
             (identical(other.targetCalendar, targetCalendar) ||
                 other.targetCalendar == targetCalendar) &&
             (identical(other.title, title) || other.title == title) &&
-            (identical(other.enabled, enabled) || other.enabled == enabled) &&
             (identical(other.status, status) || other.status == status));
   }
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, id, scheduleSource, targetCalendar, title, enabled, status);
+      runtimeType, id, scheduleSource, targetCalendar, title, status);
 
   @JsonKey(ignore: true)
   @override
@@ -257,8 +235,7 @@ abstract class _SyncProfile implements SyncProfile {
       required final ScheduleSource scheduleSource,
       required final TargetCalendar targetCalendar,
       required final String title,
-      final bool enabled,
-      final SyncProfileStatus? status}) = _$SyncProfileImpl;
+      required final SyncProfileStatus status}) = _$SyncProfileImpl;
 
   @override
   ID get id;
@@ -269,9 +246,7 @@ abstract class _SyncProfile implements SyncProfile {
   @override
   String get title;
   @override
-  bool get enabled;
-  @override
-  SyncProfileStatus? get status;
+  SyncProfileStatus get status;
   @override
   @JsonKey(ignore: true)
   _$$SyncProfileImplCopyWith<_$SyncProfileImpl> get copyWith =>

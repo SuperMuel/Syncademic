@@ -3,6 +3,7 @@ import 'package:syncademic_app/models/id.dart';
 import 'package:syncademic_app/models/schedule_source.dart';
 
 import 'package:syncademic_app/models/sync_profile.dart';
+import 'package:syncademic_app/models/sync_profile_status.dart';
 import 'package:syncademic_app/models/target_calendar.dart';
 
 void main() {
@@ -18,19 +19,21 @@ void main() {
     providerAccountId: 'providerAccountId',
   );
 
+  const status = SyncProfileStatus.notStarted();
+
   test('should create a SyncProfile instance', () {
     final syncProfile = SyncProfile(
       id: id,
       title: title,
       scheduleSource: scheduleSource,
-      enabled: false,
       targetCalendar: targetCalendar,
+      status: status,
     );
 
     expect(syncProfile.id, id);
-    expect(syncProfile.enabled, false);
     expect(syncProfile.scheduleSource, scheduleSource);
     expect(syncProfile.targetCalendar, targetCalendar);
+    expect(syncProfile.title, title);
   });
 
   group('equals', () {
@@ -39,15 +42,15 @@ void main() {
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1, equals(syncProfile2));
     });
@@ -58,15 +61,15 @@ void main() {
         id: id1,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1, isNot(equals(syncProfile2)));
     });
@@ -77,15 +80,15 @@ void main() {
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: "${title}HHAHAAAAAAAAAAAAAAAAA",
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1, isNot(equals(syncProfile2)));
     });
@@ -100,15 +103,15 @@ void main() {
         id: id,
         title: title,
         scheduleSource: scheduleSource1,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1, isNot(equals(syncProfile2)));
     });
@@ -124,34 +127,35 @@ void main() {
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar1,
+        status: status,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1, isNot(equals(syncProfile2)));
     });
 
-    test('should not be equal to another SyncProfile with a different enabled',
+    test('should not be equal to another SyncProfile with a different status',
         () {
+      const status1 = SyncProfileStatus.failed('Error message');
       final syncProfile1 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: true,
         targetCalendar: targetCalendar,
+        status: status1,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1, isNot(equals(syncProfile2)));
     });
@@ -162,15 +166,15 @@ void main() {
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       final syncProfile2 = SyncProfile(
         id: id,
         title: title,
         scheduleSource: scheduleSource,
-        enabled: false,
         targetCalendar: targetCalendar,
+        status: status,
       );
       expect(syncProfile1.hashCode, equals(syncProfile2.hashCode));
     });

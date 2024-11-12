@@ -71,7 +71,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       description: data['targetCalendar']['description'],
     );
 
-    SyncProfileStatus? status; //TODO : Refactor this crap
+    late SyncProfileStatus status; //TODO : Refactor this crap
     switch (data['status']['type']) {
       case 'inProgress':
         status = SyncProfileStatus.inProgress(

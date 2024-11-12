@@ -14,7 +14,6 @@ class SyncProfile with _$SyncProfile {
     required ScheduleSource scheduleSource,
     required TargetCalendar targetCalendar,
     required String title,
-    @Default(false) bool enabled,
-    SyncProfileStatus? status,
+    required SyncProfileStatus status,
   }) = _SyncProfile;
 }

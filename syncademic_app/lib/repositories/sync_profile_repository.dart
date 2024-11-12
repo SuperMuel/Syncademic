@@ -83,7 +83,6 @@ class MockSyncProfileRepository implements SyncProfileRepository {
       title: 'Sync Profile n°${id.value}',
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
-      enabled: Random().nextBool(),
       status: SyncProfileStatus.success(
         lastSuccessfulSync:
             DateTime.now().subtract(Duration(seconds: totalSeconds)),

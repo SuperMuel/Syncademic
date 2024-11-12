@@ -13,6 +13,7 @@ class IcsFileStorage(ABC):
         sync_trigger: str,
         ics_source: UrlIcsSource,
         ics_str: str,
+        parsing_error: str | None = None,
     ) -> None:
         pass
 
@@ -27,6 +28,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         sync_trigger: str,  # TODO : type this
         ics_source: UrlIcsSource,
         ics_str: str,
+        parsing_error: str | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
 
@@ -38,6 +40,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
             "syncProfileId": sync_profile_id,
             "syncTrigger": sync_trigger,
             "blob_created_at": now.isoformat(),
+            "parsing_error": parsing_error,
         }
         blob.upload_from_string(ics_str, content_type="text/calendar")
         logger.info(f"Stored ics string in firebase storage: {filename}")

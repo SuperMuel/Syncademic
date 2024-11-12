@@ -51,20 +51,15 @@ def perform_synchronization(
 
     try:
         events = ics_parser.parse(ics_str)
-    except RecurringEventError as recurring_event_error:
-        logger.error(
-            f"Recurring event detected in ics: {recurring_event_error}. Still saving the ics string in cache for further analysis."
-        )
+    except Exception as e:
+        logger.error(f"Failed to parse ics: {e}")
         ics_cache.save_to_cache(
             sync_profile_id=sync_profile_id,
             sync_trigger=sync_trigger,
             ics_source=ics_source,
             ics_str=ics_str,
+            parsing_error=str(e),
         )
-        raise recurring_event_error
-
-    except Exception as e:
-        logger.error(f"Failed to parse ics: {e}")
         raise e
 
     logger.info(f"Found {len(events)} events in ics")

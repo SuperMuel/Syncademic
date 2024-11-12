@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
-import 'package:syncademic_app/models/sync_profile_status.dart';
+import '../../../models/sync_profile_status.dart';
 import '../../../models/provider_account.dart';
 import '../../../services/provider_account_service.dart';
 import '../../../repositories/target_calendar_repository.dart';

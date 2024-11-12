@@ -82,13 +82,13 @@ class _List extends StatelessWidget {
             itemCount: profiles.length,
             itemBuilder: (context, index) {
               final profile = profiles[index];
-              final lastSuccessfulSync = profile.status?.lastSuccessfulSync;
+              final lastSuccessfulSync = profile.status.lastSuccessfulSync;
               return ListTile(
                   title: Text(profile.title,
                       style: Theme.of(context).textTheme.titleLarge),
-                  leading: Icon(
+                  leading: const Icon(
                     Icons.sync,
-                    color: profile.enabled ? Colors.green : Colors.grey,
+                    color: Colors.grey,
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   subtitle: lastSuccessfulSync == null

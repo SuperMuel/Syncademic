@@ -150,7 +150,7 @@ class UrlVerificationButton extends StatelessWidget {
       verified: () => const Text('This URL points to a valid time schedule',
           style: TextStyle(color: Colors.green)),
       verificationFailed: (errorMessage) => Text(
-        'This URL is not valid time schedule URL: $errorMessage',
+        'This URL is not a valid time schedule URL: $errorMessage',
         style: const TextStyle(color: Colors.red),
       ),
       notVerified: () => ElevatedButton(

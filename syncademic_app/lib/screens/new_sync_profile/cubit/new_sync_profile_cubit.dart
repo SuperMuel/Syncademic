@@ -24,9 +24,9 @@ part 'new_sync_profile_cubit.freezed.dart';
 part 'new_sync_profile_state.dart';
 
 class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
-  final IcsService icsService;
+  final IcsValidationService icsService;
 
-  NewSyncProfileCubit({this.icsService = const IcsService()})
+  NewSyncProfileCubit({this.icsService = const IcsValidationService()})
       : super(const NewSyncProfileState()) {
     GetIt.I<ProviderAccountService>()
         .onCurrentUserChanged

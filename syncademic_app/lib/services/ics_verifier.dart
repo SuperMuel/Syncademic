@@ -11,8 +11,8 @@ class Success {
   Success(this.content);
 }
 
-class IcsService {
-  const IcsService();
+class IcsValidationService {
+  const IcsValidationService();
 
   Future<Either<Failure, Success>> fetchAndParseIcs(String url) async {
     try {

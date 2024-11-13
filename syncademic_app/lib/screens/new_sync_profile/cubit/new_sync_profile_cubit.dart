@@ -95,9 +95,9 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
 
     verificationResult.fold(
         (error) => emit(state.copyWith(
-            icsVerificationStatus: IcsVerificationStatus.verificationFailed(
-                errorMessage: error.message))),
-        (calendar) => emit(state.copyWith(
+            icsVerificationStatus:
+                IcsVerificationStatus.verificationFailed(errorMessage: error))),
+        (_) => emit(state.copyWith(
             icsVerificationStatus: const IcsVerificationStatus.verified())));
   }
 

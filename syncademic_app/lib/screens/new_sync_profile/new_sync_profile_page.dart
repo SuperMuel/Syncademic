@@ -134,8 +134,8 @@ class TitleStepContent extends StatelessWidget {
   }
 }
 
-class UrlVerificationButton extends StatelessWidget {
-  const UrlVerificationButton(
+class UrlVerificationButtonAndText extends StatelessWidget {
+  const UrlVerificationButtonAndText(
       {super.key,
       required this.icsVerificationStatus,
       required this.canSubmitUrlForVerification});
@@ -191,7 +191,7 @@ class UrlStepContent extends StatelessWidget {
             const SizedBox(height: 16),
             const InsaLyonIcsUrlHelp(),
             const SizedBox(height: 16),
-            UrlVerificationButton(
+            UrlVerificationButtonAndText(
               icsVerificationStatus: state.icsVerificationStatus,
               canSubmitUrlForVerification: state.canSubmitUrlForVerification,
             ),

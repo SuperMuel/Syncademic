@@ -5,23 +5,29 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
-import '../../../models/sync_profile_status.dart';
-import '../../../models/provider_account.dart';
-import '../../../services/provider_account_service.dart';
-import '../../../repositories/target_calendar_repository.dart';
-import '../../../authorization/backend_authorization_service.dart';
-import '../../../models/id.dart';
-import '../../../models/schedule_source.dart';
-import '../../../models/sync_profile.dart';
-import '../../../models/target_calendar.dart';
-import '../../../repositories/sync_profile_repository.dart';
 import 'package:validators/validators.dart';
 
-part 'new_sync_profile_state.dart';
+import '../../../authorization/backend_authorization_service.dart';
+import '../../../models/id.dart';
+import '../../../models/provider_account.dart';
+import '../../../models/schedule_source.dart';
+import '../../../models/sync_profile.dart';
+import '../../../models/sync_profile_status.dart';
+import '../../../models/target_calendar.dart';
+import '../../../repositories/sync_profile_repository.dart';
+import '../../../repositories/target_calendar_repository.dart';
+import '../../../services/ics_verifier.dart';
+import '../../../services/provider_account_service.dart';
+import 'ics_verification_status.dart';
+
 part 'new_sync_profile_cubit.freezed.dart';
+part 'new_sync_profile_state.dart';
 
 class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
-  NewSyncProfileCubit() : super(const NewSyncProfileState()) {
+  final IcsService icsService;
+
+  NewSyncProfileCubit({this.icsService = const IcsService()})
+      : super(const NewSyncProfileState()) {
     GetIt.I<ProviderAccountService>()
         .onCurrentUserChanged
         .listen(providerAccountSelected);
@@ -66,7 +72,33 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return emit(state.copyWith(url: url, urlError: 'URL is not valid'));
     }
 
-    emit(state.copyWith(url: url, urlError: null));
+    emit(state.copyWith(
+      url: url,
+      urlError: null,
+      icsVerificationStatus: const IcsVerificationStatus.notVerified(),
+    ));
+  }
+
+  Future<void> verifyIcs() async {
+    assert(isURL(state.url), 'URL must be a valid URL before verifying');
+
+    if (state.icsVerificationStatus ==
+        const IcsVerificationStatus.verificationInProgress()) {
+      return;
+    }
+
+    emit(state.copyWith(
+        icsVerificationStatus:
+            const IcsVerificationStatus.verificationInProgress()));
+
+    final verificationResult = await icsService.fetchAndParseIcs(state.url);
+
+    verificationResult.fold(
+        (error) => emit(state.copyWith(
+            icsVerificationStatus: IcsVerificationStatus.verificationFailed(
+                errorMessage: error.message))),
+        (calendar) => emit(state.copyWith(
+            icsVerificationStatus: const IcsVerificationStatus.verified())));
   }
 
   Future<void> providerAccountSelected(ProviderAccount? providerAccount) async {

@@ -34,6 +34,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
     String? titleError,
     @Default('') String url,
     String? urlError,
+    @Default(IcsVerificationStatus.notVerified())
+    IcsVerificationStatus icsVerificationStatus,
     ProviderAccount? providerAccount,
     @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
@@ -52,8 +54,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
   const NewSyncProfileState._();
 
   bool get canContinue => switch (currentStep) {
-        NewSyncProfileStep.title => titleError == null && !isBlank(title),
-        NewSyncProfileStep.url => urlError == null && !isBlank(url),
+        NewSyncProfileStep.title => isTitleValid,
+        NewSyncProfileStep.url => areUrlAndIcsContentValid,
         NewSyncProfileStep.selectProviderAccount => providerAccount != null,
         NewSyncProfileStep.selectTargetCalendar =>
           targetCalendarSelected != null,
@@ -77,12 +79,23 @@ class NewSyncProfileState with _$NewSyncProfileState {
     }
   }
 
-  bool get isUrlValid => urlError == null && !isBlank(url);
-
   bool get isTitleValid => titleError == null && !isBlank(title);
 
+  bool get canSubmitUrlForVerification =>
+      urlError == null &&
+      !isBlank(url) &&
+      icsVerificationStatus.when(
+        notVerified: () => true,
+        verificationInProgress: () => false,
+        verified: () => false,
+        verificationFailed: (_) => true,
+      );
+
+  bool get areUrlAndIcsContentValid =>
+      urlError == null && !isBlank(url) && icsVerificationStatus.isVerified;
+
   bool canSubmit() {
-    if (!isTitleValid || !isUrlValid) {
+    if (!isTitleValid || !areUrlAndIcsContentValid) {
       return false;
     }
 

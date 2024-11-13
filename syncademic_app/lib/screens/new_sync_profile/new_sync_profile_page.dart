@@ -1,16 +1,18 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../repositories/target_calendar_repository.dart';
+import 'cubit/ics_verification_status.dart';
+import 'google_sign_in_button/sign_in_button.dart';
+
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/target_calendar.dart';
-import '../../repositories/target_calendar_repository.dart';
 import '../../widgets/feedback_icon_button.dart';
 import '../../widgets/provider_account_card.dart';
 import '../../widgets/target_calendar_card.dart';
 import 'cubit/new_sync_profile_cubit.dart';
-import 'google_sign_in_button/sign_in_button.dart';
 import 'target_calendar_selector/target_calendar_selector.dart';
 import 'target_calendar_selector/target_calendar_selector_cubit.dart';
 
@@ -132,6 +134,35 @@ class TitleStepContent extends StatelessWidget {
   }
 }
 
+class UrlVerificationButton extends StatelessWidget {
+  const UrlVerificationButton(
+      {super.key,
+      required this.icsVerificationStatus,
+      required this.canSubmitUrlForVerification});
+
+  final IcsVerificationStatus icsVerificationStatus;
+  final bool canSubmitUrlForVerification;
+
+  @override
+  Widget build(BuildContext context) {
+    return icsVerificationStatus.when(
+      verificationInProgress: () => const CircularProgressIndicator(),
+      verified: () => const Text('This URL points to a valid time schedule',
+          style: TextStyle(color: Colors.green)),
+      verificationFailed: (errorMessage) => Text(
+        'This URL is not valid time schedule URL: $errorMessage',
+        style: const TextStyle(color: Colors.red),
+      ),
+      notVerified: () => ElevatedButton(
+        onPressed: canSubmitUrlForVerification
+            ? context.read<NewSyncProfileCubit>().verifyIcs
+            : null,
+        child: const Text('Verify URL'),
+      ),
+    );
+  }
+}
+
 class UrlStepContent extends StatelessWidget {
   const UrlStepContent({
     super.key,
@@ -158,31 +189,49 @@ class UrlStepContent extends StatelessWidget {
               onEditingComplete: context.read<NewSyncProfileCubit>().next,
             ),
             const SizedBox(height: 16),
-            RichText(
-              text: TextSpan(
-                text: 'Students from INSA Lyon can get their URL by visiting ',
-                style: const TextStyle(color: Colors.black),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'ADE Outils (insa-lyon.fr)',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () => launchUrl(Uri.parse(
-                          'https://ade-outils.insa-lyon.fr/ADE-iCal@2024-2025')),
-                  ),
-                  const TextSpan(
-                    text: '.',
-                  ),
-                ],
-              ),
+            const InsaLyonIcsUrlHelp(),
+            const SizedBox(height: 16),
+            UrlVerificationButton(
+              icsVerificationStatus: state.icsVerificationStatus,
+              canSubmitUrlForVerification: state.canSubmitUrlForVerification,
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// Help message for INSA Lyon students to get their
+/// time schedule URL.
+class InsaLyonIcsUrlHelp extends StatelessWidget {
+  const InsaLyonIcsUrlHelp({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: TextSpan(
+        text: 'Students from INSA Lyon can get their URL by visiting ',
+        style: const TextStyle(color: Colors.black),
+        children: <TextSpan>[
+          TextSpan(
+            text: 'ADE Outils (insa-lyon.fr)',
+            style: const TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+              fontWeight: FontWeight.bold,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => launchUrl(Uri.parse(
+                  'https://ade-outils.insa-lyon.fr/ADE-iCal@2024-2025')),
+          ),
+          const TextSpan(
+            text: '.',
+          ),
+        ],
+      ),
     );
   }
 }

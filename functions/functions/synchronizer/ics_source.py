@@ -65,6 +65,7 @@ class UrlIcsSource(IcsSource):
                 return chunks.getvalue().decode("utf-8", errors="ignore")
 
         except requests.RequestException as e:
+            logger.error(f"Could not fetch ICS file : {e}")
             raise ValueError(f"Could not fetch ICS file : {e}")
 
 

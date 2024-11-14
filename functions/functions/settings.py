@@ -2,7 +2,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 import os
 
-IGNORE_ON_GITHUB_ACTIONS = "" if os.getenv("GITHUB_ACTIONS") else ...
+
+# This is a workaround to avoid setting the variables
+# are optional or providing default values. This way,
+# we ensure that the variables are always set in other
+# environments.
+IGNORE_ON_GITHUB_ACTIONS = "" if (os.getenv("GITHUB_ACTIONS")) else ...
+
+
+# Making the variables required causes VSCode's
+# test discovery to fail. To solve this, we provide
+# default testing values to required variables
+# in pyproject.toml using pytest-env.
 
 
 class Settings(BaseSettings):

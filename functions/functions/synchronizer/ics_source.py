@@ -17,7 +17,7 @@ class UrlIcsSource(IcsSource):
     def __init__(
         self,
         url: str,
-        timeout_s: int = 10,
+        timeout_s: int = settings.URL_ICS_SOURCE_TIMEOUT_S,
         max_content_size_b: int = settings.MAX_ICS_SIZE_BYTES,
     ):
         if not validators.url(url):

@@ -1,7 +1,9 @@
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Any
 
+import validators
 from firebase_admin import firestore, initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
 from firebase_functions.firestore_fn import (
@@ -72,6 +74,56 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     service = build("calendar", "v3", credentials=credentials)
 
     return service
+
+
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+)
+def validate_ics_url(req: https_fn.CallableRequest) -> dict:
+    # Check if the request is authenticated
+    if not req.auth:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
+        )
+
+    # Retrieve the ICS URL from the request data
+    ics_url = req.data.get("url")
+    if not ics_url:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing 'url' in request."
+        )
+
+    # URL Format Validation using validators.url
+    if not validators.url(ics_url):
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid URL"
+        )
+
+    # Use UrlIcsSource to fetch the ICS file and validate content-type and size
+    try:
+        ics_source = UrlIcsSource(ics_url)
+        content = ics_source.get_ics_string()
+    except Exception as e:
+        logging.info(f"Failed to fetch ICS file at URL '{ics_url}': {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            f"Failed to fetch ICS file: {str(e)}",
+        )
+
+    # Content verification
+    try:
+        parser = IcsParser()
+        events = parser.parse(ics_str=content)
+    except Exception as e:
+        logging.error(f"Invalid ICS content at URL '{ics_url}': {e}")
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            f"Invalid ICS content: {str(e)}",
+        )
+
+    # If everything is fine, return success
+    return {"valid": True, "nbEvents": len(events)}
 
 
 @https_fn.on_call(max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES)

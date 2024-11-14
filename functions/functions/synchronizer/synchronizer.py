@@ -5,12 +5,11 @@ from typing import List, Literal, Optional
 from firebase_functions import logger
 
 from functions.rules.models import Ruleset
-from functions.settings import settings
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.ics_cache import IcsFileStorage
 
 from .google_calendar_manager import GoogleCalendarManager
-from .ics_parser import IcsParser, RecurringEventError
+from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
 from .middleware.middleware import Middleware
 
@@ -29,25 +28,13 @@ def perform_synchronization(
     ruleset: Ruleset | None = None,
     separation_dt: datetime | None = None,
     sync_type: SyncType = "regular",
-    max_ics_size_chars: int = settings.MAX_ICS_SIZE_CHARS,
 ) -> None:
     # Temporary : only one of middlewares or ruleset can be provided, not both
     assert not (
         middlewares and ruleset
     ), "Only one of middlewares or ruleset can be provided"
 
-    try:
-        ics_str = ics_source.get_ics_string()
-    except Exception as e:
-        logger.error(f"Failed to get ics string: {e}")
-        raise e
-
-    # Check size of ics string
-    if len(ics_str) > max_ics_size_chars:
-        logger.error(
-            f"ICS string is too large: {len(ics_str)} > {max_ics_size_chars} chars"
-        )
-        raise ValueError("ICS file is too large")
+    ics_str = ics_source.get_ics_string()
 
     try:
         events = ics_parser.parse(ics_str)
@@ -58,7 +45,7 @@ def perform_synchronization(
             sync_trigger=sync_trigger,
             ics_source=ics_source,
             ics_str=ics_str,
-            parsing_error=str(e),
+            parsing_error=e,
         )
         raise e
 

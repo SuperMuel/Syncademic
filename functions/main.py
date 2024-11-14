@@ -1,4 +1,3 @@
-import logging
 import os
 from datetime import datetime, timezone
 from typing import Any
@@ -215,10 +214,10 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
 def _create_ai_ruleset(sync_profile_ref: DocumentReference):
     logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
 
-    llm = settings.RULES_BUILDER_LLM
+    model = settings.RULES_BUILDER_LLM
 
-    logger.info(f"Using {llm} model")
-    gpt4o = init_chat_model(llm)
+    logger.info(f"Using {model} model")
+    llm = init_chat_model(model)
 
     doc = sync_profile_ref.get()
     if not doc.exists:
@@ -238,7 +237,7 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
 
     logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
 
-    ruleset_builder = RulesetBuilder(llm=gpt4o)
+    ruleset_builder = RulesetBuilder(llm=llm)
 
     output = ruleset_builder.generate_ruleset(
         compressed_schedule,
@@ -257,7 +256,7 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]):
-    logging.info(f"Sync profile created: {event.data}")
+    logger.info(f"Sync profile created: {event.data}")
 
     doc = event.data.to_dict()
 

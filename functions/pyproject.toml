@@ -36,7 +36,22 @@ langchain-anthropic = "^0.2.3"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 ruff = "^0.6.9"
+responses = "^0.25.3"
+pytest-env = "^1.1.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+# These variables will be set during testing.
+# This prevents the test discovery from failing
+# due to missing environment variables in settings.py
+env = [
+    "CLIENT_ID=test-client-id",
+    "CLIENT_SECRET=test-client-secret",
+    "LOCAL_REDIRECT_URI=http://localhost:8080",
+    "PRODUCTION_REDIRECT_URI=https://example.com",
+]
+

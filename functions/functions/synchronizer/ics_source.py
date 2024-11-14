@@ -46,7 +46,7 @@ class UrlIcsSource(IcsSource):
                     content_length = int(content_length)
                     if content_length > self.max_content_size_b:
                         logger.info(
-                            f"Content-Length is too large. ({response.headers=})"
+                            f"Content-Length is too large ({content_length/1_048_576:.2f}MB > {self.max_content_size_b/1_048_576:.2f}MB) ({response.headers=})"
                         )
                         raise ValueError("ICS file is too large.")
 

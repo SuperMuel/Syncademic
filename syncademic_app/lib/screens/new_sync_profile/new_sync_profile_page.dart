@@ -150,7 +150,7 @@ class UrlVerificationButtonAndText extends StatelessWidget {
       children: [
         ElevatedButton.icon(
           onPressed: canSubmitUrlForVerification
-              ? context.read<NewSyncProfileCubit>().verifyIcs
+              ? context.read<NewSyncProfileCubit>().validateIcs
               : null,
           label: const Text('Verify URL'),
           icon: icsValidationStatus.isLoading
@@ -185,19 +185,41 @@ class UrlVerificationButtonAndText extends StatelessWidget {
   }
 }
 
-class UrlStepContent extends StatelessWidget {
+class UrlStepContent extends StatefulWidget {
   const UrlStepContent({
     super.key,
   });
 
   @override
+  State<UrlStepContent> createState() => _UrlStepContentState();
+}
+
+class _UrlStepContentState extends State<UrlStepContent> {
+  // Controller is needed to update the text field from within the bloc
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<NewSyncProfileCubit, NewSyncProfileState>(
       builder: (context, state) {
+        _controller.value = _controller.value.copyWith(text: state.url);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextFormField(
+              controller: _controller,
               decoration: InputDecoration(
                 labelText: 'Time schedule url',
                 hintText: 'https://ade-outils.insa-lyon.fr/ADE-Cal:~...',
@@ -205,10 +227,10 @@ class UrlStepContent extends StatelessWidget {
                 counterText: '',
                 errorText: state.urlError,
               ),
-              initialValue: state.url,
               maxLength: 4000,
               onChanged: context.read<NewSyncProfileCubit>().urlChanged,
-              onEditingComplete: context.read<NewSyncProfileCubit>().next,
+              onEditingComplete:
+                  context.read<NewSyncProfileCubit>().validateIcs,
             ),
             const SizedBox(height: 16),
             const InsaLyonIcsUrlHelp(),

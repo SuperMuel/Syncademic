@@ -81,12 +81,19 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     ));
   }
 
-  Future<void> verifyIcs() async {
+  Future<void> validateIcs() async {
     assert(isURL(state.url), 'URL must be a valid URL before verifying');
 
     if (state.icsValidationStatus ==
         const IcsValidationStatus.validationInProgress()) {
+      log('Validation already in progress');
       return;
+    }
+
+    // if the url doesn't start with http, we add it
+    if (!state.url.startsWith('http')) {
+      log('Adding https:// to the URL');
+      urlChanged('https://${state.url}');
     }
 
     emit(state.copyWith(
@@ -165,7 +172,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     try {
       await GetIt.I<BackendAuthorizationService>()
           .authorizeBackend(state.providerAccount!);
-      //TODO : handle UserIdMismatchException
     } on ProviderUserIdMismatchException {
       return emit(state.copyWith(
         backendAuthorizationStatus: BackendAuthorizationStatus.notAuthorized,

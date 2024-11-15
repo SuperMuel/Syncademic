@@ -24,16 +24,10 @@ def perform_synchronization(
     ics_parser: IcsParser,
     ics_cache: IcsFileStorage,
     calendar_manager: GoogleCalendarManager,
-    middlewares: Optional[List[Middleware]] = None,
     ruleset: Ruleset | None = None,
     separation_dt: datetime | None = None,
     sync_type: SyncType = "regular",
 ) -> None:
-    # Temporary : only one of middlewares or ruleset can be provided, not both
-    assert not (
-        middlewares and ruleset
-    ), "Only one of middlewares or ruleset can be provided"
-
     ics_str = ics_source.get_ics_string()
 
     try:
@@ -63,18 +57,8 @@ def perform_synchronization(
         logger.error(f"Failed to store ics string in firebase storage. {e}")
         # Do not raise, we want to continue the execution
 
-    try:
-        if middlewares:
-            logger.info(f"Applying {len(middlewares)} middlewares")
-            for middleware in middlewares:
-                events = middleware(events)
-            logger.info(f"{len(events)} events after applying middlewares")
-    except Exception as e:
-        logger.error(f"Failed to apply middlewares: {e}")
-        raise e
-
-    try:
-        if ruleset:
+    if ruleset:
+        try:
             logger.info(
                 "Temporary : since a ruleset is provided that will probably change colors, we will first manually set all the events to grey color"
             )
@@ -84,9 +68,9 @@ def perform_synchronization(
             logger.info(f"Applying {len(ruleset.rules)} rules")
             events = ruleset.apply(events)
             logger.info(f"{len(events)} events after applying rules")
-    except Exception as e:
-        logger.error(f"Failed to apply rules: {e}")
-        raise e
+        except Exception as e:
+            logger.error(f"Failed to apply rules: {e}")
+            raise e
 
     if not events:
         logger.warn("No events to synchronize")

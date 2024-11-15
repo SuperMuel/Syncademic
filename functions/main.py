@@ -507,7 +507,7 @@ def _synchronize_now(
         logger.info(f"Failed to get calendar service: {e}")
         return
 
-    customizations = {}
+    ruleset: Ruleset | None = None
 
     if ruleset_json := data.get("ruleset"):
         try:
@@ -525,16 +525,7 @@ def _synchronize_now(
                 }
             )
             return
-
-        customizations["ruleset"] = ruleset
-        logger.info(f"Found rules: {ruleset}")
-    else:
-        customizations["middlewares"] = [
-            TitlePrettifier,
-            ExamPrettifier,
-            Insa5IFMiddleware,
-            CM_TD_TP_Middleware,
-        ]
+        logger.info(f"Found {len(ruleset.rules)} rules in ruleset")
 
     try:
         perform_synchronization(
@@ -545,7 +536,7 @@ def _synchronize_now(
             ics_cache=FirebaseIcsFileStorage(storage.bucket()),
             calendar_manager=calendar_manager,
             sync_type=sync_type,
-            **customizations,
+            ruleset=ruleset,
         )
     except Exception as e:
         sync_profile_ref.update(

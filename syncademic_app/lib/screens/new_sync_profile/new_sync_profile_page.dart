@@ -220,6 +220,7 @@ class _UrlStepContentState extends State<UrlStepContent> {
           children: [
             TextFormField(
               controller: _controller,
+              enabled: !state.icsValidationStatus.isLoading,
               decoration: InputDecoration(
                 labelText: 'Time schedule url',
                 hintText: 'https://ade-outils.insa-lyon.fr/ADE-Cal:~...',

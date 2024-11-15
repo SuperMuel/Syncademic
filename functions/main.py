@@ -29,12 +29,6 @@ from functions.synchronizer.google_calendar_manager import (
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
-from functions.synchronizer.middleware.insa_middleware import (
-    CM_TD_TP_Middleware,
-    ExamPrettifier,
-    Insa5IFMiddleware,
-    TitlePrettifier,
-)
 from functions.synchronizer.synchronizer import (
     SyncTrigger,
     SyncType,

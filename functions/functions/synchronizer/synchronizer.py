@@ -1,6 +1,6 @@
 from dataclasses import replace
 from datetime import datetime, timezone
-from typing import List, Literal, Optional
+from typing import Literal
 
 from firebase_functions import logger
 
@@ -11,7 +11,6 @@ from functions.synchronizer.ics_cache import IcsFileStorage
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
-from .middleware.middleware import Middleware
 
 SyncTrigger = Literal["on_create", "manual", "scheduled"]
 SyncType = Literal["full", "regular"]

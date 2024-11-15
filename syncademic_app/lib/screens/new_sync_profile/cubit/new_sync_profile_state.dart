@@ -34,6 +34,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
     String? titleError,
     @Default('') String url,
     String? urlError,
+    @Default(IcsValidationStatus.notValidated())
+    IcsValidationStatus icsValidationStatus,
     ProviderAccount? providerAccount,
     @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
@@ -52,8 +54,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
   const NewSyncProfileState._();
 
   bool get canContinue => switch (currentStep) {
-        NewSyncProfileStep.title => titleError == null && !isBlank(title),
-        NewSyncProfileStep.url => urlError == null && !isBlank(url),
+        NewSyncProfileStep.title => isTitleValid,
+        NewSyncProfileStep.url => areUrlAndIcsContentValid,
         NewSyncProfileStep.selectProviderAccount => providerAccount != null,
         NewSyncProfileStep.selectTargetCalendar =>
           targetCalendarSelected != null,
@@ -77,12 +79,24 @@ class NewSyncProfileState with _$NewSyncProfileState {
     }
   }
 
-  bool get isUrlValid => urlError == null && !isBlank(url);
-
   bool get isTitleValid => titleError == null && !isBlank(title);
 
+  bool get canSubmitUrlForVerification =>
+      urlError == null &&
+      !isBlank(url) &&
+      icsValidationStatus.map(
+        notValidated: (_) => true,
+        validationInProgress: (_) => false,
+        validated: (_) => false,
+        invalid: (_) => true,
+        validationFailed: (_) => true,
+      );
+
+  bool get areUrlAndIcsContentValid =>
+      urlError == null && !isBlank(url) && icsValidationStatus.isValidated;
+
   bool canSubmit() {
-    if (!isTitleValid || !isUrlValid) {
+    if (!isTitleValid || !areUrlAndIcsContentValid) {
       return false;
     }
 

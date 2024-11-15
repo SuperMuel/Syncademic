@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     PRODUCTION_REDIRECT_URI: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
 
     MAX_ICS_SIZE_BYTES: int = Field(default=1 * 1024 * 1024)  # 1 MB
+    URL_ICS_SOURCE_TIMEOUT_S: int = Field(default=10)
 
     MAX_SYNCHRONIZATIONS_PER_DAY: int = Field(
         default=24 * 5  # 24 syncs per day for 5 profiles

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:get_it/get_it.dart';
+
 import '../models/provider_account.dart';
 import 'authorization_service.dart';
 import 'backend_authorization_service.dart';

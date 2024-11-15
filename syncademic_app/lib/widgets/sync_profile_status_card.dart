@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/sync_profile_status.dart';
 import 'last_synchronized.dart';
 

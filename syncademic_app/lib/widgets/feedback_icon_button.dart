@@ -1,6 +1,7 @@
 import 'package:feedback_sentry/feedback_sentry.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+
 import '../services/auth_service.dart';
 
 class FeedbackIconButton extends StatelessWidget {

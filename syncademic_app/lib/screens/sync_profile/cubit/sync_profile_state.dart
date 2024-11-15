@@ -25,7 +25,7 @@ class SyncProfileState with _$SyncProfileState {
         loaded: (loaded) {
           final profile = loaded.syncProfile;
 
-          final isInProgress = profile.status?.isInProgress() ?? false;
+          final isInProgress = profile.status.isInProgress();
 
           if (isInProgress) {
             // Synchronization is already in progress

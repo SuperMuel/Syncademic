@@ -21,6 +21,8 @@ mixin _$NewSyncProfileState {
   String? get titleError => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
   String? get urlError => throw _privateConstructorUsedError;
+  IcsValidationStatus get icsValidationStatus =>
+      throw _privateConstructorUsedError;
   ProviderAccount? get providerAccount => throw _privateConstructorUsedError;
   String? get providerAccountError => throw _privateConstructorUsedError;
   TargetCalendar? get existingCalendarSelected =>
@@ -54,6 +56,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String? titleError,
       String url,
       String? urlError,
+      IcsValidationStatus icsValidationStatus,
       ProviderAccount? providerAccount,
       String? providerAccountError,
       TargetCalendar? existingCalendarSelected,
@@ -66,6 +69,7 @@ abstract class $NewSyncProfileStateCopyWith<$Res> {
       String? submitError,
       bool submittedSuccessfully});
 
+  $IcsValidationStatusCopyWith<$Res> get icsValidationStatus;
   $ProviderAccountCopyWith<$Res>? get providerAccount;
   $TargetCalendarCopyWith<$Res>? get existingCalendarSelected;
   $TargetCalendarCopyWith<$Res>? get newCalendarCreated;
@@ -89,6 +93,7 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
     Object? titleError = freezed,
     Object? url = null,
     Object? urlError = freezed,
+    Object? icsValidationStatus = null,
     Object? providerAccount = freezed,
     Object? providerAccountError = freezed,
     Object? existingCalendarSelected = freezed,
@@ -122,6 +127,10 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
               as String?,
+      icsValidationStatus: null == icsValidationStatus
+          ? _value.icsValidationStatus
+          : icsValidationStatus // ignore: cast_nullable_to_non_nullable
+              as IcsValidationStatus,
       providerAccount: freezed == providerAccount
           ? _value.providerAccount
           : providerAccount // ignore: cast_nullable_to_non_nullable
@@ -167,6 +176,15 @@ class _$NewSyncProfileStateCopyWithImpl<$Res, $Val extends NewSyncProfileState>
           : submittedSuccessfully // ignore: cast_nullable_to_non_nullable
               as bool,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $IcsValidationStatusCopyWith<$Res> get icsValidationStatus {
+    return $IcsValidationStatusCopyWith<$Res>(_value.icsValidationStatus,
+        (value) {
+      return _then(_value.copyWith(icsValidationStatus: value) as $Val);
+    });
   }
 
   @override
@@ -221,6 +239,7 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String? titleError,
       String url,
       String? urlError,
+      IcsValidationStatus icsValidationStatus,
       ProviderAccount? providerAccount,
       String? providerAccountError,
       TargetCalendar? existingCalendarSelected,
@@ -233,6 +252,8 @@ abstract class _$$NewSyncProfileStateImplCopyWith<$Res>
       String? submitError,
       bool submittedSuccessfully});
 
+  @override
+  $IcsValidationStatusCopyWith<$Res> get icsValidationStatus;
   @override
   $ProviderAccountCopyWith<$Res>? get providerAccount;
   @override
@@ -257,6 +278,7 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
     Object? titleError = freezed,
     Object? url = null,
     Object? urlError = freezed,
+    Object? icsValidationStatus = null,
     Object? providerAccount = freezed,
     Object? providerAccountError = freezed,
     Object? existingCalendarSelected = freezed,
@@ -290,6 +312,10 @@ class __$$NewSyncProfileStateImplCopyWithImpl<$Res>
           ? _value.urlError
           : urlError // ignore: cast_nullable_to_non_nullable
               as String?,
+      icsValidationStatus: null == icsValidationStatus
+          ? _value.icsValidationStatus
+          : icsValidationStatus // ignore: cast_nullable_to_non_nullable
+              as IcsValidationStatus,
       providerAccount: freezed == providerAccount
           ? _value.providerAccount
           : providerAccount // ignore: cast_nullable_to_non_nullable
@@ -347,6 +373,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       this.titleError,
       this.url = '',
       this.urlError,
+      this.icsValidationStatus = const IcsValidationStatus.notValidated(),
       this.providerAccount,
       this.providerAccountError = null,
       this.existingCalendarSelected,
@@ -374,6 +401,9 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
   final String url;
   @override
   final String? urlError;
+  @override
+  @JsonKey()
+  final IcsValidationStatus icsValidationStatus;
   @override
   final ProviderAccount? providerAccount;
   @override
@@ -405,7 +435,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
 
   @override
   String toString() {
-    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, backendAuthorizationStatus: $backendAuthorizationStatus, backendAuthorizationError: $backendAuthorizationError, targetCalendarChoice: $targetCalendarChoice, targetCalendarColor: $targetCalendarColor, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
+    return 'NewSyncProfileState(currentStep: $currentStep, title: $title, titleError: $titleError, url: $url, urlError: $urlError, icsValidationStatus: $icsValidationStatus, providerAccount: $providerAccount, providerAccountError: $providerAccountError, existingCalendarSelected: $existingCalendarSelected, newCalendarCreated: $newCalendarCreated, backendAuthorizationStatus: $backendAuthorizationStatus, backendAuthorizationError: $backendAuthorizationError, targetCalendarChoice: $targetCalendarChoice, targetCalendarColor: $targetCalendarColor, isSubmitting: $isSubmitting, submitError: $submitError, submittedSuccessfully: $submittedSuccessfully)';
   }
 
   @override
@@ -421,6 +451,8 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
             (identical(other.url, url) || other.url == url) &&
             (identical(other.urlError, urlError) ||
                 other.urlError == urlError) &&
+            (identical(other.icsValidationStatus, icsValidationStatus) ||
+                other.icsValidationStatus == icsValidationStatus) &&
             (identical(other.providerAccount, providerAccount) ||
                 other.providerAccount == providerAccount) &&
             (identical(other.providerAccountError, providerAccountError) ||
@@ -457,6 +489,7 @@ class _$NewSyncProfileStateImpl extends _NewSyncProfileState {
       titleError,
       url,
       urlError,
+      icsValidationStatus,
       providerAccount,
       providerAccountError,
       existingCalendarSelected,
@@ -484,6 +517,7 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
       final String? titleError,
       final String url,
       final String? urlError,
+      final IcsValidationStatus icsValidationStatus,
       final ProviderAccount? providerAccount,
       final String? providerAccountError,
       final TargetCalendar? existingCalendarSelected,
@@ -507,6 +541,8 @@ abstract class _NewSyncProfileState extends NewSyncProfileState {
   String get url;
   @override
   String? get urlError;
+  @override
+  IcsValidationStatus get icsValidationStatus;
   @override
   ProviderAccount? get providerAccount;
   @override

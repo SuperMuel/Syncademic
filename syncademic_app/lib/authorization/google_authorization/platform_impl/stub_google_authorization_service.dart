@@ -1,4 +1,5 @@
 import 'package:google_sign_in/google_sign_in.dart';
+
 import '../../authorization_service.dart';
 
 class GoogleAuthorizationServiceImpl implements AuthorizationService {

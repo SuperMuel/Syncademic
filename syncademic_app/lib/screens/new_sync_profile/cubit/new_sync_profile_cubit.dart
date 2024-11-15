@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
-import 'package:syncademic_app/services/ics_validation_service.dart';
+import '../../../services/ics_validation_service.dart';
 import 'package:validators/validators.dart';
 
 import '../../../authorization/backend_authorization_service.dart';

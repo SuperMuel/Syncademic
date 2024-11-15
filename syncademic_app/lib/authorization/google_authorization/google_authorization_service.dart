@@ -1,7 +1,6 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../authorization_service.dart';
-
 import 'platform_impl/stub_google_authorization_service.dart' // https://gpalma.pt/blog/conditional-importing/
     if (dart.library.io) 'platform_impl/mobile_google_authorization_service.dart'
     if (dart.library.html) 'platform_impl/web_google_authorization_service.dart';

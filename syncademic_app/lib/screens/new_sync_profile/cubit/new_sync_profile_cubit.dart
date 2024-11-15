@@ -99,7 +99,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
         (error) => IcsValidationStatus.validationFailed(errorMessage: error),
         (result) => result.isValid
             ? IcsValidationStatus.validated(nbEvents: result.nbEvents)
-            : IcsValidationStatus.validationFailed(errorMessage: result.error),
+            : IcsValidationStatus.invalid(errorMessage: result.error),
       ),
     ));
   }

@@ -145,21 +145,42 @@ class UrlVerificationButtonAndText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return icsValidationStatus.when(
-      validationInProgress: () => const CircularProgressIndicator(),
-      validated: (nbEvents) => const Text(
-          'This URL points to a valid time schedule.',
-          style: TextStyle(color: Colors.green)),
-      validationFailed: (errorMessage) => Text(
-        'This URL is not a valid time schedule URL: $errorMessage',
-        style: const TextStyle(color: Colors.red),
-      ),
-      notValidated: () => ElevatedButton(
-        onPressed: canSubmitUrlForVerification
-            ? context.read<NewSyncProfileCubit>().verifyIcs
-            : null,
-        child: const Text('Verify URL'),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ElevatedButton.icon(
+          onPressed: canSubmitUrlForVerification
+              ? context.read<NewSyncProfileCubit>().verifyIcs
+              : null,
+          label: const Text('Verify URL'),
+          icon: icsValidationStatus.isLoading
+              ? const SizedBox.square(
+                  dimension: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ))
+              : const Icon(Icons.downloading),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: icsValidationStatus.when(
+            validated: (nbEvents) => Text(
+                'This time schedule contains $nbEvents events',
+                style: const TextStyle(color: Colors.green)),
+            invalid: (errorMessage) => Text(
+              'This URL is not a valid time schedule URL. Please check the URL and try again. \nDetails: $errorMessage',
+              style: const TextStyle(color: Colors.red),
+            ),
+            validationFailed: (errorMessage) => Text(
+              'An error occured: $errorMessage',
+              style: const TextStyle(color: Colors.red),
+            ),
+            validationInProgress: () =>
+                Container(), //Loading indicator is shown in the button below
+            notValidated: () => Container(),
+          ),
+        ),
+      ],
     );
   }
 }

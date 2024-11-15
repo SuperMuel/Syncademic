@@ -84,10 +84,11 @@ class NewSyncProfileState with _$NewSyncProfileState {
   bool get canSubmitUrlForVerification =>
       urlError == null &&
       !isBlank(url) &&
-      icsValidationStatus.when(
-        notValidated: () => true,
-        validationInProgress: () => false,
+      icsValidationStatus.map(
+        notValidated: (_) => true,
+        validationInProgress: (_) => false,
         validated: (_) => false,
+        invalid: (_) => true,
         validationFailed: (_) => true,
       );
 

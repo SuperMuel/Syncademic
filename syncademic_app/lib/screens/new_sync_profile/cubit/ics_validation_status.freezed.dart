@@ -21,6 +21,7 @@ mixin _$IcsValidationStatus {
     required TResult Function() notValidated,
     required TResult Function() validationInProgress,
     required TResult Function(int? nbEvents) validated,
+    required TResult Function(String? errorMessage) invalid,
     required TResult Function(String? errorMessage) validationFailed,
   }) =>
       throw _privateConstructorUsedError;
@@ -29,6 +30,7 @@ mixin _$IcsValidationStatus {
     TResult? Function()? notValidated,
     TResult? Function()? validationInProgress,
     TResult? Function(int? nbEvents)? validated,
+    TResult? Function(String? errorMessage)? invalid,
     TResult? Function(String? errorMessage)? validationFailed,
   }) =>
       throw _privateConstructorUsedError;
@@ -37,6 +39,7 @@ mixin _$IcsValidationStatus {
     TResult Function()? notValidated,
     TResult Function()? validationInProgress,
     TResult Function(int? nbEvents)? validated,
+    TResult Function(String? errorMessage)? invalid,
     TResult Function(String? errorMessage)? validationFailed,
     required TResult orElse(),
   }) =>
@@ -46,6 +49,7 @@ mixin _$IcsValidationStatus {
     required TResult Function(NotValidated value) notValidated,
     required TResult Function(ValidationInProgress value) validationInProgress,
     required TResult Function(Validated value) validated,
+    required TResult Function(Invalid value) invalid,
     required TResult Function(ValidationFailed value) validationFailed,
   }) =>
       throw _privateConstructorUsedError;
@@ -54,6 +58,7 @@ mixin _$IcsValidationStatus {
     TResult? Function(NotValidated value)? notValidated,
     TResult? Function(ValidationInProgress value)? validationInProgress,
     TResult? Function(Validated value)? validated,
+    TResult? Function(Invalid value)? invalid,
     TResult? Function(ValidationFailed value)? validationFailed,
   }) =>
       throw _privateConstructorUsedError;
@@ -62,6 +67,7 @@ mixin _$IcsValidationStatus {
     TResult Function(NotValidated value)? notValidated,
     TResult Function(ValidationInProgress value)? validationInProgress,
     TResult Function(Validated value)? validated,
+    TResult Function(Invalid value)? invalid,
     TResult Function(ValidationFailed value)? validationFailed,
     required TResult orElse(),
   }) =>
@@ -127,6 +133,7 @@ class _$NotValidatedImpl extends NotValidated {
     required TResult Function() notValidated,
     required TResult Function() validationInProgress,
     required TResult Function(int? nbEvents) validated,
+    required TResult Function(String? errorMessage) invalid,
     required TResult Function(String? errorMessage) validationFailed,
   }) {
     return notValidated();
@@ -138,6 +145,7 @@ class _$NotValidatedImpl extends NotValidated {
     TResult? Function()? notValidated,
     TResult? Function()? validationInProgress,
     TResult? Function(int? nbEvents)? validated,
+    TResult? Function(String? errorMessage)? invalid,
     TResult? Function(String? errorMessage)? validationFailed,
   }) {
     return notValidated?.call();
@@ -149,6 +157,7 @@ class _$NotValidatedImpl extends NotValidated {
     TResult Function()? notValidated,
     TResult Function()? validationInProgress,
     TResult Function(int? nbEvents)? validated,
+    TResult Function(String? errorMessage)? invalid,
     TResult Function(String? errorMessage)? validationFailed,
     required TResult orElse(),
   }) {
@@ -164,6 +173,7 @@ class _$NotValidatedImpl extends NotValidated {
     required TResult Function(NotValidated value) notValidated,
     required TResult Function(ValidationInProgress value) validationInProgress,
     required TResult Function(Validated value) validated,
+    required TResult Function(Invalid value) invalid,
     required TResult Function(ValidationFailed value) validationFailed,
   }) {
     return notValidated(this);
@@ -175,6 +185,7 @@ class _$NotValidatedImpl extends NotValidated {
     TResult? Function(NotValidated value)? notValidated,
     TResult? Function(ValidationInProgress value)? validationInProgress,
     TResult? Function(Validated value)? validated,
+    TResult? Function(Invalid value)? invalid,
     TResult? Function(ValidationFailed value)? validationFailed,
   }) {
     return notValidated?.call(this);
@@ -186,6 +197,7 @@ class _$NotValidatedImpl extends NotValidated {
     TResult Function(NotValidated value)? notValidated,
     TResult Function(ValidationInProgress value)? validationInProgress,
     TResult Function(Validated value)? validated,
+    TResult Function(Invalid value)? invalid,
     TResult Function(ValidationFailed value)? validationFailed,
     required TResult orElse(),
   }) {
@@ -243,6 +255,7 @@ class _$ValidationInProgressImpl extends ValidationInProgress {
     required TResult Function() notValidated,
     required TResult Function() validationInProgress,
     required TResult Function(int? nbEvents) validated,
+    required TResult Function(String? errorMessage) invalid,
     required TResult Function(String? errorMessage) validationFailed,
   }) {
     return validationInProgress();
@@ -254,6 +267,7 @@ class _$ValidationInProgressImpl extends ValidationInProgress {
     TResult? Function()? notValidated,
     TResult? Function()? validationInProgress,
     TResult? Function(int? nbEvents)? validated,
+    TResult? Function(String? errorMessage)? invalid,
     TResult? Function(String? errorMessage)? validationFailed,
   }) {
     return validationInProgress?.call();
@@ -265,6 +279,7 @@ class _$ValidationInProgressImpl extends ValidationInProgress {
     TResult Function()? notValidated,
     TResult Function()? validationInProgress,
     TResult Function(int? nbEvents)? validated,
+    TResult Function(String? errorMessage)? invalid,
     TResult Function(String? errorMessage)? validationFailed,
     required TResult orElse(),
   }) {
@@ -280,6 +295,7 @@ class _$ValidationInProgressImpl extends ValidationInProgress {
     required TResult Function(NotValidated value) notValidated,
     required TResult Function(ValidationInProgress value) validationInProgress,
     required TResult Function(Validated value) validated,
+    required TResult Function(Invalid value) invalid,
     required TResult Function(ValidationFailed value) validationFailed,
   }) {
     return validationInProgress(this);
@@ -291,6 +307,7 @@ class _$ValidationInProgressImpl extends ValidationInProgress {
     TResult? Function(NotValidated value)? notValidated,
     TResult? Function(ValidationInProgress value)? validationInProgress,
     TResult? Function(Validated value)? validated,
+    TResult? Function(Invalid value)? invalid,
     TResult? Function(ValidationFailed value)? validationFailed,
   }) {
     return validationInProgress?.call(this);
@@ -302,6 +319,7 @@ class _$ValidationInProgressImpl extends ValidationInProgress {
     TResult Function(NotValidated value)? notValidated,
     TResult Function(ValidationInProgress value)? validationInProgress,
     TResult Function(Validated value)? validated,
+    TResult Function(Invalid value)? invalid,
     TResult Function(ValidationFailed value)? validationFailed,
     required TResult orElse(),
   }) {
@@ -385,6 +403,7 @@ class _$ValidatedImpl extends Validated {
     required TResult Function() notValidated,
     required TResult Function() validationInProgress,
     required TResult Function(int? nbEvents) validated,
+    required TResult Function(String? errorMessage) invalid,
     required TResult Function(String? errorMessage) validationFailed,
   }) {
     return validated(nbEvents);
@@ -396,6 +415,7 @@ class _$ValidatedImpl extends Validated {
     TResult? Function()? notValidated,
     TResult? Function()? validationInProgress,
     TResult? Function(int? nbEvents)? validated,
+    TResult? Function(String? errorMessage)? invalid,
     TResult? Function(String? errorMessage)? validationFailed,
   }) {
     return validated?.call(nbEvents);
@@ -407,6 +427,7 @@ class _$ValidatedImpl extends Validated {
     TResult Function()? notValidated,
     TResult Function()? validationInProgress,
     TResult Function(int? nbEvents)? validated,
+    TResult Function(String? errorMessage)? invalid,
     TResult Function(String? errorMessage)? validationFailed,
     required TResult orElse(),
   }) {
@@ -422,6 +443,7 @@ class _$ValidatedImpl extends Validated {
     required TResult Function(NotValidated value) notValidated,
     required TResult Function(ValidationInProgress value) validationInProgress,
     required TResult Function(Validated value) validated,
+    required TResult Function(Invalid value) invalid,
     required TResult Function(ValidationFailed value) validationFailed,
   }) {
     return validated(this);
@@ -433,6 +455,7 @@ class _$ValidatedImpl extends Validated {
     TResult? Function(NotValidated value)? notValidated,
     TResult? Function(ValidationInProgress value)? validationInProgress,
     TResult? Function(Validated value)? validated,
+    TResult? Function(Invalid value)? invalid,
     TResult? Function(ValidationFailed value)? validationFailed,
   }) {
     return validated?.call(this);
@@ -444,6 +467,7 @@ class _$ValidatedImpl extends Validated {
     TResult Function(NotValidated value)? notValidated,
     TResult Function(ValidationInProgress value)? validationInProgress,
     TResult Function(Validated value)? validated,
+    TResult Function(Invalid value)? invalid,
     TResult Function(ValidationFailed value)? validationFailed,
     required TResult orElse(),
   }) {
@@ -461,6 +485,159 @@ abstract class Validated extends IcsValidationStatus {
   int? get nbEvents;
   @JsonKey(ignore: true)
   _$$ValidatedImplCopyWith<_$ValidatedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$InvalidImplCopyWith<$Res> {
+  factory _$$InvalidImplCopyWith(
+          _$InvalidImpl value, $Res Function(_$InvalidImpl) then) =
+      __$$InvalidImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String? errorMessage});
+}
+
+/// @nodoc
+class __$$InvalidImplCopyWithImpl<$Res>
+    extends _$IcsValidationStatusCopyWithImpl<$Res, _$InvalidImpl>
+    implements _$$InvalidImplCopyWith<$Res> {
+  __$$InvalidImplCopyWithImpl(
+      _$InvalidImpl _value, $Res Function(_$InvalidImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? errorMessage = freezed,
+  }) {
+    return _then(_$InvalidImpl(
+      errorMessage: freezed == errorMessage
+          ? _value.errorMessage
+          : errorMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$InvalidImpl extends Invalid {
+  const _$InvalidImpl({required this.errorMessage}) : super._();
+
+  @override
+  final String? errorMessage;
+
+  @override
+  String toString() {
+    return 'IcsValidationStatus.invalid(errorMessage: $errorMessage)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$InvalidImpl &&
+            (identical(other.errorMessage, errorMessage) ||
+                other.errorMessage == errorMessage));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, errorMessage);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$InvalidImplCopyWith<_$InvalidImpl> get copyWith =>
+      __$$InvalidImplCopyWithImpl<_$InvalidImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() notValidated,
+    required TResult Function() validationInProgress,
+    required TResult Function(int? nbEvents) validated,
+    required TResult Function(String? errorMessage) invalid,
+    required TResult Function(String? errorMessage) validationFailed,
+  }) {
+    return invalid(errorMessage);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? notValidated,
+    TResult? Function()? validationInProgress,
+    TResult? Function(int? nbEvents)? validated,
+    TResult? Function(String? errorMessage)? invalid,
+    TResult? Function(String? errorMessage)? validationFailed,
+  }) {
+    return invalid?.call(errorMessage);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? notValidated,
+    TResult Function()? validationInProgress,
+    TResult Function(int? nbEvents)? validated,
+    TResult Function(String? errorMessage)? invalid,
+    TResult Function(String? errorMessage)? validationFailed,
+    required TResult orElse(),
+  }) {
+    if (invalid != null) {
+      return invalid(errorMessage);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(NotValidated value) notValidated,
+    required TResult Function(ValidationInProgress value) validationInProgress,
+    required TResult Function(Validated value) validated,
+    required TResult Function(Invalid value) invalid,
+    required TResult Function(ValidationFailed value) validationFailed,
+  }) {
+    return invalid(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(NotValidated value)? notValidated,
+    TResult? Function(ValidationInProgress value)? validationInProgress,
+    TResult? Function(Validated value)? validated,
+    TResult? Function(Invalid value)? invalid,
+    TResult? Function(ValidationFailed value)? validationFailed,
+  }) {
+    return invalid?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(NotValidated value)? notValidated,
+    TResult Function(ValidationInProgress value)? validationInProgress,
+    TResult Function(Validated value)? validated,
+    TResult Function(Invalid value)? invalid,
+    TResult Function(ValidationFailed value)? validationFailed,
+    required TResult orElse(),
+  }) {
+    if (invalid != null) {
+      return invalid(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class Invalid extends IcsValidationStatus {
+  const factory Invalid({required final String? errorMessage}) = _$InvalidImpl;
+  const Invalid._() : super._();
+
+  String? get errorMessage;
+  @JsonKey(ignore: true)
+  _$$InvalidImplCopyWith<_$InvalidImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -533,6 +710,7 @@ class _$ValidationFailedImpl extends ValidationFailed {
     required TResult Function() notValidated,
     required TResult Function() validationInProgress,
     required TResult Function(int? nbEvents) validated,
+    required TResult Function(String? errorMessage) invalid,
     required TResult Function(String? errorMessage) validationFailed,
   }) {
     return validationFailed(errorMessage);
@@ -544,6 +722,7 @@ class _$ValidationFailedImpl extends ValidationFailed {
     TResult? Function()? notValidated,
     TResult? Function()? validationInProgress,
     TResult? Function(int? nbEvents)? validated,
+    TResult? Function(String? errorMessage)? invalid,
     TResult? Function(String? errorMessage)? validationFailed,
   }) {
     return validationFailed?.call(errorMessage);
@@ -555,6 +734,7 @@ class _$ValidationFailedImpl extends ValidationFailed {
     TResult Function()? notValidated,
     TResult Function()? validationInProgress,
     TResult Function(int? nbEvents)? validated,
+    TResult Function(String? errorMessage)? invalid,
     TResult Function(String? errorMessage)? validationFailed,
     required TResult orElse(),
   }) {
@@ -570,6 +750,7 @@ class _$ValidationFailedImpl extends ValidationFailed {
     required TResult Function(NotValidated value) notValidated,
     required TResult Function(ValidationInProgress value) validationInProgress,
     required TResult Function(Validated value) validated,
+    required TResult Function(Invalid value) invalid,
     required TResult Function(ValidationFailed value) validationFailed,
   }) {
     return validationFailed(this);
@@ -581,6 +762,7 @@ class _$ValidationFailedImpl extends ValidationFailed {
     TResult? Function(NotValidated value)? notValidated,
     TResult? Function(ValidationInProgress value)? validationInProgress,
     TResult? Function(Validated value)? validated,
+    TResult? Function(Invalid value)? invalid,
     TResult? Function(ValidationFailed value)? validationFailed,
   }) {
     return validationFailed?.call(this);
@@ -592,6 +774,7 @@ class _$ValidationFailedImpl extends ValidationFailed {
     TResult Function(NotValidated value)? notValidated,
     TResult Function(ValidationInProgress value)? validationInProgress,
     TResult Function(Validated value)? validated,
+    TResult Function(Invalid value)? invalid,
     TResult Function(ValidationFailed value)? validationFailed,
     required TResult orElse(),
   }) {

@@ -10,8 +10,8 @@ class IcsValidationResult {
 
   IcsValidationResult({
     required this.isValid,
-    this.error,
-    this.nbEvents,
+    required this.error,
+    required this.nbEvents,
   });
 }
 
@@ -28,10 +28,10 @@ class FirebaseIcsValidationService extends IcsValidationService {
   Future<Either<String, IcsValidationResult>> validateUrl(String url) async {
     log('Validating URL: $url');
 
-    late HttpsCallableResult result;
+    late HttpsCallableResult response;
 
     try {
-      result = await FirebaseFunctions.instance
+      response = await FirebaseFunctions.instance
           .httpsCallable('validate_ics_url')
           .call(
         {'url': url},
@@ -41,12 +41,21 @@ class FirebaseIcsValidationService extends IcsValidationService {
       return left(e.toString());
     }
 
-    log('Validation result: ${result.data}');
+    log('Validation result: ${response.data}');
 
-    return right(IcsValidationResult(
-      isValid: result.data['valid'],
-      nbEvents: result.data['nbEvents'],
-      error: result.data['error'],
-    ));
+    try {
+      //TODO : parse using deep_pick https://pub.dev/packages/deep_pick
+      final result = IcsValidationResult(
+        isValid: response.data['valid'],
+        nbEvents: response.data.containsKey('nbEvents')
+            ? response.data['nbEvents']
+            : null,
+        error: response.data['error'],
+      );
+      return right(result);
+    } catch (e) {
+      log('Error while parsing validation result: $e');
+      return left(e.toString());
+    }
   }
 }

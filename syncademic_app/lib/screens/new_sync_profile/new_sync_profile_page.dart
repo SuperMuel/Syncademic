@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../repositories/target_calendar_repository.dart';
-import 'cubit/ics_verification_status.dart';
+import 'cubit/ics_validation_status.dart';
 import 'google_sign_in_button/sign_in_button.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -137,23 +137,24 @@ class TitleStepContent extends StatelessWidget {
 class UrlVerificationButtonAndText extends StatelessWidget {
   const UrlVerificationButtonAndText(
       {super.key,
-      required this.icsVerificationStatus,
+      required this.icsValidationStatus,
       required this.canSubmitUrlForVerification});
 
-  final IcsVerificationStatus icsVerificationStatus;
+  final IcsValidationStatus icsValidationStatus;
   final bool canSubmitUrlForVerification;
 
   @override
   Widget build(BuildContext context) {
-    return icsVerificationStatus.when(
-      verificationInProgress: () => const CircularProgressIndicator(),
-      verified: () => const Text('This URL points to a valid time schedule',
+    return icsValidationStatus.when(
+      validationInProgress: () => const CircularProgressIndicator(),
+      validated: (nbEvents) => const Text(
+          'This URL points to a valid time schedule.',
           style: TextStyle(color: Colors.green)),
-      verificationFailed: (errorMessage) => Text(
+      validationFailed: (errorMessage) => Text(
         'This URL is not a valid time schedule URL: $errorMessage',
         style: const TextStyle(color: Colors.red),
       ),
-      notVerified: () => ElevatedButton(
+      notValidated: () => ElevatedButton(
         onPressed: canSubmitUrlForVerification
             ? context.read<NewSyncProfileCubit>().verifyIcs
             : null,
@@ -192,7 +193,7 @@ class UrlStepContent extends StatelessWidget {
             const InsaLyonIcsUrlHelp(),
             const SizedBox(height: 16),
             UrlVerificationButtonAndText(
-              icsVerificationStatus: state.icsVerificationStatus,
+              icsValidationStatus: state.icsValidationStatus,
               canSubmitUrlForVerification: state.canSubmitUrlForVerification,
             ),
           ],

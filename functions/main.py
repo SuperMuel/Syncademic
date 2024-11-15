@@ -106,10 +106,7 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
         content = ics_source.get_ics_string()
     except Exception as e:
         logging.info(f"Failed to fetch ICS file at URL '{ics_url}': {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            f"Failed to fetch ICS file: {str(e)}",
-        )
+        return {"valid": False, "error": str(e)}
 
     # Content verification
     try:
@@ -117,12 +114,10 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
         events = parser.parse(ics_str=content)
     except Exception as e:
         logging.error(f"Invalid ICS content at URL '{ics_url}': {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            f"Invalid ICS content: {str(e)}",
-        )
+        return {"valid": False, "error": str(e)}
 
     # If everything is fine, return success
+    logger.info(f"Successfully fetched ICS file at URL '{ics_url}'")
     return {"valid": True, "nbEvents": len(events)}
 
 

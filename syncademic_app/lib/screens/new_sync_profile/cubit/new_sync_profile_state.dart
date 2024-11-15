@@ -34,8 +34,8 @@ class NewSyncProfileState with _$NewSyncProfileState {
     String? titleError,
     @Default('') String url,
     String? urlError,
-    @Default(IcsVerificationStatus.notVerified())
-    IcsVerificationStatus icsVerificationStatus,
+    @Default(IcsValidationStatus.notValidated())
+    IcsValidationStatus icsValidationStatus,
     ProviderAccount? providerAccount,
     @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
@@ -84,15 +84,15 @@ class NewSyncProfileState with _$NewSyncProfileState {
   bool get canSubmitUrlForVerification =>
       urlError == null &&
       !isBlank(url) &&
-      icsVerificationStatus.when(
-        notVerified: () => true,
-        verificationInProgress: () => false,
-        verified: () => false,
-        verificationFailed: (_) => true,
+      icsValidationStatus.when(
+        notValidated: () => true,
+        validationInProgress: () => false,
+        validated: (_) => false,
+        validationFailed: (_) => true,
       );
 
   bool get areUrlAndIcsContentValid =>
-      urlError == null && !isBlank(url) && icsVerificationStatus.isVerified;
+      urlError == null && !isBlank(url) && icsValidationStatus.isValidated;
 
   bool canSubmit() {
     if (!isTitleValid || !areUrlAndIcsContentValid) {

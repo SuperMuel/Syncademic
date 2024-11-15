@@ -41,6 +41,7 @@ import 'services/auth_service.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/firebase_sync_profile_service.dart';
 import 'services/firestore_account_service.dart';
+import 'services/ics_validation_service.dart';
 import 'services/provider_account_service.dart';
 import 'services/sync_profile_service.dart';
 import 'widgets/feedback_icon_button.dart';
@@ -98,6 +99,10 @@ void registerDependencies() {
   getIt.registerSingleton<ProviderAccountService>(
     // MockProviderAccountService(),
     GoogleProviderAccountService(googleSignIn: googleSignIn),
+  );
+
+  getIt.registerSingleton<IcsValidationService>(
+    const FirebaseIcsValidationService(),
   );
 }
 

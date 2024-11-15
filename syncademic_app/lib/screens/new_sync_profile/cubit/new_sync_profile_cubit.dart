@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/services/ics_validation_service.dart';
 import 'package:validators/validators.dart';
 
 import '../../../authorization/backend_authorization_service.dart';
@@ -16,18 +17,19 @@ import '../../../models/sync_profile_status.dart';
 import '../../../models/target_calendar.dart';
 import '../../../repositories/sync_profile_repository.dart';
 import '../../../repositories/target_calendar_repository.dart';
-import '../../../services/ics_verifier.dart';
 import '../../../services/provider_account_service.dart';
-import 'ics_verification_status.dart';
+import 'ics_validation_status.dart';
 
 part 'new_sync_profile_cubit.freezed.dart';
 part 'new_sync_profile_state.dart';
 
 class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
-  final IcsValidationService icsService;
+  final IcsValidationService icsValidationService;
 
-  NewSyncProfileCubit({this.icsService = const IcsValidationService()})
-      : super(const NewSyncProfileState()) {
+  NewSyncProfileCubit({IcsValidationService? icsValidationService})
+      : icsValidationService =
+            icsValidationService ?? GetIt.I<IcsValidationService>(),
+        super(const NewSyncProfileState()) {
     GetIt.I<ProviderAccountService>()
         .onCurrentUserChanged
         .listen(providerAccountSelected);
@@ -75,30 +77,31 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(
       url: url,
       urlError: null,
-      icsVerificationStatus: const IcsVerificationStatus.notVerified(),
+      icsValidationStatus: const IcsValidationStatus.notValidated(),
     ));
   }
 
   Future<void> verifyIcs() async {
     assert(isURL(state.url), 'URL must be a valid URL before verifying');
 
-    if (state.icsVerificationStatus ==
-        const IcsVerificationStatus.verificationInProgress()) {
+    if (state.icsValidationStatus ==
+        const IcsValidationStatus.validationInProgress()) {
       return;
     }
 
     emit(state.copyWith(
-        icsVerificationStatus:
-            const IcsVerificationStatus.verificationInProgress()));
+        icsValidationStatus: const IcsValidationStatus.validationInProgress()));
 
-    final verificationResult = await icsService.fetchAndParseIcs(state.url);
+    final result = await icsValidationService.validateUrl(state.url);
 
-    verificationResult.fold(
-        (error) => emit(state.copyWith(
-            icsVerificationStatus:
-                IcsVerificationStatus.verificationFailed(errorMessage: error))),
-        (_) => emit(state.copyWith(
-            icsVerificationStatus: const IcsVerificationStatus.verified())));
+    emit(state.copyWith(
+      icsValidationStatus: result.fold(
+        (error) => IcsValidationStatus.validationFailed(errorMessage: error),
+        (result) => result.isValid
+            ? IcsValidationStatus.validated(nbEvents: result.nbEvents)
+            : IcsValidationStatus.validationFailed(errorMessage: result.error),
+      ),
+    ));
   }
 
   Future<void> providerAccountSelected(ProviderAccount? providerAccount) async {

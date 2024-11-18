@@ -2,13 +2,31 @@
 
 [Syncademic.io](https://syncademic.io) is a handy tool 🛠️ that makes it easy for you to manage your university schedule by syncing it directly with your Google Calendar 📅. Just give us the URL of your schedule, and we'll update your calendar automatically 🔄 whenever there are changes to your classes.
 
+![Diagram of Syncademic](images/diagram_exalidraw.png)
+
+![Screenshots of Syncademic](images/app_screens.jpg)
+
+<script src="https://cdn.commoninja.com/sdk/latest/commonninja.js" defer></script>
+<div class="commonninja_component pid-cdab97f0-73e8-4b81-b367-b07afff6dd21"></div>
+
+
 # Key Benefits of Syncademic
 
 1. 📱 **Improved user experience**: Students use the familiar, multi-platform Google Calendar, avoiding clunky university tools.
 2. 🌐 **Comprehensive view**: All academic, personal, and professional commitments are visible in one place for better planning and conflict avoidance.
 3. 🔄 **Real-time updates**: Updates are frequent, ensuring students never miss important class changes. Updates triggered by one student benefit all users instantly.
 4. 🖍️ **Customizable Experience**: You can personalize your calendar with color-coding and event title improvements to make it easier to read.
-5. 🗓️ **Multi-schedule Management**: Ideal for students involved in multiple programs or institutions, Syncademic merges various academic schedules into a single Google Calendar view.
+
+# 🚀 How It Works
+
+Use the app at [app.syncademic.io](https://app.syncademic.io) to setup your synchronization. Once you're done, you don't need the app anymore ! Just open your Google Calendar and enjoy your beautiful, updated schedule.
+
+1. **Input Your Schedule**:
+   - Provide a URL to your academic schedule. This URL is typically provided by your university.
+2. **AI Customization**:
+   - AI processes your schedule, cleaning up titles, adding colors, and removing irrelevant entries if needed.
+3. **Sync to Google Calendar**:
+   - Your customized schedule is seamlessly synced to your Google Calendar.
 
 
 # Customization

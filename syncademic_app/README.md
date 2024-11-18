@@ -2,6 +2,8 @@
 
 The user interface for Syncademic developed using Flutter.
 
+![App screenshots](../images/app_screens.jpg)
+
 **Goals**
 
 - Authenticate users via Firebase Authentication with Google Sign-In.

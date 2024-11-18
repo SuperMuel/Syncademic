@@ -47,6 +47,17 @@ storeFile=release.keystore
 For more information check https://docs.flutter.dev/deployment/android
 
 
+# How to Use 
+
+1. **Input Your Schedule**:
+   - Provide a URL to your academic schedule. This URL is typically provided by your university.
+2. **Select Your Google Calendar**:
+   - Choose the Google Calendar where you want your schedule to be synced.
+3. **Authorize Syncademic**:
+   - Allow Syncademic to access your Google Calendar to update it automatically.
+4. **AI Customization**:
+   - AI processes your schedule, cleaning up titles, adding colors, and removing irrelevant entries or duplicates if needed.
+   
 # Future Features
 
 **Translation** : The app is currently available in English. A translation library should be implemented to support additional languages, and appropriate translations provided.

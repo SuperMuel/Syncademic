@@ -316,7 +316,7 @@ Events:
   ... and 41 more events
 
 Longest description:
-```
+"""
 [IF-5-S1~Promo:EDT] Créneau Promo
 (Réunion présentation PFE - https://insa-lyon-fr.zoom.us/j/98963419861?pwd=eUY3bko2QlhpYjY0YlZSbWZhVUpaUT09)
 
@@ -324,7 +324,7 @@ IF:5:S1::Promo:EDT::5IF_S1_GR_CM
 MIRANDA Felipe
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 6 (41 events):
 From 2024-10-03 to 2025-01-31 (121 days)
@@ -339,7 +339,7 @@ Events:
   ... and 36 more events
 
 Longest description:
-```
+"""
 [IF-5-S1-EC-PSAT:CM] Projet de Synthèse Scientifique et Technique
 (P-SAT (TD) - Choix des sujets)
 
@@ -347,7 +347,7 @@ IF:5:S1::PSAT:CM::5IF_S1_GR_CM
 DURAND Gillaume
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 0 (17 events):
 From 2024-09-24 to 2024-11-26 (64 days)
@@ -362,7 +362,7 @@ Events:
   ... and 12 more events
 
 Longest description:
-```
+"""
 [IF-5-S1-EC-OT8:TD] Text mining
 (OT 8 - Text mining)
 
@@ -371,7 +371,7 @@ RENARD Pascal-Yves
 KOVACS-ZSIGMOND Eloy
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 4 (16 events):
 From 2024-10-01 to 2025-02-04 (127 days)
@@ -386,14 +386,14 @@ Events:
   ... and 11 more events
 
 Longest description:
-```
+"""
 [IF-5-S1~EPS:EDT] Créneau EPS
 ()
 
 IF:5:S1::EPS:EDT::5IF_S1_GR_CM
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 3 (14 events):
 From 2024-10-01 to 2025-01-21 (113 days)
@@ -408,7 +408,7 @@ Events:
   ... and 9 more events
 
 Longest description:
-```
+"""
 [CDS-EPS-S1-CMP-5A:TD] EPS 5A
 ()
 
@@ -416,7 +416,7 @@ CDS:EPS:S1::5A:TD::EPS-5-S1-MA16--07 (EPS-5-S1-MA16--07 #THO)
 LUCAS Lio
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 5 (12 events):
 From 2024-10-23 to 2025-01-15 (85 days)
@@ -431,7 +431,7 @@ Events:
   ... and 7 more events
 
 Longest description:
-```
+"""
 [IF-5-S1-EC-TCS2:EV] Formation par la Recherche : Modélisation et simulation de systèmes
 (TCS1 et 2 - DS)
 
@@ -439,7 +439,7 @@ IF:5:S1::TCS2:EV::5IF_S1_GR_CM
 DURAND Gillaume
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 7 (12 events):
 From 2024-10-01 to 2024-11-12 (43 days)
@@ -454,7 +454,7 @@ Events:
   ... and 7 more events
 
 Longest description:
-```
+"""
 [IF-5-S1-EC-TCS1:CM] Formation par la Recherche : Fondements scientifiques de l'informatique
 ()
 
@@ -462,7 +462,7 @@ IF:5:S1::TCS1:CM::5IF_S1_GR_CM
 DUPRE DE DINECHIN Floran
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Cluster 1 (11 events):
 From 2024-10-14 to 2025-01-20 (99 days)
@@ -477,7 +477,7 @@ Events:
   ... and 6 more events
 
 Longest description:
-```
+"""
 [HU-0-S1-EC-S-SERIE4:TD] Options Sciences Humaines et Sociales, S1 Série 4
 ()
 
@@ -485,7 +485,7 @@ HU:0:S1::S-SERIE4:TD::SERIE4-OPT18
 LAVILLE Jean Philippe
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 Unclustered (5 events):
 From 2024-10-02 to 2024-11-20 (49 days)
@@ -497,20 +497,20 @@ Events:
 - IF:5:S1::MAN-HU:CM::5IF_S1_GR_CM #004
 
 Longest description:
-```
+"""
 [IF-5-S1-EC-MAN-HU:CM] Management d'équipe
 (CM - Management)
 
 IF:5:S1::MAN-HU:CM::5IF_S1_GR_CM
 
 (Exporté le:21/10/2024 16:15)
-```
+"""
 
 ```
 
 ### Example of rules for the time schedule above
 
-```
+```json
 {
   "rules": [
     {
@@ -705,7 +705,7 @@ IF:5:S1::MAN-HU:CM::5IF_S1_GR_CM
 
 ## The prompt to create the rules with an LLM
 
-```
+```markdown
 Create customization rules in JSON format for personalizing university schedule synchronization with Google Calendar. Use the provided compressed view of the time schedule to generate these rules.
 
 Ensure the generated JSON creates concise and user-friendly schedules by:

@@ -134,6 +134,48 @@ class TitleStepContent extends StatelessWidget {
   }
 }
 
+class CollapsibleErrorMessage extends StatelessWidget {
+  final String mainMessage;
+  final String? detailMessage;
+
+  const CollapsibleErrorMessage({
+    super.key,
+    required this.mainMessage,
+    required this.detailMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ExpansionTile(
+          title: Text(
+            mainMessage,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.red,
+            ),
+          ),
+          iconColor: Colors.red,
+          collapsedIconColor: Colors.red,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                detailMessage!,
+                style: const TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class UrlVerificationButtonAndText extends StatelessWidget {
   const UrlVerificationButtonAndText(
       {super.key,
@@ -167,13 +209,13 @@ class UrlVerificationButtonAndText extends StatelessWidget {
             validated: (nbEvents) => Text(
                 'This time schedule contains $nbEvents events',
                 style: const TextStyle(color: Colors.green)),
-            invalid: (errorMessage) => Text(
-              'This URL is not a valid time schedule URL. Please check the URL and try again. \nDetails: $errorMessage',
-              style: const TextStyle(color: Colors.red),
+            invalid: (errorMessage) => CollapsibleErrorMessage(
+              mainMessage: 'This URL is not a valid time schedule URL.',
+              detailMessage: errorMessage,
             ),
-            validationFailed: (errorMessage) => Text(
-              'An error occured: $errorMessage',
-              style: const TextStyle(color: Colors.red),
+            validationFailed: (errorMessage) => CollapsibleErrorMessage(
+              mainMessage: 'Validation failed',
+              detailMessage: errorMessage,
             ),
             validationInProgress: () =>
                 Container(), //Loading indicator is shown in the button below

@@ -215,6 +215,8 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
             "Invalid colorId. Must be an integer between 1 and 25.",
         )
+    
+    logger.info(f"Creating new calendar for {user_id}/{provider_account_id}")
 
     try:
         service = get_calendar_service(user_id, provider_account_id)

@@ -116,9 +116,9 @@ void main() async {
 
   if (kDebugMode) {
     try {
-      FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-      await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-      FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
+      // FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+      // await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+      // FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
     } catch (e) {
       log("Error connecting to the local Firebase emulator: $e");
     }

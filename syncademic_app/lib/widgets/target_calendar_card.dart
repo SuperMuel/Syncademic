@@ -46,12 +46,10 @@ class TargetCalendarCard extends StatelessWidget {
                             targetCalendar.title,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          if (targetCalendar.description != null) ...[
-                            Text(
-                              targetCalendar.description!,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            )
-                          ]
+                          Text(
+                            targetCalendar.providerAccountEmail,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          )
                         ],
                       ),
                     ),

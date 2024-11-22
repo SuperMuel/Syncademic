@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:syncademic_app/models/provider_account.dart';
+import '../models/provider_account.dart';
 
 import '../models/id.dart';
 import '../models/target_calendar.dart';

@@ -78,6 +78,10 @@ class NewSyncProfileState with _$NewSyncProfileState {
   /// If the user has selected to create a new calendar, this will be the new calendar.
   /// If the user has selected to use an existing calendar, this will be the existing calendar.
   TargetCalendar? get targetCalendarSelected {
+    if (providerAccount == null) {
+      return null;
+    }
+
     switch (targetCalendarChoice) {
       case TargetCalendarChoice.createNew:
         return newCalendarToBeCreated;

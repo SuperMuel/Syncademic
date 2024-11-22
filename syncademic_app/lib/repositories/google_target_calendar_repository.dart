@@ -8,7 +8,7 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<List<TargetCalendar>> getCalendars(
-    String providerAccountId,
+    {required String providerAccountId, required String providerAccountEmail}
   ) async {
     final result = await FirebaseFunctions.instance
         .httpsCallable('list_user_calendars')
@@ -22,6 +22,7 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
               title: calendar['summary'] ?? 'Unnamed calendar',
               description: calendar['description'],
               providerAccountId: providerAccountId,
+              providerAccountEmail: providerAccountEmail,
             ))
         .toList();
   }
@@ -34,6 +35,7 @@ class GoogleTargetCalendarRepository implements TargetCalendarRepository {
         .httpsCallable('create_new_calendar')
         .call({
       'providerAccountId': providerAccountId,
+      'providerAccountEmail': targetCalendar.providerAccountEmail,
       'summary': targetCalendar.title,
       'description': targetCalendar.description,
       'colorId': color == null ? null : int.parse(color.id),

@@ -17,6 +17,7 @@ void main() {
     id: ID(),
     title: 'targetCalendarTitle',
     providerAccountId: 'providerAccountId',
+    providerAccountEmail: 'test@syncademic.io',
   );
 
   const status = SyncProfileStatus.notStarted();

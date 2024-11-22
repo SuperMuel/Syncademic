@@ -13,6 +13,7 @@ final targetCalendar1 = TargetCalendar(
   description: "Description 1",
   providerAccountId: "6371892",
   createdBySyncademic: true,
+  providerAccountEmail: 'test@syncademic.io'
 );
 
 SyncProfile getSyncProfile({

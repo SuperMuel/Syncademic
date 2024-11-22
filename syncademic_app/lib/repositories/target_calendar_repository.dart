@@ -51,7 +51,7 @@ enum GoogleCalendarColor {
 }
 
 abstract class TargetCalendarRepository {
-  Future<List<TargetCalendar>> getCalendars(String providerAccountId);
+  Future<List<TargetCalendar>> getCalendars({required String providerAccountId, required String providerAccountEmail});
 
   Future<TargetCalendar> createCalendar(
       String providerAccountId, TargetCalendar calendar,
@@ -66,12 +66,13 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
       title: 'Calendar $index',
       description: 'Description of calendar $index',
       providerAccountId: 'providerAccountId',
+      providerAccountEmail: 'providerAccountEmail',
     ),
   );
 
   @override
   Future<List<TargetCalendar>> getCalendars(
-    String providerAccountId,
+          {required String providerAccountId, required String providerAccountEmail}
   ) async =>
       _calendars;
 

@@ -33,6 +33,7 @@ class TargetCalendar with _$TargetCalendar {
     /// of the calendar itself. It is also different from the user ID that is logged in to the Syncademic app,
     /// as a user can have multiple accounts on multiple calendar services.
     required String providerAccountId,
+    required String providerAccountEmail,
     bool? createdBySyncademic,
   }) = _TargetCalendar;
 }

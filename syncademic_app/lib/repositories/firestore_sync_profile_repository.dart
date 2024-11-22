@@ -69,6 +69,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       title: data['targetCalendar']['title'],
       providerAccountId: data['targetCalendar']['providerAccountId'],
       description: data['targetCalendar']['description'],
+      providerAccountEmail: data['targetCalendar']['providerAccountEmail'],
     );
 
     late SyncProfileStatus

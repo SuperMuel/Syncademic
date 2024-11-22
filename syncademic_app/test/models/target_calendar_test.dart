@@ -6,16 +6,19 @@ void main() {
   const id = ID.fromString('test_id');
   const title = 'Test Title';
   const providerAccountId = 'providerAccountId';
+  const email = 'test@syncademic.io';
 
   TargetCalendar createTargetCalendar({
     ID id = id,
     String title = title,
     String providerAccountId = providerAccountId,
+    String providerAccountEmail = email,
   }) =>
       TargetCalendar(
         id: id,
         title: title,
         providerAccountId: providerAccountId,
+        providerAccountEmail: providerAccountEmail,
       );
 
   test('should create a TargetCalendar instance', () {
@@ -23,11 +26,13 @@ void main() {
       id: id,
       title: title,
       providerAccountId: providerAccountId,
+      providerAccountEmail: email,
     );
 
     expect(targetCalendar.id, id);
     expect(targetCalendar.title, title);
     expect(targetCalendar.providerAccountId, providerAccountId);
+    expect(targetCalendar.providerAccountEmail, email);
   });
 
   group('equals', () {
@@ -63,6 +68,16 @@ void main() {
 
       expect(targetCalendar1, isNot(equals(targetCalendar2)));
     });
+
+    test(
+        'should not be equal to another TargetCalendar with a different providerAccountEmail',
+        () {
+      final targetCalendar1 = createTargetCalendar(providerAccountEmail: 'testA@syncademic.io');
+      final targetCalendar2 = createTargetCalendar(providerAccountEmail: 'testB@syncademic.io'); 
+
+      expect(targetCalendar1, isNot(equals(targetCalendar2)));
+    });
+
 
     test(
         'should have the same hash code for TargetCalendars with the same values',

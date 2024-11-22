@@ -49,13 +49,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(
       title: title,
       titleError: null,
-      newCalendarCreated: TargetCalendar(
-        id: ID(), // Will be overwritten by the calendar API
-        title: title,
-        providerAccountId: '',
-        createdBySyncademic: true,
-        description: "Calendar created by Syncademic.io",
-      ),
     ));
   }
 

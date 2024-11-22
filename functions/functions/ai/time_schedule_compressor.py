@@ -116,9 +116,9 @@ class TimeScheduleCompressor:
                 cluster_events, key=lambda x: len(x.description) if x.description else 0
             )
             output_lines.append("\nLongest description:")
-            output_lines.append("`" * 3)
+            output_lines.append("'" * 3)
             output_lines.append(longest_description_event.description.strip())
-            output_lines.append("`" * 3)
+            output_lines.append("'" * 3)
 
         # Join all lines into a single string
         output_str = "\n".join(output_lines)

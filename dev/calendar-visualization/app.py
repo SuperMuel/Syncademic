@@ -18,7 +18,7 @@ from functions.shared.event import Event
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
 
-load_dotenv()
+load_dotenv("../../functions/.env.syncademic-36c18")
 
 st.set_page_config(
     layout="wide",

@@ -1,19 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
-import os
-
-
-# This is a workaround to avoid setting the variables
-# are optional or providing default values. This way,
-# we ensure that the variables are always set in other
-# environments.
-IGNORE_ON_GITHUB_ACTIONS = "" if (os.getenv("GITHUB_ACTIONS")) else ...
-
-
-# Making the variables required causes VSCode's
-# test discovery to fail. To solve this, we provide
-# default testing values to required variables
-# in pyproject.toml using pytest-env.
 
 
 class Settings(BaseSettings):
@@ -26,11 +12,11 @@ class Settings(BaseSettings):
 
     RULES_BUILDER_LLM: str = Field(default="gpt-4o")
 
-    CLIENT_ID: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
-    CLIENT_SECRET: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
+    CLIENT_ID: str = Field(default="mock-client-id")
+    CLIENT_SECRET: str = Field(default="mock-client-secret")
 
-    LOCAL_REDIRECT_URI: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
-    PRODUCTION_REDIRECT_URI: str = Field(default=IGNORE_ON_GITHUB_ACTIONS)
+    LOCAL_REDIRECT_URI: str = Field(default="http://localhost:7357")
+    PRODUCTION_REDIRECT_URI: str = Field(default="https://app.syncademic.io")
 
     MAX_ICS_SIZE_BYTES: int = Field(default=1 * 1024 * 1024)  # 1 MB
     URL_ICS_SOURCE_TIMEOUT_S: int = Field(default=10)

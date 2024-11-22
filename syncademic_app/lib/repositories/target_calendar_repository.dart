@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syncademic_app/models/provider_account.dart';
 
 import '../models/id.dart';
 import '../models/target_calendar.dart';
@@ -51,7 +52,7 @@ enum GoogleCalendarColor {
 }
 
 abstract class TargetCalendarRepository {
-  Future<List<TargetCalendar>> getCalendars({required String providerAccountId, required String providerAccountEmail});
+  Future<List<TargetCalendar>> getCalendars(ProviderAccount providerAccount);
 
   Future<TargetCalendar> createCalendar(
       String providerAccountId, TargetCalendar calendar,
@@ -72,7 +73,7 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<List<TargetCalendar>> getCalendars(
-          {required String providerAccountId, required String providerAccountEmail}
+          ProviderAccount providerAccount
   ) async =>
       _calendars;
 

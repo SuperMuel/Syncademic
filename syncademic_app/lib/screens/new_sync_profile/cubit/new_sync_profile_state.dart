@@ -39,7 +39,6 @@ class NewSyncProfileState with _$NewSyncProfileState {
     ProviderAccount? providerAccount,
     @Default(null) String? providerAccountError,
     TargetCalendar? existingCalendarSelected,
-    TargetCalendar? newCalendarCreated,
     @Default(BackendAuthorizationStatus.notAuthorized)
     BackendAuthorizationStatus backendAuthorizationStatus,
     String? backendAuthorizationError,
@@ -66,6 +65,14 @@ class NewSyncProfileState with _$NewSyncProfileState {
 
   bool get canGoBack => currentStep.index > 0;
 
+  TargetCalendar? get newCalendarToBeCreated => TargetCalendar(
+        id: ID(),
+        title: title,
+        description: '',
+        providerAccountId: providerAccount!.providerAccountId,
+        providerAccountEmail: providerAccount!.providerAccountEmail,
+      );
+
   /// The target calendar that the user has selected.
   ///
   /// If the user has selected to create a new calendar, this will be the new calendar.
@@ -73,7 +80,7 @@ class NewSyncProfileState with _$NewSyncProfileState {
   TargetCalendar? get targetCalendarSelected {
     switch (targetCalendarChoice) {
       case TargetCalendarChoice.createNew:
-        return newCalendarCreated;
+        return newCalendarToBeCreated;
       case TargetCalendarChoice.useExisting:
         return existingCalendarSelected;
     }

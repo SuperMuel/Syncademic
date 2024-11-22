@@ -27,6 +27,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
         'title': syncProfile.targetCalendar.title,
         'description': syncProfile.targetCalendar.description,
         'providerAccountId': syncProfile.targetCalendar.providerAccountId,
+        'providerAccountEmail': syncProfile.targetCalendar.providerAccountEmail,
       },
       'status': {'type': 'notStarted'}
     });

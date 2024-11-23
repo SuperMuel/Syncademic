@@ -49,13 +49,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     emit(state.copyWith(
       title: title,
       titleError: null,
-      newCalendarCreated: TargetCalendar(
-        id: ID(), // Will be overwritten by the calendar API
-        title: title,
-        providerAccountId: '',
-        createdBySyncademic: true,
-        description: "Calendar created by Syncademic.io",
-      ),
     ));
   }
 
@@ -111,19 +104,19 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
     ));
   }
 
-  Future<void> providerAccountSelected(ProviderAccount? providerAccount) async {
-    if (providerAccount == null) {
-      return emit(state.copyWith(
-        providerAccount: null,
-        providerAccountError: 'No provider account selected.',
-      ));
-    }
-
-    emit(state.copyWith(
-      providerAccount: providerAccount,
-      providerAccountError: null,
-    ));
-  }
+  Future<void> providerAccountSelected(
+          ProviderAccount? providerAccount) async =>
+      emit(
+        providerAccount == null
+            ? state.copyWith(
+                providerAccount: null,
+                providerAccountError: 'No provider account selected.',
+              )
+            : state.copyWith(
+                providerAccount: providerAccount,
+                providerAccountError: null,
+              ),
+      );
 
   Future<void> pickProviderAccount() async {
     await resetProviderAccount();
@@ -268,7 +261,7 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
         targetCalendar =
             await GetIt.I<TargetCalendarRepository>().createCalendar(
           state.providerAccount!.providerAccountId,
-          state.newCalendarCreated!,
+          state.newCalendarToBeCreated!,
           color: state.targetCalendarColor,
         ); //TODO : move the creation responsability to the backend
       } catch (e) {

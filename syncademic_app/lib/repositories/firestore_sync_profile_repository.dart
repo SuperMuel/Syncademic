@@ -27,6 +27,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
         'title': syncProfile.targetCalendar.title,
         'description': syncProfile.targetCalendar.description,
         'providerAccountId': syncProfile.targetCalendar.providerAccountId,
+        'providerAccountEmail': syncProfile.targetCalendar.providerAccountEmail,
       },
       'status': {'type': 'notStarted'}
     });
@@ -69,6 +70,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       title: data['targetCalendar']['title'],
       providerAccountId: data['targetCalendar']['providerAccountId'],
       description: data['targetCalendar']['description'],
+      providerAccountEmail: data['targetCalendar']['providerAccountEmail'],
     );
 
     late SyncProfileStatus

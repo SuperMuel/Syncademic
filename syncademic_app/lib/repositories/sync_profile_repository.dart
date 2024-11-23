@@ -68,6 +68,7 @@ class MockSyncProfileRepository implements SyncProfileRepository {
       title: 'Calendar ${id.value}',
       description: 'Description of calendar ${id.value}',
       providerAccountId: 'providerAccountId',
+      providerAccountEmail: 'test@syncademic.io',
     );
 
     int seconds = Random().nextInt(60);

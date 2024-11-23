@@ -26,6 +26,7 @@
     - `title` (string): Title of the target calendar, provided by the calendar provider.
     - `description` (string): Description of the target calendar, provided by the calendar provider.
     - `providerAccountId` (string): Unique identifier for the account owning the target calendar (e.g., Google account ID).
+    - `providerAccountEmail` (string): Email of the account owning the target calendar.
   - `ruleset` (string, optional): JSON string of a `Ruleset` to apply.
   - `ruleset_error` (string, optional): Error message if generating the ruleset failed.
   - `created_at` (timestamp): Timestamp when the sync profile was created.

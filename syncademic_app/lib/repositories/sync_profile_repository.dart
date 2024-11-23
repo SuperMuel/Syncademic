@@ -12,7 +12,6 @@ abstract class SyncProfileRepository {
   Stream<List<SyncProfile>> getSyncProfiles();
 
   Future<void> createSyncProfile(SyncProfile syncProfile);
-  Future<void> updateSyncProfile(SyncProfile syncProfile);
   Stream<SyncProfile?> watchSyncProfile(ID id);
 
   Future<void> deleteSyncProfile(ID id);
@@ -42,13 +41,6 @@ class MockSyncProfileRepository implements SyncProfileRepository {
       throw Exception('SyncProfile already exists');
     }
 
-    _syncProfiles[syncProfile.id] = syncProfile;
-
-    _syncProfilesController.add(_syncProfiles.values.toList());
-  }
-
-  @override
-  Future<void> updateSyncProfile(SyncProfile syncProfile) async {
     _syncProfiles[syncProfile.id] = syncProfile;
 
     _syncProfilesController.add(_syncProfiles.values.toList());
@@ -84,9 +76,10 @@ class MockSyncProfileRepository implements SyncProfileRepository {
       title: 'Sync Profile n°${id.value}',
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
+      lastSuccessfulSync:
+          DateTime.now().subtract(Duration(seconds: totalSeconds)),
       status: SyncProfileStatus.success(
-        lastSuccessfulSync:
-            DateTime.now().subtract(Duration(seconds: totalSeconds)),
+        updatedAt: DateTime.now().subtract(Duration(seconds: totalSeconds)),
       ),
     );
   }
@@ -101,8 +94,9 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addInProgressProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
+      lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1)),
       status: SyncProfileStatus.inProgress(
-        lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1)),
+        updatedAt: DateTime.now().subtract(const Duration(seconds: 10)),
       ),
     );
     _syncProfiles[syncProfile.id] = syncProfile;
@@ -111,9 +105,10 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addFailedProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
-      status: SyncProfileStatus.failed("Error message",
-          lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1))),
-    );
+        lastSuccessfulSync: DateTime.now().subtract(const Duration(days: 1)),
+        status: SyncProfileStatus.failed("Error message",
+            updatedAt: DateTime.now()
+                .subtract(const Duration(hours: 10, minutes: 30))));
 
     _syncProfiles[syncProfile.id] = syncProfile;
   }
@@ -121,8 +116,9 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addNotStartedProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
-      status: const SyncProfileStatus.notStarted(
-        lastSuccessfulSync: null,
+      lastSuccessfulSync: null,
+      status: SyncProfileStatus.notStarted(
+        updatedAt: DateTime.now().subtract(const Duration(seconds: 10)),
       ),
     );
 
@@ -132,7 +128,8 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   void addDeletionFailedProfile() {
     var syncProfile = createRandomProfile();
     syncProfile = syncProfile.copyWith(
-        status: const SyncProfileStatus.deletionFailed("Deletion failed"));
+        status: SyncProfileStatus.deletionFailed("Deletion failed",
+            updatedAt: DateTime.now().subtract(const Duration(seconds: 10))));
 
     _syncProfiles[syncProfile.id] = syncProfile;
   }
@@ -144,8 +141,10 @@ class MockSyncProfileRepository implements SyncProfileRepository {
 
   @override
   Future<void> deleteSyncProfile(ID id) async {
-    _syncProfiles[id] =
-        _syncProfiles[id]!.copyWith(status: const SyncProfileStatus.deleting());
+    _syncProfiles[id] = _syncProfiles[id]!.copyWith(
+        status: SyncProfileStatus.deleting(
+      updatedAt: DateTime.now(),
+    ));
     _syncProfilesController.add(_syncProfiles.values.toList());
     await Future.delayed(const Duration(seconds: 2));
 

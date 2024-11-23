@@ -82,21 +82,22 @@ class _List extends StatelessWidget {
             itemCount: profiles.length,
             itemBuilder: (context, index) {
               final profile = profiles[index];
-              final lastSuccessfulSync = profile.status.lastSuccessfulSync;
+              final lastSuccessfulSync = profile.lastSuccessfulSync;
               return ListTile(
                   title: Text(profile.title,
                       style: Theme.of(context).textTheme.titleLarge),
-                  leading: const Icon(
-                    Icons.sync,
-                    color: Colors.grey,
+                  leading: profile.status.maybeMap(
+                    success: (_) => const Icon(Icons.sync, color: Colors.green),
+                    failed: (_) => const Icon(Icons.error, color: Colors.red),
+                    orElse: () => const Icon(Icons.sync, color: Colors.grey),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   subtitle: lastSuccessfulSync == null
                       ? const Text('Never synced')
-                      : LastSynchronized(
-                          lastSync: lastSuccessfulSync,
+                      : TimeAgoBuilder(
+                          dt: lastSuccessfulSync,
                           builder: (_, lastSync) =>
-                              Text('Last synced: $lastSync')),
+                              Text('Last synced $lastSync')),
                   onTap: onTap == null ? null : () => onTap!(profile));
             },
           );

@@ -20,7 +20,11 @@ void main() {
     providerAccountEmail: 'test@syncademic.io',
   );
 
-  const status = SyncProfileStatus.notStarted();
+  final updatedAt = DateTime(2024, 1, 1);
+
+  final status = SyncProfileStatus.notStarted(
+    updatedAt: updatedAt,
+  );
 
   test('should create a SyncProfile instance', () {
     final syncProfile = SyncProfile(
@@ -143,7 +147,9 @@ void main() {
 
     test('should not be equal to another SyncProfile with a different status',
         () {
-      const status1 = SyncProfileStatus.failed('Error message');
+      final status1 =
+          SyncProfileStatus.failed('Error message', updatedAt: updatedAt);
+
       final syncProfile1 = SyncProfile(
         id: id,
         title: title,

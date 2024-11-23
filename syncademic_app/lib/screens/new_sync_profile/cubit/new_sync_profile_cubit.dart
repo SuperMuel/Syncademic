@@ -281,7 +281,9 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       title: state.title,
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
-      status: const SyncProfileStatus.notStarted(),
+      status: SyncProfileStatus.notStarted(
+        updatedAt: DateTime.now(),
+      ),
     );
 
     final repo = GetIt.I<SyncProfileRepository>();

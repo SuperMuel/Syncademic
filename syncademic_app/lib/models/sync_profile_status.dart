@@ -6,20 +6,29 @@ part 'sync_profile_status.freezed.dart';
 class SyncProfileStatus with _$SyncProfileStatus {
   const SyncProfileStatus._();
 
-  const factory SyncProfileStatus.success(
-      {String? syncTrigger, DateTime? lastSuccessfulSync}) = _Success;
-  const factory SyncProfileStatus.inProgress(
-      {String? syncTrigger, DateTime? lastSuccessfulSync}) = _InProgress;
-  const factory SyncProfileStatus.failed(String message,
-      {String? syncTrigger, DateTime? lastSuccessfulSync}) = _Failed;
-  const factory SyncProfileStatus.notStarted(
-      {String? syncTrigger, DateTime? lastSuccessfulSync}) = _NotStarted;
+  const factory SyncProfileStatus.success({
+    String? syncTrigger,
+    required DateTime updatedAt,
+  }) = _Success;
+  const factory SyncProfileStatus.inProgress({
+    String? syncTrigger,
+    required DateTime updatedAt,
+  }) = _InProgress;
+  const factory SyncProfileStatus.failed(
+    String message, {
+    String? syncTrigger,
+    required DateTime updatedAt,
+  }) = _Failed;
+  const factory SyncProfileStatus.notStarted({
+    String? syncTrigger,
+    required DateTime updatedAt,
+  }) = _NotStarted;
   const factory SyncProfileStatus.deleting({
-    DateTime? lastSuccessfulSync,
+    required DateTime updatedAt,
   }) = _Deleting;
   const factory SyncProfileStatus.deletionFailed(
     String message, {
-    DateTime? lastSuccessfulSync,
+    required DateTime updatedAt,
   }) = _DeletionFailed;
 
   bool isInProgress() => maybeMap(

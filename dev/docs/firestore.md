@@ -20,7 +20,9 @@
   - `status` (map)
     - `type` (string): The status type of the synchronization (`inProgress`, `failed`, `success`, `deleting`).
     - `message` (string, optional): Error message if synchronization failed.
-    - `lastSuccessfulSync` (timestamp, optional): Timestamp of the last successful synchronization.
+    - `syncTrigger` (string): The trigger that initiated the synchronization (`on_create`, `manuel`, `scheduled`).
+    - `syncType` (string) : Whether to sync only updated events or everything (`regular`, `full`).
+    - `updatedAt` (timestamp): Timestamp of the last status update.
   - `targetCalendar` (map)
     - `id` (string): ID of the target calendar.
     - `title` (string): Title of the target calendar, provided by the calendar provider.
@@ -30,6 +32,7 @@
   - `ruleset` (string, optional): JSON string of a `Ruleset` to apply.
   - `ruleset_error` (string, optional): Error message if generating the ruleset failed.
   - `created_at` (timestamp): Timestamp when the sync profile was created.
+  - `lastSuccessfulSync` (timestamp, optional): Timestamp of the last successful synchronization.
 
 - #### `syncStats`
   A collection to track the number of synchronizations performed by a user on a given date. IDs are formatted as `YYYY-MM-DD`.

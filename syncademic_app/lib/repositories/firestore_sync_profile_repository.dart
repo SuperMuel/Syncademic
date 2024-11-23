@@ -16,22 +16,25 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
   final _db = FirebaseFirestore.instance;
 
   @override
-  Future<void> createSyncProfile(SyncProfile syncProfile) async {
-    _syncProfilesCollection.doc(syncProfile.id.value).set({
-      'title': syncProfile.title,
-      'scheduleSource': {
-        'url': syncProfile.scheduleSource.url,
-      },
-      'targetCalendar': {
-        'id': syncProfile.targetCalendar.id.value,
-        'title': syncProfile.targetCalendar.title,
-        'description': syncProfile.targetCalendar.description,
-        'providerAccountId': syncProfile.targetCalendar.providerAccountId,
-        'providerAccountEmail': syncProfile.targetCalendar.providerAccountEmail,
-      },
-      'status': {'type': 'notStarted'}
-    });
-  }
+  Future<void> createSyncProfile(SyncProfile syncProfile) async =>
+      _syncProfilesCollection.doc(syncProfile.id.value).set({
+        'title': syncProfile.title,
+        'scheduleSource': {
+          'url': syncProfile.scheduleSource.url,
+        },
+        'targetCalendar': {
+          'id': syncProfile.targetCalendar.id.value,
+          'title': syncProfile.targetCalendar.title,
+          'description': syncProfile.targetCalendar.description,
+          'providerAccountId': syncProfile.targetCalendar.providerAccountId,
+          'providerAccountEmail':
+              syncProfile.targetCalendar.providerAccountEmail,
+        },
+        'status': {
+          'type': 'notStarted',
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+      });
 
   @override
   Stream<SyncProfile?> watchSyncProfile(ID id) {
@@ -54,7 +57,6 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
     await for (final snapshot in _syncProfilesCollection.snapshots()) {
       yield snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        // TODO : Handle parsing error
         return _fromData(data, doc.id);
       }).toList();
     }
@@ -75,46 +77,50 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
     late SyncProfileStatus
         status; //TODO : Refactor this crap (https://pub.dev/packages/deep_pick)
+    final updatedAt = (data['status']['updatedAt'] as Timestamp).toDate();
     switch (data['status']['type']) {
       case 'inProgress':
         status = SyncProfileStatus.inProgress(
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+          updatedAt: updatedAt,
         );
         break;
       case 'success':
         status = SyncProfileStatus.success(
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+          updatedAt: updatedAt,
         );
         break;
       case 'failed':
         status = SyncProfileStatus.failed(
           data['status']['message'] ?? '',
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+          updatedAt: updatedAt,
         );
         break;
       case 'notStarted':
         status = SyncProfileStatus.notStarted(
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
+          updatedAt: updatedAt,
         );
         break;
       case 'deleting':
-        status = const SyncProfileStatus.deleting();
+        status = SyncProfileStatus.deleting(
+          updatedAt: updatedAt,
+        );
         break;
       case 'deletionFailed':
-        status =
-            SyncProfileStatus.deletionFailed(data['status']['message'] ?? '');
+        status = SyncProfileStatus.deletionFailed(
+          data['status']['message'] ?? '',
+          updatedAt: updatedAt,
+        );
         break;
       default:
         log('Could not parse status: ${data['status']}');
     }
+
+    final lastSuccessfulSync =
+        (data['lastSuccessfulSync'] as Timestamp?)?.toDate();
 
     return SyncProfile(
       id: ID.fromString(id),
@@ -122,13 +128,8 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
       status: status,
+      lastSuccessfulSync: lastSuccessfulSync,
     );
-  }
-
-  @override
-  Future<void> updateSyncProfile(SyncProfile syncProfile) {
-    // TODO: implement updateSyncProfile
-    throw UnimplementedError();
   }
 
   CollectionReference get _syncProfilesCollection {

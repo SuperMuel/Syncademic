@@ -4,29 +4,19 @@ import '../models/sync_profile_status.dart';
 import 'last_synchronized.dart';
 
 class SyncProfileStatusCard extends StatelessWidget {
-  final SyncProfileStatus? status;
+  final SyncProfileStatus status;
 
   const SyncProfileStatusCard({super.key, required this.status});
 
   @override
-  Widget build(BuildContext context) {
-    if (status == null) {
-      return const Card(
-          child: ListTile(
-        title: Text('No status'),
-        leading: Icon(Icons.sync_problem),
-      ));
-    }
-
-    return Card(
-      child: ListTile(
-        title: Text(status!.title),
-        leading: status!.leadingIcon,
-        onTap: status!.onTap != null ? () => status!.onTap!(context) : null,
-        subtitle: status?.subtitle,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Card(
+        child: ListTile(
+          title: Text(status.title),
+          leading: status.leadingIcon,
+          onTap: status.onTap != null ? () => status.onTap!(context) : null,
+          subtitle: status.subtitle,
+        ),
+      );
 }
 
 extension on SyncProfileStatus {
@@ -50,10 +40,9 @@ extension on SyncProfileStatus {
 
   Widget? get subtitle => maybeMap(
         notStarted: (_) => null,
-        orElse: () => LastSynchronized(
-          lastSync: lastSuccessfulSync,
-          builder: (context, lastSync) =>
-              Text("Last sync: $lastSync"), // TODO : don't use colon
+        orElse: () => TimeAgoBuilder(
+          dt: updatedAt,
+          builder: (context, timeAgo) => Text(timeAgo),
         ),
       );
 

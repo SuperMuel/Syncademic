@@ -86,9 +86,10 @@ class _List extends StatelessWidget {
               return ListTile(
                   title: Text(profile.title,
                       style: Theme.of(context).textTheme.titleLarge),
-                  leading: const Icon(
-                    Icons.sync,
-                    color: Colors.grey,
+                  leading: profile.status.maybeMap(
+                    success: (_) => const Icon(Icons.sync, color: Colors.green),
+                    failed: (_) => const Icon(Icons.error, color: Colors.red),
+                    orElse: () => const Icon(Icons.sync, color: Colors.grey),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   subtitle: lastSuccessfulSync == null

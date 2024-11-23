@@ -96,7 +96,7 @@ class _List extends StatelessWidget {
                       : TimeAgoBuilder(
                           dt: lastSuccessfulSync,
                           builder: (_, lastSync) =>
-                              Text('Last synced: $lastSync')),
+                              Text('Last synced $lastSync')),
                   onTap: onTap == null ? null : () => onTap!(profile));
             },
           );

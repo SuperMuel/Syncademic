@@ -228,3 +228,8 @@ END:VEVENT"""
     )
     with pytest.raises(RecurringEventError):
         ics_parser.parse(ics_str)
+
+
+def test_empty_ics_string(ics_parser):
+    with pytest.raises(ValueError):
+        ics_parser.parse("")

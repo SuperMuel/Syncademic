@@ -38,6 +38,9 @@ class IcsParser:
         pass
 
     def parse(self, ics_str: str) -> List[Event]:
+        if not ics_str.strip():
+            raise ValueError("Empty ICS string")
+
         calendar = ics.Calendar(ics_str)
         events = []
         for event in calendar.events:

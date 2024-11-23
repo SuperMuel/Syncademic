@@ -82,7 +82,7 @@ class _List extends StatelessWidget {
             itemCount: profiles.length,
             itemBuilder: (context, index) {
               final profile = profiles[index];
-              final lastSuccessfulSync = profile.status.lastSuccessfulSync;
+              final lastSuccessfulSync = profile.lastSuccessfulSync;
               return ListTile(
                   title: Text(profile.title,
                       style: Theme.of(context).textTheme.titleLarge),

@@ -79,30 +79,22 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
       case 'inProgress':
         status = SyncProfileStatus.inProgress(
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
         );
         break;
       case 'success':
         status = SyncProfileStatus.success(
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
         );
         break;
       case 'failed':
         status = SyncProfileStatus.failed(
           data['status']['message'] ?? '',
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
         );
         break;
       case 'notStarted':
         status = SyncProfileStatus.notStarted(
           syncTrigger: data['status']['syncTrigger'],
-          lastSuccessfulSync:
-              (data['status']['lastSuccessfulSync'] as Timestamp?)?.toDate(),
         );
         break;
       case 'deleting':
@@ -116,19 +108,16 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
         log('Could not parse status: ${data['status']}');
     }
 
-    return SyncProfile(
-      id: ID.fromString(id),
-      title: data['title'],
-      scheduleSource: scheduleSource,
-      targetCalendar: targetCalendar,
-      status: status,
-    );
-  }
+    final lastSuccessfulSync =
+        (data['lastSuccessfulSync'] as Timestamp?)?.toDate();
 
-  @override
-  Future<void> updateSyncProfile(SyncProfile syncProfile) {
-    // TODO: implement updateSyncProfile
-    throw UnimplementedError();
+    return SyncProfile(
+        id: ID.fromString(id),
+        title: data['title'],
+        scheduleSource: scheduleSource,
+        targetCalendar: targetCalendar,
+        status: status,
+        lastSuccessfulSync: lastSuccessfulSync);
   }
 
   CollectionReference get _syncProfilesCollection {

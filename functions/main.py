@@ -192,8 +192,7 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
         logger.info("Backend authorization not found")
         return {"authorized": False}
 
-
-    #TODO : create service and use GoogleCalendarManager to test authorization here
+    # TODO : create service and use GoogleCalendarManager to test authorization here
 
     logger.info("Authorization successful")
     return {"authorized": True}
@@ -454,6 +453,7 @@ def _synchronize_now(
                 "type": "inProgress",
                 "syncTrigger": sync_trigger,
                 "syncType": sync_type,
+                "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
             }
         }
     )
@@ -487,6 +487,7 @@ def _synchronize_now(
                     "message": f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
                     "syncTrigger": sync_trigger,
                     "syncType": sync_type,
+                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                 }
             }
         )
@@ -510,6 +511,7 @@ def _synchronize_now(
                     # TODO : implement a way to re-authorize from the frontend
                     "syncTrigger": sync_trigger,
                     "syncType": sync_type,
+                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                 }
             }
         )
@@ -530,6 +532,7 @@ def _synchronize_now(
                         "message": f"Failed to validate ruleset: {e}",
                         "syncTrigger": sync_trigger,
                         "syncType": sync_type,
+                        "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                     }
                 }
             )
@@ -555,6 +558,7 @@ def _synchronize_now(
                     "message": f"Synchronization failed: {e}",
                     "syncTrigger": sync_trigger,
                     "syncType": sync_type,
+                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                 }
             }
         )
@@ -567,8 +571,9 @@ def _synchronize_now(
                 "type": "success",
                 "syncTrigger": sync_trigger,
                 "syncType": sync_type,
-                "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
+                "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
             },
+            "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
         }
     )
     sync_stats_ref.set({"syncCount": firestore.firestore.Increment(1)}, merge=True)

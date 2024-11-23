@@ -15,5 +15,6 @@ class SyncProfile with _$SyncProfile {
     required TargetCalendar targetCalendar,
     required String title,
     required SyncProfileStatus status,
+    DateTime? lastSuccessfulSync,
   }) = _SyncProfile;
 }

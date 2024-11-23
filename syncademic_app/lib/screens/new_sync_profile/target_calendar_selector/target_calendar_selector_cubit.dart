@@ -24,7 +24,7 @@ class TargetCalendarSelectorCubit extends Cubit<TargetCalendarSelectorState> {
           .get<TargetCalendarRepository>()
           .getCalendars(providerAccount);
     } catch (e) {
-      emit(state.copyWith(loading: false, error: e.toString()));
+      return emit(state.copyWith(loading: false, error: e.toString()));
     }
 
     emit(state.copyWith(loading: false, calendars: calendars, error: null));

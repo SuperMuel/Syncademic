@@ -44,6 +44,8 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     if not provider_account_id:
         raise ValueError("Provider account ID is required")
 
+    logger.info(f"Getting calendar service for {user_id}/{provider_account_id}")
+
     db = firestore.client()
 
     backend_authorization = (
@@ -53,6 +55,7 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     )
 
     if not backend_authorization.exists:
+        logger.error("Backend authorization not found")
         raise ValueError("Target calendar is not authorized")
 
     # Construct a Credentials object from the access token
@@ -63,6 +66,8 @@ def get_calendar_service(user_id: str, provider_account_id: str):
         token_uri="https://oauth2.googleapis.com/token",
         client_secret=settings.CLIENT_SECRET,
     )
+
+    # TODO : refresh token if expired
 
     # Build the Google Calendar API service
     service = build("calendar", "v3", credentials=credentials)
@@ -115,7 +120,10 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     return {"valid": True, "nbEvents": len(events)}
 
 
-@https_fn.on_call(max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES)
+@https_fn.on_call(
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    memory=options.MemoryOption.MB_512,
+)
 def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     if not req.auth:
         raise https_fn.HttpsError(
@@ -123,6 +131,8 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
         )
 
     user_id = req.auth.uid
+
+    logger.info(f"Listing calendars for {user_id}")
 
     # Fetch provider_account_id from user's sync profile or frontend request
     provider_account_id = req.data.get("providerAccountId")
@@ -179,10 +189,13 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     )
 
     if not backend_authorization.exists:
+        logger.info("Backend authorization not found")
         return {"authorized": False}
 
-    # TODO : Check if the access token is still valid
 
+    #TODO : create service and use GoogleCalendarManager to test authorization here
+
+    logger.info("Authorization successful")
     return {"authorized": True}
 
 
@@ -215,7 +228,7 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
             "Invalid colorId. Must be an integer between 1 and 25.",
         )
-    
+
     logger.info(f"Creating new calendar for {user_id}/{provider_account_id}")
 
     try:
@@ -657,14 +670,6 @@ def delete_sync_profile(
         )
 
     sync_profile_ref.delete()
-
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "deleted",
-            }
-        }
-    )
 
     logger.info("Sync profile deleted successfully")
 

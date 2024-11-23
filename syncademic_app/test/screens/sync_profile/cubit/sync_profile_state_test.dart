@@ -8,13 +8,14 @@ import 'package:syncademic_app/screens/sync_profile/cubit/sync_profile_cubit.dar
 
 const scheduleSource1 = ScheduleSource(url: "https://example.com");
 final targetCalendar1 = TargetCalendar(
-  id: ID(),
-  title: "Calendar 1",
-  description: "Description 1",
-  providerAccountId: "6371892",
-  createdBySyncademic: true,
-  providerAccountEmail: 'test@syncademic.io'
-);
+    id: ID(),
+    title: "Calendar 1",
+    description: "Description 1",
+    providerAccountId: "6371892",
+    createdBySyncademic: true,
+    providerAccountEmail: 'test@syncademic.io');
+
+final updatedAt = DateTime(2024, 1, 1);
 
 SyncProfile getSyncProfile({
   required SyncProfileStatus status,
@@ -35,7 +36,9 @@ void main() {
   group('canRequestSync', () {
     test('sync already in progress', () {
       final syncProfile = getSyncProfile(
-        status: const SyncProfileStatus.inProgress(),
+        status: SyncProfileStatus.inProgress(
+          updatedAt: updatedAt,
+        ),
       );
       final state = SyncProfileState.loaded(syncProfile);
 
@@ -44,7 +47,9 @@ void main() {
 
     test('last sync request was less than kMinSyncInterval ago', () {
       final syncProfile = getSyncProfile(
-        status: const SyncProfileStatus.success(),
+        status:  SyncProfileStatus.success(
+          updatedAt: updatedAt,
+        ),
       );
       final state =
           SyncProfileState.loaded(syncProfile, lastSyncRequest: DateTime.now());
@@ -54,7 +59,9 @@ void main() {
 
     test('last sync request was more than kMinSyncInterval ago', () {
       final syncProfile = getSyncProfile(
-        status: const SyncProfileStatus.success(),
+        status: SyncProfileStatus.success(
+          updatedAt: updatedAt,
+        ),
       );
       final state = SyncProfileState.loaded(
         syncProfile,

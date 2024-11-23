@@ -77,7 +77,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
     late SyncProfileStatus
         status; //TODO : Refactor this crap (https://pub.dev/packages/deep_pick)
-    final updatedAt = (data['updatedAt'] as Timestamp).toDate();
+    final updatedAt = (data['status']['updatedAt'] as Timestamp).toDate();
     switch (data['status']['type']) {
       case 'inProgress':
         status = SyncProfileStatus.inProgress(

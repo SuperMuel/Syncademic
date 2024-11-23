@@ -14,7 +14,7 @@ class SyncProfileStatusCard extends StatelessWidget {
           title: Text(status.title),
           leading: status.leadingIcon,
           onTap: status.onTap != null ? () => status.onTap!(context) : null,
-          // subtitle: status.subtitle,
+          subtitle: status.subtitle,
         ),
       );
 }
@@ -38,14 +38,13 @@ extension on SyncProfileStatus {
         deletionFailed: (_) => const Icon(Icons.error, color: Colors.red),
       )!;
 
-  // Widget? get subtitle => maybeMap(
-  //       notStarted: (_) => null,
-  //       orElse: () => LastSynchronized(
-  //         lastSync: lastSuccessfulSync,
-  //         builder: (context, lastSync) =>
-  //             Text("Last sync: $lastSync"), // TODO : don't use colon
-  //       ),
-  //     );
+  Widget? get subtitle => maybeMap(
+        notStarted: (_) => null,
+        orElse: () => TimeAgoBuilder(
+          dt: updatedAt,
+          builder: (context, timeAgo) => Text(timeAgo),
+        ),
+      );
 
   void _showSnackBarError(BuildContext context, String message) =>
       ScaffoldMessenger.of(context)

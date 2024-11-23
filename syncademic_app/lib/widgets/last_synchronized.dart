@@ -4,38 +4,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_time_ago/get_time_ago.dart';
 
-class LastSynchronized extends StatefulWidget {
-  const LastSynchronized(
+class TimeAgoBuilder extends StatefulWidget {
+  const TimeAgoBuilder(
       {super.key,
-      required this.lastSync,
+      required this.dt,
       this.builder,
       this.refreshRate = const Duration(seconds: 1)});
 
-  final DateTime? lastSync;
+  final DateTime dt;
   final Duration refreshRate;
 
   /// A builder that is called with the current last sync time.
-  final Function(BuildContext context, String? lastSync)? builder;
+  final Function(BuildContext context, String timeAgo)? builder;
 
   @override
-  State<LastSynchronized> createState() => _LastSynchronizedState();
+  State<TimeAgoBuilder> createState() => _TimeAgoBuilderState();
 }
 
-class _LastSynchronizedState extends State<LastSynchronized> {
+class _TimeAgoBuilderState extends State<TimeAgoBuilder> {
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(widget.refreshRate, (timer) {
-      setState(() => updateLastSync(widget.lastSync));
+      setState(() => updateLastSync(widget.dt));
     });
   }
 
-  updateLastSync(DateTime? lastSync) {
-    if (lastSync == null) {
-      return _lastSync = 'unknown';
-    }
+  updateLastSync(DateTime lastSync) {
     _lastSync = GetTimeAgo.parse(lastSync);
   }
 

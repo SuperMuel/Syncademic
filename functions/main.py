@@ -55,7 +55,7 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     )
 
     if not backend_authorization.exists:
-        logger.error("Backend authorization not found")
+        logger.info("Backend authorization not found")
         raise ValueError("Target calendar is not authorized")
 
     # Construct a Credentials object from the access token

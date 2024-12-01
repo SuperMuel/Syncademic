@@ -397,6 +397,7 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def scheduled_sync(event: Any):
+    logger.info("Scheduled synchronization started")
     db = firestore.client()
 
     for sync_profile in db.collection_group("syncProfiles").stream():
@@ -679,7 +680,10 @@ def delete_sync_profile(
     logger.info("Sync profile deleted successfully")
 
 
-@https_fn.on_call(max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES)
+@https_fn.on_call(
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    memory=options.MemoryOption.MB_512,
+)
 def authorize_backend(request: https_fn.CallableRequest) -> dict:
     if request.auth is None:
         raise https_fn.HttpsError(

@@ -1,10 +1,19 @@
 # Local Development
 
 ### Firebase CLI
-1. Install the Firebase CLI
+1. Install the [Firebase CLI](https://firebase.google.com/docs/cli)
 2. Login to Firebase
+```bash
+firebase login
+```
 3. Select or create the project
+```bash
+# List available projects
+firebase projects:list
 
+# Select a project
+firebase use <project-id>
+```
 
 ### FlutterFire
 Under `syncademic_app`, install and configure [FlutterFire](https://firebase.google.com/docs/flutter/setup?platform=web).
@@ -23,3 +32,12 @@ firebase emulators:start
 ```
 
 
+
+
+# Deploy
+
+### Deploy cloud functions
+
+```bash
+firebase deploy --only functions
+```

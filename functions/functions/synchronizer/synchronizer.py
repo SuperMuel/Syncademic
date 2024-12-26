@@ -1,19 +1,15 @@
 from dataclasses import replace
 from datetime import datetime, timezone
-from typing import Literal
 
 from firebase_functions import logger
 
-from functions.models import Ruleset
+from functions.models import Ruleset, SyncTrigger, SyncType
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.ics_cache import IcsFileStorage
 
 from .google_calendar_manager import GoogleCalendarManager
 from .ics_parser import IcsParser
 from .ics_source import UrlIcsSource
-
-SyncTrigger = Literal["on_create", "manual", "scheduled"]
-SyncType = Literal["full", "regular"]
 
 
 def perform_synchronization(
@@ -25,7 +21,7 @@ def perform_synchronization(
     calendar_manager: GoogleCalendarManager,
     ruleset: Ruleset | None = None,
     separation_dt: datetime | None = None,
-    sync_type: SyncType = "regular",
+    sync_type: SyncType = SyncType.REGULAR,
 ) -> None:
     ics_str = ics_source.get_ics_string()
 
@@ -74,27 +70,29 @@ def perform_synchronization(
     if not events:
         logger.warn("No events to synchronize")
 
-    if sync_trigger == "on_create":
+    if sync_trigger == SyncTrigger.ON_CREATE:
         return calendar_manager.create_events(events, sync_profile_id)
 
-    if sync_type == "regular":
-        logger.info("Performing regular synchronization, only updating future events")
+    match sync_type:
+        case SyncType.REGULAR:
+            logger.info(
+                "Performing regular synchronization, only updating future events"
+            )
 
-        separation_dt = separation_dt or datetime.now(timezone.utc)
-        events_to_delete = calendar_manager.get_events_ids_from_sync_profile(
-            sync_profile_id, separation_dt
-        )
-        new_events = [event for event in events if event.end > separation_dt]
+            separation_dt = separation_dt or datetime.now(timezone.utc)
+            events_to_delete = calendar_manager.get_events_ids_from_sync_profile(
+                sync_profile_id, separation_dt
+            )
+            new_events = [event for event in events if event.end > separation_dt]
+        case SyncType.FULL:
+            logger.info("Performing full synchronization, deleting all events")
 
-    elif sync_type == "full":
-        logger.info("Performing full synchronization, deleting all events")
-
-        events_to_delete = calendar_manager.get_events_ids_from_sync_profile(
-            sync_profile_id, min_dt=None
-        )
-        new_events = events
-    else:
-        raise ValueError(f"Invalid sync_type: {sync_type}")
+            events_to_delete = calendar_manager.get_events_ids_from_sync_profile(
+                sync_profile_id, min_dt=None
+            )
+            new_events = events
+        case _:
+            raise ValueError(f"Unimplemented sync_type: {sync_type}")
 
     if events_to_delete:
         logger.info(f"Found {len(events_to_delete)} events to delete")

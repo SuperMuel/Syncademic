@@ -20,14 +20,20 @@ The backend is built on Firebase Cloud Functions, Firebase Authentication, and F
 
 ## Exporting `requirements.txt`
 
-Firebase Cloud Functions cannot use `poetry` to manage dependencies but uses `requirements.txt` instead. Thus, we need to convert the `pyproject.toml` file to `requirements.txt` before each deployment.
+Firebase Cloud Functions cannot use `poetry` nor UV to manage dependencies but uses `requirements.txt` instead. Thus, we need to convert the `pyproject.toml` file to `requirements.txt` before each deployment.
 
-1. Install Poetry "Export" plugin
 ```bash
-poetry self add poetry-export
+uv pip compile pyproject.toml -o requirements.txt
 ```
 
-2. Inside the `functions` directory, run : 
+## Deploy Cloud Functions
+
 ```bash
-poetry export --without-hashes -f requirements.txt -o requirements.txt
+firebase deploy --only functions
+```
+
+If the error `User code failed to load. Cannot determine backend specification`, set the following environment variable before running the command again : 
+
+```bash
+export FUNCTIONS_DISCOVERY_TIMEOUT=60
 ```

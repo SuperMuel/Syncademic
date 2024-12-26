@@ -31,13 +31,3 @@ To start the emulators, run:
 firebase emulators:start
 ```
 
-
-
-
-# Deploy
-
-### Deploy cloud functions
-
-```bash
-firebase deploy --only functions
-```

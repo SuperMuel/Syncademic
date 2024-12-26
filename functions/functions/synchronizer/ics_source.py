@@ -1,10 +1,13 @@
-from abc import ABC, abstractmethod
 import io
-from functions.settings import settings
-import validators
+from abc import ABC, abstractmethod
 from pathlib import Path
+
 import requests
+import validators
 from firebase_functions import logger
+from pydantic import HttpUrl
+
+from functions.settings import settings
 
 
 class IcsSource(ABC):
@@ -16,11 +19,11 @@ class IcsSource(ABC):
 class UrlIcsSource(IcsSource):
     def __init__(
         self,
-        url: str,
+        url: str | HttpUrl,
         timeout_s: int = settings.URL_ICS_SOURCE_TIMEOUT_S,
         max_content_size_b: int = settings.MAX_ICS_SIZE_BYTES,
     ):
-        if not validators.url(url):
+        if isinstance(url, str) and not validators.url(url):
             raise ValueError("Invalid URL")
         self.url = url
         self.timeout_s = timeout_s
@@ -30,7 +33,7 @@ class UrlIcsSource(IcsSource):
         logger.info(f"Fetching ICS file from {self.url}")
         try:
             with requests.get(
-                self.url, stream=True, timeout=self.timeout_s
+                str(self.url), stream=True, timeout=self.timeout_s
             ) as response:
                 response.raise_for_status()
 

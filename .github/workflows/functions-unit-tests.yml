@@ -19,26 +19,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set up Python environment
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-
-      # Install Poetry
-      - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-
-      # Install dependencies using Poetry
-      - name: Install dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: "Set up Python"
         run: |
           cd functions
-          poetry install
+          uv python install
+          
 
-      # Run unit tests
+      - name: Install the project
+        run: | 
+          cd functions
+          uv sync --all-extras --dev
+
       - name: Run unit tests
         run: |
           cd functions
-          poetry run pytest
+          uv run pytest

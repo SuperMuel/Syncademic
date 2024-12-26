@@ -16,6 +16,21 @@ The backend is built on Firebase Cloud Functions, Firebase Authentication, and F
   - **Requesting Synchronization**: Allows users to manually trigger synchronization.
   - **Backend Authorization**: Enables the frontend to securely pass authorization codes for backend access.
 
+# Getting Started
+
+1. Install [UV](https://github.com/astral-sh/uv)
+2. Install dependencies
+  ```bash
+  uv sync
+  ``` 
+
+### Run tests
+
+```bash
+uv run pytest
+```
+
+
 # Deploy
 
 ## Exporting `requirements.txt`

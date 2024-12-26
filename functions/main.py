@@ -21,7 +21,7 @@ from langchain.chat_models import init_chat_model
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.rules.models import Ruleset
+from functions.models import Ruleset
 from functions.settings import settings
 from functions.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,

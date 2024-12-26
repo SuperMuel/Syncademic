@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, HttpUrl
 
 
 class Settings(BaseSettings):
@@ -15,8 +15,10 @@ class Settings(BaseSettings):
     CLIENT_ID: str = Field(default="mock-client-id")
     CLIENT_SECRET: str = Field(default="mock-client-secret")
 
-    LOCAL_REDIRECT_URI: str = Field(default="http://localhost:7357")
-    PRODUCTION_REDIRECT_URI: str = Field(default="https://app.syncademic.io")
+    LOCAL_REDIRECT_URI: HttpUrl = Field(default=HttpUrl("http://localhost:7357"))
+    PRODUCTION_REDIRECT_URI: HttpUrl = Field(
+        default=HttpUrl("https://app.syncademic.io")
+    )
 
     MAX_ICS_SIZE_BYTES: int = Field(default=1 * 1024 * 1024)  # 1 MB
     URL_ICS_SOURCE_TIMEOUT_S: int = Field(default=10)

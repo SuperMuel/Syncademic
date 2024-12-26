@@ -4,7 +4,7 @@ from typing import Literal
 
 from firebase_functions import logger
 
-from functions.rules.models import Ruleset
+from functions.models import Ruleset
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.ics_cache import IcsFileStorage
 

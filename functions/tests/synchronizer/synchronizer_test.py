@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import arrow
 import pytest
 
-from functions.rules.models import (
+from functions.models import (
     ChangeFieldAction,
     DeleteEventAction,
     Rule,

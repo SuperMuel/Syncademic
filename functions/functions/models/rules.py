@@ -3,10 +3,19 @@ from dataclasses import replace
 from typing import Literal, Optional, Self, Union, Sequence
 
 from pydantic import BaseModel, Field, model_validator
+from pydantic_settings import BaseSettings
 
-from .constants import RulesSettings
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
+
+
+class RulesSettings(BaseSettings):
+    MAX_TEXT_FIELD_VALUE_LENGTH: int = 256
+    MAX_CONDITIONS: int = 10
+    MAX_ACTIONS: int = 5
+    MAX_RULES: int = 50
+    MAX_NESTING_DEPTH: int = 5
+
 
 settings = RulesSettings()
 

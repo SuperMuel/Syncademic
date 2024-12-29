@@ -1,16 +1,16 @@
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Annotated, Any
+from json import loads
+from typing import Any
 
 from pydantic import (
     BaseModel,
-    BeforeValidator,
     EmailStr,
     Field,
     HttpUrl,
     PastDatetime,
-    ValidationError,
     field_serializer,
+    field_validator,
 )
 
 from functions.models.rules import Ruleset
@@ -101,16 +101,20 @@ class SyncProfileStatus(BaseModel):
     updatedAt: PastDatetime = Field(default_factory=utc_datetime_factory)
 
 
-def _decode_sync_profile_from_str(value: Any) -> Ruleset | None:
+def _decode_ruleset_from_str(value: Any) -> Ruleset | dict | None:
     """A helper function to decode a JSON string into a Ruleset object because we
     store the object as a string in Firestore, but want to work with it as a validated object.
     """
     if not value:
         return None
-    if not isinstance(value, str):
-        raise ValidationError("Ruleset must be a tring")
 
-    return Ruleset.model_validate_json(value)
+    if isinstance(value, Ruleset) or isinstance(value, dict):
+        return value
+
+    if not isinstance(value, str):
+        raise ValueError("Ruleset must be a JSON string")
+
+    return Ruleset.model_validate(loads(value))
 
 
 class SyncProfile(BaseModel):
@@ -133,14 +137,17 @@ class SyncProfile(BaseModel):
     targetCalendar: TargetCalendar
     status: SyncProfileStatus
 
-    ruleset: Annotated[
-        Ruleset | None, BeforeValidator(_decode_sync_profile_from_str)
-    ] = None
+    ruleset: Ruleset | None = None
     ruleset_error: str | None = None
 
     created_at: PastDatetime = Field(default_factory=utc_datetime_factory)
     lastSuccessfulSync: PastDatetime | None = None
 
     @field_serializer("ruleset")
-    def serialize_dt(self, ruleset: Ruleset | None) -> str | None:
+    def serialize_ruleset_as_json_str(self, ruleset: Ruleset | None) -> str | None:
         return ruleset.model_dump_json() if ruleset else None
+
+    @field_validator("ruleset", mode="before")
+    @classmethod
+    def decode_ruleset_from_json_str(cls, value: Any) -> Any:
+        return _decode_ruleset_from_str(value)

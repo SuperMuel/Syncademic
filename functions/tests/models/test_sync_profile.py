@@ -10,6 +10,13 @@ from functions.models import (
     SyncTrigger,
     SyncType,
 )
+from functions.models.rules import (
+    Rule,
+    Ruleset,
+    TextFieldCondition,
+    ChangeColorAction,
+    GoogleEventColor,
+)
 
 VALID_SCHEDULE_SOURCE = ScheduleSource(url=HttpUrl("https://example.com/test.ics"))
 
@@ -82,3 +89,37 @@ def test_sync_profile_too_long_title():
         )
 
     assert "should have at most 50 characters" in str(exc_info.value)
+
+
+VALID_RULESET = Ruleset(
+    rules=[
+        Rule(
+            condition=TextFieldCondition(
+                field="title",
+                operator="contains",
+                value="x",
+            ),
+            actions=[ChangeColorAction(value=GoogleEventColor.BASIL)],
+        )
+    ],
+)
+
+
+def test_sync_profile_ruleset_serde_from_and_to_string():
+    profile = SyncProfile(
+        title="My New Profile",
+        scheduleSource=VALID_SCHEDULE_SOURCE,
+        targetCalendar=VALID_TARGET_CALENDAR,
+        status=VALID_SYNC_PROFILE_STATUS,
+        ruleset=VALID_RULESET,
+    )
+
+    assert isinstance(profile.ruleset, Ruleset)
+    assert profile.ruleset == VALID_RULESET
+
+    profile_dict = profile.model_dump()
+    assert isinstance(profile_dict["ruleset"], str)
+
+    deserialised_profile = SyncProfile(**profile_dict)
+    assert deserialised_profile.ruleset == VALID_RULESET
+    assert deserialised_profile.ruleset == profile.ruleset

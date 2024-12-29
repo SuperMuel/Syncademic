@@ -58,8 +58,6 @@ from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
 from functions.synchronizer.synchronizer import (
-    SyncTrigger,
-    SyncType,
     perform_synchronization,
 )
 
@@ -668,6 +666,12 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.PERMISSION_DENIED,
             "The authorized Google account does not match the providerAccountId (ProviderUserIdMismatch)",
+        )
+
+    if not credentials.token:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL,
+            "Authorization process did not return a valid token",
         )
 
     backend_auth_repo.set_authorization(

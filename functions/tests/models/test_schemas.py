@@ -239,5 +239,5 @@ def test_authorize_backend_input_unknown_redirect_uri():
         "providerAccountId": "1122334455",
     }
     with pytest.raises(ValidationError) as exc_info:
-        AuthorizeBackendInput(**data)
+        AuthorizeBackendInput.model_validate(data)
     assert "Invalid redirect URI" in str(exc_info.value)

@@ -58,9 +58,12 @@ class DeleteSyncProfileInput(BaseModel):
     )
 
 
+ALLOWED_REDIRECT_URIS = [settings.LOCAL_REDIRECT_URI, settings.PRODUCTION_REDIRECT_URI]
+
+
 def is_valid_redirect_uri(uri: HttpUrl) -> HttpUrl:
     # TODO : Check if this is safe
-    if uri != settings.LOCAL_REDIRECT_URI and uri != settings.PRODUCTION_REDIRECT_URI:
+    if uri not in ALLOWED_REDIRECT_URIS:
         raise ValueError("Invalid redirect URI")
     return uri
 

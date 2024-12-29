@@ -86,16 +86,20 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     return service
 
 
+def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
+    if not req.auth or not req.auth.uid:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
+        )
+    return req.auth.uid
+
+
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def validate_ics_url(req: https_fn.CallableRequest) -> dict:
-    # Check if the request is authenticated
-    if not req.auth or not req.auth.uid:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
-        )
+    get_user_id_or_raise(req)
 
     try:
         request = ValidateIcsUrlInput.model_validate(req.data)
@@ -131,12 +135,7 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     memory=options.MemoryOption.MB_512,
 )
 def list_user_calendars(req: https_fn.CallableRequest) -> dict:
-    if not req.auth or not req.auth.uid:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_user_id_or_raise(req)
 
     logger.info(f"Listing calendars for {user_id}")
 
@@ -173,12 +172,7 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def is_authorized(req: https_fn.CallableRequest) -> dict:
-    if not req.auth or not req.auth.uid:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_user_id_or_raise(req)
 
     try:
         request = IsAuthorizedInput.model_validate(req.data)
@@ -212,12 +206,7 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def create_new_calendar(req: https_fn.CallableRequest) -> dict:
-    if not req.auth or not req.auth.uid:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_user_id_or_raise(req)
 
     try:
         request = CreateNewCalendarInput.model_validate(req.data)
@@ -342,10 +331,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def request_sync(req: https_fn.CallableRequest) -> Any:
-    if not req.auth or not req.auth.uid:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
+    user_id = get_user_id_or_raise(req)
 
     try:
         request = RequestSyncInput.model_validate(req.data)
@@ -355,14 +341,12 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     sync_profile_id = request.syncProfileId
     sync_type = request.syncType
 
-    logger.info(
-        f"{sync_type} Sync request received for {req.auth.uid}/{sync_profile_id}"
-    )
+    logger.info(f"{sync_type} Sync request received for {user_id}/{sync_profile_id}")
 
     syncProfile = (
         firestore.client()
         .collection("users")
-        .document(req.auth.uid)
+        .document(user_id)
         .collection("syncProfiles")
         .document(sync_profile_id)
         .get()
@@ -377,8 +361,8 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
         )
 
     _synchronize_now(
-        req.auth.uid,
-        sync_profile_id,
+        user_id=user_id,
+        sync_profile_id=sync_profile_id,
         sync_trigger=SyncTrigger.MANUAL,
         sync_type=sync_type,
     )
@@ -586,10 +570,7 @@ def _synchronize_now(
 def delete_sync_profile(
     req: https_fn.CallableRequest,
 ) -> Any:  # TODO : add 'force' argument
-    if not req.auth or not req.auth.uid:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
+    user_id = get_user_id_or_raise(req)
 
     try:
         request = DeleteSyncProfileInput.model_validate(req.data)
@@ -601,7 +582,7 @@ def delete_sync_profile(
     sync_profile_ref = (
         firestore.client()
         .collection("users")
-        .document(req.auth.uid)
+        .document(user_id)
         .collection("syncProfiles")
         .document(sync_profile_id)
     )
@@ -630,7 +611,7 @@ def delete_sync_profile(
 
     try:
         service = get_calendar_service(
-            user_id=req.auth.uid,
+            user_id=user_id,
             provider_account_id=doc.get("targetCalendar.providerAccountId"),
         )
     except Exception as e:
@@ -681,16 +662,11 @@ def delete_sync_profile(
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
     memory=options.MemoryOption.MB_512,
 )
-def authorize_backend(_request: https_fn.CallableRequest) -> dict:
-    if _request.auth is None:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthenticated"
-        )
-
-    user_id = _request.auth.uid
+def authorize_backend(req: https_fn.CallableRequest) -> dict:
+    user_id = get_user_id_or_raise(req)
 
     try:
-        request = AuthorizeBackendInput.model_validate(_request.data)
+        request = AuthorizeBackendInput.model_validate(req.data)
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 

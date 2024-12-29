@@ -1,8 +1,17 @@
-from enum import Enum
-
-from pydantic import BaseModel, Field, HttpUrl, EmailStr, PastDatetime
-
 from datetime import UTC, datetime
+from enum import Enum
+from typing import Annotated, Any
+
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    EmailStr,
+    Field,
+    HttpUrl,
+    PastDatetime,
+    ValidationError,
+    field_serializer,
+)
 
 from functions.models.rules import Ruleset
 
@@ -16,6 +25,7 @@ class SyncProfileStatusType(str, Enum):
     FAILED = "failed"
     SUCCESS = "success"
     DELETING = "deleting"
+    DELETION_FAILED = "deletionFailed"
 
 
 class SyncTrigger(str, Enum):
@@ -91,6 +101,18 @@ class SyncProfileStatus(BaseModel):
     updatedAt: PastDatetime = Field(default_factory=utc_datetime_factory)
 
 
+def _decode_sync_profile_from_str(value: Any) -> Ruleset | None:
+    """A helper function to decode a JSON string into a Ruleset object because we
+    store the object as a string in Firestore, but want to work with it as a validated object.
+    """
+    if not value:
+        return None
+    if not isinstance(value, str):
+        raise ValidationError("Ruleset must be a tring")
+
+    return Ruleset.model_validate_json(value)
+
+
 class SyncProfile(BaseModel):
     """
     A Pydantic model representing a user's sync profile document in Firestore.
@@ -111,8 +133,14 @@ class SyncProfile(BaseModel):
     targetCalendar: TargetCalendar
     status: SyncProfileStatus
 
-    ruleset: Ruleset | None = None
+    ruleset: Annotated[
+        Ruleset | None, BeforeValidator(_decode_sync_profile_from_str)
+    ] = None
     ruleset_error: str | None = None
 
     created_at: PastDatetime = Field(default_factory=utc_datetime_factory)
     lastSuccessfulSync: PastDatetime | None = None
+
+    @field_serializer("ruleset")
+    def serialize_dt(self, ruleset: Ruleset | None) -> str | None:
+        return ruleset.model_dump_json() if ruleset else None

@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import datetime, timezone
 from typing import Any
 
 from firebase_admin import firestore, initialize_app, storage
@@ -21,7 +20,13 @@ from pydantic import ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.models import Ruleset
+from functions.models import (
+    SyncProfileStatus,
+    SyncProfileStatusType,
+    SyncTrigger,
+    SyncType,
+)
+from functions.models.authorization import BackendAuthorization
 from functions.models.schemas import (
     AuthorizeBackendInput,
     CreateNewCalendarInput,
@@ -32,6 +37,18 @@ from functions.models.schemas import (
     RequestSyncInput,
     ValidateIcsUrlInput,
     ValidateIcsUrlOutput,
+)
+from functions.repositories.backend_authorization_repository import (
+    FirestoreBackendAuthorizationRepository,
+    IBackendAuthorizationRepository,
+)
+from functions.repositories.sync_profile_repository import (
+    FirestoreSyncProfileRepository,
+    ISyncProfileRepository,
+)
+from functions.repositories.sync_stats_repository import (
+    FirestoreSyncStatsRepository,
+    ISyncStatsRepository,
 )
 from functions.settings import settings
 from functions.synchronizer.google_calendar_manager import (
@@ -48,8 +65,18 @@ from functions.synchronizer.synchronizer import (
 
 initialize_app()
 
+backend_auth_repo: IBackendAuthorizationRepository = (
+    FirestoreBackendAuthorizationRepository()
+)
+sync_stats_repo: ISyncStatsRepository = FirestoreSyncStatsRepository()
+sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
+
 
 def get_calendar_service(user_id: str, provider_account_id: str):
+    """
+    Construct the Google Calendar API service for a given user and provider account.
+    """
+
     if not user_id:
         raise ValueError("User ID is required")
     if not provider_account_id:
@@ -57,23 +84,16 @@ def get_calendar_service(user_id: str, provider_account_id: str):
 
     logger.info(f"Getting calendar service for {user_id}/{provider_account_id}")
 
-    db = firestore.client()
-
-    backend_authorization = (
-        db.collection("backendAuthorizations")
-        .document(user_id + provider_account_id)
-        .get()
-    )
-
-    if not backend_authorization.exists:
+    authorization = backend_auth_repo.get_authorization(user_id, provider_account_id)
+    if authorization is None:
         logger.info("Backend authorization not found")
         raise ValueError("Target calendar is not authorized")
 
-    # Construct a Credentials object from the access token
+    # Construct a Credentials object from the stored token
     credentials = Credentials(
         client_id=settings.CLIENT_ID,
-        token=backend_authorization.get("accessToken"),
-        refresh_token=backend_authorization.get("refreshToken"),
+        token=authorization.accessToken,
+        refresh_token=authorization.refreshToken,
         token_uri="https://oauth2.googleapis.com/token",
         client_secret=settings.CLIENT_SECRET,
     )
@@ -82,7 +102,6 @@ def get_calendar_service(user_id: str, provider_account_id: str):
 
     # Build the Google Calendar API service
     service = build("calendar", "v3", credentials=credentials)
-
     return service
 
 
@@ -181,24 +200,15 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
 
     provider_account_id = request.providerAccountId
 
-    db = firestore.client()
-
-    backend_authorization = (
-        db.collection("backendAuthorizations")
-        .document(user_id + provider_account_id)
-        .get()
-    )
-
-    if not backend_authorization.exists:
+    if not backend_auth_repo.exists(user_id, provider_account_id):
         logger.info("Backend authorization not found")
-        authorized = False
+        return IsAuthorizedOutput(authorized=False).model_dump()
 
-    # TODO : create service and use GoogleCalendarManager to test authorization here
+    # TODO : Actually check if the token is expired or if the user has revoked the access
+    # by making a request to the Google Calendar API
 
     logger.info("Authorization successful")
-    authorized = True
-
-    return IsAuthorizedOutput(authorized=authorized).model_dump()
+    return IsAuthorizedOutput(authorized=True).model_dump()
 
 
 @https_fn.on_call(
@@ -226,8 +236,8 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
             https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
         )
 
-    calendar_name = req.data.get("summary", "New Calendar")
-    calendar_description = req.data.get("description", "Created by Syncademic")
+    calendar_name = request.summary
+    calendar_description = request.description
     calendar_body = {
         "summary": calendar_name,
         "description": calendar_description,
@@ -245,8 +255,7 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     if color_id is not None:
         try:
             service.calendarList().patch(
-                calendarId=result.get("id"),
-                body={"colorId": color_id},
+                calendarId=result.get("id"), body={"colorId": color_id}
             ).execute()
         except Exception as e:
             logger.error(f"Failed to patch calendar list entry: {e}")
@@ -275,19 +284,16 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
     compressed_schedule = compresser.compress(events)
 
     logger.info(
-        f"Compressed schedule to {len(compressed_schedule)=} ({len(compressed_schedule)/len(ics_str)*100:.2f}% of original)"
+        f"Compressed schedule to {len(compressed_schedule)=} "
+        f"({len(compressed_schedule)/len(ics_str)*100:.2f}% of original)"
     )
 
     logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
 
     ruleset_builder = RulesetBuilder(llm=llm)
-
     output = ruleset_builder.generate_ruleset(
         compressed_schedule,
-        metadata={
-            "ics_url": ics_url,
-            "sync_profile_id": sync_profile_ref.id,
-        },
+        metadata={"ics_url": ics_url, "sync_profile_id": sync_profile_ref.id},
     )
 
     sync_profile_ref.update({"ruleset": output.ruleset.model_dump_json()})
@@ -310,7 +316,6 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     # Add created_at field
     sync_profile_ref = event.data.reference
     assert isinstance(sync_profile_ref, DocumentReference)
-
     sync_profile_ref.update({"created_at": firestore.firestore.SERVER_TIMESTAMP})
 
     try:
@@ -319,6 +324,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
         logger.error(f"Failed to create AI ruleset: {e}")
         sync_profile_ref.update({"ruleset_error": str(e)})
 
+    # Initial synchronization
     _synchronize_now(
         event.params["userId"],
         event.params["syncProfileId"],
@@ -343,18 +349,8 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 
     logger.info(f"{sync_type} Sync request received for {user_id}/{sync_profile_id}")
 
-    syncProfile = (
-        firestore.client()
-        .collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-        .get()
-    )
-
-    assert isinstance(syncProfile, DocumentSnapshot)
-
-    if not syncProfile.exists:
+    profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
+    if profile is None:
         logger.error("Sync profile not found")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
@@ -378,7 +374,6 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 def scheduled_sync(event: Any):
     logger.info("Scheduled synchronization started")
     db = firestore.client()
-
     for sync_profile in db.collection_group("syncProfiles").stream():
         sync_profile_id = sync_profile.id
         user_id = sync_profile.reference.parent.parent.id
@@ -398,168 +393,107 @@ def _synchronize_now(
     sync_trigger: SyncTrigger,
     sync_type: SyncType = SyncType.REGULAR,
 ):
-    db = firestore.client()
-
-    user_ref = db.collection("users").document(user_id)
-
-    sync_profile_ref = (
-        db.collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    )
-
-    assert isinstance(sync_profile_ref, DocumentReference)
-
-    doc = sync_profile_ref.get()
-    if not doc.exists:
+    profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
+    if profile is None:
         logger.error("Sync profile not found")
         return
 
-    data = doc.to_dict()
-    assert data is not None
-
-    status = doc.get("status")
-    assert status, f"status field is required. {status=}"
-    if status and (
-        status.get("type") in ["inProgress", "deleting", "deleted"]
-    ):  # TODO : extract to a should_skip(status)->bool function
-        logger.info(f"Synchronization is {status.get('type')}, skipping")
+    if profile.status in [
+        SyncProfileStatusType.IN_PROGRESS,
+        SyncProfileStatusType.DELETING,
+        SyncProfileStatusType.DELETION_FAILED,
+    ]:
+        logger.info(f"Synchronization is {profile.status}, skipping")
         return
 
-    # TODO: Check access token validity and refresh or send error if needed
-
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "inProgress",
-                "syncTrigger": sync_trigger.value,
-                "syncType": sync_type.value,
-                "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-            }
-        }
+    in_progress_status = SyncProfileStatus(
+        type=SyncProfileStatusType.IN_PROGRESS,
+        syncTrigger=sync_trigger,
+        syncType=sync_type,
     )
 
-    # Check if number of sync per day is not exceeded
-    # Get current date in UTC
-    current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    sync_stats_ref = user_ref.collection("syncStats").document(current_date)
-    assert isinstance(sync_stats_ref, DocumentReference)
+    sync_profile_repo.update_sync_profile_status(
+        user_id, sync_profile_id, in_progress_status
+    )
 
-    # Fetch today's synchronization stats
-    sync_stats_doc = sync_stats_ref.get()
-    if sync_stats_doc.exists:
-        sync_stats = sync_stats_doc.to_dict()
-        assert sync_stats is not None, "sync_stats should not be None since it exists"
-        sync_count = sync_stats.get("syncCount", 0)
-    else:
-        sync_count = 0
-
-    assert isinstance(sync_count, int) and sync_count >= 0
-
+    sync_count = sync_stats_repo.get_daily_sync_count(user_id)
     logger.info(f"Sync count: {sync_count}" if sync_count else "First sync of the day")
 
-    # Check if the user has reached the daily limit
     if sync_count >= settings.MAX_SYNCHRONIZATIONS_PER_DAY:
         logger.info(f"User {user_id} has reached the daily synchronization limit.")
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "failed",
-                    "message": f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
-                    "syncTrigger": sync_trigger.value,
-                    "syncType": sync_type.value,
-                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                }
-            }
+        failed_status = SyncProfileStatus(
+            type=SyncProfileStatusType.FAILED,
+            message=f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
+            syncTrigger=sync_trigger,
+            syncType=sync_type,
         )
-        return  # Exit without performing synchronization
+        sync_profile_repo.update_sync_profile_status(
+            user_id, sync_profile_id, failed_status
+        )
+        return  # Do not synchronize
+
+    target_calendar = profile.targetCalendar
+    provider_account_id = target_calendar.providerAccountId
 
     try:
-        service = get_calendar_service(
-            user_id=user_id,
-            provider_account_id=doc.get("targetCalendar.providerAccountId"),
-        )
-        calendar_manager = GoogleCalendarManager(
-            service=service, calendar_id=doc.get("targetCalendar.id")
-        )
+        service = get_calendar_service(user_id, provider_account_id)
+        calendar_manager = GoogleCalendarManager(service, target_calendar.id)
         calendar_manager.test_authorization()
     except Exception as e:
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "failed",
-                    "message": f"Autorization failed: {e}",
-                    # TODO : implement a way to re-authorize from the frontend
-                    "syncTrigger": sync_trigger.value,
-                    "syncType": sync_type.value,
-                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                }
-            }
+        failed_status = SyncProfileStatus(
+            type=SyncProfileStatusType.FAILED,
+            message=f"Authorization failed: {e}",
+            syncTrigger=sync_trigger,
+            syncType=sync_type,
+        )
+        sync_profile_repo.update_sync_profile_status(
+            user_id, sync_profile_id, failed_status
         )
         logger.info(f"Failed to get calendar service: {e}")
         return
 
-    ruleset: Ruleset | None = None
-
-    if ruleset_json := data.get("ruleset"):
-        try:
-            ruleset = Ruleset.model_validate_json(ruleset_json)
-        except Exception as e:
-            logger.error(f"Failed to validate ruleset: {e}")
-            sync_profile_ref.update(
-                {
-                    "status": {
-                        "type": "failed",
-                        "message": f"Failed to validate ruleset: {e}",
-                        "syncTrigger": sync_trigger.value,
-                        "syncType": sync_type.value,
-                        "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                    }
-                }
-            )
-            return
-        logger.info(f"Found {len(ruleset.rules)} rules in ruleset")
-
     try:
+        ics_url = profile.scheduleSource.url
         perform_synchronization(
             sync_profile_id=sync_profile_id,
             sync_trigger=sync_trigger,
-            ics_source=UrlIcsSource(doc.get("scheduleSource.url")),
+            ics_source=UrlIcsSource(ics_url),
             ics_parser=IcsParser(),
             ics_cache=FirebaseIcsFileStorage(storage.bucket()),
             calendar_manager=calendar_manager,
             sync_type=sync_type,
-            ruleset=ruleset,
+            ruleset=profile.ruleset,
         )
     except Exception as e:
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "failed",
-                    "message": f"Synchronization failed: {e}",
-                    "syncTrigger": sync_trigger.value,
-                    "syncType": sync_type.value,
-                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                }
-            }
-        )
         logger.info(f"Synchronization failed: {e}")
+        failed_status = SyncProfileStatus(
+            type=SyncProfileStatusType.FAILED,
+            message=f"Synchronization failed: {e}",
+            syncTrigger=sync_trigger,
+            syncType=sync_type,
+        )
+        sync_profile_repo.update_sync_profile_status(
+            user_id, sync_profile_id, failed_status
+        )
         return
 
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "success",
-                "syncTrigger": sync_trigger.value,
-                "syncType": sync_type.value,
-                "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-            },
-            "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
-        }
+    # If successful, update status + increment syncCount
+    success_status = SyncProfileStatus(
+        type=SyncProfileStatusType.SUCCESS,
+        syncTrigger=sync_trigger,
+        syncType=sync_type,
     )
-    sync_stats_ref.set({"syncCount": firestore.firestore.Increment(1)}, merge=True)
+    sync_profile_repo.update_sync_profile_status(
+        user_id, sync_profile_id, success_status
+    )
 
+    firestore.client().collection("users").document(user_id).collection(
+        "syncProfiles"
+    ).document(sync_profile_id).update(
+        {"lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP}
+    )
+
+    sync_stats_repo.increment_sync_count(user_id)
     logger.info("Synchronization completed successfully")
 
 
@@ -579,81 +513,72 @@ def delete_sync_profile(
 
     sync_profile_id = request.syncProfileId
 
-    sync_profile_ref = (
-        firestore.client()
-        .collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    )
-
-    doc = sync_profile_ref.get()
-
-    if not doc.exists:
+    sync_profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
+    if sync_profile is None:
+        logger.info("Sync profile not found")
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
         )
 
-    status = doc.get("status")
-
-    if status and (status.get("type") in ["deleting", "deleted"]):
-        logger.info(f"Sync profile is already {status.get('type')}, skipping deletion")
+    status = sync_profile.status
+    if status.type == SyncProfileStatusType.DELETING:
+        logger.info(f"Sync profile is already {status.type}, skipping deletion")
         return
 
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "deleting",
-                "syncTrigger": None,
-            }
-        }
+    if status.type == SyncProfileStatusType.IN_PROGRESS:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
+            "Sync profile is currently in progress",
+        )
+
+    sync_profile_repo.update_sync_profile_status(
+        user_id, sync_profile_id, SyncProfileStatus(type=SyncProfileStatusType.DELETING)
     )
 
     try:
         service = get_calendar_service(
-            user_id=user_id,
-            provider_account_id=doc.get("targetCalendar.providerAccountId"),
+            user_id, sync_profile.targetCalendar.providerAccountId
         )
     except Exception as e:
         logger.info(f"Failed to get calendar service: {e}. Skipping deletion")
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "deletionFailed",
-                    "message": f"Autorization failed: {e}",
-                }
-            }
+        sync_profile_repo.update_sync_profile_status(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+            status=SyncProfileStatus(
+                type=SyncProfileStatusType.DELETION_FAILED,
+                message=f"Authorization failed: {e}",
+            ),
         )
+
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL,
             "Authorization failed",
         )
 
-    calendar_manager = GoogleCalendarManager(service, doc.get("targetCalendar.id"))
+    calendar_manager = GoogleCalendarManager(service, sync_profile.targetCalendar.id)
 
     try:
         events = calendar_manager.get_events_ids_from_sync_profile(
             sync_profile_id=sync_profile_id,
         )
         logger.info(f"Deleting {len(events)} events")
-
         calendar_manager.delete_events(events)
     except Exception as e:
         logger.error(f"Failed to delete events: {e}")
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "deletionFailed",
-                    "message": "Could not delete events",
-                }
-            }
-        )
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "Failed to delete events",
+        sync_profile_repo.update_sync_profile_status(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+            status=SyncProfileStatus(
+                type=SyncProfileStatusType.DELETION_FAILED,
+                message=f"Failed to delete events: {e}",
+            ),
         )
 
-    sync_profile_ref.delete()
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.INTERNAL, "Failed to delete events"
+        )
+
+    sync_profile_repo.delete_sync_profile(user_id, sync_profile_id)
 
     logger.info("Sync profile deleted successfully")
 
@@ -676,7 +601,7 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
 
     db = firestore.client()
 
-    # verify that the user exists in firestore
+    # Verify that the user doc exists
     user_ref = db.collection("users").document(user_id)
     if not user_ref.get().exists:
         raise https_fn.HttpsError(
@@ -699,9 +624,7 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
             scopes=["https://www.googleapis.com/auth/calendar"],
             redirect_uri=redirect_uri,
         )
-
         flow.fetch_token(code=auth_code)
-
         credentials = flow.credentials
     except Exception as e:
         logger.error(
@@ -717,7 +640,6 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
     # We can get this from the ID token
 
     id_token = credentials.id_token  # type: ignore
-
     if not id_token:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.INTERNAL, "ID token not found"
@@ -727,7 +649,6 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
         id_info = verify_oauth2_token(
             id_token, requests.Request(), audience=settings.CLIENT_ID
         )
-
     except Exception as e:
         logger.error(f"An error occurred while verifying the ID token: {e}")
         raise https_fn.HttpsError(
@@ -749,20 +670,16 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
             "The authorized Google account does not match the providerAccountId (ProviderUserIdMismatch)",
         )
 
-    access_token = credentials.token
-    refresh_token = credentials.refresh_token
-
-    # TODO : separate into two collections : backendAuthorizations and providerAccounts
-    db.collection("backendAuthorizations").document(user_id + google_user_id).set(
-        {
-            "userId": user_id,
-            "provider": "google",
-            "providerAccountId": google_user_id,
-            "providerAccountEmail": id_info.get("email"),
-            "accessToken": access_token,
-            "refreshToken": refresh_token,
-            "expirationDate": credentials.expiry,
-        }
+    backend_auth_repo.set_authorization(
+        BackendAuthorization(
+            userId=user_id,
+            provider="google",
+            providerAccountId=google_user_id,
+            providerAccountEmail=id_info.get("email"),
+            accessToken=credentials.token,
+            refreshToken=credentials.refresh_token,
+            expirationDate=credentials.expiry,
+        )
     )
 
     return {"success": True}

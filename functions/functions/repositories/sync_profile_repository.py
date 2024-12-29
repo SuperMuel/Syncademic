@@ -44,6 +44,13 @@ class ISyncProfileRepository(Protocol):
         Replaces the status field of the SyncProfile document with the provided status.
         """
 
+    def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
+        """
+        Deletes a SyncProfile document.
+        """
+
+        ...
+
     # def create_sync_profile(self, user_id: str, sync_profile: SyncProfile) -> str:
     #     """
     #     Creates a new SyncProfile document and returns the generated syncProfileId.
@@ -66,13 +73,6 @@ class ISyncProfileRepository(Protocol):
     #     """
     #     Partially updates the SyncProfile document with the provided partial_data.
     #     For example, updating the status or ruleset field.
-    #     """
-
-    #     ...
-
-    # def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
-    #     """
-    #     Deletes a SyncProfile document.
     #     """
 
     #     ...
@@ -161,3 +161,16 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         )
 
         doc_ref.update({"status": status.model_dump()})
+
+    def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
+        """
+        Deletes a SyncProfile document.
+        """
+        doc_ref: DocumentReference = (
+            self._db.collection("users")
+            .document(user_id)
+            .collection("syncProfiles")
+            .document(sync_profile_id)
+        )
+
+        doc_ref.delete()

@@ -17,14 +17,14 @@ class ISyncStatsRepository(Protocol):
         users/{userId}/syncStats/{YYYY-MM-DD}
     """
 
-    def get_daily_sync_count(self, user_id: str, day: date) -> int:
+    def get_daily_sync_count(self, user_id: str, day: date | None = None) -> int:
         """
         Retrieves the syncCount for the given user on a specific date (UTC).
         Returns 0 if not found.
         """
         ...
 
-    def increment_sync_count(self, user_id: str, day: date) -> None:
+    def increment_sync_count(self, user_id: str, day: date | None = None) -> None:
         """
         Increments the syncCount by 1 for the given user on the specified date.
         Creates the document if it doesn't exist.
@@ -44,13 +44,17 @@ class FirestoreSyncStatsRepository(ISyncStatsRepository):
         """
         self._db = db or firestore.Client()
 
-    def get_daily_sync_count(self, user_id: str, day: date) -> int:
+    def get_daily_sync_count(self, user_id: str, day: date | None = None) -> int:
         """
         Retrieves the syncCount for the given user on a specific date (UTC).
         Returns 0 if not found.
 
-
+        :param user_id: The user ID.
+        :param day: The date for which to retrieve the sync count. If None, defaults to today.
         """
+        if day is None:
+            day = date.today()
+
         doc_id = day.isoformat()  # e.g. "2024-01-20"
         doc_ref: DocumentReference = (
             self._db.collection("users")
@@ -66,11 +70,17 @@ class FirestoreSyncStatsRepository(ISyncStatsRepository):
 
         return data.get("syncCount", 0)
 
-    def increment_sync_count(self, user_id: str, day: date) -> None:
+    def increment_sync_count(self, user_id: str, day: date | None = None) -> None:
         """
         Increments the syncCount by 1 for the given user on the specified date.
         Creates the document if it doesn't exist.
+
+        :param user_id: The user ID.
+        :param day: The date for which to retrieve the sync count. If None, defaults to today.
         """
+        if day is None:
+            day = date.today()
+
         doc_id = day.isoformat()
         doc_ref: DocumentReference = (
             self._db.collection("users")

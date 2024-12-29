@@ -92,7 +92,7 @@ def get_calendar_service(user_id: str, provider_account_id: str):
 )
 def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     # Check if the request is authenticated
-    if not req.auth:
+    if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
         )
@@ -131,7 +131,7 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     memory=options.MemoryOption.MB_512,
 )
 def list_user_calendars(req: https_fn.CallableRequest) -> dict:
-    if not req.auth:
+    if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
         )
@@ -173,7 +173,7 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def is_authorized(req: https_fn.CallableRequest) -> dict:
-    if not req.auth:
+    if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
         )
@@ -212,7 +212,7 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def create_new_calendar(req: https_fn.CallableRequest) -> dict:
-    if not req.auth:
+    if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
         )
@@ -342,7 +342,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def request_sync(req: https_fn.CallableRequest) -> Any:
-    if not req.auth:
+    if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
         )
@@ -449,8 +449,8 @@ def _synchronize_now(
         {
             "status": {
                 "type": "inProgress",
-                "syncTrigger": sync_trigger,
-                "syncType": sync_type,
+                "syncTrigger": sync_trigger.value,
+                "syncType": sync_type.value,
                 "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
             }
         }
@@ -483,8 +483,8 @@ def _synchronize_now(
                 "status": {
                     "type": "failed",
                     "message": f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
-                    "syncTrigger": sync_trigger,
-                    "syncType": sync_type,
+                    "syncTrigger": sync_trigger.value,
+                    "syncType": sync_type.value,
                     "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                 }
             }
@@ -507,8 +507,8 @@ def _synchronize_now(
                     "type": "failed",
                     "message": f"Autorization failed: {e}",
                     # TODO : implement a way to re-authorize from the frontend
-                    "syncTrigger": sync_trigger,
-                    "syncType": sync_type,
+                    "syncTrigger": sync_trigger.value,
+                    "syncType": sync_type.value,
                     "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                 }
             }
@@ -528,8 +528,8 @@ def _synchronize_now(
                     "status": {
                         "type": "failed",
                         "message": f"Failed to validate ruleset: {e}",
-                        "syncTrigger": sync_trigger,
-                        "syncType": sync_type,
+                        "syncTrigger": sync_trigger.value,
+                        "syncType": sync_type.value,
                         "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                     }
                 }
@@ -554,8 +554,8 @@ def _synchronize_now(
                 "status": {
                     "type": "failed",
                     "message": f"Synchronization failed: {e}",
-                    "syncTrigger": sync_trigger,
-                    "syncType": sync_type,
+                    "syncTrigger": sync_trigger.value,
+                    "syncType": sync_type.value,
                     "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
                 }
             }
@@ -567,8 +567,8 @@ def _synchronize_now(
         {
             "status": {
                 "type": "success",
-                "syncTrigger": sync_trigger,
-                "syncType": sync_type,
+                "syncTrigger": sync_trigger.value,
+                "syncType": sync_type.value,
                 "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
             },
             "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
@@ -586,7 +586,7 @@ def _synchronize_now(
 def delete_sync_profile(
     req: https_fn.CallableRequest,
 ) -> Any:  # TODO : add 'force' argument
-    if not req.auth:
+    if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
         )

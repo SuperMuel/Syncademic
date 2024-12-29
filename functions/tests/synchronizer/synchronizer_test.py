@@ -12,6 +12,7 @@ from functions.models import (
     Ruleset,
     TextFieldCondition,
 )
+from functions.models.sync_profile import SyncTrigger, SyncType
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
@@ -40,7 +41,7 @@ future_event = Event(
 def test_perform_manual_synchronization_successful():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"  # Assuming 'manual' is a valid value for SyncTrigger
+    sync_trigger = SyncTrigger.MANUAL
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -93,7 +94,7 @@ def test_perform_manual_synchronization_successful():
 def test_perform_scheduled_synchronization_successful():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "scheduled"  # Assuming 'manual' is a valid value for SyncTrigger
+    sync_trigger = SyncTrigger.SCHEDULED
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -149,7 +150,7 @@ def test_perform_synchronization_with_ruleset():
 
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -201,7 +202,7 @@ def test_perform_synchronization_with_ruleset():
 def test_perform_synchronization_no_events_after_ruleset():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -244,7 +245,7 @@ def test_perform_synchronization_no_events_after_ruleset():
 def test_perform_synchronization_on_create():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "on_create"
+    sync_trigger = SyncTrigger.ON_CREATE
 
     # Mock ICS source and parser
     ics_source = Mock(spec=UrlIcsSource)
@@ -281,7 +282,7 @@ def test_perform_synchronization_on_create():
 def test_perform_synchronization_save_to_cache_exception():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
 
     # Mock ICS source and parser
     ics_source = Mock(spec=UrlIcsSource)
@@ -322,7 +323,8 @@ def test_perform_manual_synchronization_full_sync():
     """
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
+    sync_type = SyncType.FULL
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -352,7 +354,7 @@ def test_perform_manual_synchronization_full_sync():
         ics_parser=ics_parser,
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
-        sync_type="full",
+        sync_type=sync_type,
     )
 
     # Assert
@@ -384,7 +386,8 @@ def test_perform_scheduled_synchronization_full_sync():
     """
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "scheduled"
+    sync_trigger = SyncTrigger.SCHEDULED
+    sync_type = SyncType.FULL
 
     # Mock ICS source
     ics_source = Mock(spec=UrlIcsSource)
@@ -413,7 +416,7 @@ def test_perform_scheduled_synchronization_full_sync():
         ics_parser=ics_parser,
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
-        sync_type="full",
+        sync_type=sync_type,
     )
 
     # Assert
@@ -435,7 +438,8 @@ def test_perform_synchronization_with_ruleset_full_sync():
     """
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
+    sync_type = SyncType.FULL
 
     # Events with titles to match condition
     _past_event = replace(past_event, title="Lecture")
@@ -475,7 +479,7 @@ def test_perform_synchronization_with_ruleset_full_sync():
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
         ruleset=ruleset,
-        sync_type="full",
+        sync_type=sync_type,
     )
 
     # Assert
@@ -500,7 +504,8 @@ def test_perform_synchronization_with_ruleset_full_sync():
 def test_event_ending_at_separation_dt():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
+    sync_type = SyncType.REGULAR
 
     # Mock ICS source and parser
     ics_source = Mock(spec=UrlIcsSource)
@@ -536,7 +541,7 @@ def test_event_ending_at_separation_dt():
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
         separation_dt=separation_dt,
-        sync_type="regular",
+        sync_type=sync_type,
     )
 
     # Assert
@@ -549,7 +554,8 @@ def test_event_ending_at_separation_dt():
 def test_event_starting_at_separation_dt():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
+    sync_type = SyncType.REGULAR
 
     # Mock ICS source and parser
     ics_source = Mock(spec=UrlIcsSource)
@@ -587,7 +593,7 @@ def test_event_starting_at_separation_dt():
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
         separation_dt=separation_dt,
-        sync_type="regular",
+        sync_type=sync_type,
     )
 
     # Assert
@@ -602,7 +608,8 @@ def test_event_starting_at_separation_dt():
 def test_event_spanning_separation_dt():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
+    sync_type = SyncType.REGULAR
 
     # Mock ICS source and parser
     ics_source = Mock(spec=UrlIcsSource)
@@ -640,7 +647,7 @@ def test_event_spanning_separation_dt():
         ics_cache=ics_cache,
         calendar_manager=calendar_manager,
         separation_dt=separation_dt,
-        sync_type="regular",
+        sync_type=sync_type,
     )
 
     # Assert
@@ -655,7 +662,7 @@ def test_event_spanning_separation_dt():
 def test_save_to_cache_on_parsing_error():
     # Arrange
     sync_profile_id = "test_sync_profile"
-    sync_trigger = "manual"
+    sync_trigger = SyncTrigger.MANUAL
 
     # Mock ICS source and parser
     ics_source = Mock(spec=UrlIcsSource)

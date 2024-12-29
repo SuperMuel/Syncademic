@@ -549,6 +549,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "mock-firestore" },
     { name = "pytest" },
     { name = "responses" },
     { name = "ruff" },
@@ -578,6 +579,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "mock-firestore", specifier = ">=0.11.0" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "responses", specifier = ">=0.25.3" },
     { name = "ruff", specifier = ">=0.6.9" },
@@ -1226,6 +1228,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0d/80/0985960e4b89922cb5a0bac0ed39c5b96cbc1a536a99f30e8c220a996ed9/MarkupSafe-3.0.2-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:131a3c7689c85f5ad20f9f6fb1b866f402c445b220c19fe4308c0b147ccd2ad9", size = 24098 },
     { url = "https://files.pythonhosted.org/packages/82/78/fedb03c7d5380df2427038ec8d973587e90561b2d90cd472ce9254cf348b/MarkupSafe-3.0.2-cp313-cp313t-win32.whl", hash = "sha256:ba8062ed2cf21c07a9e295d5b8a2a5ce678b913b45fdf68c32d95d6c1291e0b6", size = 15208 },
     { url = "https://files.pythonhosted.org/packages/4f/65/6079a46068dfceaeabb5dcad6d674f5f5c61a6fa5673746f42a9f4c233b3/MarkupSafe-3.0.2-cp313-cp313t-win_amd64.whl", hash = "sha256:e444a31f8db13eb18ada366ab3cf45fd4b31e4db1236a4448f68778c1d1a5a2f", size = 15739 },
+]
+
+[[package]]
+name = "mock-firestore"
+version = "0.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/b8/08ccd007d29e7560020b7a9654ea6fbbc6eaf672ad21d0fa03b6867d4a9a/mock-firestore-0.11.0.tar.gz", hash = "sha256:4958b983534b890f7cdffe12b651b1deefa6ee202ee46af751c6bdaa44fe3432", size = 13307 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/d6/56cfac3ae7563b17117d79b6beaecda495a9805d478e76bc783cba17ad93/mock_firestore-0.11.0-py3-none-any.whl", hash = "sha256:9e847a886a64d490bf13e2d52105745b6618d6a7e7169aeb62d4b895c405d204", size = 18269 },
 ]
 
 [[package]]

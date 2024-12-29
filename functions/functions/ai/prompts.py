@@ -1,5 +1,5 @@
 from functions.ai.types import RulesetOutput
-from functions.rules.models import Ruleset
+from functions.models import Ruleset
 
 SYSTEM_PROMPT = """Create customization rules in JSON format for personalizing university schedule synchronization with Google Calendar. Use the provided compressed view of the time schedule to generate these rules.
 

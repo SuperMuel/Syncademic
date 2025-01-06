@@ -147,7 +147,10 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         if not data:
             return None
 
-        return SyncProfile(id=sync_profile_id, user_id=user_id, **data)
+        data["id"] = sync_profile_id
+        data["user_id"] = user_id
+
+        return SyncProfile.model_validate(data)
 
     def list_user_sync_profiles(self, user_id: str) -> list[SyncProfile]:
         """
@@ -164,7 +167,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         for doc in query:
             doc: DocumentSnapshot
             if data := doc.to_dict():
-                profiles.append(SyncProfile(id=doc.id, user_id=user_id, **data))
+                data["id"] = doc.id
+                data["user_id"] = user_id
+                profiles.append(SyncProfile.model_validate(data))
 
         return profiles
 
@@ -180,11 +185,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         for doc in query:
             doc: DocumentSnapshot
             if data := doc.to_dict():
-                profiles.append(
-                    SyncProfile(
-                        id=doc.id, user_id=doc.reference.parent.parent.id, **data
-                    )
-                )
+                data["id"] = doc.id
+                data["user_id"] = doc.reference.parent.parent.id
+                profiles.append(SyncProfile.model_validate(data))
 
         return profiles
 
@@ -210,11 +213,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
             doc: DocumentSnapshot
 
             if data := doc.to_dict():
-                profiles.append(
-                    SyncProfile(
-                        id=doc.id, user_id=doc.reference.parent.parent.id, **data
-                    )
-                )
+                data["id"] = doc.id
+                data["user_id"] = doc.reference.parent.parent.id
+                profiles.append(SyncProfile.model_validate(data))
 
         return profiles
 

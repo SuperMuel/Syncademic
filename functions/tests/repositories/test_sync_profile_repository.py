@@ -26,7 +26,7 @@ def mock_db():
 
 
 sync_profile1 = SyncProfile(
-    id="syncProf_ABC",
+    id="p1",
     user_id="user123",
     title="My Sync Profile 1",
     scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/cal1.ics")),
@@ -45,7 +45,7 @@ sync_profile1 = SyncProfile(
     lastSuccessfulSync=None,
 )
 sync_profile2 = SyncProfile(
-    id="syncProf_XYZ",
+    id="p2",
     user_id="user123",
     title="My Sync Profile 2",
     scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/cal1.ics")),

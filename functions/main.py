@@ -327,7 +327,9 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     )
 
     # Validate document using Pydantic
-    sync_profile = SyncProfile(id=sync_profile_id, user_id=user_id, **data)
+    data["id"] = sync_profile_id
+    data["user_id"] = user_id
+    sync_profile = SyncProfile.model_validate(data)
 
     try:
         _create_ai_ruleset(sync_profile)

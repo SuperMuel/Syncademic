@@ -26,6 +26,8 @@ def mock_db():
 
 
 sync_profile1 = SyncProfile(
+    id="syncProf_ABC",
+    user_id="user123",
     title="My Sync Profile 1",
     scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/cal1.ics")),
     targetCalendar=TargetCalendar(
@@ -43,6 +45,8 @@ sync_profile1 = SyncProfile(
     lastSuccessfulSync=None,
 )
 sync_profile2 = SyncProfile(
+    id="syncProf_XYZ",
+    user_id="user123",
     title="My Sync Profile 2",
     scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/cal1.ics")),
     targetCalendar=TargetCalendar(
@@ -72,10 +76,12 @@ def test_get_sync_profile_not_found(mock_db):
 
 def test_get_sync_profile_found(mock_db):
     repo = FirestoreSyncProfileRepository(db=mock_db)
-    user_id = "user123"
     sync_profile_id = "syncProf_ABC"
+    user_id = "user123"
 
     sync_profile = SyncProfile(
+        id=sync_profile_id,
+        user_id=user_id,
         title="My Sync Profile",
         scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/cal.ics")),
         targetCalendar=TargetCalendar(

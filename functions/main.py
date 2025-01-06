@@ -371,12 +371,11 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 )
 def scheduled_sync(event: Any):
     logger.info("Scheduled synchronization started")
-    db = firestore.client()
-    for sync_profile in db.collection_group("syncProfiles").stream():
-        sync_profile_id = sync_profile.id
-        user_id = sync_profile.reference.parent.parent.id
 
-        logger.info(f"Synchronizing {user_id}/{sync_profile_id}")
+    for sync_profile in sync_profile_repo.list_all_sync_profiles():
+        sync_profile_id, user_id = sync_profile.id, sync_profile.user_id
+
+        logger.info(f"Synchronizing {user_id}/{sync_profile_id} ({sync_profile.title})")
         try:
             _synchronize_now(
                 user_id, sync_profile_id, sync_trigger=SyncTrigger.SCHEDULED

@@ -34,9 +34,14 @@ VALID_SYNC_PROFILE_STATUS = SyncProfileStatus(
     syncType=SyncType.FULL,
 )
 
+SYNC_PROFILE_ID = "test_sync_profile_id"
+USER_ID = "test_user_id"
+
 
 def test_sync_profile_valid_minimal():
     profile = SyncProfile(
+        id=SYNC_PROFILE_ID,
+        user_id=USER_ID,
         title="My New Profile",
         scheduleSource=VALID_SCHEDULE_SOURCE,
         targetCalendar=VALID_TARGET_CALENDAR,
@@ -48,6 +53,34 @@ def test_sync_profile_valid_minimal():
     assert profile.status.type == SyncProfileStatusType.IN_PROGRESS
     assert profile.created_at is not None
     assert profile.created_at <= datetime.now(timezone.utc)
+
+
+def test_sync_profile_empty_id():
+    with pytest.raises(ValidationError) as exc_info:
+        SyncProfile(
+            id="",
+            user_id=USER_ID,
+            title="My New Profile",
+            scheduleSource=VALID_SCHEDULE_SOURCE,
+            targetCalendar=VALID_TARGET_CALENDAR,
+            status=VALID_SYNC_PROFILE_STATUS,
+        )
+
+    assert "string_too_short" in str(exc_info.value)
+
+
+def test_sync_profile_empty_user_id():
+    with pytest.raises(ValidationError) as exc_info:
+        SyncProfile(
+            id=SYNC_PROFILE_ID,
+            user_id="",
+            title="My New Profile",
+            scheduleSource=VALID_SCHEDULE_SOURCE,
+            targetCalendar=VALID_TARGET_CALENDAR,
+            status=VALID_SYNC_PROFILE_STATUS,
+        )
+
+    assert "string_too_short" in str(exc_info.value)
 
 
 def test_sync_profile_invalid_url():
@@ -67,6 +100,8 @@ def test_sync_profile_too_short_title():
     """
     with pytest.raises(ValidationError) as exc_info:
         SyncProfile(
+            id=SYNC_PROFILE_ID,
+            user_id=USER_ID,
             title="",
             scheduleSource=VALID_SCHEDULE_SOURCE,
             targetCalendar=VALID_TARGET_CALENDAR,
@@ -82,6 +117,8 @@ def test_sync_profile_too_long_title():
     """
     with pytest.raises(ValidationError) as exc_info:
         SyncProfile(
+            id=SYNC_PROFILE_ID,
+            user_id=USER_ID,
             title="x" * 51,
             scheduleSource=VALID_SCHEDULE_SOURCE,
             targetCalendar=VALID_TARGET_CALENDAR,
@@ -107,6 +144,8 @@ VALID_RULESET = Ruleset(
 
 def test_sync_profile_ruleset_serde_from_and_to_string():
     profile = SyncProfile(
+        id=SYNC_PROFILE_ID,
+        user_id=USER_ID,
         title="My New Profile",
         scheduleSource=VALID_SCHEDULE_SOURCE,
         targetCalendar=VALID_TARGET_CALENDAR,

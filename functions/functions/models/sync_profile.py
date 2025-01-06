@@ -122,6 +122,8 @@ class SyncProfile(BaseModel):
     A Pydantic model representing a user's sync profile document in Firestore.
 
     Fields:
+    - id: unique identifier of the sync profile
+    - user_id: ID of the user who owns this profile
     - title: a human-friendly title
     - scheduleSource: an ICS file URL or other config
     - targetCalendar: references the user’s chosen target calendar
@@ -131,6 +133,13 @@ class SyncProfile(BaseModel):
     - created_at: timestamp of creation
     - lastSuccessfulSync: timestamp of last successful sync
     """
+
+    id: str = Field(
+        ..., description="Unique identifier of the sync profile", min_length=1
+    )
+    user_id: str = Field(
+        ..., description="ID of the user who owns this profile", min_length=1
+    )
 
     title: str = Field(..., min_length=3, max_length=50)
     scheduleSource: ScheduleSource

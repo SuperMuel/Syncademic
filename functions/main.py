@@ -305,27 +305,36 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
 def on_sync_profile_created(event: Event[DocumentSnapshot]):
     logger.info(f"Sync profile created: {event.data}")
 
-    doc = event.data.to_dict()
+    # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
+    user_id = event.params["userId"]
+    sync_profile_id = event.params["syncProfileId"]
 
-    assert doc is not None, "Sync Profile Document was just created, should not be None"
-
-    # TODO validate the document
+    assert (
+        event.data.to_dict()
+    ), "Sync Profile Document was just created : it should not be empty"
 
     # Add created_at field
     sync_profile_ref = event.data.reference
     assert isinstance(sync_profile_ref, DocumentReference)
-    sync_profile_ref.update({"created_at": firestore.firestore.SERVER_TIMESTAMP})
+
+    sync_profile_repo.update_created_at(
+        user_id=user_id, sync_profile_id=sync_profile_id
+    )
 
     try:
         _create_ai_ruleset(sync_profile_ref)
     except Exception as e:
         logger.error(f"Failed to create AI ruleset: {e}")
-        sync_profile_ref.update({"ruleset_error": str(e)})
+        sync_profile_repo.update_ruleset_error(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+            error_str=f"{type(e).__name__}: {str(e)}",
+        )
 
     # Initial synchronization
     _synchronize_now(
-        event.params["userId"],
-        event.params["syncProfileId"],
+        user_id=user_id,
+        sync_profile_id=sync_profile_id,
         sync_trigger=SyncTrigger.ON_CREATE,
     )
 

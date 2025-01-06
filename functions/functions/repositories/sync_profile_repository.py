@@ -1,9 +1,9 @@
 from typing import Protocol
+from firebase_admin.firestore import firestore
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.document import DocumentReference
 from google.cloud.firestore_v1.collection import CollectionReference
 
-from google.cloud import firestore
 
 from functions.models.sync_profile import (
     SyncProfile,
@@ -60,6 +60,24 @@ class ISyncProfileRepository(Protocol):
         Deletes a SyncProfile document.
         """
 
+        ...
+
+    def update_created_at(self, user_id: str, sync_profile_id: str) -> None:
+        """
+        Updates the created_at field with the server timestamp.
+        """
+        ...
+
+    def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
+        """
+        Updates the lastSuccessfulSync field with the server timestamp.
+        """
+        ...
+
+    def update_ruleset_error(
+        self, user_id: str, sync_profile_id: str, error_str: str
+    ) -> None:
+        """Updates the ruleset_error field with the provided error message."""
         ...
 
     # def create_sync_profile(self, user_id: str, sync_profile: SyncProfile) -> str:
@@ -120,7 +138,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         if not data:
             return None
 
-        return SyncProfile.model_validate(data)
+        return SyncProfile(id=sync_profile_id, user_id=user_id, **data)
 
     def list_user_sync_profiles(self, user_id: str) -> list[SyncProfile]:
         """
@@ -135,8 +153,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         profiles: list[SyncProfile] = []
 
         for doc in query:
+            doc: DocumentSnapshot
             if data := doc.to_dict():
-                profiles.append(SyncProfile.model_validate(data))
+                profiles.append(SyncProfile(id=doc.id, user_id=user_id, **data))
 
         return profiles
 
@@ -152,9 +171,11 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         for doc in query:
             doc: DocumentSnapshot
             if data := doc.to_dict():
-                data["id"] = doc.id
-                data["user_id"] = doc.reference.parent.parent.id
-                profiles.append(SyncProfile.model_validate(data))
+                profiles.append(
+                    SyncProfile(
+                        id=doc.id, user_id=doc.reference.parent.parent.id, **data
+                    )
+                )
 
         return profiles
 
@@ -180,10 +201,11 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
             doc: DocumentSnapshot
 
             if data := doc.to_dict():
-                data["id"] = doc.id
-                data["user_id"] = doc.reference.parent.parent.id
-
-                profiles.append(SyncProfile.model_validate(data))
+                profiles.append(
+                    SyncProfile(
+                        id=doc.id, user_id=doc.reference.parent.parent.id, **data
+                    )
+                )
 
         return profiles
 
@@ -217,3 +239,33 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         )
 
         doc_ref.delete()
+
+    def update_created_at(self, user_id: str, sync_profile_id: str) -> None:
+        doc_ref: DocumentReference = (
+            self._db.collection("users")
+            .document(user_id)
+            .collection("syncProfiles")
+            .document(sync_profile_id)
+        )
+        doc_ref.update({"created_at": firestore.SERVER_TIMESTAMP})
+
+    def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
+        doc_ref: DocumentReference = (
+            self._db.collection("users")
+            .document(user_id)
+            .collection("syncProfiles")
+            .document(sync_profile_id)
+        )
+        doc_ref.update({"lastSuccessfulSync": firestore.SERVER_TIMESTAMP})
+
+    def update_ruleset_error(
+        self, user_id: str, sync_profile_id: str, error_str: str
+    ) -> None:
+        """Updates the ruleset_error field with the provided error message."""
+        doc_ref: DocumentReference = (
+            self._db.collection("users")
+            .document(user_id)
+            .collection("syncProfiles")
+            .document(sync_profile_id)
+        )
+        doc_ref.update({"ruleset_error": error_str})

@@ -21,6 +21,7 @@ def utc_datetime_factory():
 
 
 class SyncProfileStatusType(str, Enum):
+    NOT_STARTED = "notStarted"
     IN_PROGRESS = "inProgress"
     FAILED = "failed"
     SUCCESS = "success"
@@ -34,7 +35,11 @@ class SyncProfileStatusType(str, Enum):
         """
 
         match self:
-            case SyncProfileStatusType.SUCCESS | SyncProfileStatusType.FAILED:
+            case (
+                SyncProfileStatusType.NOT_STARTED
+                | SyncProfileStatusType.SUCCESS
+                | SyncProfileStatusType.FAILED
+            ):
                 return True
             case (
                 SyncProfileStatusType.IN_PROGRESS

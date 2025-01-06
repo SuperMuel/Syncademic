@@ -91,8 +91,6 @@ def perform_synchronization(
                 sync_profile_id, min_dt=None
             )
             new_events = events
-        case _:
-            raise ValueError(f"Unimplemented sync_type: {sync_type}")
 
     if events_to_delete:
         logger.info(f"Found {len(events_to_delete)} events to delete")

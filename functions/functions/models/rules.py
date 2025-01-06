@@ -67,8 +67,6 @@ class TextFieldCondition(BaseModel):
             case "regex":
                 flags = 0 if self.case_sensitive else re.IGNORECASE
                 result = bool(re.search(condition_value, field_value, flags))
-            case _:
-                raise ValueError(f"Unimplemented operator: {self.operator}")
 
         return not result if self.negate else result
 
@@ -132,8 +130,6 @@ class ChangeFieldAction(BaseModel):
                 new_field_value = field_value + new_value
             case "prepend":
                 new_field_value = new_value + field_value
-            case _:
-                raise ValueError(f"Unimplemented method: {self.method}")
 
         return replace(event, **{self.field: new_field_value})
 

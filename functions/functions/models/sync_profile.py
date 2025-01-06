@@ -27,6 +27,23 @@ class SyncProfileStatusType(str, Enum):
     DELETING = "deleting"
     DELETION_FAILED = "deletionFailed"
 
+    def is_active(self) -> bool:
+        """
+        Determines if a sync profile in this state should be considered active
+        for synchronization purposes.
+        """
+
+        match self:
+            case SyncProfileStatusType.SUCCESS | SyncProfileStatusType.FAILED:
+                return True
+            case (
+                SyncProfileStatusType.IN_PROGRESS
+                | SyncProfileStatusType.DELETING
+                | SyncProfileStatusType.DELETION_FAILED
+            ):
+                return False
+            # Don't use a catch-all case ! We want a type error if a new status is not handled.
+
 
 class SyncTrigger(str, Enum):
     """

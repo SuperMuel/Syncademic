@@ -1,10 +1,15 @@
 from typing import Protocol
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.document import DocumentReference
 from google.cloud.firestore_v1.collection import CollectionReference
 
 from google.cloud import firestore
 
-from functions.models.sync_profile import SyncProfile, SyncProfileStatus
+from functions.models.sync_profile import (
+    SyncProfile,
+    SyncProfileStatus,
+    SyncProfileStatusType,
+)
 
 
 class ISyncProfileRepository(Protocol):
@@ -31,6 +36,12 @@ class ISyncProfileRepository(Protocol):
     def list_all_sync_profiles(self) -> list[SyncProfile]:
         """
         Lists all SyncProfiles for all users.
+        """
+        ...
+
+    def list_all_active_sync_profiles(self) -> list[SyncProfile]:
+        """
+        Lists all active SyncProfiles for all users.
         """
         ...
 
@@ -139,7 +150,39 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         profiles: list[SyncProfile] = []
 
         for doc in query:
+            doc: DocumentSnapshot
             if data := doc.to_dict():
+                data["id"] = doc.id
+                data["user_id"] = doc.reference.parent.parent.id
+                profiles.append(SyncProfile.model_validate(data))
+
+        return profiles
+
+    def list_all_active_sync_profiles(self) -> list[SyncProfile]:
+        """
+        Lists all active SyncProfiles for all users.
+
+        A profile is considered active if it can be synchronized
+        (i.e., not currently being processed or deleted).
+
+        """
+        # Note :  SyncProfiles can't be disabled yet.
+
+        query = self._db.collection_group("syncProfiles").where(
+            "status.type",
+            "in",
+            [status.value for status in SyncProfileStatusType if status.is_active()],
+        )
+
+        profiles: list[SyncProfile] = []
+
+        for doc in query.stream():
+            doc: DocumentSnapshot
+
+            if data := doc.to_dict():
+                data["id"] = doc.id
+                data["user_id"] = doc.reference.parent.parent.id
+
                 profiles.append(SyncProfile.model_validate(data))
 
         return profiles

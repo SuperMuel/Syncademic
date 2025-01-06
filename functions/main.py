@@ -372,7 +372,7 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 def scheduled_sync(event: Any):
     logger.info("Scheduled synchronization started")
 
-    for sync_profile in sync_profile_repo.list_all_sync_profiles():
+    for sync_profile in sync_profile_repo.list_all_active_sync_profiles():
         sync_profile_id, user_id = sync_profile.id, sync_profile.user_id
 
         logger.info(f"Synchronizing {user_id}/{sync_profile_id} ({sync_profile.title})")
@@ -517,16 +517,23 @@ def delete_sync_profile(
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
         )
 
-    status = sync_profile.status
-    if status.type == SyncProfileStatusType.DELETING:
-        logger.info(f"Sync profile is already {status.type}, skipping deletion")
-        return
-
-    if status.type == SyncProfileStatusType.IN_PROGRESS:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
-            "Sync profile is currently in progress",
-        )
+    match status_type := sync_profile.status.type:
+        case SyncProfileStatusType.DELETING:
+            logger.info(f"Sync profile is already {status_type}, skipping deletion")
+            return
+        case SyncProfileStatusType.IN_PROGRESS:
+            raise https_fn.HttpsError(
+                https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
+                "Sync profile is currently in progress",
+            )
+        case (
+            SyncProfileStatusType.SUCCESS
+            | SyncProfileStatusType.FAILED
+            | SyncProfileStatusType.DELETION_FAILED
+        ):
+            # Allow deletion to proceed
+            pass
+        # Do not use a catch-all case ! We want a type error if a new status is not handled.
 
     sync_profile_repo.update_sync_profile_status(
         user_id, sync_profile_id, SyncProfileStatus(type=SyncProfileStatusType.DELETING)
@@ -595,15 +602,6 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
     auth_code = request.authCode
     redirect_uri = request.redirectUri
     provider_account_id = request.providerAccountId
-
-    db = firestore.client()
-
-    # Verify that the user doc exists
-    user_ref = db.collection("users").document(user_id)
-    if not user_ref.get().exists:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "User document not found"
-        )
 
     # https://www.reddit.com/r/webdev/comments/11w1e36/warning_oauth_scope_has_changed_from (Workaround)
     os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"

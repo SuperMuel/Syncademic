@@ -1,22 +1,19 @@
-import pytest
 from datetime import datetime, timezone
-from pydantic import ValidationError, HttpUrl
+
+import pytest
+from pydantic import HttpUrl, ValidationError
+
 from functions.models import (
+    ScheduleSource,
     SyncProfile,
     SyncProfileStatus,
     SyncProfileStatusType,
-    ScheduleSource,
-    TargetCalendar,
     SyncTrigger,
     SyncType,
+    TargetCalendar,
 )
-from functions.models.rules import (
-    Rule,
-    Ruleset,
-    TextFieldCondition,
-    ChangeColorAction,
-    GoogleEventColor,
-)
+from functions.models.rules import Ruleset
+from tests.util import VALID_RULESET
 
 VALID_SCHEDULE_SOURCE = ScheduleSource(url=HttpUrl("https://example.com/test.ics"))
 
@@ -126,20 +123,6 @@ def test_sync_profile_too_long_title():
         )
 
     assert "should have at most 50 characters" in str(exc_info.value)
-
-
-VALID_RULESET = Ruleset(
-    rules=[
-        Rule(
-            condition=TextFieldCondition(
-                field="title",
-                operator="contains",
-                value="x",
-            ),
-            actions=[ChangeColorAction(value=GoogleEventColor.BASIL)],
-        )
-    ],
-)
 
 
 def test_sync_profile_ruleset_serde_from_and_to_string():

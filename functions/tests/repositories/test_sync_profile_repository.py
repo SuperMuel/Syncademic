@@ -15,6 +15,7 @@ from functions.models.sync_profile import (
 from functions.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
 )
+from tests.util import VALID_RULESET
 
 
 @pytest.fixture
@@ -170,3 +171,88 @@ def test_update_sync_profile_status(mock_db):
     assert updated is not None
 
     assert updated.status == new_status
+
+
+def test_update_created_at(mock_db):
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = "user123"
+    sync_profile_id = "syncProf_ABC"
+
+    # Create initial profile doc
+    mock_db.collection("users").document(user_id).collection("syncProfiles").document(
+        sync_profile_id
+    ).set(sync_profile1.model_dump())
+
+    # Update created_at
+    repo.update_created_at(user_id, sync_profile_id)
+
+    # Verify document was updated with server timestamp
+    doc = (
+        mock_db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+        .get()
+    )
+    assert doc.to_dict()["created_at"] is not None
+
+
+def test_update_ruleset(mock_db):
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = "user123"
+    sync_profile_id = "syncProf_ABC"
+
+    # Create initial profile doc
+    mock_db.collection("users").document(user_id).collection("syncProfiles").document(
+        sync_profile_id
+    ).set(sync_profile1.model_dump())
+
+    repo.update_ruleset(user_id, sync_profile_id, VALID_RULESET)
+
+    updated = repo.get_sync_profile(user_id, sync_profile_id)
+
+    assert updated is not None
+    assert updated.ruleset == VALID_RULESET
+
+
+def test_update_ruleset_error(mock_db):
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = "user123"
+    sync_profile_id = "syncProf_ABC"
+
+    # Create initial profile doc
+    mock_db.collection("users").document(user_id).collection("syncProfiles").document(
+        sync_profile_id
+    ).set(sync_profile1.model_dump())
+
+    error_message = "Failed to generate ruleset: Invalid input"
+
+    repo.update_ruleset_error(user_id, sync_profile_id, error_message)
+
+    updated = repo.get_sync_profile(user_id, sync_profile_id)
+    assert updated is not None
+    assert updated.ruleset_error == error_message
+
+
+def test_update_last_successful_sync(mock_db):
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = "user123"
+    sync_profile_id = "syncProf_ABC"
+
+    # Create initial profile doc
+    mock_db.collection("users").document(user_id).collection("syncProfiles").document(
+        sync_profile_id
+    ).set(sync_profile1.model_dump())
+
+    # Update last successful sync
+    repo.update_last_successful_sync(user_id, sync_profile_id)
+
+    # Verify document was updated with server timestamp
+    doc = (
+        mock_db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+        .get()
+    )
+    assert doc.to_dict()["lastSuccessfulSync"] is not None

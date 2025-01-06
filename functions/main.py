@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any
 
-from firebase_admin import firestore, initialize_app, storage
+from firebase_admin import initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
 from firebase_functions.firestore_fn import (
     Event,

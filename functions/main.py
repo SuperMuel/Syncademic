@@ -10,7 +10,6 @@ from firebase_functions.firestore_fn import (
 )
 from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
-from google.cloud.firestore_v1.document import DocumentReference
 from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
@@ -38,6 +37,7 @@ from functions.models.schemas import (
     ValidateIcsUrlInput,
     ValidateIcsUrlOutput,
 )
+from functions.models.sync_profile import SyncProfile
 from functions.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
     IBackendAuthorizationRepository,
@@ -261,20 +261,17 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     return result
 
 
-def _create_ai_ruleset(sync_profile_ref: DocumentReference):
-    logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
+def _create_ai_ruleset(sync_profile: SyncProfile):
+    logger.info(
+        f"Creating AI ruleset for {sync_profile.user_id}/{sync_profile.id} ({sync_profile.title})"
+    )
 
     model = settings.RULES_BUILDER_LLM
 
     logger.info(f"Using {model} model")
     llm = init_chat_model(model)
 
-    doc = sync_profile_ref.get()
-    if not doc.exists:
-        logger.error("Sync profile not found")
-        return
-
-    ics_url = doc.get("scheduleSource.url")
+    ics_url = sync_profile.scheduleSource.url
     ics_str = UrlIcsSource(ics_url).get_ics_string()
     events = IcsParser().parse(ics_str=ics_str)
 
@@ -286,15 +283,27 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
         f"({len(compressed_schedule)/len(ics_str)*100:.2f}% of original)"
     )
 
-    logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
+    logger.info(f"Creating AI ruleset for {sync_profile.user_id}/{sync_profile.id}")
 
     ruleset_builder = RulesetBuilder(llm=llm)
     output = ruleset_builder.generate_ruleset(
         compressed_schedule,
-        metadata={"ics_url": ics_url, "sync_profile_id": sync_profile_ref.id},
+        metadata={
+            "ics_url": ics_url,
+            "user_id": sync_profile.user_id,
+            "sync_profile_id": sync_profile.id,
+        },
     )
 
-    sync_profile_ref.update({"ruleset": output.ruleset.model_dump_json()})
+    sync_profile_repo.update_ruleset(
+        user_id=sync_profile.user_id,
+        sync_profile_id=sync_profile.id,
+        ruleset=output.ruleset,
+    )
+
+    logger.info(
+        f"Succesfully created AI ruleset for {sync_profile.user_id}/{sync_profile.id}"
+    )
 
 
 @on_document_created(
@@ -308,21 +317,20 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
     user_id = event.params["userId"]
     sync_profile_id = event.params["syncProfileId"]
+    data = event.data.to_dict()
 
-    assert (
-        event.data.to_dict()
-    ), "Sync Profile Document was just created : it should not be empty"
+    assert data, "Sync Profile Document was just created : it should not be empty"
 
     # Add created_at field
-    sync_profile_ref = event.data.reference
-    assert isinstance(sync_profile_ref, DocumentReference)
-
     sync_profile_repo.update_created_at(
         user_id=user_id, sync_profile_id=sync_profile_id
     )
 
+    # Validate document using Pydantic
+    sync_profile = SyncProfile(id=sync_profile_id, user_id=user_id, **data)
+
     try:
-        _create_ai_ruleset(sync_profile_ref)
+        _create_ai_ruleset(sync_profile)
     except Exception as e:
         logger.error(f"Failed to create AI ruleset: {e}")
         sync_profile_repo.update_ruleset_error(
@@ -492,12 +500,7 @@ def _synchronize_now(
     sync_profile_repo.update_sync_profile_status(
         user_id, sync_profile_id, success_status
     )
-
-    firestore.client().collection("users").document(user_id).collection(
-        "syncProfiles"
-    ).document(sync_profile_id).update(
-        {"lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP}
-    )
+    sync_profile_repo.update_last_successful_sync(user_id, sync_profile_id)
 
     sync_stats_repo.increment_sync_count(user_id)
     logger.info("Synchronization completed successfully")

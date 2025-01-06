@@ -5,6 +5,7 @@ from google.cloud.firestore_v1.document import DocumentReference
 from google.cloud.firestore_v1.collection import CollectionReference
 
 
+from functions.models.rules import Ruleset
 from functions.models.sync_profile import (
     SyncProfile,
     SyncProfileStatus,
@@ -78,6 +79,14 @@ class ISyncProfileRepository(Protocol):
         self, user_id: str, sync_profile_id: str, error_str: str
     ) -> None:
         """Updates the ruleset_error field with the provided error message."""
+        ...
+
+    def update_ruleset(
+        self, user_id: str, sync_profile_id: str, ruleset: Ruleset
+    ) -> None:
+        """
+        Updates the ruleset field of a sync profile.
+        """
         ...
 
     # def create_sync_profile(self, user_id: str, sync_profile: SyncProfile) -> str:
@@ -269,3 +278,19 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
             .document(sync_profile_id)
         )
         doc_ref.update({"ruleset_error": error_str})
+
+    def update_ruleset(
+        self, user_id: str, sync_profile_id: str, ruleset: Ruleset
+    ) -> None:
+        """
+        Updates the ruleset field of a sync profile.
+        """
+        doc_ref: DocumentReference = (
+            self._db.collection("users")
+            .document(user_id)
+            .collection("syncProfiles")
+            .document(sync_profile_id)
+        )
+
+        # We store the ruleset as a JSON string in Firestore.
+        doc_ref.update({"ruleset": ruleset.model_dump_json()})

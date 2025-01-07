@@ -1,8 +1,10 @@
 from .base import SyncademicError
 from .auth import (
     BaseAuthorizationError,
+    UnauthorizedError,
     InvalidAuthCodeError,
     TokenVerificationError,
+    ProviderUserIdMismatchError,
 )
 from .target_calendar import (
     BaseTargetCalendarError,
@@ -32,6 +34,7 @@ __all__ = [
     "BaseAuthorizationError",
     "InvalidAuthCodeError",
     "TokenVerificationError",
+    "ProviderUserIdMismatchError",
     "BaseTargetCalendarError",
     "TargetCalendarNotFoundError",
     "TargetCalendarAccessError",

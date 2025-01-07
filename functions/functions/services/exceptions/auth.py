@@ -7,13 +7,19 @@ class BaseAuthorizationError(SyncademicError):
     pass
 
 
-class InvalidAuthCodeError(BaseAuthorizationError):
-    """Raised when the authorization code is invalid or expired"""
+class UnauthorizedError(BaseAuthorizationError):
+    """Raised when Syncademic does not have permission to access the user's Google Calendar"""
 
     pass
 
 
-class TokenVerificationError(BaseAuthorizationError):
-    """Raised when token verification fails"""
+class ProviderUserIdMismatchError(BaseAuthorizationError):
+    """Raised when the authorization flow succeed, but for a different provider account
+    than the one that was expected.
+
+    Typically, the user would first select a provider account to link to their Syncademic, and
+    then complete the authorization flow. The second flow might prompt the user to select a
+    different account, which would raise this error.
+    """
 
     pass

@@ -10,7 +10,7 @@ import os
 from functions.services.exceptions.auth import ProviderUserIdMismatchError
 from services.exceptions import (
     BaseAuthorizationError,
-    TokenVerificationError,
+    UnauthorizedError,
 )
 
 from firebase_functions import logger
@@ -106,7 +106,7 @@ class AuthorizationService:
                 audience=settings.CLIENT_ID,
             )
         except Exception as e:
-            raise TokenVerificationError(
+            raise BaseAuthorizationError(
                 message="Error verifying ID token",
                 original_exception=e,
             )
@@ -157,12 +157,16 @@ class AuthorizationService:
 
         Returns:
             A resource object for interacting with the Google Calendar API.
+
+        Raises:
+            UnauthorizedError: If no valid authorization is found for this user/account.
+            BaseAuthorizationError: If an error occurs while refreshing the token.
         """
         logger.info(f"Fetching calendar service for {user_id}/{provider_account_id}")
 
         authorization = self._auth_repo.get_authorization(user_id, provider_account_id)
         if authorization is None:
-            raise BaseAuthorizationError(
+            raise UnauthorizedError(
                 "No valid authorization found for this user/account."
             )
 

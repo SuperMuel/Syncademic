@@ -56,6 +56,7 @@ from functions.synchronizer.ics_source import UrlIcsSource
 from functions.synchronizer.synchronizer import (
     perform_synchronization,
 )
+from functions.services.google_calendar_service import GoogleCalendarService
 
 initialize_app()
 
@@ -65,6 +66,8 @@ backend_auth_repo: IBackendAuthorizationRepository = (
 sync_stats_repo: ISyncStatsRepository = FirestoreSyncStatsRepository()
 sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
+google_calendar_service = GoogleCalendarService(authorization_service)
+
 error_mapping = ErrorMapping()
 
 
@@ -125,30 +128,15 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
         request = ListUserCalendarsInput.model_validate(req.data)
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-
-    provider_account_id = request.providerAccountId
-
+        
     try:
-        service = authorization_service.get_calendar_service(
-            user_id, provider_account_id
+        calendars = google_calendar_service.list_calendars(
+            user_id=user_id,
+            provider_account_id=request.providerAccountId,
         )
-    except Exception as e:
-        logger.error(f"Failed to get calendar service: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
-        )
-
-    try:
-        # TODO : move this to GoogleCalendarManager, and handle pagination
-        calendars_result = service.calendarList().list().execute()
-        calendars = calendars_result.get("items", [])
-
         return {"calendars": calendars}
-    except Exception as e:
-        logger.error(f"Failed to list calendars: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to list calendars."
-        )
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 @https_fn.on_call(
@@ -186,47 +174,18 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
         request = CreateNewCalendarInput.model_validate(req.data)
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-
-    provider_account_id = request.providerAccountId
-    color_id = request.colorId
-
-    logger.info(f"Creating new calendar for {user_id}/{provider_account_id}")
-
+        
     try:
-        service = authorization_service.get_calendar_service(
-            user_id, provider_account_id
+        result = google_calendar_service.create_new_calendar(
+            user_id=user_id,
+            provider_account_id=request.providerAccountId,
+            summary=request.summary,
+            description=request.description,
+            color_id=request.colorId,
         )
-    except Exception as e:
-        logger.error(f"Failed to get calendar service: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
-        )
-
-    calendar_name = request.summary
-    calendar_description = request.description
-    calendar_body = {
-        "summary": calendar_name,
-        "description": calendar_description,
-    }
-
-    try:
-        result = service.calendars().insert(body=calendar_body).execute()
-    except Exception as e:
-        logger.error(f"Failed to create calendar: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to create calendar."
-        )
-
-    # Calendar color is a property of the calendar list entry, not the calendar itself
-    if color_id is not None:
-        try:
-            service.calendarList().patch(
-                calendarId=result.get("id"), body={"colorId": color_id}
-            ).execute()
-        except Exception as e:
-            logger.error(f"Failed to patch calendar list entry: {e}")
-
-    return result
+        return result
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 def _create_ai_ruleset(sync_profile: SyncProfile):

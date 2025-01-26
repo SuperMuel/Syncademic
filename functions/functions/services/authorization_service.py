@@ -7,6 +7,8 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 import os
 
+from pydantic import HttpUrl
+
 from functions.services.exceptions.auth import ProviderUserIdMismatchError
 from services.exceptions import (
     BaseAuthorizationError,
@@ -47,7 +49,7 @@ class AuthorizationService:
         *,
         user_id: str,
         auth_code: str,
-        redirect_uri: str,
+        redirect_uri: HttpUrl,
         provider_account_id: str,
     ) -> None:
         """
@@ -81,7 +83,7 @@ class AuthorizationService:
                 }
             },
             scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri=redirect_uri,
+            redirect_uri=str(redirect_uri),
         )
 
         try:
@@ -98,8 +100,11 @@ class AuthorizationService:
         if not credentials.id_token:
             raise BaseAuthorizationError("ID token not found in OAuth credentials")
 
+        # The logged-in user can authorize the backend on multiple google accounts.
+        # Thus we need to get the unique identifier of the authorized google account (provider_account_id)
+        # We can get this from the ID token
+
         try:
-            # Verify the ID token to ensure it matches our client config
             id_info = verify_oauth2_token(
                 credentials.id_token,
                 Request(),

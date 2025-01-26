@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Any
 
 from firebase_admin import initialize_app, storage
@@ -8,12 +7,7 @@ from firebase_functions.firestore_fn import (
     Event,
     on_document_created,
 )
-from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
-from google.oauth2.credentials import Credentials
-from google.oauth2.id_token import verify_oauth2_token
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
 from langchain.chat_models import init_chat_model
 from pydantic import ValidationError
 
@@ -25,7 +19,6 @@ from functions.models import (
     SyncTrigger,
     SyncType,
 )
-from functions.models.authorization import BackendAuthorization
 from functions.models.schemas import (
     AuthorizeBackendInput,
     CreateNewCalendarInput,
@@ -50,6 +43,9 @@ from functions.repositories.sync_stats_repository import (
     FirestoreSyncStatsRepository,
     ISyncStatsRepository,
 )
+from functions.services.authorization_service import AuthorizationService
+from functions.services.exceptions.base import SyncademicError
+from functions.services.exceptions.mapping import ErrorMapping
 from functions.settings import settings
 from functions.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
@@ -68,39 +64,8 @@ backend_auth_repo: IBackendAuthorizationRepository = (
 )
 sync_stats_repo: ISyncStatsRepository = FirestoreSyncStatsRepository()
 sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
-
-
-def get_calendar_service(user_id: str, provider_account_id: str):
-    """
-    Construct the Google Calendar API service for a given user and provider account.
-    """
-
-    if not user_id:
-        raise ValueError("User ID is required")
-    if not provider_account_id:
-        raise ValueError("Provider account ID is required")
-
-    logger.info(f"Getting calendar service for {user_id}/{provider_account_id}")
-
-    authorization = backend_auth_repo.get_authorization(user_id, provider_account_id)
-    if authorization is None:
-        logger.info("Backend authorization not found")
-        raise ValueError("Target calendar is not authorized")
-
-    # Construct a Credentials object from the stored token
-    credentials = Credentials(
-        client_id=settings.CLIENT_ID,
-        token=authorization.accessToken,
-        refresh_token=authorization.refreshToken,
-        token_uri="https://oauth2.googleapis.com/token",
-        client_secret=settings.CLIENT_SECRET,
-    )
-
-    # TODO : refresh token if expired
-
-    # Build the Google Calendar API service
-    service = build("calendar", "v3", credentials=credentials)
-    return service
+authorization_service = AuthorizationService(backend_auth_repo)
+error_mapping = ErrorMapping()
 
 
 def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
@@ -164,7 +129,9 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     provider_account_id = request.providerAccountId
 
     try:
-        service = get_calendar_service(user_id, provider_account_id)
+        service = authorization_service.get_calendar_service(
+            user_id, provider_account_id
+        )
     except Exception as e:
         logger.error(f"Failed to get calendar service: {e}")
         raise https_fn.HttpsError(
@@ -198,12 +165,11 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
 
     provider_account_id = request.providerAccountId
 
-    if not backend_auth_repo.exists(user_id, provider_account_id):
-        logger.info("Backend authorization not found")
+    try:
+        authorization_service.test_authorization(user_id, provider_account_id)
+    except SyncademicError as e:
+        logger.error(f"Failed to test authorization: {e}")
         return IsAuthorizedOutput(authorized=False).model_dump()
-
-    # TODO : Actually check if the token is expired or if the user has revoked the access
-    # by making a request to the Google Calendar API
 
     logger.info("Authorization successful")
     return IsAuthorizedOutput(authorized=True).model_dump()
@@ -227,7 +193,9 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
     logger.info(f"Creating new calendar for {user_id}/{provider_account_id}")
 
     try:
-        service = get_calendar_service(user_id, provider_account_id)
+        service = authorization_service.get_calendar_service(
+            user_id, provider_account_id
+        )
     except Exception as e:
         logger.error(f"Failed to get calendar service: {e}")
         raise https_fn.HttpsError(
@@ -412,7 +380,9 @@ def _synchronize_now(
     profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
     if profile is None:
         logger.error("Sync profile not found")
-        return
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+        )
 
     if profile.status in [
         SyncProfileStatusType.IN_PROGRESS,
@@ -452,9 +422,10 @@ def _synchronize_now(
     provider_account_id = target_calendar.providerAccountId
 
     try:
-        service = get_calendar_service(user_id, provider_account_id)
+        service = authorization_service.get_calendar_service(
+            user_id, provider_account_id
+        )
         calendar_manager = GoogleCalendarManager(service, target_calendar.id)
-        calendar_manager.test_authorization()
     except Exception as e:
         failed_status = SyncProfileStatus(
             type=SyncProfileStatusType.FAILED,
@@ -554,7 +525,7 @@ def delete_sync_profile(
     )
 
     try:
-        service = get_calendar_service(
+        service = authorization_service.get_calendar_service(
             user_id, sync_profile.targetCalendar.providerAccountId
         )
     except Exception as e:
@@ -613,88 +584,15 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
-    auth_code = request.authCode
-    redirect_uri = request.redirectUri
-    provider_account_id = request.providerAccountId
-
-    # https://www.reddit.com/r/webdev/comments/11w1e36/warning_oauth_scope_has_changed_from (Workaround)
-    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
-
     try:
-        flow = Flow.from_client_config(
-            {
-                "web": {
-                    "client_id": settings.CLIENT_ID,
-                    "client_secret": settings.CLIENT_SECRET,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                }
-            },
-            scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri=redirect_uri,
+        authorization_service.authorize_backend_with_auth_code(
+            user_id=user_id,
+            auth_code=request.authCode,
+            redirect_uri=request.redirectUri,
+            provider_account_id=request.providerAccountId,
         )
-        flow.fetch_token(code=auth_code)
-        credentials = flow.credentials
-    except Exception as e:
-        logger.error(
-            f"An error occurred while exchanging the authorization code: {str(e)}"
-        )
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "An error occurred while exchanging the authorization code",
-        )
-
-    # The logged-in user (request.auth.uid) can authorize the backend on multiple google accounts.
-    # Thus we need to get the unique identifier of the authorized google account
-    # We can get this from the ID token
-
-    id_token = credentials.id_token  # type: ignore
-    if not id_token:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "ID token not found"
-        )
-
-    try:
-        id_info = verify_oauth2_token(
-            id_token, requests.Request(), audience=settings.CLIENT_ID
-        )
-    except Exception as e:
-        logger.error(f"An error occurred while verifying the ID token: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "An error occurred while verifying the ID token",
-        )
-
-    google_user_id = id_info.get("sub")
-    if not google_user_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "google_user_id not found in id_token",
-        )
-
-    # Check if the user is authorizing the backend on the correct google account
-    if google_user_id != provider_account_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.PERMISSION_DENIED,
-            "The authorized Google account does not match the providerAccountId (ProviderUserIdMismatch)",
-        )
-
-    if not credentials.token:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "Authorization process did not return a valid token",
-        )
-
-    backend_auth_repo.set_authorization(
-        BackendAuthorization(
-            userId=user_id,
-            provider="google",
-            providerAccountId=google_user_id,
-            providerAccountEmail=id_info.get("email"),
-            accessToken=credentials.token,
-            refreshToken=credentials.refresh_token,
-            expirationDate=credentials.expiry,
-        )
-    )
+    except SyncademicError as e:
+        logger.error(f"Failed to authorize backend: {e}")
+        raise error_mapping.to_http_error(e)
 
     return {"success": True}

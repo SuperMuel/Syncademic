@@ -132,7 +132,3 @@ class GoogleCalendarManager:
                     )
                 )
             batch.execute()
-
-    def test_authorization(self) -> None:
-        logger.info("Testing authorization.")
-        self.service.calendarList().list().execute(num_retries=3)

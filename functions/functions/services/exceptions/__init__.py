@@ -2,8 +2,6 @@ from .base import SyncademicError
 from .auth import (
     BaseAuthorizationError,
     UnauthorizedError,
-    InvalidAuthCodeError,
-    TokenVerificationError,
     ProviderUserIdMismatchError,
 )
 from .target_calendar import (

@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import pytest
 from pydantic import HttpUrl
 import arrow
@@ -52,50 +52,43 @@ def test_validate_ics_url_success(
     test_ics_content = "test_ics_content"
 
     mock_url_ics_source.get_ics_string.return_value = test_ics_content
+    mock_url_ics_source.url = test_url
     mock_ics_parser.parse.return_value = mock_events
 
-    with patch(
-        "functions.services.ics_service.UrlIcsSource",
-        return_value=mock_url_ics_source,
-    ):
-        # Act
-        result = service.validate_ics_url(test_url)
+    # Act
+    result = service.validate_ics_url(mock_url_ics_source)
 
-        # Assert
-        assert isinstance(result, ValidateIcsUrlOutput)
-        assert result.valid is True
-        assert result.error is None
-        assert result.nbEvents == 2
+    # Assert
+    assert isinstance(result, ValidateIcsUrlOutput)
+    assert result.valid is True
+    assert result.error is None
+    assert result.nbEvents == len(mock_events)
 
-        mock_url_ics_source.get_ics_string.assert_called_once()
-        mock_ics_parser.parse.assert_called_once_with(ics_str=test_ics_content)
-        mock_ics_storage.save_to_cache.assert_called_once_with(
-            ics_source_url=test_url,
-            ics_str=test_ics_content,
-            parsing_error=None,
-        )
+    mock_url_ics_source.get_ics_string.assert_called_once()
+    mock_ics_parser.parse.assert_called_once_with(ics_str=test_ics_content)
+    mock_ics_storage.save_to_cache.assert_called_once_with(
+        ics_source=mock_url_ics_source,
+        ics_str=test_ics_content,
+        parsing_error=None,
+    )
 
 
 def test_validate_ics_url_fetch_failure(
     service: IcsService,
     mock_url_ics_source: Mock,
 ) -> None:
+    fetch_error = Exception("Network error")
     # Arrange
-    test_url = "https://example.com/calendar.ics"
-    mock_url_ics_source.get_ics_string.side_effect = Exception("Network error")
+    mock_url_ics_source.get_ics_string.side_effect = fetch_error
 
-    with patch(
-        "functions.services.ics_service.UrlIcsSource",
-        return_value=mock_url_ics_source,
-    ):
-        # Act
-        result = service.validate_ics_url(test_url)
+    # Act
+    result = service.validate_ics_url(mock_url_ics_source)
 
-        # Assert
-        assert isinstance(result, ValidateIcsUrlOutput)
-        assert result.valid is False
-        assert result.error == "Network error"
-        assert result.nbEvents is None
+    # Assert
+    assert isinstance(result, ValidateIcsUrlOutput)
+    assert result.valid is False
+    assert str(fetch_error) in str(result.error)
+    assert result.nbEvents is None
 
 
 def test_validate_ics_url_parse_failure(
@@ -110,53 +103,44 @@ def test_validate_ics_url_parse_failure(
     parse_error = Exception("Invalid ICS format")
 
     mock_url_ics_source.get_ics_string.return_value = test_ics_content
+    mock_url_ics_source.url = test_url
     mock_ics_parser.parse.side_effect = parse_error
 
-    with patch(
-        "functions.services.ics_service.UrlIcsSource",
-        return_value=mock_url_ics_source,
-    ):
-        # Act
-        result = service.validate_ics_url(test_url)
+    # Act
+    result = service.validate_ics_url(mock_url_ics_source)
 
-        # Assert
-        assert isinstance(result, ValidateIcsUrlOutput)
-        assert result.valid is False
-        assert result.error == "Invalid ICS format"
-        assert result.nbEvents is None
-        mock_ics_storage.save_to_cache.assert_called_once_with(
-            ics_source_url=test_url,
-            ics_str=test_ics_content,
-            parsing_error=parse_error,
-        )
+    # Assert
+    assert isinstance(result, ValidateIcsUrlOutput)
+    assert result.valid is False
+    assert str(parse_error) in str(result.error)
+    assert result.nbEvents is None
+    mock_ics_storage.save_to_cache.assert_called_once_with(
+        ics_source=mock_url_ics_source,
+        ics_str=test_ics_content,
+        parsing_error=parse_error,
+    )
 
 
 def test_validate_ics_url_no_storage(
     mock_ics_parser: Mock,
     mock_url_ics_source: Mock,
+    mock_events: list[Event],
 ) -> None:
     # Arrange
     service = IcsService(ics_parser=mock_ics_parser, ics_storage=None)
-    test_url = "https://example.com/calendar.ics"
     test_ics_content = "test_ics_content"
-    now = arrow.now()
-    mock_events = [Event(start=now, end=now.shift(hours=1), title="Event 1")]
 
     mock_url_ics_source.get_ics_string.return_value = test_ics_content
     mock_ics_parser.parse.return_value = mock_events
 
-    with patch(
-        "functions.services.ics_service.UrlIcsSource",
-        return_value=mock_url_ics_source,
-    ):
-        # Act
-        result = service.validate_ics_url(test_url, save_to_storage=True)
+    # Act
+    result = service.validate_ics_url(mock_url_ics_source)
 
-        # Assert
-        assert isinstance(result, ValidateIcsUrlOutput)
-        assert result.valid is True
-        assert result.error is None
-        assert result.nbEvents == 1
+    # Assert
+    assert isinstance(result, ValidateIcsUrlOutput)
+    assert result.valid is True
+    assert result.error is None
+    assert result.nbEvents == len(mock_events)
 
 
 def test_validate_ics_url_storage_failure(
@@ -171,21 +155,18 @@ def test_validate_ics_url_storage_failure(
     test_ics_content = "test_ics_content"
 
     mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_ics_parser.parse.return_value = mock_events[:1]  # Just use one event
+    mock_url_ics_source.url = test_url
+    mock_ics_parser.parse.return_value = mock_events
     mock_ics_storage.save_to_cache.side_effect = Exception("Storage error")
 
-    with patch(
-        "functions.services.ics_service.UrlIcsSource",
-        return_value=mock_url_ics_source,
-    ):
-        # Act
-        result = service.validate_ics_url(test_url)
+    # Act
+    result = service.validate_ics_url(mock_url_ics_source)
 
-        # Assert
-        assert isinstance(result, ValidateIcsUrlOutput)
-        assert result.valid is True
-        assert result.error is None
-        assert result.nbEvents == 1
+    # Assert
+    assert isinstance(result, ValidateIcsUrlOutput)
+    assert result.valid is True
+    assert result.error is None
+    assert result.nbEvents == len(mock_events)
 
 
 def test_validate_ics_url_with_http_url(
@@ -199,17 +180,14 @@ def test_validate_ics_url_with_http_url(
     test_ics_content = "test_ics_content"
 
     mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_ics_parser.parse.return_value = mock_events[:1]  # Just use one event
+    mock_url_ics_source.url = test_url
+    mock_ics_parser.parse.return_value = mock_events
 
-    with patch(
-        "functions.services.ics_service.UrlIcsSource",
-        return_value=mock_url_ics_source,
-    ):
-        # Act
-        result = service.validate_ics_url(test_url)
+    # Act
+    result = service.validate_ics_url(mock_url_ics_source)
 
-        # Assert
-        assert isinstance(result, ValidateIcsUrlOutput)
-        assert result.valid is True
-        assert result.error is None
-        assert result.nbEvents == 1
+    # Assert
+    assert isinstance(result, ValidateIcsUrlOutput)
+    assert result.valid is True
+    assert result.error is None
+    assert result.nbEvents == len(mock_events)

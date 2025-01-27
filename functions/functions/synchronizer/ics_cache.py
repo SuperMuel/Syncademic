@@ -1,18 +1,21 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any
-from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 from google.cloud import storage
 from firebase_functions import logger
+
+from functions.synchronizer.ics_source import UrlIcsSource
 
 
 class IcsFileStorage(ABC):
     @abstractmethod
     def save_to_cache(
         self,
-        ics_source_url: str,
         ics_str: str,
+        *,
+        ics_source: UrlIcsSource,
         sync_profile_id: str | None = None,
+        user_id: str | None = None,
         sync_trigger: str | None = None,
         parsing_error: str | Exception | None = None,
     ) -> None:
@@ -36,20 +39,23 @@ class FirebaseIcsFileStorage(IcsFileStorage):
 
     def save_to_cache(
         self,
-        ics_source_url: str,
         ics_str: str,
+        *,
+        ics_source: UrlIcsSource,
         sync_profile_id: str | None = None,
+        user_id: str | None = None,
         sync_trigger: str | None = None,  # TODO : type this
         parsing_error: str | Exception | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
 
-        filename = f"{sync_profile_id}_{now.strftime('%Y-%m-%d_%H-%M-%S')}.ics"
+        filename = f"{sync_profile_id if sync_profile_id else 'unknown-sync-profile'}_{now.strftime('%Y-%m-%d_%H-%M-%S')}.ics"
         blob = self.firebase_storage_bucket.blob(filename)
 
         blob.metadata = {
-            "sourceUrl": ics_source_url,
+            "sourceUrl": str(ics_source.url),
             "syncProfileId": sync_profile_id,
+            "userId": user_id,
             "syncTrigger": sync_trigger,
             "blob_created_at": now.isoformat(),
             "parsing_error": format_exception(parsing_error),

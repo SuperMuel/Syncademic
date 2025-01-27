@@ -94,7 +94,7 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
     return ics_service.validate_ics_url(
-        request.url,
+        UrlIcsSource(request.url),
         # In case of error, we want to understand what went wrong by looking at the ICS file.
         save_to_storage=True,
     ).model_dump()

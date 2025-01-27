@@ -1,7 +1,5 @@
 import logging
 
-from pydantic import HttpUrl
-
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.synchronizer.ics_cache import IcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
@@ -23,7 +21,7 @@ class IcsService:
     def _try_save_to_storage(
         self,
         *,
-        ics_source_url: str,
+        ics_source: UrlIcsSource,
         ics_str: str,
         save_to_storage: bool,
         parsing_error: str | Exception | None = None,
@@ -34,7 +32,7 @@ class IcsService:
 
         try:
             self.ics_storage.save_to_cache(
-                ics_source_url=ics_source_url,
+                ics_source=ics_source,
                 ics_str=ics_str,
                 parsing_error=parsing_error,
             )
@@ -54,26 +52,25 @@ class IcsService:
 
     def validate_ics_url(
         self,
-        ics_url: str | HttpUrl,
+        ics_source: UrlIcsSource,
         *,
         save_to_storage: bool = True,
     ) -> ValidateIcsUrlOutput:
         """
-        1) Fetches the ICS file from the URL (streaming + size checks).
+        1) Fetches the ICS file from the source.
         2) Parses the ICS file to detect if it is valid.
+
+        Args:
+            ics_source: The source to fetch the ICS file from
+            save_to_storage: If True, the ICS file is stored in storage.
 
         Returns:
             ValidateIcsUrlOutput: The result of the validation.
-
-        If save_to_storage is True, the ICS file is stored in Firebase Storage, and
-        we store some metadata along with it.
         """
-
         try:
-            ics_source = UrlIcsSource(ics_url)
             ics_str = ics_source.get_ics_string()
         except Exception as e:
-            logger.error(f"Failed to fetch ICS file from URL: {e}")
+            logger.error(f"Failed to fetch ICS file from source: {e}")
             return ValidateIcsUrlOutput(
                 valid=False,
                 error=str(e),
@@ -82,7 +79,7 @@ class IcsService:
         events_or_error = self._try_parse_ics(ics_str=ics_str)
 
         self._try_save_to_storage(
-            ics_source_url=str(ics_url),
+            ics_source=ics_source,
             ics_str=ics_str,
             save_to_storage=save_to_storage,
             parsing_error=events_or_error

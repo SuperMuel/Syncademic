@@ -12,11 +12,9 @@ from pydantic import ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
+from functions.functions.services.ai_ruleset_service import AiRulesetService
 from functions.models import (
-    SyncProfileStatus,
-    SyncProfileStatusType,
     SyncTrigger,
-    SyncType,
 )
 from functions.models.schemas import (
     AuthorizeBackendInput,
@@ -48,9 +46,6 @@ from functions.services.google_calendar_service import GoogleCalendarService
 from functions.services.ics_service import IcsService
 from functions.services.sync_profile_service import SyncProfileService
 from functions.settings import settings
-from functions.synchronizer.google_calendar_manager import (
-    GoogleCalendarManager,
-)
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
@@ -64,14 +59,20 @@ sync_stats_repo: ISyncStatsRepository = FirestoreSyncStatsRepository()
 sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
-ics_service = IcsService()
+ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
+ics_service = IcsService(ics_storage=ics_file_storage)
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
     ics_service=ics_service,
 )
-
+ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
+ai_ruleset_service = AiRulesetService(
+    ics_service=ics_service,
+    sync_profile_repo=sync_profile_repo,
+    ruleset_builder=ruleset_builder,
+)
 error_mapping = ErrorMapping()
 
 
@@ -179,51 +180,6 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
         raise error_mapping.to_http_error(e)
 
 
-def _create_ai_ruleset(sync_profile: SyncProfile):
-    logger.info(
-        f"Creating AI ruleset for {sync_profile.user_id}/{sync_profile.id} ({sync_profile.title})"
-    )
-
-    model = settings.RULES_BUILDER_LLM
-
-    logger.info(f"Using {model} model")
-    llm = init_chat_model(model)
-
-    ics_url = sync_profile.scheduleSource.url
-    ics_str = UrlIcsSource(url=ics_url).get_ics_string()
-    events = IcsParser().try_parse(ics_str=ics_str)
-
-    compresser = TimeScheduleCompressor()
-    compressed_schedule = compresser.compress(events)
-
-    logger.info(
-        f"Compressed schedule to {len(compressed_schedule)=} "
-        f"({len(compressed_schedule)/len(ics_str)*100:.2f}% of original)"
-    )
-
-    logger.info(f"Creating AI ruleset for {sync_profile.user_id}/{sync_profile.id}")
-
-    ruleset_builder = RulesetBuilder(llm=llm)
-    output = ruleset_builder.generate_ruleset(
-        compressed_schedule,
-        metadata={
-            "ics_url": ics_url,
-            "user_id": sync_profile.user_id,
-            "sync_profile_id": sync_profile.id,
-        },
-    )
-
-    sync_profile_repo.update_ruleset(
-        user_id=sync_profile.user_id,
-        sync_profile_id=sync_profile.id,
-        ruleset=output.ruleset,
-    )
-
-    logger.info(
-        f"Succesfully created AI ruleset for {sync_profile.user_id}/{sync_profile.id}"
-    )
-
-
 @on_document_created(
     document="users/{userId}/syncProfiles/{syncProfileId}",
     memory=options.MemoryOption.MB_512,
@@ -249,15 +205,9 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     data["user_id"] = user_id
     sync_profile = SyncProfile.model_validate(data)
 
-    try:
-        _create_ai_ruleset(sync_profile)
-    except Exception as e:
-        logger.error(f"Failed to create AI ruleset: {e}")
-        sync_profile_repo.update_ruleset_error(
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-            error_str=f"{type(e).__name__}: {str(e)}",
-        )
+    ai_ruleset_service.create_ruleset_for_sync_profile(
+        sync_profile,
+    )
 
     # Initial synchronization
     sync_profile_service.synchronize(

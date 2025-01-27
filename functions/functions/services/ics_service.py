@@ -56,8 +56,8 @@ class IcsService:
 
     def __init__(
         self,
+        ics_storage: IcsFileStorage | None,
         ics_parser: IcsParser | None = None,
-        ics_storage: IcsFileStorage | None = None,
     ) -> None:
         self.ics_parser = ics_parser or IcsParser()
         self.ics_storage = ics_storage

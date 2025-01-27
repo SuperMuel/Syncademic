@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from pydantic import ValidationError
 import pytest
 import requests
 import responses
+from pydantic import HttpUrl, ValidationError
 
 from functions.settings import settings
 from functions.synchronizer.ics_source import (
@@ -38,12 +38,12 @@ invalid_url = "htp:/invalid-url"
 
 
 def test_valid_ics_url_with_content_length():
-    url = "https://example.com/valid.ics"
+    url = HttpUrl("https://example.com/valid.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=valid_ics_content,
             status=200,
             content_type="text/calendar",
@@ -56,12 +56,12 @@ def test_valid_ics_url_with_content_length():
 
 
 def test_valid_ics_url_without_content_length():
-    url = "https://example.com/valid.ics"
+    url = HttpUrl("https://example.com/valid.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=valid_ics_content,
             status=200,
             content_type="text/calendar",
@@ -74,12 +74,12 @@ def test_valid_ics_url_without_content_length():
 
 
 def test_ics_file_too_large_with_content_length():
-    url = "https://example.com/large.ics"
+    url = HttpUrl("https://example.com/large.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=large_ics_content,
             status=200,
             content_type="text/calendar",
@@ -92,12 +92,12 @@ def test_ics_file_too_large_with_content_length():
 
 
 def test_ics_file_too_large_without_content_length():
-    url = "https://example.com/large.ics"
+    url = HttpUrl("https://example.com/large.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=large_ics_content,
             status=200,
             content_type="text/calendar",
@@ -110,11 +110,15 @@ def test_ics_file_too_large_without_content_length():
 
 
 def test_http_error():
-    url = "https://example.com/notfound.ics"
+    url = HttpUrl("https://example.com/notfound.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
-            responses.GET, url, body="Not Found", status=404, content_type="text/plain"
+            responses.GET,
+            str(url),
+            body="Not Found",
+            status=404,
+            content_type="text/plain",
         )
 
         ics_source = UrlIcsSource(url=url)
@@ -123,12 +127,12 @@ def test_http_error():
 
 
 def test_invalid_content_type():
-    url = "https://example.com/invalid-content-type.ics"
+    url = HttpUrl("https://example.com/invalid-content-type.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=valid_ics_content,
             status=200,
             content_type="application/pdf",
@@ -141,12 +145,12 @@ def test_invalid_content_type():
 
 
 def test_missing_content_type():
-    url = "https://example.com/valid.ics"
+    url = HttpUrl("https://example.com/valid.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=valid_ics_content,
             status=200,
             adding_headers={"Content-Length": str(len(valid_ics_content))},
@@ -162,12 +166,12 @@ def test_missing_content_type():
     ["text/calendar", "text/plain"],
 )
 def test_valid_content_type(content_type):
-    url = "https://example.com/valid.ics"
+    url = HttpUrl("https://example.com/valid.ics")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            url,
+            str(url),
             body=valid_ics_content,
             status=200,
             content_type=content_type,
@@ -187,7 +191,7 @@ def test_invalid_url():
 
 
 def test_timeout():
-    url = "https://example.com/timeout.ics"
+    url = HttpUrl("https://example.com/timeout.ics")
 
     with responses.RequestsMock() as rsps:
 
@@ -195,7 +199,10 @@ def test_timeout():
             raise requests.exceptions.Timeout()
 
         rsps.add_callback(
-            responses.GET, url, callback=request_callback, content_type="text/calendar"
+            responses.GET,
+            str(url),
+            callback=request_callback,
+            content_type="text/calendar",
         )
 
         ics_source = UrlIcsSource(url=url)
@@ -204,10 +211,10 @@ def test_timeout():
 
 
 def test_url_ics_source_equality():
-    url = "https://example.com/calendar.ics"
+    url = HttpUrl("https://example.com/calendar.ics")
     source1 = UrlIcsSource(url=url)
     source2 = UrlIcsSource(url=url)
-    source3 = UrlIcsSource(url="https://example.com/different.ics")
+    source3 = UrlIcsSource(url=HttpUrl("https://example.com/different.ics"))
 
     assert source1 == source2
     assert source1 != source3
@@ -238,7 +245,7 @@ def test_string_ics_source_equality():
 
 
 def test_different_source_types_inequality():
-    url_source = UrlIcsSource(url="https://example.com/calendar.ics")
+    url_source = UrlIcsSource(url=HttpUrl("https://example.com/calendar.ics"))
     file_source = FileIcsSource(file_path=Path("/tmp/calendar.ics"))
     string_source = StringIcsSource(ics_string="BEGIN:VCALENDAR\nEND:VCALENDAR")
 

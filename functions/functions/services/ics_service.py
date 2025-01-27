@@ -2,10 +2,10 @@ import logging
 
 from pydantic import HttpUrl
 
-from functions.functions.models.schemas import ValidateIcsUrlOutput
-from functions.functions.synchronizer.ics_cache import IcsFileStorage
-from functions.functions.synchronizer.ics_parser import IcsParser
-from functions.functions.synchronizer.ics_source import UrlIcsSource
+from functions.models.schemas import ValidateIcsUrlOutput
+from functions.synchronizer.ics_cache import IcsFileStorage
+from functions.synchronizer.ics_parser import IcsParser
+from functions.synchronizer.ics_source import UrlIcsSource
 from functions.shared.event import Event
 
 logger = logging.getLogger(__name__)

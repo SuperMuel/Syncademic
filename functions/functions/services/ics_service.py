@@ -26,6 +26,7 @@ class IcsService:
         ics_source_url: str,
         ics_str: str,
         save_to_storage: bool,
+        parsing_error: str | Exception | None = None,
     ) -> None:
         if not save_to_storage or not self.ics_storage:
             logger.info("Not saving to storage")
@@ -35,20 +36,21 @@ class IcsService:
             self.ics_storage.save_to_cache(
                 ics_source_url=ics_source_url,
                 ics_str=ics_str,
+                parsing_error=parsing_error,
             )
 
         except Exception as e:
             logger.error(f"Failed to save ICS file to storage: {e}")
 
-    def _try_parse_ics(self, ics_str: str) -> list[Event] | str:
+    def _try_parse_ics(self, ics_str: str) -> list[Event] | Exception:
         """
-        Parses the ICS file and returns the events or an error message.
+        Parses the ICS file and returns the events or an exception.
         """
         try:
             return self.ics_parser.parse(ics_str=ics_str)
         except Exception as e:
             logger.error(f"Failed to parse ICS file: {e}")
-            return str(e)
+            return e
 
     def validate_ics_url(
         self,
@@ -83,13 +85,17 @@ class IcsService:
             ics_source_url=str(ics_url),
             ics_str=ics_str,
             save_to_storage=save_to_storage,
-            parsing_error=events_or_error if isinstance(events_or_error, str) else None,
+            parsing_error=events_or_error
+            if isinstance(events_or_error, Exception)
+            else None,
         )
 
         return ValidateIcsUrlOutput(
-            valid=not isinstance(events_or_error, str),
-            error=events_or_error if isinstance(events_or_error, str) else None,
+            valid=not isinstance(events_or_error, Exception),
+            error=str(events_or_error)
+            if isinstance(events_or_error, Exception)
+            else None,
             nbEvents=len(events_or_error)
-            if not isinstance(events_or_error, str)
+            if not isinstance(events_or_error, Exception)
             else None,
         )

@@ -14,11 +14,7 @@ class IcsFileStorage(ABC):
         ics_str: str,
         *,
         ics_source: IcsSource,
-        sync_profile_id: str | None = None,
-        user_id: str | None = None,
-        # TODO : type this and add sync_type
-        sync_trigger: str | None = None,
-        parsing_error: str | Exception | None = None,
+        metadata: dict | None = None,
     ) -> None:
         pass
 
@@ -43,23 +39,27 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         ics_str: str,
         *,
         ics_source: IcsSource,
-        sync_profile_id: str | None = None,
-        user_id: str | None = None,
-        sync_trigger: str | None = None,  # TODO : type this
-        parsing_error: str | Exception | None = None,
+        metadata: dict | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
+        if not metadata:
+            metadata = {}
 
-        filename = f"{sync_profile_id if sync_profile_id else 'unknown-sync-profile'}_{now.strftime('%Y-%m-%d_%H-%M-%S')}.ics"
+        # format exceptions in the metadata
+        metadata = {
+            k: format_exception(v)
+            for k, v in metadata.items()
+            if isinstance(v, Exception)
+        }
+
+        sync_profile_id = metadata.get("sync_profile_id", "unknown-sync-profile")
+        filename = f"{sync_profile_id}_{now.strftime('%Y-%m-%d_%H-%M-%S')}.ics"
         blob = self.firebase_storage_bucket.blob(filename)
 
         blob.metadata = {
             "ics_source": ics_source.model_dump(),
-            "syncProfileId": sync_profile_id,
-            "userId": user_id,
-            "syncTrigger": sync_trigger,
             "blob_created_at": now.isoformat(),
-            "parsing_error": format_exception(parsing_error),
+            **metadata,
         }
         blob.upload_from_string(ics_str, content_type="text/calendar")
         logger.info(f"Stored ics string in firebase storage: {filename}")

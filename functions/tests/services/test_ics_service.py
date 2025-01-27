@@ -64,7 +64,7 @@ class TestTryFetchAndParse:
         mock_ics_parser.try_parse.return_value = expected_events
 
         # Act
-        result = service.try_fetch_and_parse(mock_ics_source)
+        result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
 
         # Assert
         assert result == expected_events
@@ -73,7 +73,7 @@ class TestTryFetchAndParse:
         mock_ics_storage.save_to_cache.assert_called_once_with(
             ics_source=mock_ics_source,
             ics_str=ics_content,
-            parsing_error=None,
+            metadata={"test": "test"},
         )
 
     def test_fetch_error(
@@ -110,7 +110,7 @@ class TestTryFetchAndParse:
         mock_ics_parser.try_parse.return_value = error
 
         # Act
-        result = service.try_fetch_and_parse(mock_ics_source)
+        result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
 
         # Assert
         assert result == error
@@ -119,7 +119,7 @@ class TestTryFetchAndParse:
         mock_ics_storage.save_to_cache.assert_called_once_with(
             ics_source=mock_ics_source,
             ics_str=ics_content,
-            parsing_error=error,
+            metadata={"test": "test"},
         )
 
     def test_storage_disabled(

@@ -115,7 +115,9 @@ class UrlIcsSource(IcsSource):
                     chunks.write(chunk)
 
                 # Decode all bytes at once
-                return chunks.getvalue().decode("utf-8", errors="ignore")
+                s = chunks.getvalue().decode("utf-8", errors="ignore")
+                logger.info(f"ICS string size: {len(s) / 1024} KB")
+                return s
 
         except requests.RequestException as e:
             logger.error(f"Could not fetch ICS file : {e}")

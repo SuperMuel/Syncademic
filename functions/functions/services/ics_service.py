@@ -9,7 +9,7 @@ from functions.services.exceptions.ics import (
 from functions.shared.event import Event
 from functions.synchronizer.ics_cache import IcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
-from functions.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +65,10 @@ class IcsService:
     def _try_save_to_storage(
         self,
         *,
-        ics_source: UrlIcsSource,
+        ics_source: IcsSource,
         ics_str: str,
         save_to_storage: bool,
-        parsing_error: str | Exception | None = None,
+        metadata: dict | None = None,
     ) -> None:
         if not save_to_storage or not self.ics_storage:
             logger.info("Not saving to storage")
@@ -78,7 +78,7 @@ class IcsService:
             self.ics_storage.save_to_cache(
                 ics_source=ics_source,
                 ics_str=ics_str,
-                parsing_error=parsing_error,
+                metadata=metadata,
             )
 
         except Exception as e:
@@ -86,9 +86,10 @@ class IcsService:
 
     def try_fetch_and_parse(
         self,
-        ics_source: UrlIcsSource,
+        ics_source: IcsSource,
         *,
         save_to_storage: bool = True,
+        metadata: dict | None = None,
     ) -> list[Event] | IcsSourceError | IcsParsingError:
         """
         Tries to fetch the ICS file and parse it. Optionally saves the ICS file to storage for debugging purposes.
@@ -96,6 +97,7 @@ class IcsService:
         Args:
             ics_source: The source to fetch the ICS file from
             save_to_storage: If True, the ICS file is stored in storage, whether the parsing is successful or not.
+            metadata: Metadata to add to the ICS file in storage.
 
         Returns:
             list[Event] if successful, otherwise a BaseIcsError.
@@ -115,9 +117,7 @@ class IcsService:
             ics_source=ics_source,
             ics_str=ics_str,
             save_to_storage=save_to_storage,
-            parsing_error=events_or_error
-            if isinstance(events_or_error, Exception)
-            else None,
+            metadata=metadata,
         )
 
         return events_or_error

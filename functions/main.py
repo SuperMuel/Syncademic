@@ -57,6 +57,7 @@ from functions.synchronizer.synchronizer import (
     perform_synchronization,
 )
 from functions.services.google_calendar_service import GoogleCalendarService
+from functions.services.ics_service import IcsService
 
 initialize_app()
 
@@ -67,6 +68,7 @@ sync_stats_repo: ISyncStatsRepository = FirestoreSyncStatsRepository()
 sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
+ics_service = IcsService()
 
 error_mapping = ErrorMapping()
 
@@ -91,28 +93,11 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
-    ics_url = request.url
-
-    # Use UrlIcsSource to fetch the ICS file and validate content-type and size
-    try:
-        ics_source = UrlIcsSource(ics_url)
-        content = ics_source.get_ics_string()
-    except Exception as e:
-        logging.info(f"Failed to fetch ICS file at URL '{ics_url}': {e}")
-        return {"valid": False, "error": str(e)}
-
-    # Content verification
-    try:
-        parser = IcsParser()
-        events = parser.parse(ics_str=content)
-    except Exception as e:
-        logging.error(f"Invalid ICS content at URL '{ics_url}': {e}")
-        return {"valid": False, "error": str(e)}
-
-    # If everything is fine, return success
-    logger.info(f"Successfully fetched ICS file at URL '{ics_url}'")
-
-    return ValidateIcsUrlOutput(valid=True, nbEvents=len(events)).model_dump()
+    return ics_service.validate_ics_url(
+        request.url,
+        # In case of error, we want to understand what went wrong by looking at the ICS file.
+        save_to_storage=True,
+    ).model_dump()
 
 
 @https_fn.on_call(
@@ -128,7 +113,7 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
         request = ListUserCalendarsInput.model_validate(req.data)
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-        
+
     try:
         calendars = google_calendar_service.list_calendars(
             user_id=user_id,
@@ -174,7 +159,7 @@ def create_new_calendar(req: https_fn.CallableRequest) -> dict:
         request = CreateNewCalendarInput.model_validate(req.data)
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-        
+
     try:
         result = google_calendar_service.create_new_calendar(
             user_id=user_id,

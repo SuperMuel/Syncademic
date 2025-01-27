@@ -224,6 +224,8 @@ class AuthorizationService:
             # A simple operation that fails if authorization is invalid
             service.calendarList().list().execute(num_retries=2)
             logger.info("Authorization is valid.")
+
+        # TODO : do not cache all exceptions, but only authorization errors
         except Exception as e:
             logger.error(f"Failed to test authorization: {e}")
             raise BaseAuthorizationError(

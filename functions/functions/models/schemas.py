@@ -11,7 +11,15 @@ class ValidateIcsUrlInput(BaseModel):
 
 class ValidateIcsUrlOutput(BaseModel):
     valid: bool = Field(..., description="Whether the URL is valid")
-    nbEvents: int = Field(..., description="Number of events in the ICS file", ge=0)
+    nbEvents: int | None = Field(
+        default=None, description="Number of events in the ICS file", ge=0
+    )
+    error: str | None = Field(
+        None,
+        description="Error message if the URL is not valid",
+    )
+
+    # Maybe we'd like to return the parsed events to the frontend
 
 
 class ListUserCalendarsInput(BaseModel):

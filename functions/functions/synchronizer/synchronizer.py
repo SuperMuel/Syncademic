@@ -32,7 +32,7 @@ def perform_synchronization(
         ics_cache.save_to_cache(
             sync_profile_id=sync_profile_id,
             sync_trigger=sync_trigger,
-            ics_source=ics_source,
+            ics_source_url=ics_source.url,
             ics_str=ics_str,
             parsing_error=e,
         )
@@ -45,7 +45,7 @@ def perform_synchronization(
         ics_cache.save_to_cache(
             sync_profile_id=sync_profile_id,
             sync_trigger=sync_trigger,
-            ics_source=ics_source,
+            ics_source_url=ics_source.url,
             ics_str=ics_str,
         )
     except Exception as e:

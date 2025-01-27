@@ -1,33 +1,95 @@
+import logging
+
 from pydantic import HttpUrl
+
+from functions.functions.models.schemas import ValidateIcsUrlOutput
+from functions.functions.synchronizer.ics_cache import IcsFileStorage
+from functions.functions.synchronizer.ics_parser import IcsParser
+from functions.functions.synchronizer.ics_source import UrlIcsSource
+from functions.shared.event import Event
+
+logger = logging.getLogger(__name__)
 
 
 class IcsService:
-    def validate_ics_url(self, ics_url: str | HttpUrl) -> tuple[bool, int]:
+    def __init__(
+        self,
+        ics_parser: IcsParser | None = None,
+        ics_storage: IcsFileStorage | None = None,
+    ) -> None:
+        self.ics_parser = ics_parser or IcsParser()
+        self.ics_storage = ics_storage
+
+    def _try_save_to_storage(
+        self,
+        *,
+        ics_source_url: str,
+        ics_str: str,
+        save_to_storage: bool,
+    ) -> None:
+        if not save_to_storage or not self.ics_storage:
+            logger.info("Not saving to storage")
+            return
+
+        try:
+            self.ics_storage.save_to_cache(
+                ics_source_url=ics_source_url,
+                ics_str=ics_str,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to save ICS file to storage: {e}")
+
+    def _try_parse_ics(self, ics_str: str) -> list[Event] | str:
+        """
+        Parses the ICS file and returns the events or an error message.
+        """
+        try:
+            return self.ics_parser.parse(ics_str=ics_str)
+        except Exception as e:
+            logger.error(f"Failed to parse ICS file: {e}")
+            return str(e)
+
+    def validate_ics_url(
+        self,
+        ics_url: str | HttpUrl,
+        *,
+        save_to_storage: bool = True,
+    ) -> ValidateIcsUrlOutput:
         """
         1) Fetches the ICS file from the URL (streaming + size checks).
         2) Parses the ICS file to detect if it is valid.
-        Returns (is_valid, number_of_events).
-        """
-        ics_url = HttpUrl(ics_url)
 
-    def fetch_and_parse_ics(
-        self,
-        ics_url: str,
-    ) -> list[Event]:
-        """
-        Fetch the ICS string, parse it, and return the parsed events.
-        Raises an exception if anything fails (fetch or parse).
+        Returns:
+            ValidateIcsUrlOutput: The result of the validation.
+
+        If save_to_storage is True, the ICS file is stored in Firebase Storage, and
+        we store some metadata along with it.
         """
 
-    def save_ics_to_cache(
-        self,
-        sync_profile_id: str,
-        sync_trigger: str,
-        ics_url: str,
-        ics_str: str,
-        parsing_error: Exception | None = None,
-    ) -> None:
-        """
-        Stores the ICS file in Firebase Storage (or another storage backend),
-        along with metadata about the profile, trigger, and any errors.
-        """
+        try:
+            ics_source = UrlIcsSource(ics_url)
+            ics_str = ics_source.get_ics_string()
+        except Exception as e:
+            logger.error(f"Failed to fetch ICS file from URL: {e}")
+            return ValidateIcsUrlOutput(
+                valid=False,
+                error=str(e),
+            )
+
+        events_or_error = self._try_parse_ics(ics_str=ics_str)
+
+        self._try_save_to_storage(
+            ics_source_url=str(ics_url),
+            ics_str=ics_str,
+            save_to_storage=save_to_storage,
+            parsing_error=events_or_error if isinstance(events_or_error, str) else None,
+        )
+
+        return ValidateIcsUrlOutput(
+            valid=not isinstance(events_or_error, str),
+            error=events_or_error if isinstance(events_or_error, str) else None,
+            nbEvents=len(events_or_error)
+            if not isinstance(events_or_error, str)
+            else None,
+        )

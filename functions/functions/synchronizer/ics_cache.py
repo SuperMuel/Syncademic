@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any
-from functions.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 from google.cloud import storage
 from firebase_functions import logger
 
@@ -10,10 +10,10 @@ class IcsFileStorage(ABC):
     @abstractmethod
     def save_to_cache(
         self,
-        sync_profile_id: str,
-        sync_trigger: str,
-        ics_source: UrlIcsSource,
+        ics_source_url: str,
         ics_str: str,
+        sync_profile_id: str | None = None,
+        sync_trigger: str | None = None,
         parsing_error: str | Exception | None = None,
     ) -> None:
         pass
@@ -36,10 +36,10 @@ class FirebaseIcsFileStorage(IcsFileStorage):
 
     def save_to_cache(
         self,
-        sync_profile_id: str,
-        sync_trigger: str,  # TODO : type this
-        ics_source: UrlIcsSource,
+        ics_source_url: str,
         ics_str: str,
+        sync_profile_id: str | None = None,
+        sync_trigger: str | None = None,  # TODO : type this
         parsing_error: str | Exception | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
@@ -48,7 +48,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         blob = self.firebase_storage_bucket.blob(filename)
 
         blob.metadata = {
-            "sourceUrl": ics_source.url,
+            "sourceUrl": ics_source_url,
             "syncProfileId": sync_profile_id,
             "syncTrigger": sync_trigger,
             "blob_created_at": now.isoformat(),

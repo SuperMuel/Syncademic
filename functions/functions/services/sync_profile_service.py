@@ -23,8 +23,6 @@ from functions.repositories.sync_stats_repository import ISyncStatsRepository
 from functions.services.authorization_service import AuthorizationService
 from functions.settings import settings
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
-from functions.synchronizer.ics_cache import IcsFileStorage
-from functions.synchronizer.ics_parser import IcsParser
 
 
 class SyncProfileService:
@@ -282,4 +280,95 @@ class SyncProfileService:
             logger.info(f"User {user_id} has reached the daily synchronization limit.")
             raise DailySyncLimitExceededError(
                 f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached."
+            )
+
+    def _can_delete(self, status_type: SyncProfileStatusType) -> bool:
+        match status_type:
+            case (
+                SyncProfileStatusType.DELETING  # Already in deletion process
+                | SyncProfileStatusType.DELETION_FAILED  # re-trying deletion is not implemented yet
+                | SyncProfileStatusType.IN_PROGRESS  # Do not delete while synchronization is in progress
+                | SyncProfileStatusType.NOT_STARTED  # A synchronization will start soon, so we don't delete
+            ):
+                return False
+            case (
+                SyncProfileStatusType.FAILED  # Failed syncs can be deleted
+                | SyncProfileStatusType.SUCCESS  # Successful syncs can be deleteds
+            ):
+                return True
+            # case _: # Don't use a catch-all case ! we want to get warning if we forgot to add a case
+
+        raise ValueError(f"Unhandled status type: {status_type}")
+
+    def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
+        """
+        Handles the complete deletion process for a sync profile including:
+        1. Status validation and transition to DELETING state
+        2. Calendar event cleanup
+        3. Profile deletion from repository
+
+        Args:
+            user_id: Firebase Auth user ID
+            sync_profile_id: ID of the sync profile to delete
+
+        Doesn't raise but logs errors and updates the sync profile status to DELETION_FAILED
+        in case of error.
+
+        For a default deletion, we want to delete all the events on the target calendar. This
+        step can fail because of a calendar authorization error or because of an error while
+        deleting the events. Thus there's a need for a DELETION_FAILED status.
+        Currently, we don't retry nor force the deletion, as we want to take time to think about
+        how to handle this. Some users might want to delete their events but not the calendar, some
+        might want to delete everything, some might want to just delete the sync profile but not the
+        calendar or the events.  #TODO (supermuel) implement right deletion logic.
+        """
+        profile = self._get_profile_or_raise(user_id, sync_profile_id)
+
+        def _update_status(
+            status_type: SyncProfileStatusType, message: str | None = None
+        ) -> None:
+            self._sync_profile_repo.update_sync_profile_status(
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+                status=SyncProfileStatus(type=status_type, message=message),
+            )
+
+        if not self._can_delete(profile.status.type):
+            logger.info(f"Profile is {profile.status.type}, skipping deletion")
+            return
+
+        _update_status(SyncProfileStatusType.DELETING)
+
+        try:
+            calendar_manager = (
+                self._authorization_service.get_authenticated_google_calendar_manager(
+                    user_id=user_id,
+                    provider_account_id=profile.targetCalendar.providerAccountId,
+                    calendar_id=profile.targetCalendar.id,
+                )
+            )
+        except Exception as e:
+            logger.error(f"Authorization failed: {e}")
+            _update_status(
+                SyncProfileStatusType.DELETION_FAILED, f"Authorization failed."
+            )
+            return
+
+        try:
+            if to_delete_ids := calendar_manager.get_events_ids_from_sync_profile(
+                sync_profile_id=profile.id
+            ):
+                logger.info(f"Deleting {len(to_delete_ids)} events")
+                calendar_manager.delete_events(ids=to_delete_ids)
+            else:
+                logger.info("No events to delete")
+
+            self._sync_profile_repo.delete_sync_profile(user_id, sync_profile_id)
+            logger.info("Deletion successful")
+
+        except Exception as e:
+            logger.error(f"Unexpected error during event deletion: {e}")
+            _update_status(
+                SyncProfileStatusType.DELETION_FAILED,
+                f"Could not delete events from calendar.",
             )

@@ -69,8 +69,7 @@ sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
-    ics_parser=IcsParser(),
-    ics_cache=FirebaseIcsFileStorage(bucket=storage.bucket()),
+    ics_service=ics_service,
 )
 
 error_mapping = ErrorMapping()
@@ -328,9 +327,7 @@ def scheduled_sync(event: Any) -> None:
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def delete_sync_profile(
-    req: https_fn.CallableRequest,
-) -> Any:  # TODO : add 'force' argument
+def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
     user_id = get_user_id_or_raise(req)
 
     try:
@@ -338,89 +335,13 @@ def delete_sync_profile(
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
-    sync_profile_id = request.syncProfileId
-
-    sync_profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
-    if sync_profile is None:
-        logger.info("Sync profile not found")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
-        )
-
-    match status_type := sync_profile.status.type:
-        case SyncProfileStatusType.DELETING:
-            logger.info(f"Sync profile is already {status_type}, skipping deletion")
-            return
-        case SyncProfileStatusType.IN_PROGRESS:
-            raise https_fn.HttpsError(
-                https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
-                "Sync profile is currently in progress",
-            )
-        case (
-            SyncProfileStatusType.SUCCESS
-            | SyncProfileStatusType.FAILED
-            | SyncProfileStatusType.DELETION_FAILED
-        ):
-            # Allow deletion to proceed
-            pass
-        # Do not use a catch-all case ! We want a type error if a new status is not handled.
-
-    sync_profile_repo.update_sync_profile_status(
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
-        status=SyncProfileStatus(type=SyncProfileStatusType.DELETING),
-    )
-
     try:
-        calendar_manager = (
-            authorization_service.get_authenticated_google_calendar_manager(
-                user_id=user_id,
-                provider_account_id=sync_profile.targetCalendar.providerAccountId,
-                calendar_id=sync_profile.targetCalendar.id,
-            )
+        sync_profile_service.delete_sync_profile(
+            user_id=user_id, sync_profile_id=request.syncProfileId
         )
-    except Exception as e:
-        logger.info(f"Failed to get calendar service: {e}. Skipping deletion")
-        sync_profile_repo.update_sync_profile_status(
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-            status=SyncProfileStatus(
-                type=SyncProfileStatusType.DELETION_FAILED,
-                message=f"Authorization failed: {e}",
-            ),
-        )
-
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "Authorization failed",
-        )
-
-    try:
-        events_ids = calendar_manager.get_events_ids_from_sync_profile(
-            sync_profile_id=sync_profile_id,
-        )
-        logger.info(f"Deleting {len(events_ids)} events")
-        calendar_manager.delete_events(
-            ids=events_ids,
-        )
-    except Exception as e:
-        logger.error(f"Failed to delete events: {e}")
-        sync_profile_repo.update_sync_profile_status(
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-            status=SyncProfileStatus(
-                type=SyncProfileStatusType.DELETION_FAILED,
-                message=f"Failed to delete events: {e}",
-            ),
-        )
-
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to delete events"
-        )
-
-    sync_profile_repo.delete_sync_profile(user_id, sync_profile_id)
-
-    logger.info("Sync profile deleted successfully")
+        return {"success": True}
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 @https_fn.on_call(

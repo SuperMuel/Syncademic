@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.functions.services.ai_ruleset_service import AiRulesetService
 from functions.models import (
     SyncTrigger,
 )
@@ -39,6 +38,7 @@ from functions.repositories.sync_stats_repository import (
     FirestoreSyncStatsRepository,
     ISyncStatsRepository,
 )
+from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.authorization_service import AuthorizationService
 from functions.services.exceptions.base import SyncademicError
 from functions.services.exceptions.mapping import ErrorMapping

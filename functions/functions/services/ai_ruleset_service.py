@@ -5,13 +5,13 @@ from langchain.chat_models import init_chat_model
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.functions.repositories.sync_profile_repository import (
-    ISyncProfileRepository,
-)
-from functions.functions.services.ics_service import IcsService
 from functions.models.rules import Ruleset
 from functions.models.sync_profile import SyncProfile
+from functions.repositories.sync_profile_repository import (
+    ISyncProfileRepository,
+)
 from functions.services.exceptions.ruleset import RulesetGenerationError
+from functions.services.ics_service import IcsService
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
 

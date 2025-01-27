@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import ValidationError
 import pytest
 import requests
 import responses
@@ -181,8 +182,8 @@ def test_valid_content_type(content_type):
 def test_invalid_url():
     url = invalid_url
 
-    with pytest.raises(ValueError, match="Invalid URL"):
-        UrlIcsSource(url=url)
+    with pytest.raises(ValidationError):
+        UrlIcsSource(url=url)  # type: ignore
 
 
 def test_timeout():

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from typing import Optional
 import arrow
 
 from functions.shared.google_calendar_colors import GoogleEventColor

@@ -10,7 +10,7 @@ import os
 from pydantic import HttpUrl
 
 from functions.services.exceptions.auth import ProviderUserIdMismatchError
-from services.exceptions import (
+from functions.services.exceptions import (
     BaseAuthorizationError,
     UnauthorizedError,
 )

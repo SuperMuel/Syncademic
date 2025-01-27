@@ -90,3 +90,50 @@ class FirestoreSyncStatsRepository(ISyncStatsRepository):
         )
 
         doc_ref.set({"syncCount": firestore.Increment(1)}, merge=True)
+
+
+class MockSyncStatsRepository(ISyncStatsRepository):
+    """
+    In-memory implementation of ISyncStatsRepository for testing purposes.
+    Stores sync stats in a dictionary instead of Firestore.
+    """
+
+    def __init__(self) -> None:
+        """Initialize an empty stats storage."""
+        # Format: {user_id: {date_str: sync_count}}
+        self._storage: dict[str, dict[str, int]] = {}
+
+    def get_daily_sync_count(self, user_id: str, day: date | None = None) -> int:
+        """
+        Retrieves the syncCount for the given user on a specific date from memory.
+        Returns 0 if not found.
+
+        :param user_id: The user ID.
+        :param day: The date for which to retrieve the sync count. If None, defaults to today.
+        :return: The number of syncs for the given user and day.
+        """
+        if day is None:
+            day = date.today()
+
+        date_str = day.isoformat()
+        return self._storage.get(user_id, {}).get(date_str, 0)
+
+    def increment_sync_count(self, user_id: str, day: date | None = None) -> None:
+        """
+        Increments the syncCount by 1 for the given user on the specified date in memory.
+        Creates the entry if it doesn't exist.
+
+        :param user_id: The user ID.
+        :param day: The date for which to increment the sync count. If None, defaults to today.
+        """
+        if day is None:
+            day = date.today()
+
+        date_str = day.isoformat()
+
+        if user_id not in self._storage:
+            self._storage[user_id] = {}
+
+        self._storage[user_id][date_str] = (
+            self._storage.get(user_id, {}).get(date_str, 0) + 1
+        )

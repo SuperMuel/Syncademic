@@ -30,8 +30,6 @@ from .mapping import ErrorMapping
 __all__ = [
     "SyncademicError",
     "BaseAuthorizationError",
-    "InvalidAuthCodeError",
-    "TokenVerificationError",
     "ProviderUserIdMismatchError",
     "BaseTargetCalendarError",
     "TargetCalendarNotFoundError",

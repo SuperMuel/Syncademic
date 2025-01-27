@@ -4,11 +4,11 @@ from typing import Any
 
 from firebase_functions import logger
 
-from functions.functions.services.exceptions.sync import (
+from functions.services.exceptions.sync import (
     DailySyncLimitExceededError,
     SyncProfileNotFoundError,
 )
-from functions.functions.shared.google_calendar_colors import GoogleEventColor
+from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.models import (
     SyncProfile,
     SyncProfileStatus,

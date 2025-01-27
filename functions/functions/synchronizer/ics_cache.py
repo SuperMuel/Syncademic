@@ -4,7 +4,7 @@ from typing import Any
 from google.cloud import storage
 from firebase_functions import logger
 
-from functions.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
 class IcsFileStorage(ABC):
@@ -13,7 +13,7 @@ class IcsFileStorage(ABC):
         self,
         ics_str: str,
         *,
-        ics_source: UrlIcsSource,
+        ics_source: IcsSource,
         sync_profile_id: str | None = None,
         user_id: str | None = None,
         # TODO : type this and add sync_type
@@ -42,7 +42,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         self,
         ics_str: str,
         *,
-        ics_source: UrlIcsSource,
+        ics_source: IcsSource,
         sync_profile_id: str | None = None,
         user_id: str | None = None,
         sync_trigger: str | None = None,  # TODO : type this
@@ -54,7 +54,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         blob = self.firebase_storage_bucket.blob(filename)
 
         blob.metadata = {
-            "sourceUrl": str(ics_source.url),
+            "ics_source": ics_source.model_dump(),
             "syncProfileId": sync_profile_id,
             "userId": user_id,
             "syncTrigger": sync_trigger,

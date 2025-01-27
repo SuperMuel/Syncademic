@@ -14,6 +14,7 @@ from pydantic import (
 )
 
 from functions.models.rules import Ruleset
+from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
 def utc_datetime_factory():
@@ -83,6 +84,12 @@ class ScheduleSource(BaseModel):
     """
 
     url: HttpUrl = Field(..., description="Publicly accessible URL to the ICS file")
+
+    def to_ics_source(self) -> IcsSource:
+        """
+        Converts the schedule source definition to an actual IcsSource object.
+        """
+        return UrlIcsSource(url=self.url)
 
 
 class TargetCalendar(BaseModel):

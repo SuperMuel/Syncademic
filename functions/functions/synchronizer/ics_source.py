@@ -19,11 +19,6 @@ class IcsSource(BaseModel, ABC):
 class UrlIcsSource(IcsSource):
     url: HttpUrl
 
-    def __init__(self, url: str | HttpUrl, **data):
-        if isinstance(url, str) and not validators.url(url):
-            raise ValueError("Invalid URL")
-        super().__init__(url=url, **data)
-
     def get_ics_string(
         self,
         *,

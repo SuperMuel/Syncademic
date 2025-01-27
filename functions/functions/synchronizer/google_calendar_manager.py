@@ -1,14 +1,17 @@
 from datetime import datetime
-from typing import List, Optional, TypeAlias, Dict
+from typing import Any, Iterable, List, Optional, TypeAlias, Dict
 from itertools import islice
 import pytz
 from firebase_functions import logger
 from functions.shared.event import Event
 
-ExtendedProperties: TypeAlias = Dict
+ExtendedProperties: TypeAlias = dict[str, Any]
 
 
-def batched(iterable, batch_size):
+def batched(iterable: Iterable, batch_size: int) -> Iterable[list]:
+    """
+    Batch an iterable into chunks of a given size.
+    """
     iterator = iter(iterable)
     while True:
         batch = list(islice(iterator, batch_size))
@@ -18,12 +21,22 @@ def batched(iterable, batch_size):
 
 
 class GoogleCalendarManager:
-    def __init__(self, service, calendar_id: str):
-        self.service = service
-        self.calendar_id = calendar_id
+    """Create, retrieve, and delete events in Google Calendar,
+    with support for batch operations and extended properties for sync tracking.
 
-    def event_to_google_event(
-        self, event: Event, extended_properties: ExtendedProperties
+    The manager handles:
+    - Converting our Event objects to Google Calendar event format
+    - Batch creation of events
+    - Retrieving event IDs based on sync profile
+    - Batch deletion of events
+
+    All methods that interact with the Google Calendar API require a service object
+    (googleapiclient.discovery.Resource) and a calendar_id.
+    """
+
+    @staticmethod
+    def _event_to_google_event(
+        event: Event, extended_properties: ExtendedProperties
     ) -> dict:
         # Format the start and end times to RFC 3339
         start_time_rfc3339 = event.start.format("YYYY-MM-DDTHH:mm:ssZZ")
@@ -43,30 +56,52 @@ class GoogleCalendarManager:
 
         return body
 
-    def _get_syncademic_marker(self, sync_profile_id) -> ExtendedProperties:
-        assert sync_profile_id
+    @staticmethod
+    def _create_extended_properties(sync_profile_id: str) -> ExtendedProperties:
+        if not sync_profile_id:
+            raise ValueError(f"{sync_profile_id=} is not valid")
         return {"private": {"syncademic": sync_profile_id}}
 
     def create_events(
-        self, events: list[Event], sync_profile_id: str, *, batch_size: int = 50
+        self,
+        events: list[Event],
+        *,
+        sync_profile_id: str,
+        service: Any,
+        calendar_id: str,
+        batch_size: int = 50,
     ) -> None:
-        logger.info(f"Creating {len(events)} events.")
+        """Create multiple events in Google Calendar using batch requests.
 
-        if len(events) > 1000:
-            raise Exception(f"Too many events. ({len(events)})")
+        This method creates events in batches to optimize API usage. Each event is tagged
+        with a sync profile ID in its extended properties for tracking purposes.
+
+        Args:
+            events: List of Event objects to create in Google Calendar.
+            sync_profile_id: Identifier used to tag and track synced events.
+            service: Google Calendar API service object (googleapiclient.discovery.Resource).
+            calendar_id: ID of the Google Calendar to add events to (e.g., "primary").
+            batch_size: Number of events to process in each batch request. Defaults to 50.
+        """
+        if len(events) > 10000:  # TODO : make this configurable
+            raise ValueError(f"Too many events to create ({len(events)})")
+
+        logger.info(f"Creating {len(events)} events.")
 
         for i, sublist in enumerate(
             batched(events, batch_size)
         ):  # TODO : check maximum batch size
-            batch = self.service.new_batch_http_request()
+            batch = service.new_batch_http_request()
             for event in sublist:
-                google_event = self.event_to_google_event(
+                google_event = self._event_to_google_event(
                     event,
-                    self._get_syncademic_marker(sync_profile_id),
+                    extended_properties=self._create_extended_properties(
+                        sync_profile_id
+                    ),
                 )
                 batch.add(
-                    self.service.events().insert(
-                        calendarId=self.calendar_id,
+                    service.events().insert(
+                        calendarId=calendar_id,
                         body=google_event,
                     )
                 )
@@ -75,10 +110,13 @@ class GoogleCalendarManager:
 
     def get_events_ids_from_sync_profile(
         self,
+        *,
         sync_profile_id: str,
+        service: Any,
+        calendar_id: str,
         min_dt: datetime | None = None,
         limit: int | None = 1000,
-    ) -> List[str]:
+    ) -> list[str]:
         """Get the ids of the events associated with the sync_profile_id.
 
         Uses the privateExtendedProperty to filter the events.
@@ -93,8 +131,8 @@ class GoogleCalendarManager:
 
         events_as_dict = []
 
-        request = self.service.events().list(
-            calendarId=self.calendar_id,
+        request = service.events().list(
+            calendarId=calendar_id,
             privateExtendedProperty=f"syncademic={sync_profile_id}",
             singleEvents=True,
             orderBy="startTime",
@@ -110,7 +148,7 @@ class GoogleCalendarManager:
         while request:
             response = request.execute()
             events_as_dict.extend(response.get("items", []))
-            request = self.service.events().list_next(request, response)
+            request = service.events().list_next(request, response)
 
         # TODO : assert here that the API respected timeMin
 
@@ -119,16 +157,24 @@ class GoogleCalendarManager:
     def delete_events(
         self,
         ids: list[str],
+        *,
+        service: Any,
+        calendar_id: str,
         batch_size: int = 50,
     ) -> None:
+        """
+        Delete events from the calendar by their ids.
+        """
         logger.info(f"Deleting {len(ids)} events.")
-        for sublist in batched(ids, batch_size):
-            batch = self.service.new_batch_http_request()
+
+        for i, sublist in enumerate(batched(ids, batch_size)):
+            batch = service.new_batch_http_request()
             for id in sublist:
                 batch.add(
-                    self.service.events().delete(
-                        calendarId=self.calendar_id,
+                    service.events().delete(
+                        calendarId=calendar_id,
                         eventId=id,
                     )
                 )
             batch.execute()
+            logger.info(f"Deleted {i * batch_size + len(sublist)}/{len(ids)} events.")

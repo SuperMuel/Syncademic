@@ -78,7 +78,7 @@ def test_get_syncademic_marker():
     sync_profile_id = "test_sync_profile"
 
     # Act
-    marker = manager._get_syncademic_marker(sync_profile_id)
+    marker = manager._create_extended_properties(sync_profile_id)
 
     # Assert
     assert marker == {"private": {"syncademic": sync_profile_id}}

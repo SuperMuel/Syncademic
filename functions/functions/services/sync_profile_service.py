@@ -1,5 +1,5 @@
-import datetime
 from dataclasses import replace
+from datetime import datetime, timezone
 from typing import Any
 
 from firebase_functions import logger
@@ -39,14 +39,12 @@ class SyncProfileService:
         authorization_service: AuthorizationService,
         ics_parser: IcsParser,
         ics_cache: IcsFileStorage,
-        calendar_manager: GoogleCalendarManager,
     ) -> None:
         self._sync_profile_repo = sync_profile_repo
         self._sync_stats_repo = sync_stats_repo
         self._authorization_service = authorization_service
         self._ics_parser = ics_parser
         self._ics_cache = ics_cache
-        self._calendar_manager = calendar_manager
 
     @staticmethod
     def _can_sync(status_type: SyncProfileStatusType) -> bool:
@@ -140,6 +138,10 @@ class SyncProfileService:
             service = self._authorization_service.get_calendar_service(
                 user_id, profile.targetCalendar.providerAccountId
             )
+            calendar_manager = GoogleCalendarManager(
+                service=service,
+                calendar_id=profile.targetCalendar.id,
+            )
         except Exception as e:
             logger.error(f"Failed to get calendar service: {e}")
             _update_status(SyncProfileStatusType.FAILED, str(e))
@@ -153,7 +155,7 @@ class SyncProfileService:
                 sync_profile_id=sync_profile_id,
                 sync_trigger=sync_trigger,
                 sync_type=sync_type,
-                service=service,
+                calendar_manager=calendar_manager,
             )
 
             logger.info("Synchronization successful")
@@ -177,7 +179,7 @@ class SyncProfileService:
         sync_type: SyncType,
         user_id: str,
         sync_profile_id: str,
-        service: Any,
+        calendar_manager: GoogleCalendarManager,
     ) -> None:
         logger.info(f"Running synchronization for profile {profile.id}")
 
@@ -241,30 +243,24 @@ class SyncProfileService:
         # When it's the first sync, we create all the events on the target calendar
         # and that's all we need to do
         if sync_trigger == SyncTrigger.ON_CREATE:
-            return self._calendar_manager.create_events(
+            return calendar_manager.create_events(
                 events,
-                service=service,
-                calendar_id=profile.targetCalendar.id,
                 sync_profile_id=profile.id,
             )
 
         match sync_type:
             case SyncType.REGULAR:
                 # When it's a regular sync, we only update future events, and let past events untouched
-                separation_dt = datetime.now(datetime.timezone.utc)
+                separation_dt = datetime.now(timezone.utc)
                 to_create = [event for event in events if event.end > separation_dt]
-                to_delete = self._calendar_manager.get_events_ids_from_sync_profile(
-                    service=service,
-                    calendar_id=profile.targetCalendar.id,
+                to_delete = calendar_manager.get_events_ids_from_sync_profile(
                     sync_profile_id=profile.id,
                     min_dt=separation_dt,
                 )
             case SyncType.FULL:
                 # When it's a full sync, we delete all the events on the target calendar linked
                 # to this sync profile and then create all the events again
-                to_delete = self._calendar_manager.get_events_ids_from_sync_profile(
-                    service=service,
-                    calendar_id=profile.targetCalendar.id,
+                to_delete = calendar_manager.get_events_ids_from_sync_profile(
                     sync_profile_id=profile.id,
                     min_dt=None,
                 )
@@ -272,17 +268,15 @@ class SyncProfileService:
 
         if to_delete:
             logger.info(f"Found {len(to_delete)} events to delete")
-            self._calendar_manager.delete_events(
+            calendar_manager.delete_events(
                 ids=to_delete,
-                service=service,
-                calendar_id=profile.targetCalendar.id,
             )
         else:
             logger.info("No events to delete")
 
         if to_create:
             logger.info(f"Found {len(to_create)} events to create")
-            calendar_manager.create_events(to_create, profile.id)
+            calendar_manager.create_events(to_create, sync_profile_id=profile.id)
         else:
             logger.info("No new events to create")
 

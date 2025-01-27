@@ -65,7 +65,6 @@ sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
 ics_service = IcsService()
-calendar_manager = GoogleCalendarManager()
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
@@ -376,6 +375,9 @@ def delete_sync_profile(
         service = authorization_service.get_calendar_service(
             user_id, sync_profile.targetCalendar.providerAccountId
         )
+        calendar_manager = GoogleCalendarManager(
+            service=service, calendar_id=sync_profile.targetCalendar.id
+        )
     except Exception as e:
         logger.info(f"Failed to get calendar service: {e}. Skipping deletion")
         sync_profile_repo.update_sync_profile_status(
@@ -395,14 +397,10 @@ def delete_sync_profile(
     try:
         events_ids = calendar_manager.get_events_ids_from_sync_profile(
             sync_profile_id=sync_profile_id,
-            service=service,
-            calendar_id=sync_profile.targetCalendar.id,
         )
         logger.info(f"Deleting {len(events_ids)} events")
         calendar_manager.delete_events(
             ids=events_ids,
-            service=service,
-            calendar_id=sync_profile.targetCalendar.id,
         )
     except Exception as e:
         logger.error(f"Failed to delete events: {e}")

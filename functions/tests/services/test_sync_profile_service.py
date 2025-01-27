@@ -476,3 +476,117 @@ def test_fails_on_daily_limit(
         sync_stats_repo.get_daily_sync_count(user_id)
         == settings.MAX_SYNCHRONIZATIONS_PER_DAY
     )
+
+
+def test_successful_deletion(
+    sync_profile_service: SyncProfileService, sync_profile_repo, auth_service_mock
+):
+    """Successful deletion flow with event cleanup"""
+    user_id = "user123"
+    prof_id = "profile123"
+
+    # Setup profile with existing events
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.SUCCESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    # Mock calendar manager with existing events
+    manager = MockGoogleCalendarManager()
+    manager.create_events(
+        [Event(start=arrow.now(), end=arrow.now().shift(hours=1), title="Test Event")],
+        sync_profile_id=prof_id,
+    )
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    # Act
+    sync_profile_service.delete_sync_profile(user_id, prof_id)
+
+    # Assert
+    assert sync_profile_repo.get_sync_profile(user_id, prof_id) is None
+    assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
+
+
+def test_deletion_skipped_for_invalid_status(
+    sync_profile_service, sync_profile_repo, auth_service_mock
+):
+    """Should skip deletion for profiles in progress"""
+    user_id = "user123"
+    prof_id = "profile456"
+
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.IN_PROGRESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    sync_profile_service.delete_sync_profile(user_id, prof_id)
+
+    # Profile still exists with original status
+    assert sync_profile_repo.get_sync_profile(user_id, prof_id) is not None
+    assert (
+        sync_profile_repo.get_sync_profile(user_id, prof_id).status.type
+        == SyncProfileStatusType.IN_PROGRESS
+    )
+
+
+def test_deletion_failed_authorization(
+    sync_profile_service, sync_profile_repo, auth_service_mock
+):
+    """Should handle calendar authorization failures"""
+    user_id = "user123"
+    prof_id = "profile789"
+
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.SUCCESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    # Simulate authorization failure
+    auth_service_mock.get_authenticated_google_calendar_manager.side_effect = Exception(
+        "Auth failed"
+    )
+
+    sync_profile_service.delete_sync_profile(user_id, prof_id)
+
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile.status.type == SyncProfileStatusType.DELETION_FAILED
+    assert "Authorization failed" in updated_profile.status.message
+
+
+def test_deletion_failed_event_cleanup(
+    sync_profile_service: SyncProfileService, sync_profile_repo, auth_service_mock
+):
+    """Should handle event deletion failures"""
+    user_id = "user123"
+    prof_id = "profile101112"
+
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.SUCCESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    # Mock manager that throws on delete
+    manager = MockGoogleCalendarManager()
+    # Create some events first
+    manager.create_events(
+        [Event(start=arrow.now(), end=arrow.now().shift(hours=1), title="Test Event")],
+        sync_profile_id=prof_id,
+    )
+    # Then make delete_events throw
+    manager.delete_events = Mock(side_effect=Exception("Delete failed"))
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    sync_profile_service.delete_sync_profile(user_id, prof_id)
+
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    # Profile should still exist, but status should be DELETION_FAILED
+    assert updated_profile.status.type == SyncProfileStatusType.DELETION_FAILED
+    assert "Could not delete events" in updated_profile.status.message

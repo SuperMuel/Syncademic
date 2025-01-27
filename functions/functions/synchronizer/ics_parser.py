@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from functions.functions.services.exceptions.ics import (
+from functions.services.exceptions.ics import (
     IcsParsingError,
     RecurringEventError,
 )
@@ -11,27 +11,25 @@ import ics
 logger = logging.getLogger(__name__)
 
 
-def _check_for_recurring_event(event) -> None:
+def _is_recurring_event(event: ics.Event) -> bool:
     """
     Check if an event contains recurrence properties and raise RecurringEventError if found.
 
     Args:
         event: The ICS event to check
 
-    Raises:
-        RecurringEventError: If the event contains any recurrence properties
+    Returns:
+        bool: True if the event is recurring, False otherwise
     """
     extra_names: list[str] = [extra.name for extra in event.extra]
     assert all(isinstance(name, str) for name in extra_names)
 
-    if any(
+    recurring_props = ["RRULE", "RDATE", "EXDATE"]
+    return any(
         extra_name.startswith(prop)
         for extra_name in extra_names
-        for prop in ["RRULE", "RDATE", "EXDATE"]
-    ):
-        raise RecurringEventError(
-            f"Recurring event detected: {event.name=}, {extra_names=}. We do not support recurring events yet."
-        )
+        for prop in recurring_props
+    )
 
 
 class IcsParser:
@@ -79,7 +77,7 @@ class IcsParser:
             RecurringEventError: If any event contains recurrence rules (the exception is itself an IcsParsingError)
         """
         if not ics_str.strip():
-            raise IcsParsingError("Empty ICS string")
+            return IcsParsingError("Empty ICS string")
 
         try:
             calendar = ics.Calendar(ics_str)
@@ -89,16 +87,23 @@ class IcsParser:
 
         events = []
         for event in calendar.events:
-            _check_for_recurring_event(event)
-
-            # Append non-recurring events to the list
-            events.append(
-                Event(
-                    title=event.name or "",
-                    description=event.description or "",
-                    start=event.begin,
-                    end=event.end,
-                    location=event.location or "",
+            if _is_recurring_event(event):
+                return RecurringEventError(
+                    f"Recurring event detected: {event.name=}, {event.extra=}. We do not support recurring events yet."
                 )
-            )
+
+            try:
+                # Append non-recurring events to the list
+                events.append(
+                    Event(
+                        title=event.name or "",
+                        description=event.description or "",
+                        start=event.begin,
+                        end=event.end,
+                        location=event.location or "",
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to parse event: {e}")
+                return IcsParsingError(f"Failed to parse event: {e}")
         return events

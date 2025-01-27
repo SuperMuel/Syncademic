@@ -5,6 +5,7 @@ import requests
 import responses
 from pydantic import HttpUrl, ValidationError
 
+from functions.services.exceptions.ics import IcsSourceError
 from functions.settings import settings
 from functions.synchronizer.ics_source import (
     FileIcsSource,
@@ -87,7 +88,7 @@ def test_ics_file_too_large_with_content_length():
         )
 
         ics_source = UrlIcsSource(url=url)
-        with pytest.raises(ValueError, match="ICS file is too large"):
+        with pytest.raises(IcsSourceError, match="ICS file is too large"):
             ics_source.get_ics_string()
 
 
@@ -105,7 +106,7 @@ def test_ics_file_too_large_without_content_length():
         )
 
         ics_source = UrlIcsSource(url=url)
-        with pytest.raises(ValueError, match="ICS file is too large"):
+        with pytest.raises(IcsSourceError, match="ICS file is too large"):
             ics_source.get_ics_string()
 
 
@@ -122,7 +123,7 @@ def test_http_error():
         )
 
         ics_source = UrlIcsSource(url=url)
-        with pytest.raises(ValueError, match="Could not fetch ICS file"):
+        with pytest.raises(IcsSourceError, match="Could not fetch ICS file"):
             ics_source.get_ics_string()
 
 
@@ -140,7 +141,7 @@ def test_invalid_content_type():
         )
 
         ics_source = UrlIcsSource(url=url)
-        with pytest.raises(ValueError, match="Content-Type is not text"):
+        with pytest.raises(IcsSourceError, match="Content-Type is not text"):
             ics_source.get_ics_string()
 
 
@@ -206,7 +207,7 @@ def test_timeout():
         )
 
         ics_source = UrlIcsSource(url=url)
-        with pytest.raises(ValueError, match="Could not fetch ICS file"):
+        with pytest.raises(IcsSourceError, match="Could not fetch ICS file"):
             ics_source.get_ics_string()
 
 

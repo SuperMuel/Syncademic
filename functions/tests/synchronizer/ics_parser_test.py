@@ -1,6 +1,9 @@
-import pytest
 from typing import List
+
 import arrow
+import pytest
+
+from functions.services.exceptions.ics import IcsParsingError
 from functions.shared.event import Event
 from functions.synchronizer.ics_parser import IcsParser, RecurringEventError
 
@@ -23,7 +26,7 @@ LOCATION:{event.location}
 END:VEVENT"""
 
 
-def build_ics(events: List[Event]):
+def build_ics(events: list[Event]) -> str:
     return build_ics_outline("\n".join([event_to_ics(event) for event in events]))
 
 
@@ -45,50 +48,52 @@ event2 = Event(
 
 
 @pytest.fixture
-def ics_parser():
+def ics_parser() -> IcsParser:
     return IcsParser()
 
 
-def test_parse(ics_parser):
+def test_parse(ics_parser: IcsParser):
     """Test parsing a valid ics string."""
     ics_str = build_ics([event1])
-    events = ics_parser.parse(ics_str)
+    events = ics_parser.try_parse(ics_str)
     assert events == [event1]
 
 
-def test_parse_empty_string_throws(ics_parser):
+def test_parse_empty_string_throws(ics_parser: IcsParser):
     """Test parsing an empty ics string."""
     ics_str = ""
 
-    with pytest.raises(Exception):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, IcsParsingError)
 
 
-def test_parse_no_events(ics_parser):
+def test_parse_no_events(ics_parser: IcsParser):
     """Test parsing an empty ics string."""
     ics_str = build_ics_outline("")
-    events = ics_parser.parse(ics_str)
+    events = ics_parser.try_parse(ics_str)
     assert events == []
 
 
-def test_parse_invalid(ics_parser):
+def test_parse_invalid(ics_parser: IcsParser):
     """Test parsing an invalid ics string."""
     ics_str = "invalid"
-    with pytest.raises(Exception):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, IcsParsingError)
 
 
-def test_parse_multiple(ics_parser):
+def test_parse_multiple(ics_parser: IcsParser):
     """Test parsing multiple events."""
     ics_str = build_ics([event1, event2])
-    events = ics_parser.parse(ics_str)
+    events = ics_parser.try_parse(ics_str)
+    assert isinstance(events, list)
+    assert len(events) == 2
 
     assert events[0] == event1 or events[0] == event2
     assert events[1] == event1 or events[1] == event2
     assert events[0] != events[1]
 
 
-def test_an_event_has_no_title(ics_parser):
+def test_an_event_has_no_title(ics_parser: IcsParser):
     """Test that an event has no title."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -98,11 +103,12 @@ DTSTART:20230101T090000
 DTEND:20230101T100000
 END:VEVENT"""
     )
-    events = ics_parser.parse(ics_str)
+    events = ics_parser.try_parse(ics_str)
+    assert isinstance(events, list)
     assert events[0].title == ""
 
 
-def test_an_event_has_no_description(ics_parser):
+def test_an_event_has_no_description(ics_parser: IcsParser):
     """Test that an event has no description."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -112,11 +118,12 @@ DTSTART:20230101T090000
 DTEND:20230101T100000
 END:VEVENT"""
     )
-    events = ics_parser.parse(ics_str)
+    events = ics_parser.try_parse(ics_str)
+    assert isinstance(events, list)
     assert events[0].description == ""
 
 
-def test_an_event_has_no_location(ics_parser):
+def test_an_event_has_no_location(ics_parser: IcsParser):
     """Test that an event has no location."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -126,11 +133,12 @@ DTSTART:20230101T090000
 DTEND:20230101T100000
 END:VEVENT"""
     )
-    events = ics_parser.parse(ics_str)
+    events = ics_parser.try_parse(ics_str)
+    assert isinstance(events, list)
     assert events[0].location == ""
 
 
-def test_an_event_has_no_start_throws(ics_parser):
+def test_an_event_has_no_start_throws(ics_parser: IcsParser):
     """Test that an event has no start."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -140,11 +148,11 @@ LOCATION:Location
 DTEND:20230101T100000
 END:VEVENT"""
     )
-    with pytest.raises(Exception):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, IcsParsingError)
 
 
-def test_an_event_has_no_end_throws(ics_parser):
+def test_an_event_has_no_end_throws(ics_parser: IcsParser):
     """Test that an event has no end."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -154,11 +162,11 @@ LOCATION:Location
 DTSTART:20230101T090000
 END:VEVENT"""
     )
-    with pytest.raises(Exception):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, IcsParsingError)
 
 
-def test_an_event_has_start_after_end_throws(ics_parser):
+def test_an_event_has_start_after_end_throws(ics_parser: IcsParser):
     """Test that an event has start after end."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT 
@@ -169,11 +177,11 @@ DTSTART:20230101T100000
 DTEND:20230101T090000
 END:VEVENT"""
     )
-    with pytest.raises(Exception):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, IcsParsingError)
 
 
-def test_an_event_has_start_equal_end_throws(ics_parser):
+def test_an_event_has_start_equal_end_throws(ics_parser: IcsParser):
     """Test that an event has start equal end."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -184,11 +192,11 @@ DTSTART:20230101T090000
 DTEND:20230101T090000
 END:VEVENT"""
     )
-    with pytest.raises(Exception):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, IcsParsingError)
 
 
-def test_recurring_event_with_rrule_throws(ics_parser):
+def test_recurring_event_with_rrule_throws(ics_parser: IcsParser):
     """Test that a recurring event with RRULE raises an error. We do not support recurring events yet."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -198,11 +206,14 @@ DTEND:20230101T100000
 RRULE:FREQ=DAILY;COUNT=5
 END:VEVENT"""
     )
-    with pytest.raises(RecurringEventError):
-        ics_parser.parse(ics_str)
+    # with pytest.raises(RecurringEventError):
+    #     ics_parser.parse(ics_str)
+
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, RecurringEventError)
 
 
-def test_recurring_event_with_rdate_throws(ics_parser):
+def test_recurring_event_with_rdate_throws(ics_parser: IcsParser):
     """Test that a recurring event with RDATE raises an error. We do not support recurring events yet."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -212,11 +223,11 @@ DTEND:20230101T100000
 RDATE:20230102T090000,20230103T090000
 END:VEVENT"""
     )
-    with pytest.raises(RecurringEventError):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, RecurringEventError)
 
 
-def test_recurring_event_with_exdate_throws(ics_parser):
+def test_recurring_event_with_exdate_throws(ics_parser: IcsParser):
     """Test that a recurring event with EXDATE raises an error. We do not support recurring events yet."""
     ics_str = build_ics_outline(
         """BEGIN:VEVENT
@@ -226,10 +237,10 @@ DTEND:20230101T100000
 EXDATE:20230102T090000
 END:VEVENT"""
     )
-    with pytest.raises(RecurringEventError):
-        ics_parser.parse(ics_str)
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, RecurringEventError)
 
 
-def test_empty_ics_string(ics_parser):
-    with pytest.raises(ValueError):
-        ics_parser.parse("")
+def test_empty_ics_string(ics_parser: IcsParser):
+    error = ics_parser.try_parse("")
+    assert isinstance(error, IcsParsingError)

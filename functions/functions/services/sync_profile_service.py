@@ -4,6 +4,8 @@ from typing import Any
 
 from firebase_functions import logger
 
+from functions.services.exceptions.ics import BaseIcsError, IcsParsingError
+from functions.services.ics_service import IcsService
 from functions.services.exceptions.sync import (
     DailySyncLimitExceededError,
     SyncProfileNotFoundError,
@@ -37,14 +39,12 @@ class SyncProfileService:
         sync_profile_repo: ISyncProfileRepository,
         sync_stats_repo: ISyncStatsRepository,
         authorization_service: AuthorizationService,
-        ics_parser: IcsParser,
-        ics_cache: IcsFileStorage,
+        ics_service: IcsService,
     ) -> None:
         self._sync_profile_repo = sync_profile_repo
         self._sync_stats_repo = sync_stats_repo
         self._authorization_service = authorization_service
-        self._ics_parser = ics_parser
-        self._ics_cache = ics_cache
+        self._ics_service = ics_service
 
     @staticmethod
     def _can_sync(status_type: SyncProfileStatusType) -> bool:
@@ -152,7 +152,6 @@ class SyncProfileService:
             self._run_synchronization(
                 profile=profile,
                 user_id=user_id,
-                sync_profile_id=sync_profile_id,
                 sync_trigger=sync_trigger,
                 sync_type=sync_type,
                 calendar_manager=calendar_manager,
@@ -178,47 +177,25 @@ class SyncProfileService:
         sync_trigger: SyncTrigger,
         sync_type: SyncType,
         user_id: str,
-        sync_profile_id: str,
         calendar_manager: GoogleCalendarManager,
     ) -> None:
         logger.info(f"Running synchronization for profile {profile.id}")
 
-        def _save_ics_to_cache(
-            ics_str: str,
-            *,
-            parsing_error: Exception | None = None,
-        ) -> None:
-            """
-            Saves ICS string to cache, logging any errors without raising them.
-            """
-            try:
-                self._ics_cache.save_to_cache(
-                    ics_str=ics_str,
-                    user_id=user_id,
-                    sync_profile_id=sync_profile_id,
-                    sync_trigger=sync_trigger,
-                    ics_source=profile.scheduleSource.to_ics_source(),
-                    parsing_error=parsing_error,
-                )
-            except Exception as e:
-                logger.error(f"Failed to store ics string in firebase storage: {e}")
-                # Do not raise, we want to continue the execution
+        events_or_error = self._ics_service.try_fetch_and_parse(
+            ics_source=profile.scheduleSource.to_ics_source(),
+            metadata={
+                "sync_profile_id": profile.id,
+                "user_id": user_id,
+                "sync_trigger": sync_trigger,
+                "sync_type": sync_type,
+            },
+        )
+        if not isinstance(error := events_or_error, list):
+            raise error
 
-        ics_str = profile.scheduleSource.to_ics_source().get_ics_string()
-        logger.info(f"ICS string size: {len(ics_str) / 1024} KB")
-
-        try:
-            events = self._ics_parser.try_parse(ics_str)
-        except Exception as e:
-            logger.error(f"Failed to parse ics: {e}")
-            # Save the ics string for later debugging
-            _save_ics_to_cache(ics_str, parsing_error=e)
-            raise e
+        assert isinstance(events := events_or_error, list)
 
         logger.info(f"Found {len(events)} events in ics")
-
-        # Save the ics string for later debugging
-        _save_ics_to_cache(ics_str)
 
         # Apply ruleset if any
         if profile.ruleset:

@@ -1,5 +1,10 @@
 import logging
 
+from functions.functions.services.exceptions.ics import (
+    BaseIcsError,
+    IcsParsingError,
+    IcsSourceError,
+)
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.synchronizer.ics_cache import IcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
@@ -40,43 +45,32 @@ class IcsService:
         except Exception as e:
             logger.error(f"Failed to save ICS file to storage: {e}")
 
-    def _try_parse_ics(self, ics_str: str) -> list[Event] | Exception:
-        """
-        Parses the ICS file and returns the events or an exception.
-        """
-        try:
-            return self.ics_parser.parse(ics_str=ics_str)
-        except Exception as e:
-            logger.error(f"Failed to parse ICS file: {e}")
-            return e
-
-    def validate_ics_url(
+    def try_fetch_and_parse(
         self,
         ics_source: UrlIcsSource,
         *,
         save_to_storage: bool = True,
-    ) -> ValidateIcsUrlOutput:
+    ) -> list[Event] | BaseIcsError:
         """
-        1) Fetches the ICS file from the source.
-        2) Parses the ICS file to detect if it is valid.
+        Tries to fetch the ICS file and parse it. Optionally saves the ICS file to storage for debugging purposes.
 
         Args:
             ics_source: The source to fetch the ICS file from
-            save_to_storage: If True, the ICS file is stored in storage.
+            save_to_storage: If True, the ICS file is stored in storage, whether the parsing is successful or not.
 
         Returns:
-            ValidateIcsUrlOutput: The result of the validation.
+            list[Event] if successful, otherwise a BaseIcsError.
+
+        Raises:
+            Exception: When an error other than BaseIcsError occurs.
         """
         try:
             ics_str = ics_source.get_ics_string()
-        except Exception as e:
+        except IcsSourceError as e:
             logger.error(f"Failed to fetch ICS file from source: {e}")
-            return ValidateIcsUrlOutput(
-                valid=False,
-                error=str(e),
-            )
+            return e
 
-        events_or_error = self._try_parse_ics(ics_str=ics_str)
+        events_or_error = self.ics_parser.try_parse(ics_str)
 
         self._try_save_to_storage(
             ics_source=ics_source,
@@ -87,12 +81,38 @@ class IcsService:
             else None,
         )
 
+        return events_or_error
+
+    def validate_ics_url(
+        self,
+        ics_source: UrlIcsSource,
+        *,
+        save_to_storage: bool = True,
+    ) -> ValidateIcsUrlOutput:
+        """
+        Validates an ICS URL by attempting to fetch and parse its contents.
+
+        Args:
+            ics_source: The source to fetch the ICS file from
+            save_to_storage: If True, the ICS file is stored in storage.
+
+        Returns:
+            ValidateIcsUrlOutput: Contains validation results including:
+                - valid: Whether the ICS file is valid
+                - error: Error message if validation failed
+                - nbEvents: Number of events if validation succeeded
+        """
+        events_or_error = self.try_fetch_and_parse(
+            ics_source=ics_source,
+            save_to_storage=save_to_storage,
+        )
+
         return ValidateIcsUrlOutput(
-            valid=not isinstance(events_or_error, Exception),
+            valid=not isinstance(events_or_error, BaseIcsError),
             error=str(events_or_error)
-            if isinstance(events_or_error, Exception)
+            if isinstance(events_or_error, BaseIcsError)
             else None,
             nbEvents=len(events_or_error)
-            if not isinstance(events_or_error, Exception)
+            if not isinstance(events_or_error, BaseIcsError)
             else None,
         )

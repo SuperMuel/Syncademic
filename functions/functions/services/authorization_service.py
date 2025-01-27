@@ -9,6 +9,9 @@ import os
 
 from pydantic import HttpUrl
 
+from functions.synchronizer.google_calendar_manager import (
+    GoogleCalendarManager,
+)
 from functions.services.exceptions.auth import ProviderUserIdMismatchError
 from functions.services.exceptions import (
     BaseAuthorizationError,
@@ -148,6 +151,33 @@ class AuthorizationService:
 
         logger.info(f"Successfully authorized user {user_id} for {google_user_id}")
 
+    def get_authenticated_google_calendar_manager(
+        self,
+        user_id: str,
+        provider_account_id: str,
+        calendar_id: str,
+    ) -> GoogleCalendarManager:
+        """
+        Get an authenticated GoogleCalendarManager instance for a specific user and calendar.
+
+        This method creates a GoogleCalendarManager with an authenticated Google Calendar service
+        for the specified user and calendar. It handles token refresh if needed.
+
+        Args:
+            user_id: The Firebase Auth user ID.
+            provider_account_id: The Google user ID associated with the calendar access.
+            calendar_id: The ID of the Google Calendar to manage.
+
+        Returns:
+            GoogleCalendarManager: An authenticated manager instance for the specified calendar.
+
+        Raises:
+            UnauthorizedError: If no valid authorization exists for the user/account.
+            BaseAuthorizationError: If an error occurs while refreshing the authentication token.
+        """
+        service = self.get_calendar_service(user_id, provider_account_id)
+        return GoogleCalendarManager(service=service, calendar_id=calendar_id)
+
     def get_calendar_service(
         self,
         user_id: str,
@@ -212,9 +242,8 @@ class AuthorizationService:
             user_id: The Firebase Auth user ID.
             provider_account_id: The Google user ID.
 
-        # Raises:
-        #     ValueError: If the user or account has no stored authorization.
-        #     Exception: If the token is invalid or another error occurs during the request.
+        Raises:
+            BaseAuthorizationError: If the authorization is invalid.
         """
         logger.info("Testing authorization with a lightweight Calendar API call.")
 
@@ -225,7 +254,7 @@ class AuthorizationService:
             service.calendarList().list().execute(num_retries=2)
             logger.info("Authorization is valid.")
 
-        # TODO : do not cache all exceptions, but only authorization errors
+        # TODO : do not catch all exceptions, but only authorization errors
         except Exception as e:
             logger.error(f"Failed to test authorization: {e}")
             raise BaseAuthorizationError(

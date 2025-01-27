@@ -135,12 +135,12 @@ class SyncProfileService:
             return
 
         try:
-            service = self._authorization_service.get_calendar_service(
-                user_id, profile.targetCalendar.providerAccountId
-            )
-            calendar_manager = GoogleCalendarManager(
-                service=service,
-                calendar_id=profile.targetCalendar.id,
+            calendar_manager = (
+                self._authorization_service.get_authenticated_google_calendar_manager(
+                    user_id=user_id,
+                    provider_account_id=profile.targetCalendar.providerAccountId,
+                    calendar_id=profile.targetCalendar.id,
+                )
             )
         except Exception as e:
             logger.error(f"Failed to get calendar service: {e}")
@@ -208,7 +208,7 @@ class SyncProfileService:
         logger.info(f"ICS string size: {len(ics_str) / 1024} KB")
 
         try:
-            events = self._ics_parser.parse(ics_str)
+            events = self._ics_parser.try_parse(ics_str)
         except Exception as e:
             logger.error(f"Failed to parse ics: {e}")
             # Save the ics string for later debugging

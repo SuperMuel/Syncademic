@@ -16,8 +16,8 @@ from .sync import (
     SyncInProgressError,
 )
 from .ics import (
-    IcsError,
-    IcsUrlError,
+    BaseIcsError,
+    IcsSourceError,
     IcsParsingError,
 )
 from .ruleset import (
@@ -38,8 +38,8 @@ __all__ = [
     "SyncProfileNotFoundError",
     "DailySyncLimitExceededError",
     "SyncInProgressError",
-    "IcsError",
-    "IcsUrlError",
+    "BaseIcsError",
+    "IcsSourceError",
     "IcsParsingError",
     "BaseRulesetError",
     "RulesetGenerationError",

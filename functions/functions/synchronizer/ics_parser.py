@@ -1,16 +1,17 @@
+import logging
 from typing import List
 
+from functions.functions.services.exceptions.ics import (
+    IcsParsingError,
+    RecurringEventError,
+)
 from functions.shared.event import Event
 import ics
 
-
-class RecurringEventError(Exception):
-    """Custom exception raised when a recurring event is detected because we don't support them yet."""
-
-    pass
+logger = logging.getLogger(__name__)
 
 
-def check_for_recurring_event(event) -> None:
+def _check_for_recurring_event(event) -> None:
     """
     Check if an event contains recurrence properties and raise RecurringEventError if found.
 
@@ -34,17 +35,61 @@ def check_for_recurring_event(event) -> None:
 
 
 class IcsParser:
+    """
+    Parser for ICS (iCalendar) format strings into Event objects.
+
+    This class handles the parsing of ICS calendar data, performing validation
+    and conversion of calendar events into the internal Event model.
+
+    Example:
+        ```python
+        parser = IcsParser()
+        try:
+            events = parser.try_parse(ics_string)
+            if isinstance(events, IcsParsingError):
+                print(f"Failed to parse: {events}")
+            else:
+                for event in events:
+                    print(f"Parsed event: {event.title}")
+        ```
+    """
+
     def __init__(self):
         pass
 
-    def parse(self, ics_str: str) -> List[Event]:
-        if not ics_str.strip():
-            raise ValueError("Empty ICS string")
+    def try_parse(self, ics_str: str) -> list[Event] | IcsParsingError:
+        """
+        Attempt to parse an ICS string into a list of Event objects.
 
-        calendar = ics.Calendar(ics_str)
+        This method performs several steps:
+        1. Validates the input string is not empty
+        2. Parses the ICS string into a calendar object
+        3. Checks each event for unsupported recurring event properties
+        4. Converts valid events into the internal Event model
+
+        Args:
+            ics_str: Raw ICS format string to parse
+
+        Returns:
+            Either a list of successfully parsed Event objects or an IcsParsingError
+            if parsing fails
+
+        Raises:
+            IcsParsingError: If the input string is empty
+            RecurringEventError: If any event contains recurrence rules (the exception is itself an IcsParsingError)
+        """
+        if not ics_str.strip():
+            raise IcsParsingError("Empty ICS string")
+
+        try:
+            calendar = ics.Calendar(ics_str)
+        except Exception as e:
+            logger.error(f"Failed to parse ICS file: {e}")
+            return IcsParsingError(f"Failed to parse ICS file: {e}")
+
         events = []
         for event in calendar.events:
-            check_for_recurring_event(event)
+            _check_for_recurring_event(event)
 
             # Append non-recurring events to the list
             events.append(

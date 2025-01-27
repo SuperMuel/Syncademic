@@ -192,7 +192,7 @@ def _create_ai_ruleset(sync_profile: SyncProfile):
 
     ics_url = sync_profile.scheduleSource.url
     ics_str = UrlIcsSource(url=ics_url).get_ics_string()
-    events = IcsParser().parse(ics_str=ics_str)
+    events = IcsParser().try_parse(ics_str=ics_str)
 
     compresser = TimeScheduleCompressor()
     compressed_schedule = compresser.compress(events)
@@ -372,11 +372,12 @@ def delete_sync_profile(
     )
 
     try:
-        service = authorization_service.get_calendar_service(
-            user_id, sync_profile.targetCalendar.providerAccountId
-        )
-        calendar_manager = GoogleCalendarManager(
-            service=service, calendar_id=sync_profile.targetCalendar.id
+        calendar_manager = (
+            authorization_service.get_authenticated_google_calendar_manager(
+                user_id=user_id,
+                provider_account_id=sync_profile.targetCalendar.providerAccountId,
+                calendar_id=sync_profile.targetCalendar.id,
+            )
         )
     except Exception as e:
         logger.info(f"Failed to get calendar service: {e}. Skipping deletion")

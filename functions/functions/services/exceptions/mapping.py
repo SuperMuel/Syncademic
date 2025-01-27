@@ -12,7 +12,7 @@ from .sync import (
 from .auth import BaseAuthorizationError, ProviderUserIdMismatchError, UnauthorizedError
 from .ruleset import RulesetGenerationError, RulesetValidationError
 
-from .ics import IcsUrlError
+from .ics import IcsSourceError
 
 
 class ErrorMapping:
@@ -48,7 +48,7 @@ class ErrorMapping:
             case DailySyncLimitExceededError():
                 return (https_fn.FunctionsErrorCode.RESOURCE_EXHAUSTED, str(error))
 
-            case IcsUrlError():
+            case IcsSourceError():
                 return (https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(error))
 
             case SyncInProgressError():

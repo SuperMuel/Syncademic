@@ -5,35 +5,35 @@ from pathlib import Path
 import requests
 import validators
 from firebase_functions import logger
-from pydantic import HttpUrl
+from pydantic import BaseModel, HttpUrl
 
 from functions.settings import settings
 
 
-class IcsSource(ABC):
+class IcsSource(BaseModel, ABC):
     @abstractmethod
     def get_ics_string(self) -> str:
         pass
 
 
 class UrlIcsSource(IcsSource):
-    def __init__(
-        self,
-        url: str | HttpUrl,
-        timeout_s: int = settings.URL_ICS_SOURCE_TIMEOUT_S,
-        max_content_size_b: int = settings.MAX_ICS_SIZE_BYTES,
-    ):
+    url: HttpUrl
+
+    def __init__(self, url: str | HttpUrl, **data):
         if isinstance(url, str) and not validators.url(url):
             raise ValueError("Invalid URL")
-        self.url = url
-        self.timeout_s = timeout_s
-        self.max_content_size_b = max_content_size_b
+        super().__init__(url=url, **data)
 
-    def get_ics_string(self) -> str:
+    def get_ics_string(
+        self,
+        *,
+        timeout_s: int = settings.URL_ICS_SOURCE_TIMEOUT_S,
+        max_content_size_b: int = settings.MAX_ICS_SIZE_BYTES,
+    ) -> str:
         logger.info(f"Fetching ICS file from {self.url}")
         try:
             with requests.get(
-                str(self.url), stream=True, timeout=self.timeout_s
+                str(self.url), stream=True, timeout=timeout_s
             ) as response:
                 response.raise_for_status()
 
@@ -47,9 +47,9 @@ class UrlIcsSource(IcsSource):
                 content_length = response.headers.get("Content-Length")
                 if content_length is not None:
                     content_length = int(content_length)
-                    if content_length > self.max_content_size_b:
+                    if content_length > max_content_size_b:
                         logger.info(
-                            f"Content-Length is too large ({content_length/1_048_576:.2f}MB > {self.max_content_size_b/1_048_576:.2f}MB) ({response.headers=})"
+                            f"Content-Length is too large ({content_length/1_048_576:.2f}MB > {max_content_size_b/1_048_576:.2f}MB) ({response.headers=})"
                         )
                         raise ValueError("ICS file is too large.")
 
@@ -60,7 +60,7 @@ class UrlIcsSource(IcsSource):
                 # Collect raw bytes first
                 for chunk in response.iter_content(chunk_size=8192):
                     total_bytes += len(chunk)
-                    if total_bytes > self.max_content_size_b:
+                    if total_bytes > max_content_size_b:
                         raise ValueError("ICS file is too large.")
                     chunks.write(chunk)
 
@@ -73,18 +73,15 @@ class UrlIcsSource(IcsSource):
 
 
 class FileIcsSource(IcsSource):
-    def __init__(self, file_path: Path):
-        self.file_path = file_path
+    file_path: Path
 
     def get_ics_string(self) -> str:
-        # read file
         with open(self.file_path, "r") as file:
             return file.read()
 
 
 class StringIcsSource(IcsSource):
-    def __init__(self, ics_string: str):
-        self.ics_string = ics_string
+    ics_string: str
 
     def get_ics_string(self) -> str:
         return self.ics_string

@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 from firebase_admin import initialize_app, storage
@@ -28,7 +27,6 @@ from functions.models.schemas import (
     ListUserCalendarsInput,
     RequestSyncInput,
     ValidateIcsUrlInput,
-    ValidateIcsUrlOutput,
 )
 from functions.models.sync_profile import SyncProfile
 from functions.repositories.backend_authorization_repository import (
@@ -94,7 +92,7 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
     return ics_service.validate_ics_url(
-        UrlIcsSource(request.url),
+        UrlIcsSource(url=request.url),
         # In case of error, we want to understand what went wrong by looking at the ICS file.
         save_to_storage=True,
     ).model_dump()
@@ -184,7 +182,7 @@ def _create_ai_ruleset(sync_profile: SyncProfile):
     llm = init_chat_model(model)
 
     ics_url = sync_profile.scheduleSource.url
-    ics_str = UrlIcsSource(ics_url).get_ics_string()
+    ics_str = UrlIcsSource(url=ics_url).get_ics_string()
     events = IcsParser().parse(ics_str=ics_str)
 
     compresser = TimeScheduleCompressor()
@@ -223,7 +221,7 @@ def _create_ai_ruleset(sync_profile: SyncProfile):
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )  # type: ignore
-def on_sync_profile_created(event: Event[DocumentSnapshot]):
+def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     logger.info(f"Sync profile created: {event.data}")
 
     # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
@@ -300,7 +298,7 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     timeout_sec=3600,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def scheduled_sync(event: Any):
+def scheduled_sync(event: Any) -> None:
     logger.info("Scheduled synchronization started")
 
     for sync_profile in sync_profile_repo.list_all_active_sync_profiles():
@@ -388,7 +386,7 @@ def _synchronize_now(
         perform_synchronization(
             sync_profile_id=sync_profile_id,
             sync_trigger=sync_trigger,
-            ics_source=UrlIcsSource(ics_url),
+            ics_source=UrlIcsSource(url=ics_url),
             ics_parser=IcsParser(),
             ics_cache=FirebaseIcsFileStorage(storage.bucket()),
             calendar_manager=calendar_manager,

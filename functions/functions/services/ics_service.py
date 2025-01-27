@@ -1,15 +1,15 @@
 import logging
 
-from functions.functions.services.exceptions.ics import (
+from functions.models.schemas import ValidateIcsUrlOutput
+from functions.services.exceptions.ics import (
     BaseIcsError,
     IcsParsingError,
     IcsSourceError,
 )
-from functions.models.schemas import ValidateIcsUrlOutput
+from functions.shared.event import Event
 from functions.synchronizer.ics_cache import IcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
-from functions.shared.event import Event
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class IcsService:
         ics_source: UrlIcsSource,
         *,
         save_to_storage: bool = True,
-    ) -> list[Event] | BaseIcsError:
+    ) -> list[Event] | IcsSourceError | IcsParsingError:
         """
         Tries to fetch the ICS file and parse it. Optionally saves the ICS file to storage for debugging purposes.
 

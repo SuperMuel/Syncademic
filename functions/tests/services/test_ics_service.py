@@ -1,11 +1,15 @@
 from unittest.mock import Mock
+
+import arrow
 import pytest
 from pydantic import HttpUrl
-import arrow
 
 from functions.models.schemas import ValidateIcsUrlOutput
+from functions.services.exceptions.ics import IcsParsingError, IcsSourceError
 from functions.services.ics_service import IcsService
 from functions.shared.event import Event
+from functions.synchronizer.ics_parser import IcsParser
+from functions.synchronizer.ics_source import UrlIcsSource
 
 
 @pytest.fixture
@@ -18,8 +22,13 @@ def mock_events() -> list[Event]:
 
 
 @pytest.fixture
+def mock_ics_source() -> Mock:
+    return Mock(spec=UrlIcsSource)
+
+
+@pytest.fixture
 def mock_ics_parser() -> Mock:
-    return Mock()
+    return Mock(spec=IcsParser)
 
 
 @pytest.fixture
@@ -29,7 +38,7 @@ def mock_ics_storage() -> Mock:
 
 @pytest.fixture
 def mock_url_ics_source() -> Mock:
-    return Mock()
+    return Mock(spec=UrlIcsSource)
 
 
 @pytest.fixture
@@ -40,154 +49,207 @@ def service(mock_ics_parser: Mock, mock_ics_storage: Mock) -> IcsService:
     )
 
 
-def test_validate_ics_url_success(
-    service: IcsService,
-    mock_ics_parser: Mock,
-    mock_ics_storage: Mock,
-    mock_url_ics_source: Mock,
-    mock_events: list[Event],
-) -> None:
-    # Arrange
-    test_url = "https://example.com/calendar.ics"
-    test_ics_content = "test_ics_content"
+class TestTryFetchAndParse:
+    def test_successful_fetch_and_parse(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_ics_parser: Mock,
+        mock_ics_storage: Mock,
+    ) -> None:
+        # Arrange
+        ics_content = "BEGIN:VCALENDAR..."
+        expected_events = [Mock(spec=Event), Mock(spec=Event)]
+        mock_ics_source.get_ics_string.return_value = ics_content
+        mock_ics_parser.try_parse.return_value = expected_events
 
-    mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_url_ics_source.url = test_url
-    mock_ics_parser.parse.return_value = mock_events
+        # Act
+        result = service.try_fetch_and_parse(mock_ics_source)
 
-    # Act
-    result = service.validate_ics_url(mock_url_ics_source)
+        # Assert
+        assert result == expected_events
+        mock_ics_source.get_ics_string.assert_called_once()
+        mock_ics_parser.try_parse.assert_called_once_with(ics_content)
+        mock_ics_storage.save_to_cache.assert_called_once_with(
+            ics_source=mock_ics_source,
+            ics_str=ics_content,
+            parsing_error=None,
+        )
 
-    # Assert
-    assert isinstance(result, ValidateIcsUrlOutput)
-    assert result.valid is True
-    assert result.error is None
-    assert result.nbEvents == len(mock_events)
+    def test_fetch_error(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_ics_parser: Mock,
+        mock_ics_storage: Mock,
+    ) -> None:
+        # Arrange
+        error = IcsSourceError("Failed to fetch")
+        mock_ics_source.get_ics_string.side_effect = error
 
-    mock_url_ics_source.get_ics_string.assert_called_once()
-    mock_ics_parser.parse.assert_called_once_with(ics_str=test_ics_content)
-    mock_ics_storage.save_to_cache.assert_called_once_with(
-        ics_source=mock_url_ics_source,
-        ics_str=test_ics_content,
-        parsing_error=None,
-    )
+        # Act
+        result = service.try_fetch_and_parse(mock_ics_source)
 
+        # Assert
+        assert result == error
+        mock_ics_source.get_ics_string.assert_called_once()
+        mock_ics_parser.try_parse.assert_not_called()
+        mock_ics_storage.save_to_cache.assert_not_called()
 
-def test_validate_ics_url_fetch_failure(
-    service: IcsService,
-    mock_url_ics_source: Mock,
-) -> None:
-    fetch_error = Exception("Network error")
-    # Arrange
-    mock_url_ics_source.get_ics_string.side_effect = fetch_error
+    def test_parse_error(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_ics_parser: Mock,
+        mock_ics_storage: Mock,
+    ) -> None:
+        # Arrange
+        ics_content = "BEGIN:VCALENDAR..."
+        error = IcsParsingError("Invalid format")
+        mock_ics_source.get_ics_string.return_value = ics_content
+        mock_ics_parser.try_parse.return_value = error
 
-    # Act
-    result = service.validate_ics_url(mock_url_ics_source)
+        # Act
+        result = service.try_fetch_and_parse(mock_ics_source)
 
-    # Assert
-    assert isinstance(result, ValidateIcsUrlOutput)
-    assert result.valid is False
-    assert str(fetch_error) in str(result.error)
-    assert result.nbEvents is None
+        # Assert
+        assert result == error
+        mock_ics_source.get_ics_string.assert_called_once()
+        mock_ics_parser.try_parse.assert_called_once_with(ics_content)
+        mock_ics_storage.save_to_cache.assert_called_once_with(
+            ics_source=mock_ics_source,
+            ics_str=ics_content,
+            parsing_error=error,
+        )
 
+    def test_storage_disabled(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_ics_parser: Mock,
+        mock_ics_storage: Mock,
+    ) -> None:
+        # Arrange
+        ics_content = "BEGIN:VCALENDAR..."
+        expected_events = [Mock(spec=Event)]
+        mock_ics_source.get_ics_string.return_value = ics_content
+        mock_ics_parser.try_parse.return_value = expected_events
 
-def test_validate_ics_url_parse_failure(
-    service: IcsService,
-    mock_ics_parser: Mock,
-    mock_ics_storage: Mock,
-    mock_url_ics_source: Mock,
-) -> None:
-    # Arrange
-    test_url = "https://example.com/calendar.ics"
-    test_ics_content = "invalid_ics_content"
-    parse_error = Exception("Invalid ICS format")
+        # Act
+        result = service.try_fetch_and_parse(mock_ics_source, save_to_storage=False)
 
-    mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_url_ics_source.url = test_url
-    mock_ics_parser.parse.side_effect = parse_error
+        # Assert
+        assert result == expected_events
+        mock_ics_storage.save_to_cache.assert_not_called()
 
-    # Act
-    result = service.validate_ics_url(mock_url_ics_source)
+    def test_storage_error_handled(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_ics_parser: Mock,
+        mock_ics_storage: Mock,
+    ) -> None:
+        # Arrange
+        ics_content = "BEGIN:VCALENDAR..."
+        expected_events = [Mock(spec=Event)]
+        mock_ics_source.get_ics_string.return_value = ics_content
+        mock_ics_parser.try_parse.return_value = expected_events
+        mock_ics_storage.save_to_cache.side_effect = Exception("Storage error")
 
-    # Assert
-    assert isinstance(result, ValidateIcsUrlOutput)
-    assert result.valid is False
-    assert str(parse_error) in str(result.error)
-    assert result.nbEvents is None
-    mock_ics_storage.save_to_cache.assert_called_once_with(
-        ics_source=mock_url_ics_source,
-        ics_str=test_ics_content,
-        parsing_error=parse_error,
-    )
+        # Act
+        result = service.try_fetch_and_parse(mock_ics_source)
 
+        # Assert
+        assert result == expected_events  # Operation succeeds despite storage error
+        mock_ics_storage.save_to_cache.assert_called_once()
 
-def test_validate_ics_url_no_storage(
-    mock_ics_parser: Mock,
-    mock_url_ics_source: Mock,
-    mock_events: list[Event],
-) -> None:
-    # Arrange
-    service = IcsService(ics_parser=mock_ics_parser, ics_storage=None)
-    test_ics_content = "test_ics_content"
+    def test_no_storage_configured(self, mock_ics_parser: Mock) -> None:
+        # Arrange
+        service = IcsService(ics_parser=mock_ics_parser, ics_storage=None)
+        mock_ics_source = Mock(spec=UrlIcsSource)
+        ics_content = "BEGIN:VCALENDAR..."
+        expected_events = [Mock(spec=Event)]
+        mock_ics_source.get_ics_string.return_value = ics_content
+        mock_ics_parser.try_parse.return_value = expected_events
 
-    mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_ics_parser.parse.return_value = mock_events
+        # Act
+        result = service.try_fetch_and_parse(mock_ics_source)
 
-    # Act
-    result = service.validate_ics_url(mock_url_ics_source)
-
-    # Assert
-    assert isinstance(result, ValidateIcsUrlOutput)
-    assert result.valid is True
-    assert result.error is None
-    assert result.nbEvents == len(mock_events)
-
-
-def test_validate_ics_url_storage_failure(
-    service: IcsService,
-    mock_ics_parser: Mock,
-    mock_ics_storage: Mock,
-    mock_url_ics_source: Mock,
-    mock_events: list[Event],
-) -> None:
-    # Arrange
-    test_url = "https://example.com/calendar.ics"
-    test_ics_content = "test_ics_content"
-
-    mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_url_ics_source.url = test_url
-    mock_ics_parser.parse.return_value = mock_events
-    mock_ics_storage.save_to_cache.side_effect = Exception("Storage error")
-
-    # Act
-    result = service.validate_ics_url(mock_url_ics_source)
-
-    # Assert
-    assert isinstance(result, ValidateIcsUrlOutput)
-    assert result.valid is True
-    assert result.error is None
-    assert result.nbEvents == len(mock_events)
+        # Assert
+        assert result == expected_events
 
 
-def test_validate_ics_url_with_http_url(
-    service: IcsService,
-    mock_ics_parser: Mock,
-    mock_url_ics_source: Mock,
-    mock_events: list[Event],
-) -> None:
-    # Arrange
-    test_url = HttpUrl("https://example.com/calendar.ics")
-    test_ics_content = "test_ics_content"
+class TestValidateIcsUrl:
+    def test_successful_validation(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_events: list[Event],
+    ) -> None:
+        # Arrange
+        service.try_fetch_and_parse = Mock(return_value=mock_events)  # type: ignore
 
-    mock_url_ics_source.get_ics_string.return_value = test_ics_content
-    mock_url_ics_source.url = test_url
-    mock_ics_parser.parse.return_value = mock_events
+        # Act
+        result = service.validate_ics_url(mock_ics_source)
 
-    # Act
-    result = service.validate_ics_url(mock_url_ics_source)
+        # Assert
+        assert isinstance(result, ValidateIcsUrlOutput)
+        assert result.valid is True
+        assert result.error is None
+        assert result.nbEvents == len(mock_events)
+        service.try_fetch_and_parse.assert_called_once_with(
+            mock_ics_source, save_to_storage=True
+        )
 
-    # Assert
-    assert isinstance(result, ValidateIcsUrlOutput)
-    assert result.valid is True
-    assert result.error is None
-    assert result.nbEvents == len(mock_events)
+    def test_source_error(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+    ) -> None:
+        # Arrange
+        error = IcsSourceError("Failed to fetch calendar")
+        service.try_fetch_and_parse = Mock(return_value=error)  # type: ignore
+
+        # Act
+        result = service.validate_ics_url(mock_ics_source)
+
+        # Assert
+        assert isinstance(result, ValidateIcsUrlOutput)
+        assert result.valid is False
+        assert result.error == str(error)
+        assert result.nbEvents is None
+
+    def test_parsing_error(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+    ) -> None:
+        # Arrange
+        error = IcsParsingError("Invalid calendar format")
+        service.try_fetch_and_parse = Mock(return_value=error)  # type: ignore
+
+        # Act
+        result = service.validate_ics_url(mock_ics_source)
+
+        # Assert
+        assert isinstance(result, ValidateIcsUrlOutput)
+        assert result.valid is False
+        assert result.error == str(error)
+        assert result.nbEvents is None
+
+    def test_storage_parameter_passed(
+        self,
+        service: IcsService,
+        mock_ics_source: Mock,
+        mock_events: list[Event],
+    ) -> None:
+        # Arrange
+        service.try_fetch_and_parse = Mock(return_value=mock_events)  # type: ignore
+
+        # Act
+        service.validate_ics_url(mock_ics_source, save_to_storage=False)
+
+        # Assert
+        service.try_fetch_and_parse.assert_called_once_with(
+            mock_ics_source, save_to_storage=False
+        )

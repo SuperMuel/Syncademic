@@ -32,3 +32,30 @@ dev = [
     "responses>=0.25.3",
     "ruff>=0.6.9",
 ]
+
+[tool.ruff]
+
+[tool.ruff.lint]
+select = [
+    "N",  # Enable all pep8-naming rules
+    "E7", # Statements lints
+
+    "UP006", # foo: list[int] = [1, 2, 3] instead of foo: List[int] = [1, 2, 3]
+    "UP007", # Use X | Y for type annotations
+
+    "UP038", # Use isinstance(x, int | float) instead of isinstance(x, (int, float))
+
+    "ANN001", # Checks that function arguments have type annotations.
+    "ANN201", # Missing return type annotation for public function {name}
+
+    "SIM2", # Simplify boolean expressions
+
+    "T20", # Find uses of 'print' or 'pprint'
+
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*" = ["S101", "D", "D101", "ANN001", "ANN201"]

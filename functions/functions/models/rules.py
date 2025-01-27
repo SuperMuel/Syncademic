@@ -31,8 +31,8 @@ class TextFieldCondition(BaseModel):
     value: str = Field(
         ..., min_length=1, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
     )
-    case_sensitive: Optional[bool] = True
-    negate: Optional[bool] = False
+    case_sensitive: bool | None = True
+    negate: bool | None = False
 
     @model_validator(mode="after")
     def validate_regex(self) -> Self:
@@ -117,7 +117,7 @@ class ChangeFieldAction(BaseModel):
         ..., min_length=0, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
     )
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         field_value = getattr(event, self.field)
         assert isinstance(field_value, str)
 
@@ -138,14 +138,14 @@ class ChangeColorAction(BaseModel):
     action: Literal["change_color"] = "change_color"
     value: GoogleEventColor
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         return replace(event, color=self.value)
 
 
 class DeleteEventAction(BaseModel):
     action: Literal["delete_event"] = "delete_event"
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         return None
 
 
@@ -158,7 +158,7 @@ class Rule(BaseModel):
         ..., min_length=1, max_length=settings.MAX_ACTIONS
     )
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         if self.condition.evaluate(event):
             for action in self.actions:
                 result = action.apply(event)

@@ -76,8 +76,8 @@ class GoogleCalendarManager:
     def get_events_ids_from_sync_profile(
         self,
         sync_profile_id: str,
-        min_dt: Optional[datetime] = None,
-        limit: Optional[int] = 1000,
+        min_dt: datetime | None = None,
+        limit: int | None = 1000,
     ) -> List[str]:
         """Get the ids of the events associated with the sync_profile_id.
 

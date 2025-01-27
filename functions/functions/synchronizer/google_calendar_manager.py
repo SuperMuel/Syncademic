@@ -245,10 +245,34 @@ class MockGoogleCalendarManager(GoogleCalendarManager):
         for event_id in ids:
             self._events.pop(event_id, None)
 
-    def get_all_events(self) -> dict[str, tuple[dict[str, Any], str]]:
+    def get_all_events(self, *, sync_profile_id: str) -> list[dict[str, Any]]:
         """Helper method for testing - returns all stored events.
 
+        Args:
+            sync_profile_id (str): The sync_profile_id to filter the events
+
         Returns:
-            Dictionary mapping event IDs to tuples of (event_dict, sync_profile_id)
+            List of events associated with the sync_profile_id
         """
-        return self._events.copy()
+        events = []
+        for event_dict, stored_profile_id in self._events.values():
+            if stored_profile_id == sync_profile_id:
+                events.append(event_dict)
+        return events
+
+    def get_all_events_with_ids(
+        self, *, sync_profile_id: str
+    ) -> dict[str, dict[str, Any]]:
+        """Helper method for testing - returns all stored events with their IDs.
+
+        Args:
+            sync_profile_id (str): The sync_profile_id to filter the events
+
+        Returns:
+            Dictionary mapping event IDs to their event data for the given sync_profile_id
+        """
+        events = {}
+        for event_id, (event_dict, stored_profile_id) in self._events.items():
+            if stored_profile_id == sync_profile_id:
+                events[event_id] = event_dict
+        return events

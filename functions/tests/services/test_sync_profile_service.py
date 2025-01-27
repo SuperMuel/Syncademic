@@ -1,17 +1,8 @@
-"""
-tests/services/test_sync_profile_service.py
-
-Tests for the new SyncProfileService. These tests verify the end-to-end synchronization
-logic (e.g., ICS fetching, parsing, applying rules, and deleting/creating calendar events)
-using mocks and the in-memory MockGoogleCalendarManager.
-"""
-
 from pydantic import HttpUrl
 import pytest
 import arrow
 from unittest.mock import Mock
 
-from functions.settings import settings
 from functions.models.sync_profile import (
     SyncProfile,
     SyncProfileStatus,
@@ -24,16 +15,12 @@ from functions.models.sync_profile import (
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.services.sync_profile_service import SyncProfileService
-from functions.services.exceptions.sync import DailySyncLimitExceededError
 from functions.services.exceptions.ics import (
-    BaseIcsError,
-    IcsParsingError,
     IcsSourceError,
 )
 from functions.repositories.sync_stats_repository import MockSyncStatsRepository
-from functions.synchronizer.google_calendar_manager import (
-    MockGoogleCalendarManager,
-)
+from functions.repositories.sync_profile_repository import MockSyncProfileRepository
+from functions.synchronizer.google_calendar_manager import MockGoogleCalendarManager
 
 
 def _make_sync_profile(
@@ -61,16 +48,19 @@ def _make_sync_profile(
 
 
 @pytest.fixture
-def sync_profile_repo_mock():
-    """Mock of ISyncProfileRepository."""
-    return Mock()
+def sync_profile_repo() -> MockSyncProfileRepository:
+    """
+    Real in-memory SyncProfileRepository so we can store/fetch profiles
+    without mocking every method call.
+    """
+    return MockSyncProfileRepository()
 
 
 @pytest.fixture
 def auth_service_mock():
     """
-    Mock of AuthorizationService.
-    We'll stub get_authenticated_google_calendar_manager(...) to return a MockGoogleCalendarManager.
+    Mock of AuthorizationService. We'll stub get_authenticated_google_calendar_manager(...)
+    to return a MockGoogleCalendarManager.
     """
     return Mock()
 
@@ -79,7 +69,7 @@ def auth_service_mock():
 def ics_service_mock():
     """
     Mock of IcsService.
-    We'll control the return value of try_fetch_and_parse(...) (list[Event] or BaseIcsError).
+    We'll control the return value of try_fetch_and_parse(...) (list[Event] or a BaseIcsError).
     """
     return Mock()
 
@@ -92,14 +82,14 @@ def sync_stats_repo() -> MockSyncStatsRepository:
 
 @pytest.fixture
 def sync_profile_service(
-    sync_profile_repo_mock,
+    sync_profile_repo,
     sync_stats_repo,
     auth_service_mock,
     ics_service_mock,
 ):
-    """Create a SyncProfileService with all dependencies mocked or injected."""
+    """Create a SyncProfileService with the real MockSyncProfileRepository."""
     return SyncProfileService(
-        sync_profile_repo=sync_profile_repo_mock,
+        sync_profile_repo=sync_profile_repo,
         sync_stats_repo=sync_stats_repo,
         authorization_service=auth_service_mock,
         ics_service=ics_service_mock,
@@ -128,7 +118,7 @@ def past_event() -> Event:
 
 def test_on_create_success(
     sync_profile_service,
-    sync_profile_repo_mock,
+    sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
@@ -136,24 +126,25 @@ def test_on_create_success(
     past_event,
 ):
     """
-    ON_CREATE scenario: ICS returns 2 events, both get created. Final status -> SUCCESS,
-    daily sync count increments.
+    ON_CREATE scenario: ICS returns 2 events, both get created.
+    We store the profile in memory with status=NOT_STARTED,
+    then check final status in the repo after sync.
     """
     user_id = "user123"
     prof_id = "profile_on_create"
 
-    # ICS is a success -> returns 2 events
+    # ICS returns 2 events
     ics_service_mock.try_fetch_and_parse.return_value = [past_event, future_event]
 
-    # The sync profile is newly created with NOT_STARTED status
-    sync_profile = _make_sync_profile(
+    # Put a NOT_STARTED profile into the repository
+    profile = _make_sync_profile(
         user_id=user_id,
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.NOT_STARTED,
     )
-    sync_profile_repo_mock.get_sync_profile.return_value = sync_profile
+    sync_profile_repo.store_sync_profile(profile)
 
-    # Provide a mock manager from auth service
+    # Provide a mock manager
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
 
@@ -165,23 +156,25 @@ def test_on_create_success(
         sync_type=SyncType.REGULAR,
     )
 
-    # Assert
-    # 1) IcsService is called
+    # ICS was called
     ics_service_mock.try_fetch_and_parse.assert_called_once()
-    # 2) 2 events created
-    all_events = manager.get_all_events()
+
+    # 2 events created
+    all_events = manager.get_all_events(sync_profile_id=prof_id)
     assert len(all_events) == 2
-    # # 3) final status = SUCCESS
-    final_call = sync_profile_repo_mock.update_sync_profile_status.mock_calls[-1]
-    # _, kwargs = final_call
-    # assert kwargs["status"].type == SyncProfileStatusType.SUCCESS
-    # # 4) daily usage = 1
-    # assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+
+    # final status = SUCCESS
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
+
+    # daily usage = 1
+    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
 
 
 def test_regular_sync_only_future(
     sync_profile_service,
-    sync_profile_repo_mock,
+    sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
@@ -190,21 +183,21 @@ def test_regular_sync_only_future(
 ):
     """
     REGULAR sync scenario: ICS returns 1 past + 1 future event.
-    We only create the future event, and delete existing future events in the calendar.
+    Sync should only create the future event, and delete old future events.
     """
     user_id = "user123"
     prof_id = "profile_reg"
 
     ics_service_mock.try_fetch_and_parse.return_value = [past_event, future_event]
 
-    sync_profile = _make_sync_profile(
+    # Put a profile in SUCCESS state
+    profile = _make_sync_profile(
         user_id=user_id,
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo_mock.get_sync_profile.return_value = sync_profile
+    sync_profile_repo.store_sync_profile(profile)
 
-    # Manager has 2 old future events
     manager = MockGoogleCalendarManager()
     manager.create_events(
         [
@@ -223,49 +216,51 @@ def test_regular_sync_only_future(
         sync_type=SyncType.REGULAR,
     )
 
-    # Assert
-    # 1) Only future event is created, old future events are deleted
-    all_after = manager.get_all_events()
+    # Only 1 new future event remains
+    all_after = manager.get_all_events(sync_profile_id=prof_id)
     assert len(all_after) == 1
-    (key, (ev_data, _)) = list(all_after.items())[0]
-    assert ev_data["summary"] == "Future Event"
-    # 2) final status SUCCESS
-    final_status_call = sync_profile_repo_mock.update_sync_profile_status.mock_calls[-1]
-    _, kwargs = final_status_call
-    assert kwargs["status"].type == SyncProfileStatusType.SUCCESS
-    # 3) daily usage = 1
+    assert all_after[0]["summary"] == "Future Event"
+
+    # final status => SUCCESS in the repository
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
+
+    # daily usage = 1
     assert sync_stats_repo.get_daily_sync_count(user_id) == 1
 
 
 def test_full_sync_deletes_all(
     sync_profile_service,
-    sync_profile_repo_mock,
+    sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
+    past_event,
     future_event,
 ):
     """
-    FULL sync: ICS returns 1 event,
-    we delete all existing events from that profile, then create the new one.
+    FULL sync: ICS returns 1 event, we remove all old events, create the new one.
     """
     user_id = "user123"
     prof_id = "profile_full"
 
     ics_service_mock.try_fetch_and_parse.return_value = [future_event]
 
-    sync_profile = _make_sync_profile(
+    profile = _make_sync_profile(
         user_id=user_id,
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo_mock.get_sync_profile.return_value = sync_profile
+    sync_profile_repo.store_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
-    # Suppose we had 3 old events
     manager.create_events(
         [
-            Event(start=future_event.start, end=future_event.end, title="Old A"),
+            # An event in the past. We want to assert that it gets deleted, that's
+            # the difference between FULL and REGULAR syncs.
+            Event(start=past_event.start, end=past_event.end, title="Old A"),
+            # Some events in the future:
             Event(start=future_event.start, end=future_event.end, title="Old B"),
             Event(start=future_event.start, end=future_event.end, title="Old C"),
         ],
@@ -273,7 +268,6 @@ def test_full_sync_deletes_all(
     )
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
 
-    # Act
     sync_profile_service.synchronize(
         user_id=user_id,
         sync_profile_id=prof_id,
@@ -281,36 +275,32 @@ def test_full_sync_deletes_all(
         sync_type=SyncType.FULL,
     )
 
-    # All old events removed, 1 new event remains
-    all_events = manager.get_all_events()
+    # All old events removed, new event remains
+    all_events = manager.get_all_events(sync_profile_id=prof_id)
     assert len(all_events) == 1
-    only_event = list(all_events.values())[0][0]
-    assert only_event["summary"] == "Future Event"
+    assert all_events[0]["summary"] == "Future Event"
 
-    final_call = sync_profile_repo_mock.update_sync_profile_status.mock_calls[-1]
-    _, kwargs = final_call
-    assert kwargs["status"].type == SyncProfileStatusType.SUCCESS
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
     assert sync_stats_repo.get_daily_sync_count(user_id) == 1
 
 
 def test_ruleset_applied(
     sync_profile_service,
-    sync_profile_repo_mock,
+    sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
 ):
     """
-    If there's a ruleset, it modifies the events.
-    The IcsService returns 1 event "Lecture" -> we transform to "Modified Lecture"
-    and color = GRAPHITE, final status SUCCESS, usage=1.
+    ICS returns 1 event "Lecture", we have a ruleset that changes it to "Modified Lecture".
+    Then we confirm the final status in the repository.
     """
     now = arrow.now()
     raw_event = Event(start=now, end=now.shift(hours=1), title="Lecture")
-
     ics_service_mock.try_fetch_and_parse.return_value = [raw_event]
 
-    # Create a simple ruleset that sets "Lecture" => "Modified Lecture"
     from functions.models.rules import (
         Rule,
         Ruleset,
@@ -322,51 +312,10 @@ def test_ruleset_applied(
     act = ChangeFieldAction(field="title", method="set", value="Modified Lecture")
     ruleset = Ruleset(rules=[Rule(condition=cond, actions=[act])])
 
-    sync_profile = _make_sync_profile(ruleset=ruleset)
-    sync_profile_repo_mock.get_sync_profile.return_value = sync_profile
-
-    manager = MockGoogleCalendarManager()
-    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
-
-    sync_profile_service.synchronize(
-        user_id="user123",
-        sync_profile_id="profileABC",
-        sync_trigger=SyncTrigger.MANUAL,
-        sync_type=SyncType.REGULAR,
-    )
-
-    # 1 event created, with modified title
-    all_ev = manager.get_all_events()
-    assert len(all_ev) == 1
-    ev_data, _ = list(all_ev.values())[0]
-    assert ev_data["summary"] == "Modified Lecture"
-    assert ev_data["colorId"] == GoogleEventColor.GRAPHITE.to_color_id()
-
-    final_call = sync_profile_repo_mock.update_sync_profile_status.mock_calls[-1]
-    _, kwargs = final_call
-    assert kwargs["status"].type == SyncProfileStatusType.SUCCESS
-    assert sync_stats_repo.get_daily_sync_count("user123") == 1
-
-
-def test_fails_on_ics_fetch_error(
-    sync_profile_service,
-    sync_profile_repo_mock,
-    auth_service_mock,
-    ics_service_mock,
-    sync_stats_repo,
-):
-    """
-    ICS fails to fetch/parse => we raise that error => final status=FAILED,
-    no events created, daily usage not incremented.
-    """
-    user_id = "userXYZ"
-    prof_id = "profileFail"
-
-    # Return an IcsSourceError to simulate a fetch error or parse error
-    ics_service_mock.try_fetch_and_parse.return_value = IcsSourceError("Couldn't fetch")
-
-    sync_profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
-    sync_profile_repo_mock.get_sync_profile.return_value = sync_profile
+    user_id = "user123"
+    prof_id = "profileABC"
+    profile = _make_sync_profile(ruleset=ruleset)
+    sync_profile_repo.store_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
@@ -378,42 +327,82 @@ def test_fails_on_ics_fetch_error(
         sync_type=SyncType.REGULAR,
     )
 
-    final_call = sync_profile_repo_mock.update_sync_profile_status.mock_calls[-1]
-    _, kwargs = final_call
-    assert kwargs["status"].type == SyncProfileStatusType.FAILED
+    # We should see 1 event with "Modified Lecture"
+    all_events = manager.get_all_events(sync_profile_id=prof_id)
+    assert len(all_events) == 1
+    assert all_events[0]["summary"] == "Modified Lecture"
 
-    # no events
-    assert len(manager.get_all_events()) == 0
-    # daily usage still 0
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
+    # This is a temporary feature. We want all events to be grey by default, unless a rule
+    # explicitly sets a color.
+    assert all_events[0]["colorId"] == GoogleEventColor.GRAPHITE.to_color_id()
+
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
+    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
 
 
-def test_fails_on_daily_limit(
+def test_fails_on_ics_fetch_error(
     sync_profile_service,
-    sync_profile_repo_mock,
+    sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
-    future_event,
 ):
     """
-    If user exceeded daily sync limit, we fail early before ICS is fetched.
+    ICS returns an IcsSourceError => final status=FAILED in repository, no events, usage=0.
     """
-    user_id = "userX"
-    prof_id = "profileLimit"
+    user_id = "userXYZ"
+    prof_id = "profileFail"
 
-    # We do 10 sync increments to simulate a used-up daily limit
-    for _ in range(settings.MAX_SYNCHRONIZATIONS_PER_DAY):
-        sync_stats_repo.increment_sync_count(user_id)
+    ics_service_mock.try_fetch_and_parse.return_value = IcsSourceError("Couldn't fetch")
 
-    sync_profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
-    sync_profile_repo_mock.get_sync_profile.return_value = sync_profile
+    profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
+    sync_profile_repo.store_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
 
-    # ICS would have a future event, but we won't get that far
-    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=SyncType.REGULAR,
+    )
+
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.FAILED
+
+    assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
+    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
+
+
+def test_fails_on_ics_parse_error(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    sync_stats_repo,
+):
+    """
+    ICS returns an IcsParseError => final status=FAILED in repository, no events, usage=0.
+    """
+    user_id = "userABC"
+    prof_id = "profileParseError"
+
+    # Simulate ICS parse error
+    ics_service_mock.try_fetch_and_parse.side_effect = IcsSourceError(
+        "Failed to parse ICS"
+    )
+
+    # Store initial profile
+    profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
+    sync_profile_repo.store_sync_profile(profile)
+
+    # Setup mock calendar manager
+    manager = MockGoogleCalendarManager()
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
 
     # Act
     sync_profile_service.synchronize(
@@ -423,18 +412,66 @@ def test_fails_on_daily_limit(
         sync_type=SyncType.REGULAR,
     )
 
-    # final status = FAILED
-    final_call = sync_profile_repo_mock.update_sync_profile_status.mock_calls[-1]
-    _, kwargs = final_call
-    assert kwargs["status"].type == SyncProfileStatusType.FAILED
+    # Assert profile status is FAILED
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.FAILED
 
-    # ICS never fetched
+    # Assert no events were created
+    assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
+
+    # Assert sync count was not incremented
+    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
+
+
+def test_fails_on_daily_limit(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    sync_stats_repo,
+    future_event,
+):
+    """
+    If user exceeded daily limit, we fail early (status=FAILED in the repo),
+    ICS not fetched, no events, usage doesn't increment.
+    """
+    # We'll saturate today's usage
+    from functions.settings import settings
+
+    user_id = "userX"
+    prof_id = "profileLimit"
+
+    for _ in range(settings.MAX_SYNCHRONIZATIONS_PER_DAY):
+        sync_stats_repo.increment_sync_count(user_id)
+
+    profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
+    sync_profile_repo.store_sync_profile(profile)
+
+    manager = MockGoogleCalendarManager()
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    # If ICS were fetched, we'd return future_event, but we won't get that far:
+    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=SyncType.REGULAR,
+    )
+
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.FAILED
+
+    # ICS never called
     ics_service_mock.try_fetch_and_parse.assert_not_called()
 
-    # no events
-    assert len(manager.get_all_events()) == 0
+    # No new events
+    assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
 
-    # usage is still maxed out, no new increment
+    # usage remains maxed
     assert (
         sync_stats_repo.get_daily_sync_count(user_id)
         == settings.MAX_SYNCHRONIZATIONS_PER_DAY

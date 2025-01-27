@@ -38,11 +38,12 @@ def test_create_and_retrieve_events():
 
     # Assert
     assert len(event_ids) == 2
-    stored_events = manager.get_all_events()
+
+    stored_events = manager.get_all_events(sync_profile_id=sync_profile_id)
     assert len(stored_events) == 2
 
     # Verify event details were stored correctly
-    first_event = stored_events["1"][0]
+    first_event = stored_events[0]
     assert first_event["summary"] == "Test Event 1"
     assert first_event["colorId"] == GoogleEventColor.TOMATO.to_color_id()
 
@@ -68,7 +69,7 @@ def test_delete_events():
     manager.delete_events(event_ids)
 
     # Assert
-    assert len(manager.get_all_events()) == 0
+    assert len(manager.get_all_events(sync_profile_id=sync_profile_id)) == 0
 
 
 def test_get_events_with_min_dt():
@@ -99,8 +100,9 @@ def test_get_events_with_min_dt():
 
     # Assert
     assert len(event_ids) == 1
-    stored_events = manager.get_all_events()
-    assert stored_events[event_ids[0]][0]["summary"] == "Future Event"
+
+    stored_events = manager.get_all_events_with_ids(sync_profile_id=sync_profile_id)
+    assert stored_events[event_ids[0]]["summary"] == "Future Event"
 
 
 def test_get_events_filters_by_sync_profile():

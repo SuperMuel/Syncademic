@@ -165,7 +165,11 @@ def test_update_sync_profile_status(mock_db):
         type=SyncProfileStatusType.FAILED, message="An error occurred"
     )
 
-    repo.update_sync_profile_status(user_id, sync_profile_id, new_status)
+    repo.update_sync_profile_status(
+        user_id=user_id,
+        sync_profile_id=sync_profile_id,
+        status=new_status,
+    )
 
     updated = repo.get_sync_profile(user_id=user_id, sync_profile_id=sync_profile_id)
     assert updated is not None

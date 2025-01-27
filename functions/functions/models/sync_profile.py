@@ -175,10 +175,10 @@ class SyncProfile(BaseModel):
     lastSuccessfulSync: PastDatetime | None = None
 
     @field_serializer("ruleset")
-    def serialize_ruleset_as_json_str(self, ruleset: Ruleset | None) -> str | None:
+    def _serialize_ruleset_as_json_str(self, ruleset: Ruleset | None) -> str | None:
         return ruleset.model_dump_json() if ruleset else None
 
     @field_validator("ruleset", mode="before")
     @classmethod
-    def decode_ruleset_from_json_str(cls, value: Any) -> Any:
+    def _decode_ruleset_from_json_str(cls, value: Any) -> Any:
         return _decode_ruleset_from_str(value)

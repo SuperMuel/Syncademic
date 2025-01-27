@@ -48,7 +48,7 @@ class GoogleCalendarManager:
         return {"private": {"syncademic": sync_profile_id}}
 
     def create_events(
-        self, events: List[Event], sync_profile_id: str, batch_size: int = 50
+        self, events: list[Event], sync_profile_id: str, *, batch_size: int = 50
     ) -> None:
         logger.info(f"Creating {len(events)} events.")
 

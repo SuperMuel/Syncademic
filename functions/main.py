@@ -44,6 +44,9 @@ from functions.repositories.sync_stats_repository import (
 from functions.services.authorization_service import AuthorizationService
 from functions.services.exceptions.base import SyncademicError
 from functions.services.exceptions.mapping import ErrorMapping
+from functions.services.google_calendar_service import GoogleCalendarService
+from functions.services.ics_service import IcsService
+from functions.services.sync_profile_service import SyncProfileService
 from functions.settings import settings
 from functions.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
@@ -51,11 +54,6 @@ from functions.synchronizer.google_calendar_manager import (
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
-from functions.synchronizer.synchronizer import (
-    perform_synchronization,
-)
-from functions.services.google_calendar_service import GoogleCalendarService
-from functions.services.ics_service import IcsService
 
 initialize_app()
 
@@ -67,11 +65,22 @@ sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
 ics_service = IcsService()
+sync_profile_service = SyncProfileService(
+    sync_profile_repo=sync_profile_repo,
+    sync_stats_repo=sync_stats_repo,
+    authorization_service=authorization_service,
+    ics_parser=IcsParser(),
+    ics_cache=FirebaseIcsFileStorage(),
+)
 
 error_mapping = ErrorMapping()
 
 
 def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
+    """
+    Get the user ID from the request, or raise an error if the request is not authenticated.
+    """
+
     if not req.auth or not req.auth.uid:
         raise https_fn.HttpsError(
             https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
@@ -252,7 +261,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
         )
 
     # Initial synchronization
-    _synchronize_now(
+    sync_profile_service.synchronize(
         user_id=user_id,
         sync_profile_id=sync_profile_id,
         sync_trigger=SyncTrigger.ON_CREATE,
@@ -283,7 +292,7 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
             https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
         )
 
-    _synchronize_now(
+    sync_profile_service.synchronize(
         user_id=user_id,
         sync_profile_id=sync_profile_id,
         sync_trigger=SyncTrigger.MANUAL,
@@ -306,119 +315,13 @@ def scheduled_sync(event: Any) -> None:
 
         logger.info(f"Synchronizing {user_id}/{sync_profile_id} ({sync_profile.title})")
         try:
-            _synchronize_now(
-                user_id, sync_profile_id, sync_trigger=SyncTrigger.SCHEDULED
+            sync_profile_service.synchronize(
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+                sync_trigger=SyncTrigger.SCHEDULED,
             )
         except Exception as e:
             logger.error(f"Failed to synchronize {user_id}/{sync_profile_id}: {e}")
-
-
-def _synchronize_now(
-    user_id: str,
-    sync_profile_id: str,
-    sync_trigger: SyncTrigger,
-    sync_type: SyncType = SyncType.REGULAR,
-):
-    profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
-    if profile is None:
-        logger.error("Sync profile not found")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
-        )
-
-    if profile.status in [
-        SyncProfileStatusType.IN_PROGRESS,
-        SyncProfileStatusType.DELETING,
-        SyncProfileStatusType.DELETION_FAILED,
-    ]:
-        logger.info(f"Synchronization is {profile.status}, skipping")
-        return
-
-    in_progress_status = SyncProfileStatus(
-        type=SyncProfileStatusType.IN_PROGRESS,
-        syncTrigger=sync_trigger,
-        syncType=sync_type,
-    )
-
-    sync_profile_repo.update_sync_profile_status(
-        user_id, sync_profile_id, in_progress_status
-    )
-
-    sync_count = sync_stats_repo.get_daily_sync_count(user_id)
-    logger.info(f"Sync count: {sync_count}" if sync_count else "First sync of the day")
-
-    if sync_count >= settings.MAX_SYNCHRONIZATIONS_PER_DAY:
-        logger.info(f"User {user_id} has reached the daily synchronization limit.")
-        failed_status = SyncProfileStatus(
-            type=SyncProfileStatusType.FAILED,
-            message=f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
-            syncTrigger=sync_trigger,
-            syncType=sync_type,
-        )
-        sync_profile_repo.update_sync_profile_status(
-            user_id, sync_profile_id, failed_status
-        )
-        return  # Do not synchronize
-
-    target_calendar = profile.targetCalendar
-    provider_account_id = target_calendar.providerAccountId
-
-    try:
-        service = authorization_service.get_calendar_service(
-            user_id, provider_account_id
-        )
-        calendar_manager = GoogleCalendarManager(service, target_calendar.id)
-    except Exception as e:
-        failed_status = SyncProfileStatus(
-            type=SyncProfileStatusType.FAILED,
-            message=f"Authorization failed: {e}",
-            syncTrigger=sync_trigger,
-            syncType=sync_type,
-        )
-        sync_profile_repo.update_sync_profile_status(
-            user_id, sync_profile_id, failed_status
-        )
-        logger.info(f"Failed to get calendar service: {e}")
-        return
-
-    try:
-        ics_url = profile.scheduleSource.url
-        perform_synchronization(
-            sync_profile_id=sync_profile_id,
-            sync_trigger=sync_trigger,
-            ics_source=UrlIcsSource(url=ics_url),
-            ics_parser=IcsParser(),
-            ics_cache=FirebaseIcsFileStorage(storage.bucket()),
-            calendar_manager=calendar_manager,
-            sync_type=sync_type,
-            ruleset=profile.ruleset,
-        )
-    except Exception as e:
-        logger.info(f"Synchronization failed: {e}")
-        failed_status = SyncProfileStatus(
-            type=SyncProfileStatusType.FAILED,
-            message=f"Synchronization failed: {e}",
-            syncTrigger=sync_trigger,
-            syncType=sync_type,
-        )
-        sync_profile_repo.update_sync_profile_status(
-            user_id, sync_profile_id, failed_status
-        )
-        return
-
-    # If successful, update status + increment syncCount
-    success_status = SyncProfileStatus(
-        type=SyncProfileStatusType.SUCCESS,
-        syncTrigger=sync_trigger,
-        syncType=sync_type,
-    )
-    sync_profile_repo.update_sync_profile_status(
-        user_id, sync_profile_id, success_status
-    )
-    sync_profile_repo.update_last_successful_sync(user_id, sync_profile_id)
-
-    sync_stats_repo.increment_sync_count(user_id)
-    logger.info("Synchronization completed successfully")
 
 
 @https_fn.on_call(
@@ -463,7 +366,9 @@ def delete_sync_profile(
         # Do not use a catch-all case ! We want a type error if a new status is not handled.
 
     sync_profile_repo.update_sync_profile_status(
-        user_id, sync_profile_id, SyncProfileStatus(type=SyncProfileStatusType.DELETING)
+        user_id=user_id,
+        sync_profile_id=sync_profile_id,
+        status=SyncProfileStatus(type=SyncProfileStatusType.DELETING),
     )
 
     try:

@@ -48,6 +48,7 @@ class ISyncProfileRepository(Protocol):
 
     def update_sync_profile_status(
         self,
+        *,
         user_id: str,
         sync_profile_id: str,
         status: SyncProfileStatus,
@@ -221,6 +222,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
 
     def update_sync_profile_status(
         self,
+        *,
         user_id: str,
         sync_profile_id: str,
         status: SyncProfileStatus,

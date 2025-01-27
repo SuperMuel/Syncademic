@@ -16,6 +16,7 @@ class IcsFileStorage(ABC):
         ics_source: UrlIcsSource,
         sync_profile_id: str | None = None,
         user_id: str | None = None,
+        # TODO : type this and add sync_type
         sync_trigger: str | None = None,
         parsing_error: str | Exception | None = None,
     ) -> None:

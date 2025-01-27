@@ -284,19 +284,15 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
 
     logger.info(f"{sync_type} Sync request received for {user_id}/{sync_profile_id}")
 
-    profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
-    if profile is None:
-        logger.error("Sync profile not found")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
+    try:
+        sync_profile_service.synchronize(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+            sync_trigger=SyncTrigger.MANUAL,
+            sync_type=sync_type,
         )
-
-    sync_profile_service.synchronize(
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
-        sync_trigger=SyncTrigger.MANUAL,
-        sync_type=sync_type,
-    )
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 # Every day at 2:00 AM UTC

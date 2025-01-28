@@ -21,7 +21,7 @@ The backend is built on Firebase Cloud Functions, Firebase Authentication, and F
 1. Install [UV](https://github.com/astral-sh/uv)
 2. Install dependencies
   ```bash
-  uv sync --dev
+  uv sync
   ``` 
 
 ### Run tests

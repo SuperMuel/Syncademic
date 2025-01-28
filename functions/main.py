@@ -1,78 +1,91 @@
-import logging
-import os
-from datetime import datetime, timezone
 from typing import Any
 
-import validators
-from firebase_admin import firestore, initialize_app, storage
+from firebase_admin import initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
 from firebase_functions.firestore_fn import (
     Event,
     on_document_created,
 )
-from google.auth.transport import requests
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
-from google.cloud.firestore_v1.document import DocumentReference
-from google.oauth2.credentials import Credentials
-from google.oauth2.id_token import verify_oauth2_token
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
 from langchain.chat_models import init_chat_model
+from pydantic import ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.rules.models import Ruleset
-from functions.settings import settings
-from functions.synchronizer.google_calendar_manager import (
-    GoogleCalendarManager,
+from functions.models import (
+    SyncTrigger,
 )
+from functions.models.schemas import (
+    AuthorizeBackendInput,
+    CreateNewCalendarInput,
+    DeleteSyncProfileInput,
+    IsAuthorizedInput,
+    IsAuthorizedOutput,
+    ListUserCalendarsInput,
+    RequestSyncInput,
+    ValidateIcsUrlInput,
+)
+from functions.models.sync_profile import SyncProfile
+from functions.repositories.backend_authorization_repository import (
+    FirestoreBackendAuthorizationRepository,
+    IBackendAuthorizationRepository,
+)
+from functions.repositories.sync_profile_repository import (
+    FirestoreSyncProfileRepository,
+    ISyncProfileRepository,
+)
+from functions.repositories.sync_stats_repository import (
+    FirestoreSyncStatsRepository,
+    ISyncStatsRepository,
+)
+from functions.services.ai_ruleset_service import AiRulesetService
+from functions.services.authorization_service import AuthorizationService
+from functions.services.exceptions.base import SyncademicError
+from functions.services.exceptions.mapping import ErrorMapping
+from functions.services.google_calendar_service import GoogleCalendarService
+from functions.services.ics_service import IcsService
+from functions.services.sync_profile_service import SyncProfileService
+from functions.settings import settings
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
-from functions.synchronizer.synchronizer import (
-    SyncTrigger,
-    SyncType,
-    perform_synchronization,
-)
 
 initialize_app()
 
+backend_auth_repo: IBackendAuthorizationRepository = (
+    FirestoreBackendAuthorizationRepository()
+)
+sync_stats_repo: ISyncStatsRepository = FirestoreSyncStatsRepository()
+sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
+authorization_service = AuthorizationService(backend_auth_repo)
+google_calendar_service = GoogleCalendarService(authorization_service)
+ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
+ics_service = IcsService(ics_storage=ics_file_storage)
+sync_profile_service = SyncProfileService(
+    sync_profile_repo=sync_profile_repo,
+    sync_stats_repo=sync_stats_repo,
+    authorization_service=authorization_service,
+    ics_service=ics_service,
+)
+ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
+ai_ruleset_service = AiRulesetService(
+    ics_service=ics_service,
+    sync_profile_repo=sync_profile_repo,
+    ruleset_builder=ruleset_builder,
+)
+error_mapping = ErrorMapping()
 
-def get_calendar_service(user_id: str, provider_account_id: str):
-    if not user_id:
-        raise ValueError("User ID is required")
-    if not provider_account_id:
-        raise ValueError("Provider account ID is required")
 
-    logger.info(f"Getting calendar service for {user_id}/{provider_account_id}")
+def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
+    """
+    Get the user ID from the request, or raise an error if the request is not authenticated.
+    """
 
-    db = firestore.client()
-
-    backend_authorization = (
-        db.collection("backendAuthorizations")
-        .document(user_id + provider_account_id)
-        .get()
-    )
-
-    if not backend_authorization.exists:
-        logger.info("Backend authorization not found")
-        raise ValueError("Target calendar is not authorized")
-
-    # Construct a Credentials object from the access token
-    credentials = Credentials(
-        client_id=settings.CLIENT_ID,
-        token=backend_authorization.get("accessToken"),
-        refresh_token=backend_authorization.get("refreshToken"),
-        token_uri="https://oauth2.googleapis.com/token",
-        client_secret=settings.CLIENT_SECRET,
-    )
-
-    # TODO : refresh token if expired
-
-    # Build the Google Calendar API service
-    service = build("calendar", "v3", credentials=credentials)
-
-    return service
+    if not req.auth or not req.auth.uid:
+        raise https_fn.HttpsError(
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
+        )
+    return req.auth.uid
 
 
 @https_fn.on_call(
@@ -80,44 +93,18 @@ def get_calendar_service(user_id: str, provider_account_id: str):
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def validate_ics_url(req: https_fn.CallableRequest) -> dict:
-    # Check if the request is authenticated
-    if not req.auth:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized request."
-        )
+    get_user_id_or_raise(req)
 
-    # Retrieve the ICS URL from the request data
-    ics_url = req.data.get("url")
-    if not ics_url:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing 'url' in request."
-        )
-
-    # URL Format Validation using validators.url
-    if not validators.url(ics_url):
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid URL"
-        )
-
-    # Use UrlIcsSource to fetch the ICS file and validate content-type and size
     try:
-        ics_source = UrlIcsSource(ics_url)
-        content = ics_source.get_ics_string()
-    except Exception as e:
-        logging.info(f"Failed to fetch ICS file at URL '{ics_url}': {e}")
-        return {"valid": False, "error": str(e)}
+        request = ValidateIcsUrlInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
-    # Content verification
-    try:
-        parser = IcsParser()
-        events = parser.parse(ics_str=content)
-    except Exception as e:
-        logging.error(f"Invalid ICS content at URL '{ics_url}': {e}")
-        return {"valid": False, "error": str(e)}
-
-    # If everything is fine, return success
-    logger.info(f"Successfully fetched ICS file at URL '{ics_url}'")
-    return {"valid": True, "nbEvents": len(events)}
+    return ics_service.validate_ics_url(
+        UrlIcsSource(url=request.url),
+        # In case of error, we want to understand what went wrong by looking at the ICS file.
+        save_to_storage=True,
+    ).model_dump()
 
 
 @https_fn.on_call(
@@ -125,41 +112,23 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     memory=options.MemoryOption.MB_512,
 )
 def list_user_calendars(req: https_fn.CallableRequest) -> dict:
-    if not req.auth:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_user_id_or_raise(req)
 
     logger.info(f"Listing calendars for {user_id}")
 
-    # Fetch provider_account_id from user's sync profile or frontend request
-    provider_account_id = req.data.get("providerAccountId")
-    if not provider_account_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
-        )
+    try:
+        request = ListUserCalendarsInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
     try:
-        service = get_calendar_service(user_id, provider_account_id)
-    except Exception as e:
-        logger.error(f"Failed to get calendar service: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
+        calendars = google_calendar_service.list_calendars(
+            user_id=user_id,
+            provider_account_id=request.providerAccountId,
         )
-
-    try:
-        # TODO : move this to GoogleCalendarManager, and handle pagination
-        calendars_result = service.calendarList().list().execute()
-        calendars = calendars_result.get("items", [])
-
         return {"calendars": calendars}
-    except Exception as e:
-        logger.error(f"Failed to list calendars: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to list calendars."
-        )
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 @https_fn.on_call(
@@ -167,35 +136,23 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def is_authorized(req: https_fn.CallableRequest) -> dict:
-    if not req.auth:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
+    user_id = get_user_id_or_raise(req)
 
-    user_id = req.auth.uid
+    try:
+        request = IsAuthorizedInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
-    provider_account_id = req.data.get("providerAccountId")
-    if not provider_account_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
-        )
+    provider_account_id = request.providerAccountId
 
-    db = firestore.client()
-
-    backend_authorization = (
-        db.collection("backendAuthorizations")
-        .document(user_id + provider_account_id)
-        .get()
-    )
-
-    if not backend_authorization.exists:
-        logger.info("Backend authorization not found")
-        return {"authorized": False}
-
-    # TODO : create service and use GoogleCalendarManager to test authorization here
+    try:
+        authorization_service.test_authorization(user_id, provider_account_id)
+    except SyncademicError as e:
+        logger.info(f"Failed to test authorization: {e}")
+        return IsAuthorizedOutput(authorized=False).model_dump()
 
     logger.info("Authorization successful")
-    return {"authorized": True}
+    return IsAuthorizedOutput(authorized=True).model_dump()
 
 
 @https_fn.on_call(
@@ -203,106 +160,24 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def create_new_calendar(req: https_fn.CallableRequest) -> dict:
-    if not req.auth:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
-
-    user_id = req.auth.uid
-
-    provider_account_id = req.data.get("providerAccountId")
-    if not provider_account_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
-        )
-
-    # Validate colorId
-    color_id = req.data.get("colorId")
-    if (
-        color_id is not None
-        and not isinstance(color_id, int)
-        or not 1 <= color_id <= 25
-    ):
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            "Invalid colorId. Must be an integer between 1 and 25.",
-        )
-
-    logger.info(f"Creating new calendar for {user_id}/{provider_account_id}")
+    user_id = get_user_id_or_raise(req)
 
     try:
-        service = get_calendar_service(user_id, provider_account_id)
-    except Exception as e:
-        logger.error(f"Failed to get calendar service: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to get calendar service."
-        )
-
-    calendar_name = req.data.get("summary", "New Calendar")
-    calendar_description = req.data.get("description", "Created by Syncademic")
-    calendar_body = {
-        "summary": calendar_name,
-        "description": calendar_description,
-    }
+        request = CreateNewCalendarInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
     try:
-        result = service.calendars().insert(body=calendar_body).execute()
-    except Exception as e:
-        logger.error(f"Failed to create calendar: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "Failed to create calendar."
+        result = google_calendar_service.create_new_calendar(
+            user_id=user_id,
+            provider_account_id=request.providerAccountId,
+            summary=request.summary,
+            description=request.description,
+            color_id=request.colorId,
         )
-
-    # Calendar color is a property of the calendar list entry, not the calendar itself
-    if color_id is not None:
-        try:
-            service.calendarList().patch(
-                calendarId=result.get("id"),
-                body={"colorId": color_id},
-            ).execute()
-        except Exception as e:
-            logger.error(f"Failed to patch calendar list entry: {e}")
-
-    return result
-
-
-def _create_ai_ruleset(sync_profile_ref: DocumentReference):
-    logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
-
-    model = settings.RULES_BUILDER_LLM
-
-    logger.info(f"Using {model} model")
-    llm = init_chat_model(model)
-
-    doc = sync_profile_ref.get()
-    if not doc.exists:
-        logger.error("Sync profile not found")
-        return
-
-    ics_url = doc.get("scheduleSource.url")
-    ics_str = UrlIcsSource(ics_url).get_ics_string()
-    events = IcsParser().parse(ics_str=ics_str)
-
-    compresser = TimeScheduleCompressor()
-    compressed_schedule = compresser.compress(events)
-
-    logger.info(
-        f"Compressed schedule to {len(compressed_schedule)=} ({len(compressed_schedule)/len(ics_str)*100:.2f}% of original)"
-    )
-
-    logger.info(f"Creating AI ruleset for {sync_profile_ref.path}")
-
-    ruleset_builder = RulesetBuilder(llm=llm)
-
-    output = ruleset_builder.generate_ruleset(
-        compressed_schedule,
-        metadata={
-            "ics_url": ics_url,
-            "sync_profile_id": sync_profile_ref.id,
-        },
-    )
-
-    sync_profile_ref.update({"ruleset": output.ruleset.model_dump_json()})
+        return result
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 @on_document_created(
@@ -310,33 +185,35 @@ def _create_ai_ruleset(sync_profile_ref: DocumentReference):
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )  # type: ignore
-def on_sync_profile_created(event: Event[DocumentSnapshot]):
+def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     logger.info(f"Sync profile created: {event.data}")
 
-    doc = event.data.to_dict()
+    # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
+    user_id = event.params["userId"]
+    sync_profile_id = event.params["syncProfileId"]
+    data = event.data.to_dict()
 
-    if doc is None:
-        # ? Why would this happen?
-        raise ValueError("Document has been created but is None")
-
-    # TODO validate the document
+    assert data, "Sync Profile Document was just created : it should not be empty"
 
     # Add created_at field
-    sync_profile_ref = event.data.reference
-    assert isinstance(sync_profile_ref, DocumentReference)
+    sync_profile_repo.update_created_at(
+        user_id=user_id, sync_profile_id=sync_profile_id
+    )
 
-    sync_profile_ref.update({"created_at": firestore.firestore.SERVER_TIMESTAMP})
+    # Validate document using Pydantic
+    data["id"] = sync_profile_id
+    data["user_id"] = user_id
+    sync_profile = SyncProfile.model_validate(data)
 
-    try:
-        _create_ai_ruleset(sync_profile_ref)
-    except Exception as e:
-        logger.error(f"Failed to create AI ruleset: {e}")
-        sync_profile_ref.update({"ruleset_error": str(e)})
+    ai_ruleset_service.create_ruleset_for_sync_profile(
+        sync_profile,
+    )
 
-    _synchronize_now(
-        event.params["userId"],
-        event.params["syncProfileId"],
-        sync_trigger="on_create",
+    # Initial synchronization
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=sync_profile_id,
+        sync_trigger=SyncTrigger.ON_CREATE,
     )
 
 
@@ -345,48 +222,27 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]):
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def request_sync(req: https_fn.CallableRequest) -> Any:
-    if not req.auth:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
+    user_id = get_user_id_or_raise(req)
+
+    try:
+        request = RequestSyncInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
+
+    sync_profile_id = request.syncProfileId
+    sync_type = request.syncType
+
+    logger.info(f"{sync_type} Sync request received for {user_id}/{sync_profile_id}")
+
+    try:
+        sync_profile_service.synchronize(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+            sync_trigger=SyncTrigger.MANUAL,
+            sync_type=sync_type,
         )
-
-    sync_profile_id = req.data.get("syncProfileId")
-
-    logger.info(f"Sync request received for {req.auth.uid}/{sync_profile_id}")
-
-    if not sync_profile_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
-        )
-
-    sync_type = req.data.get("syncType", "regular")
-
-    if sync_type not in ["regular", "full"]:
-        logger.error(f"Invalid syncType: {sync_type}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Invalid syncType"
-        )
-
-    logger.info(f"Sync type: {sync_type}")
-
-    syncProfile = (
-        firestore.client()
-        .collection("users")
-        .document(req.auth.uid)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-        .get()
-    )
-
-    if not syncProfile.exists:
-        logger.error("Sync profile not found")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
-        )
-
-    _synchronize_now(
-        req.auth.uid, sync_profile_id, sync_trigger="manual", sync_type=sync_type
-    )
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
 
 
 # Every day at 2:00 AM UTC
@@ -396,425 +252,65 @@ def request_sync(req: https_fn.CallableRequest) -> Any:
     timeout_sec=3600,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def scheduled_sync(event: Any):
+def scheduled_sync(event: Any) -> None:
     logger.info("Scheduled synchronization started")
-    db = firestore.client()
 
-    for sync_profile in db.collection_group("syncProfiles").stream():
-        sync_profile_id = sync_profile.id
-        user_id = sync_profile.reference.parent.parent.id
+    for sync_profile in sync_profile_repo.list_all_active_sync_profiles():
+        sync_profile_id, user_id = sync_profile.id, sync_profile.user_id
 
-        logger.info(f"Synchronizing {user_id}/{sync_profile_id}")
+        logger.info(f"Synchronizing {user_id}/{sync_profile_id} ({sync_profile.title})")
         try:
-            _synchronize_now(user_id, sync_profile_id, sync_trigger="scheduled")
+            sync_profile_service.synchronize(
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+                sync_trigger=SyncTrigger.SCHEDULED,
+            )
         except Exception as e:
             logger.error(f"Failed to synchronize {user_id}/{sync_profile_id}: {e}")
 
 
-def _synchronize_now(
-    user_id: str,
-    sync_profile_id: str,
-    sync_trigger: SyncTrigger,
-    sync_type: SyncType = "regular",
-):
-    db = firestore.client()
-
-    user_ref = db.collection("users").document(user_id)
-
-    sync_profile_ref = (
-        db.collection("users")
-        .document(user_id)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    )
-
-    assert isinstance(sync_profile_ref, DocumentReference)
-
-    doc = sync_profile_ref.get()
-    if not doc.exists:
-        logger.error("Sync profile not found")
-        return
-
-    data = doc.to_dict()
-    assert data is not None
-
-    status = doc.get("status")
-    assert status, f"status field is required. {status=}"
-    if status and (
-        status.get("type") in ["inProgress", "deleting", "deleted"]
-    ):  # TODO : extract to a should_skip(status)->bool function
-        logger.info(f"Synchronization is {status.get('type')}, skipping")
-        return
-
-    # TODO: Check access token validity and refresh or send error if needed
-
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "inProgress",
-                "syncTrigger": sync_trigger,
-                "syncType": sync_type,
-                "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-            }
-        }
-    )
-
-    # Check if number of sync per day is not exceeded
-    # Get current date in UTC
-    current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    sync_stats_ref = user_ref.collection("syncStats").document(current_date)
-    assert isinstance(sync_stats_ref, DocumentReference)
-
-    # Fetch today's synchronization stats
-    sync_stats_doc = sync_stats_ref.get()
-    if sync_stats_doc.exists:
-        sync_stats = sync_stats_doc.to_dict()
-        assert sync_stats is not None, "sync_stats should not be None since it exists"
-        sync_count = sync_stats.get("syncCount", 0)
-    else:
-        sync_count = 0
-
-    assert isinstance(sync_count, int) and sync_count >= 0
-
-    logger.info(f"Sync count: {sync_count}" if sync_count else "First sync of the day")
-
-    # Check if the user has reached the daily limit
-    if sync_count >= settings.MAX_SYNCHRONIZATIONS_PER_DAY:
-        logger.info(f"User {user_id} has reached the daily synchronization limit.")
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "failed",
-                    "message": f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached.",
-                    "syncTrigger": sync_trigger,
-                    "syncType": sync_type,
-                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                }
-            }
-        )
-        return  # Exit without performing synchronization
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+)
+def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
+    user_id = get_user_id_or_raise(req)
 
     try:
-        service = get_calendar_service(
+        request = DeleteSyncProfileInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
+
+    try:
+        sync_profile_service.delete_sync_profile(
+            user_id=user_id, sync_profile_id=request.syncProfileId
+        )
+        return {"success": True}
+    except SyncademicError as e:
+        raise error_mapping.to_http_error(e)
+
+
+@https_fn.on_call(
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    memory=options.MemoryOption.MB_512,
+)
+def authorize_backend(req: https_fn.CallableRequest) -> dict:
+    user_id = get_user_id_or_raise(req)
+
+    try:
+        request = AuthorizeBackendInput.model_validate(req.data)
+    except ValidationError as e:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
+
+    try:
+        authorization_service.authorize_backend_with_auth_code(
             user_id=user_id,
-            provider_account_id=doc.get("targetCalendar.providerAccountId"),
+            auth_code=request.authCode,
+            redirect_uri=request.redirectUri,
+            provider_account_id=request.providerAccountId,
         )
-        calendar_manager = GoogleCalendarManager(
-            service=service, calendar_id=doc.get("targetCalendar.id")
-        )
-        calendar_manager.test_authorization()
-    except Exception as e:
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "failed",
-                    "message": f"Autorization failed: {e}",
-                    # TODO : implement a way to re-authorize from the frontend
-                    "syncTrigger": sync_trigger,
-                    "syncType": sync_type,
-                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                }
-            }
-        )
-        logger.info(f"Failed to get calendar service: {e}")
-        return
-
-    ruleset: Ruleset | None = None
-
-    if ruleset_json := data.get("ruleset"):
-        try:
-            ruleset = Ruleset.model_validate_json(ruleset_json)
-        except Exception as e:
-            logger.error(f"Failed to validate ruleset: {e}")
-            sync_profile_ref.update(
-                {
-                    "status": {
-                        "type": "failed",
-                        "message": f"Failed to validate ruleset: {e}",
-                        "syncTrigger": sync_trigger,
-                        "syncType": sync_type,
-                        "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                    }
-                }
-            )
-            return
-        logger.info(f"Found {len(ruleset.rules)} rules in ruleset")
-
-    try:
-        perform_synchronization(
-            sync_profile_id=sync_profile_id,
-            sync_trigger=sync_trigger,
-            ics_source=UrlIcsSource(doc.get("scheduleSource.url")),
-            ics_parser=IcsParser(),
-            ics_cache=FirebaseIcsFileStorage(storage.bucket()),
-            calendar_manager=calendar_manager,
-            sync_type=sync_type,
-            ruleset=ruleset,
-        )
-    except Exception as e:
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "failed",
-                    "message": f"Synchronization failed: {e}",
-                    "syncTrigger": sync_trigger,
-                    "syncType": sync_type,
-                    "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-                }
-            }
-        )
-        logger.info(f"Synchronization failed: {e}")
-        return
-
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "success",
-                "syncTrigger": sync_trigger,
-                "syncType": sync_type,
-                "updatedAt": firestore.firestore.SERVER_TIMESTAMP,
-            },
-            "lastSuccessfulSync": firestore.firestore.SERVER_TIMESTAMP,
-        }
-    )
-    sync_stats_ref.set({"syncCount": firestore.firestore.Increment(1)}, merge=True)
-
-    logger.info("Synchronization completed successfully")
-
-
-@https_fn.on_call(
-    memory=options.MemoryOption.MB_512,
-    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-)
-def delete_sync_profile(
-    req: https_fn.CallableRequest,
-) -> Any:  # TODO : add 'force' argument
-    if not req.auth:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthorized"
-        )
-
-    sync_profile_id = req.data.get("syncProfileId")
-
-    if not sync_profile_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing syncProfileId"
-        )
-
-    sync_profile_ref = (
-        firestore.client()
-        .collection("users")
-        .document(req.auth.uid)
-        .collection("syncProfiles")
-        .document(sync_profile_id)
-    )
-
-    doc = sync_profile_ref.get()
-
-    if not doc.exists:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "Sync profile not found"
-        )
-
-    status = doc.get("status")
-
-    if status and (status.get("type") in ["deleting", "deleted"]):
-        logger.info(f"Sync profile is already {status.get('type')}, skipping deletion")
-        return
-
-    sync_profile_ref.update(
-        {
-            "status": {
-                "type": "deleting",
-                "syncTrigger": None,
-            }
-        }
-    )
-
-    try:
-        service = get_calendar_service(
-            user_id=req.auth.uid,
-            provider_account_id=doc.get("targetCalendar.providerAccountId"),
-        )
-    except Exception as e:
-        logger.info(f"Failed to get calendar service: {e}. Skipping deletion")
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "deletionFailed",
-                    "message": f"Autorization failed: {e}",
-                }
-            }
-        )
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "Authorization failed",
-        )
-
-    calendar_manager = GoogleCalendarManager(service, doc.get("targetCalendar.id"))
-
-    try:
-        events = calendar_manager.get_events_ids_from_sync_profile(
-            sync_profile_id=sync_profile_id,
-        )
-        logger.info(f"Deleting {len(events)} events")
-
-        calendar_manager.delete_events(events)
-    except Exception as e:
-        logger.error(f"Failed to delete events: {e}")
-        sync_profile_ref.update(
-            {
-                "status": {
-                    "type": "deletionFailed",
-                    "message": "Could not delete events",
-                }
-            }
-        )
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "Failed to delete events",
-        )
-
-    sync_profile_ref.delete()
-
-    logger.info("Sync profile deleted successfully")
-
-
-@https_fn.on_call(
-    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-    memory=options.MemoryOption.MB_512,
-)
-def authorize_backend(request: https_fn.CallableRequest) -> dict:
-    if request.auth is None:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Unauthenticated"
-        )
-
-    auth_code = request.data.get("authCode")
-
-    if not auth_code:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing authorization code"
-        )
-
-    redirect_uri = request.data.get("redirectUri", settings.PRODUCTION_REDIRECT_URI)
-    if redirect_uri not in [
-        settings.PRODUCTION_REDIRECT_URI,
-        settings.LOCAL_REDIRECT_URI,
-    ]:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            f"{redirect_uri} is not a valid redirect URI.",
-        )
-
-    provider = request.data.get("provider")
-
-    supported_providers = ["google"]
-
-    if not provider or provider.lower() not in supported_providers:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            f"Invalid provider. Supported providers are {supported_providers}",
-        )
-
-    provider_account_id = request.data.get("providerAccountId")
-
-    if not provider_account_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INVALID_ARGUMENT, "Missing providerAccountId"
-        )
-
-    user_id = request.auth.uid
-
-    db = firestore.client()
-
-    # verify that the user exists in firestore
-    user_ref = db.collection("users").document(user_id)
-    if not user_ref.get().exists:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.NOT_FOUND, "User document not found"
-        )
-
-    # https://www.reddit.com/r/webdev/comments/11w1e36/warning_oauth_scope_has_changed_from (Workaround)
-    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
-
-    try:
-        flow = Flow.from_client_config(
-            {
-                "web": {
-                    "client_id": settings.CLIENT_ID,
-                    "client_secret": settings.CLIENT_SECRET,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                }
-            },
-            scopes=["https://www.googleapis.com/auth/calendar"],
-            redirect_uri=redirect_uri,
-        )
-
-        flow.fetch_token(code=auth_code)
-
-        credentials = flow.credentials
-    except Exception as e:
-        logger.error(
-            f"An error occurred while exchanging the authorization code: {str(e)}"
-        )
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "An error occurred while exchanging the authorization code",
-        )
-
-    # The logged-in user (request.auth.uid) can authorize the backend on multiple google accounts.
-    # Thus we need to get the unique identifier of the authorized google account
-    # We can get this from the ID token
-
-    id_token = credentials.id_token  # type: ignore
-
-    if not id_token:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL, "ID token not found"
-        )
-
-    try:
-        id_info = verify_oauth2_token(
-            id_token, requests.Request(), audience=settings.CLIENT_ID
-        )
-
-    except Exception as e:
-        logger.error(f"An error occurred while verifying the ID token: {e}")
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "An error occurred while verifying the ID token",
-        )
-
-    google_user_id = id_info.get("sub")
-    if not google_user_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            "google_user_id not found in id_token",
-        )
-
-    # Check if the user is authorizing the backend on the correct google account
-    if google_user_id != provider_account_id:
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.PERMISSION_DENIED,
-            "The authorized Google account does not match the providerAccountId (ProviderUserIdMismatch)",
-        )
-
-    access_token = credentials.token
-    refresh_token = credentials.refresh_token
-
-    # TODO : separate into two collections : backendAuthorizations and providerAccounts
-    db.collection("backendAuthorizations").document(user_id + google_user_id).set(
-        {
-            "userId": user_id,
-            "provider": "google",
-            "providerAccountId": google_user_id,
-            "providerAccountEmail": id_info.get("email"),
-            "accessToken": access_token,
-            "refreshToken": refresh_token,
-            "expirationDate": credentials.expiry,
-        }
-    )
+    except SyncademicError as e:
+        logger.error(f"Failed to authorize backend: {e}")
+        raise error_mapping.to_http_error(e)
 
     return {"success": True}

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from typing import Optional
 import arrow
 
 from functions.shared.google_calendar_colors import GoogleEventColor
@@ -13,7 +12,7 @@ class Event:
     title: str = ""
     description: str = ""
     location: str = ""
-    color: Optional[GoogleEventColor] = None
+    color: GoogleEventColor | None = None
 
     def __post_init__(self):
         if self.start is None or self.end is None:

@@ -3,10 +3,19 @@ from dataclasses import replace
 from typing import Literal, Optional, Self, Union, Sequence
 
 from pydantic import BaseModel, Field, model_validator
+from pydantic_settings import BaseSettings
 
-from .constants import RulesSettings
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
+
+
+class RulesSettings(BaseSettings):
+    MAX_TEXT_FIELD_VALUE_LENGTH: int = 256
+    MAX_CONDITIONS: int = 10
+    MAX_ACTIONS: int = 5
+    MAX_RULES: int = 50
+    MAX_NESTING_DEPTH: int = 5
+
 
 settings = RulesSettings()
 
@@ -22,8 +31,8 @@ class TextFieldCondition(BaseModel):
     value: str = Field(
         ..., min_length=1, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
     )
-    case_sensitive: Optional[bool] = True
-    negate: Optional[bool] = False
+    case_sensitive: bool | None = True
+    negate: bool | None = False
 
     @model_validator(mode="after")
     def validate_regex(self) -> Self:
@@ -58,8 +67,6 @@ class TextFieldCondition(BaseModel):
             case "regex":
                 flags = 0 if self.case_sensitive else re.IGNORECASE
                 result = bool(re.search(condition_value, field_value, flags))
-            case _:
-                raise ValueError(f"Unimplemented operator: {self.operator}")
 
         return not result if self.negate else result
 
@@ -110,7 +117,7 @@ class ChangeFieldAction(BaseModel):
         ..., min_length=0, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
     )
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         field_value = getattr(event, self.field)
         assert isinstance(field_value, str)
 
@@ -123,8 +130,6 @@ class ChangeFieldAction(BaseModel):
                 new_field_value = field_value + new_value
             case "prepend":
                 new_field_value = new_value + field_value
-            case _:
-                raise ValueError(f"Unimplemented method: {self.method}")
 
         return replace(event, **{self.field: new_field_value})
 
@@ -133,14 +138,14 @@ class ChangeColorAction(BaseModel):
     action: Literal["change_color"] = "change_color"
     value: GoogleEventColor
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         return replace(event, color=self.value)
 
 
 class DeleteEventAction(BaseModel):
     action: Literal["delete_event"] = "delete_event"
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         return None
 
 
@@ -153,7 +158,7 @@ class Rule(BaseModel):
         ..., min_length=1, max_length=settings.MAX_ACTIONS
     )
 
-    def apply(self, event: Event) -> Optional[Event]:
+    def apply(self, event: Event) -> Event | None:
         if self.condition.evaluate(event):
             for action in self.actions:
                 result = action.apply(event)

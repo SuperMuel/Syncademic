@@ -1,36 +1,89 @@
-from abc import ABC, abstractmethod
 import io
-from functions.settings import settings
-import validators
+from abc import ABC, abstractmethod
 from pathlib import Path
+
 import requests
+import validators
 from firebase_functions import logger
+from pydantic import BaseModel, HttpUrl
+
+from functions.settings import settings
+from functions.services.exceptions.ics import BaseIcsError, IcsSourceError
 
 
-class IcsSource(ABC):
+class IcsSource(BaseModel, ABC):
+    """
+    Base class for ICS sources.
+    """
+
     @abstractmethod
     def get_ics_string(self) -> str:
+        """
+        Retrieves the ICS calendar data as a string.
+
+        Returns:
+            str: The ICS calendar data as a string.
+
+        Raises:
+            IcsSourceError: If there is an error retrieving the ICS data.
+        """
         pass
 
 
 class UrlIcsSource(IcsSource):
-    def __init__(
+    """
+    ICS calendar source that fetches calendar data from a URL.
+
+    This class handles the safe retrieval of ICS data from remote URLs,
+    implementing various safety checks including:
+    - Content-Type validation to ensure text-based responses
+    - Content size limits to prevent memory issues
+    - Timeout controls for network requests
+    - Proper UTF-8 decoding of the response
+
+    Attributes:
+        url (HttpUrl): The URL from which to fetch the ICS calendar data.
+            Validated using Pydantic's HttpUrl type.
+
+    Example:
+        ```python
+        from pydantic import HttpUrl
+
+        source = UrlIcsSource(url=HttpUrl("https://example.com/calendar.ics"))
+        try:
+            ics_data = source.get_ics_string()
+        except IcsSourceError as e:
+            print(f"Failed to fetch calendar: {e}")
+        ```
+    """
+
+    url: HttpUrl
+
+    def get_ics_string(
         self,
-        url: str,
+        *,
         timeout_s: int = settings.URL_ICS_SOURCE_TIMEOUT_S,
         max_content_size_b: int = settings.MAX_ICS_SIZE_BYTES,
-    ):
-        if not validators.url(url):
-            raise ValueError("Invalid URL")
-        self.url = url
-        self.timeout_s = timeout_s
-        self.max_content_size_b = max_content_size_b
+    ) -> str:
+        """
+        Safely fetch and return ICS calendar data from a URL.
 
-    def get_ics_string(self) -> str:
+        Args:
+            timeout_s: Request timeout in seconds.
+            max_content_size_b: Maximum allowed size of ICS file in bytes. Preventing
+                large files from being fetched and processed.
+
+        Returns:
+            str: The ICS calendar data as a string.
+
+        Raises:
+            IcsSourceError: If there is an error fetching or processing the ICS file,
+                including timeout, size limits, or invalid content type.
+        """
         logger.info(f"Fetching ICS file from {self.url}")
         try:
             with requests.get(
-                self.url, stream=True, timeout=self.timeout_s
+                str(self.url), stream=True, timeout=timeout_s
             ) as response:
                 response.raise_for_status()
 
@@ -38,17 +91,17 @@ class UrlIcsSource(IcsSource):
                 content_type = response.headers.get("Content-Type")
                 if content_type is not None and "text" not in content_type:
                     logger.info(f"Content-Type is not text : {content_type}")
-                    raise ValueError(f"Content-Type is not text : {content_type}")
+                    raise IcsSourceError(f"Content-Type is not text : {content_type}")
 
                 # Check the Content-Length header if available
                 content_length = response.headers.get("Content-Length")
                 if content_length is not None:
                     content_length = int(content_length)
-                    if content_length > self.max_content_size_b:
+                    if content_length > max_content_size_b:
                         logger.info(
-                            f"Content-Length is too large ({content_length/1_048_576:.2f}MB > {self.max_content_size_b/1_048_576:.2f}MB) ({response.headers=})"
+                            f"Content-Length is too large ({content_length/1_048_576:.2f}MB > {max_content_size_b/1_048_576:.2f}MB) ({response.headers=})"
                         )
-                        raise ValueError("ICS file is too large.")
+                        raise IcsSourceError("ICS file is too large.")
 
                 # Use BytesIO to accumulate chunks
                 chunks = io.BytesIO()
@@ -57,31 +110,56 @@ class UrlIcsSource(IcsSource):
                 # Collect raw bytes first
                 for chunk in response.iter_content(chunk_size=8192):
                     total_bytes += len(chunk)
-                    if total_bytes > self.max_content_size_b:
-                        raise ValueError("ICS file is too large.")
+                    if total_bytes > max_content_size_b:
+                        raise IcsSourceError("ICS file is too large.")
                     chunks.write(chunk)
 
                 # Decode all bytes at once
-                return chunks.getvalue().decode("utf-8", errors="ignore")
+                s = chunks.getvalue().decode("utf-8", errors="ignore")
+                logger.info(f"ICS string size: {len(s) / 1024} KB")
+                return s
 
         except requests.RequestException as e:
             logger.error(f"Could not fetch ICS file : {e}")
-            raise ValueError(f"Could not fetch ICS file : {e}")
+            raise IcsSourceError(f"Could not fetch ICS file. ", original_exception=e)
 
 
 class FileIcsSource(IcsSource):
-    def __init__(self, file_path: Path):
-        self.file_path = file_path
+    """
+    ICS source that is a file path, for testing purposes.
+    """
+
+    file_path: Path
 
     def get_ics_string(self) -> str:
-        # read file
-        with open(self.file_path, "r") as file:
-            return file.read()
+        """
+        Reads and returns ICS calendar data from a file.
+
+        Returns:
+            str: The ICS calendar data as a string.
+
+        Raises:
+            IcsSourceError: If there is an error reading the file.
+        """
+        try:
+            with open(self.file_path, "r") as file:
+                return file.read()
+        except Exception as e:
+            raise IcsSourceError(f"Could not read ICS file: {e}", original_exception=e)
 
 
 class StringIcsSource(IcsSource):
-    def __init__(self, ics_string: str):
-        self.ics_string = ics_string
+    """
+    ICS source that is already a string, for testing purposes.
+    """
+
+    ics_string: str
 
     def get_ics_string(self) -> str:
+        """
+        Returns the stored ICS calendar string.
+
+        Returns:
+            str: The ICS calendar data as a string.
+        """
         return self.ics_string

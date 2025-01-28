@@ -11,7 +11,7 @@ def test_event_to_google_event_basic():
     # Arrange
     service = Mock()
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
 
     event = Event(
         start=arrow.get("2023-01-01T09:00:00+00:00"),
@@ -24,7 +24,7 @@ def test_event_to_google_event_basic():
     extended_properties = {"private": {"syncademic": "sync_profile_id"}}
 
     # Act
-    google_event = manager.event_to_google_event(event, extended_properties)
+    google_event = manager._event_to_google_event(event, extended_properties)
 
     # Assert
     assert google_event == {
@@ -41,7 +41,7 @@ def test_event_to_google_event_with_color():
     # Arrange
     service = Mock()
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
 
     color = GoogleEventColor.TOMATO
 
@@ -56,7 +56,7 @@ def test_event_to_google_event_with_color():
     extended_properties = {"private": {"syncademic": "sync_profile_id"}}
 
     # Act
-    google_event = manager.event_to_google_event(event, extended_properties)
+    google_event = manager._event_to_google_event(event, extended_properties)
 
     # Assert
     assert google_event == {
@@ -74,11 +74,11 @@ def test_get_syncademic_marker():
     # Arrange
     service = Mock()
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
     sync_profile_id = "test_sync_profile"
 
     # Act
-    marker = manager._get_syncademic_marker(sync_profile_id)
+    marker = manager._create_extended_properties(sync_profile_id)
 
     # Assert
     assert marker == {"private": {"syncademic": sync_profile_id}}
@@ -90,7 +90,7 @@ def test_create_events_successful():
     batch = Mock()
     service.new_batch_http_request.return_value = batch
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
     sync_profile_id = "test_sync_profile"
 
     event1 = Event(
@@ -110,7 +110,10 @@ def test_create_events_successful():
     events = [event1, event2]
 
     # Act
-    manager.create_events(events, sync_profile_id)
+    manager.create_events(
+        events=events,
+        sync_profile_id=sync_profile_id,
+    )
 
     # Assert
     service.new_batch_http_request.assert_called_once()
@@ -131,7 +134,7 @@ def test_create_events_in_batches():
     service.new_batch_http_request.side_effect = new_batch_http_request
 
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
     sync_profile_id = "test_sync_profile"
 
     n_events = 105
@@ -151,8 +154,8 @@ def test_create_events_in_batches():
 
     # Act
     manager.create_events(
-        events,
-        sync_profile_id,
+        events=events,
+        sync_profile_id=sync_profile_id,
         batch_size=batch_size,
     )
 
@@ -168,7 +171,7 @@ def test_get_events_ids_from_sync_profile():
     # Arrange
     service = Mock()
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
     sync_profile_id = "test_sync_profile"
     min_dt = datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
@@ -181,8 +184,8 @@ def test_get_events_ids_from_sync_profile():
 
     # Act
     event_ids = manager.get_events_ids_from_sync_profile(
-        sync_profile_id,
-        min_dt,
+        sync_profile_id=sync_profile_id,
+        min_dt=min_dt,
     )
 
     # Assert
@@ -201,7 +204,7 @@ def test_get_events_ids_from_sync_profile_multiple_pages():
     # Arrange
     service = Mock()
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
     sync_profile_id = "test_sync_profile"
 
     # Mock the first page
@@ -215,7 +218,9 @@ def test_get_events_ids_from_sync_profile_multiple_pages():
     service.events.return_value.list_next.side_effect = [request, None]
 
     # Act
-    event_ids = manager.get_events_ids_from_sync_profile(sync_profile_id)
+    event_ids = manager.get_events_ids_from_sync_profile(
+        sync_profile_id=sync_profile_id,
+    )
 
     # Assert
     assert event_ids == ["event_id_1", "event_id_2"]
@@ -227,7 +232,7 @@ def test_delete_events_successful():
     batch = Mock()
     service.new_batch_http_request.return_value = batch
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
 
     event_ids = ["event_id_1", "event_id_2"]
 
@@ -253,7 +258,7 @@ def test_delete_events_in_batches():
     service.new_batch_http_request.side_effect = new_batch_http_request
 
     calendar_id = "test_calendar_id"
-    manager = GoogleCalendarManager(service, calendar_id)
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
 
     # Create more than 50 event IDs to test batching
     n_events = 105

@@ -21,7 +21,7 @@ The backend is built on Firebase Cloud Functions, Firebase Authentication, and F
 1. Install [UV](https://github.com/astral-sh/uv)
 2. Install dependencies
   ```bash
-  uv sync
+  uv sync --dev
   ``` 
 
 ### Run tests
@@ -38,7 +38,7 @@ uv run pytest
 Firebase Cloud Functions cannot use `poetry` nor UV to manage dependencies but uses `requirements.txt` instead. Thus, we need to convert the `pyproject.toml` file to `requirements.txt` before each deployment.
 
 ```bash
-uv pip compile pyproject.toml -o requirements.txt
+uv export -o requirements.txt
 ```
 
 ## Deploy Cloud Functions

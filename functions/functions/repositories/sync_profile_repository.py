@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Dict, Protocol
 
@@ -13,6 +14,8 @@ from functions.models.sync_profile import (
     SyncProfileStatus,
     SyncProfileStatusType,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ISyncProfileRepository(Protocol):
@@ -92,32 +95,6 @@ class ISyncProfileRepository(Protocol):
         """
         ...
 
-    # def create_sync_profile(self, user_id: str, sync_profile: SyncProfile) -> str:
-    #     """
-    #     Creates a new SyncProfile document and returns the generated syncProfileId.
-    #     """
-
-    #     ...
-
-    # def update_sync_profile(
-    #     self, user_id: str, sync_profile_id: str, sync_profile: SyncProfile
-    # ) -> None:
-    #     """
-    #     Replaces or merges the existing SyncProfile with new data.
-    #     """
-
-    #     ...
-
-    # def patch_sync_profile(
-    #     self, user_id: str, sync_profile_id: str, partial_data: dict
-    # ) -> None:
-    #     """
-    #     Partially updates the SyncProfile document with the provided partial_data.
-    #     For example, updating the status or ruleset field.
-    #     """
-
-    #     ...
-
 
 class FirestoreSyncProfileRepository(ISyncProfileRepository):
     """
@@ -138,6 +115,8 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         Retrieves a SyncProfile by user_id and sync_profile_id.
         Returns None if not found.
         """
+        logger.info(f"Getting sync profile {sync_profile_id} for user {user_id}")
+
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)
@@ -159,6 +138,8 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         """
         Lists all SyncProfiles for a given user.
         """
+        logger.info(f"Listing sync profiles for user {user_id}")
+
         collection_ref: CollectionReference = (
             self._db.collection("users").document(user_id).collection("syncProfiles")
         )
@@ -226,7 +207,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         (i.e., not currently being processed or deleted).
 
         """
-        # Note :  SyncProfiles can't be disabled yet.
+        logger.info("Listing active sync profiles")
 
         query = self._db.collection_group("syncProfiles").where(
             "status.type",
@@ -256,6 +237,10 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         """
         Replaces the status field of the SyncProfile document with the provided status.
         """
+
+        logger.info(
+            f"Updating sync profile {sync_profile_id} for user {user_id} to status {status.model_dump()}"
+        )
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)
@@ -268,7 +253,12 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
     def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
         """
         Deletes a SyncProfile document.
+
+        Warning: This method only deletes the document from Firestore. Unlike SyncProfileService.delete(),
+        it does not clean up associated data like calendar events. Use with caution.
         """
+        logger.info(f"Deleting sync profile {sync_profile_id} for user {user_id}")
+
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)
@@ -279,6 +269,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         doc_ref.delete()
 
     def update_created_at(self, user_id: str, sync_profile_id: str) -> None:
+        logger.info(
+            f"Updating created_at for sync profile {sync_profile_id} for user {user_id}"
+        )
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)
@@ -288,6 +281,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         doc_ref.update({"created_at": firestore.SERVER_TIMESTAMP})
 
     def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
+        logger.info(
+            f"Updating lastSuccessfulSync for sync profile {sync_profile_id} for user {user_id}"
+        )
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)
@@ -300,6 +296,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         self, user_id: str, sync_profile_id: str, error_str: str
     ) -> None:
         """Updates the ruleset_error field with the provided error message."""
+        logger.info(
+            f"Updating ruleset_error for sync profile {sync_profile_id} for user {user_id} with error {error_str}"
+        )
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)
@@ -314,6 +313,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         """
         Updates the ruleset field of a sync profile.
         """
+        logger.info(
+            f"Updating ruleset for sync profile {sync_profile_id} for user {user_id}"
+        )
         doc_ref: DocumentReference = (
             self._db.collection("users")
             .document(user_id)

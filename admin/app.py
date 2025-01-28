@@ -1,4 +1,6 @@
 import streamlit as st
+from pydantic import ValidationError
+
 from functions.models.sync_profile import SyncProfile
 from functions.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
@@ -105,3 +107,42 @@ def display_sync_profiles(profiles: list[SyncProfile | dict]) -> None:
 
 
 display_sync_profiles(profiles)
+
+# Display invalid profiles section
+invalid_profiles = [p for p in profiles if isinstance(p, dict)]
+
+if invalid_profiles:
+    st.header("Invalid Sync Profiles")
+    st.write("The following sync profiles failed validation:")
+
+    for profile in invalid_profiles:
+        with st.expander(
+            f"Invalid Profile - User: {profile.get('user_id', 'Unknown')}, ID: {profile.get('id', 'Unknown')}"
+        ):
+            try:
+                # Try to validate again to get the specific error
+                SyncProfile.model_validate(profile)
+            except ValidationError as e:
+                st.code(str(e), language="text")
+
+            st.write("Raw Profile Data:")
+            st.json(profile)
+
+            # Add delete button
+            if st.button(
+                "Delete Profile",
+                key=f"delete_{profile.get('id')}",
+                type="primary",
+                use_container_width=True,
+            ):
+                user_id = profile.get("user_id")
+                profile_id = profile.get("id")
+                if not user_id or not profile_id:
+                    st.error("Missing user_id or profile_id")
+                    print(f"Missing user_id or profile_id: {user_id=} {profile_id=}")
+                    continue
+                repo.delete_sync_profile(user_id, profile_id)
+                st.toast(f"Profile {profile_id} deleted successfully!")
+                print(f"Deleted profile {profile_id} for user {user_id}")
+                st.cache_data.clear()
+                st.rerun()

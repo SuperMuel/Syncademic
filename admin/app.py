@@ -161,21 +161,7 @@ if failed_profiles:
     for profile in failed_profiles:
         with st.expander(f"Failed Profile - User: {profile.user_id}, ID: {profile.id}"):
             st.write("Profile Details:")
-            st.json(
-                {
-                    "user_id": profile.user_id,
-                    "profile_id": profile.id,
-                    "title": profile.title,
-                    "status_message": profile.status.message,
-                    "last_sync": profile.lastSuccessfulSync.strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
-                    if profile.lastSuccessfulSync
-                    else "Never",
-                    "calendar_id": profile.targetCalendar.id,
-                    "source_url": str(profile.scheduleSource.url),
-                }
-            )
+            st.json(profile.model_dump())
 
             # Add retry button
             if st.button(
@@ -189,15 +175,23 @@ if failed_profiles:
                 st.cache_data.clear()
                 st.rerun()
 
-            # Add delete button
+            # Add delete button with confirmation
             if st.button(
                 "Delete Profile",
                 key=f"delete_failed_{profile.id}",
                 type="secondary",
                 use_container_width=True,
             ):
-                repo.delete_sync_profile(profile.user_id, profile.id)
-                st.toast(f"Profile {profile.id} deleted successfully!")
-                print(f"Deleted failed profile {profile.id} for user {profile.user_id}")
-                st.cache_data.clear()
-                st.rerun()
+                if st.button(
+                    "Click again to confirm deletion",
+                    key=f"confirm_delete_failed_{profile.id}",
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    repo.delete_sync_profile(profile.user_id, profile.id)
+                    st.toast(f"Profile {profile.id} deleted successfully!")
+                    print(
+                        f"Deleted failed profile {profile.id} for user {profile.user_id}"
+                    )
+                    st.cache_data.clear()
+                    st.rerun()

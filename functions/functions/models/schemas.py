@@ -1,5 +1,6 @@
 from typing import Annotated, Literal
-from pydantic import AfterValidator, BaseModel, Field, HttpUrl
+
+from pydantic import AfterValidator, BaseModel, Field, HttpUrl, field_validator
 
 from functions.models.sync_profile import SyncType
 from functions.settings import settings
@@ -88,6 +89,12 @@ class AuthorizeBackendInput(BaseModel):
         description="Redirect URI to use for the OAuth flow",
     )
     provider: Literal["google"] = Field("google", description="Provider to authorize")
+
+    @field_validator("provider", mode="before")
+    @classmethod
+    def _validate_provider(cls, v: str) -> str:
+        return v.lower()
+
     providerAccountId: str = Field(
         ..., description="ID of the provider account", min_length=1
     )

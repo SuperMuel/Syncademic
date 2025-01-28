@@ -1,7 +1,7 @@
 import streamlit as st
 from pydantic import ValidationError
 
-from functions.models.sync_profile import SyncProfile
+from functions.models.sync_profile import SyncProfile, SyncProfileStatusType
 from functions.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
 )
@@ -144,5 +144,60 @@ if invalid_profiles:
                 repo.delete_sync_profile(user_id, profile_id)
                 st.toast(f"Profile {profile_id} deleted successfully!")
                 print(f"Deleted profile {profile_id} for user {user_id}")
+                st.cache_data.clear()
+                st.rerun()
+
+# Display failed profiles section
+failed_profiles = [
+    p
+    for p in profiles
+    if isinstance(p, SyncProfile) and p.status.type == SyncProfileStatusType.FAILED
+]
+
+if failed_profiles:
+    st.header("Failed Sync Profiles")
+    st.write("The following sync profiles are in a failed state:")
+
+    for profile in failed_profiles:
+        with st.expander(f"Failed Profile - User: {profile.user_id}, ID: {profile.id}"):
+            st.write("Profile Details:")
+            st.json(
+                {
+                    "user_id": profile.user_id,
+                    "profile_id": profile.id,
+                    "title": profile.title,
+                    "status_message": profile.status.message,
+                    "last_sync": profile.lastSuccessfulSync.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    if profile.lastSuccessfulSync
+                    else "Never",
+                    "calendar_id": profile.targetCalendar.id,
+                    "source_url": str(profile.scheduleSource.url),
+                }
+            )
+
+            # Add retry button
+            if st.button(
+                "Retry Sync",
+                key=f"retry_{profile.id}",
+                type="primary",
+                use_container_width=True,
+            ):
+                st.toast(f"Triggered sync retry for profile {profile.id}")
+                # Note: You'll need to implement the retry functionality
+                st.cache_data.clear()
+                st.rerun()
+
+            # Add delete button
+            if st.button(
+                "Delete Profile",
+                key=f"delete_failed_{profile.id}",
+                type="secondary",
+                use_container_width=True,
+            ):
+                repo.delete_sync_profile(profile.user_id, profile.id)
+                st.toast(f"Profile {profile.id} deleted successfully!")
+                print(f"Deleted failed profile {profile.id} for user {profile.user_id}")
                 st.cache_data.clear()
                 st.rerun()

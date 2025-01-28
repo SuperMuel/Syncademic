@@ -5,6 +5,7 @@ from firebase_admin.firestore import firestore
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.collection import CollectionReference
 from google.cloud.firestore_v1.document import DocumentReference
+from pydantic import ValidationError
 
 from functions.models.rules import Ruleset
 from functions.models.sync_profile import (
@@ -172,6 +173,30 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
                 data["id"] = doc.id
                 data["user_id"] = user_id
                 profiles.append(SyncProfile.model_validate(data))
+
+        return profiles
+
+    def try_list_all_sync_profiles(self) -> list[SyncProfile | dict]:
+        """
+        Lists all SyncProfiles for all users, returning raw dicts for invalid profiles.
+        Uses Firestore collectionGroup on 'syncProfiles'.
+
+        Returns a list containing either validated SyncProfile objects or raw dicts
+        for profiles that failed validation.
+        """
+        query = self._db.collection_group("syncProfiles").stream()
+        profiles: list[SyncProfile | dict] = []
+
+        for doc in query:
+            doc: DocumentSnapshot
+            if data := doc.to_dict():
+                data["id"] = doc.id
+                data["user_id"] = doc.reference.parent.parent.id
+                try:
+                    profiles.append(SyncProfile.model_validate(data))
+                except ValidationError:
+                    # If validation fails, append the raw dict
+                    profiles.append(data)
 
         return profiles
 

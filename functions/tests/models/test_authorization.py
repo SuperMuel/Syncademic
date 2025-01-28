@@ -36,7 +36,7 @@ def test_backend_authorization_with_invalid_provider():
     with pytest.raises(ValidationError):
         BackendAuthorization(
             userId="someFirebaseUID",
-            provider="invalid",
+            provider="invalid",  # type: ignore
             providerAccountId="1234567890",
             providerAccountEmail="user@example.com",
             accessToken="abc123",

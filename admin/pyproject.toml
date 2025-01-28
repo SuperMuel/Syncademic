@@ -7,7 +7,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["functions", "streamlit>=1.41.1"]
+dependencies = [
+    "functions",
+    "python-dotenv>=1.0.1",
+ "streamlit>=1.41.1",
+]
 
 [tool.uv.sources]
 functions = { path = "../functions", editable = true }

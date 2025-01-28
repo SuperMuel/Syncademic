@@ -302,8 +302,6 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
     except ValidationError as e:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
-    print(request.model_dump_json(indent=2))
-
     try:
         authorization_service.authorize_backend_with_auth_code(
             user_id=user_id,

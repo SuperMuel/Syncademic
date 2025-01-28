@@ -1,5 +1,5 @@
 import pytest
-from pydantic import ValidationError
+from pydantic import HttpUrl, ValidationError
 
 from functions.models.schemas import (
     AuthorizeBackendInput,
@@ -199,17 +199,24 @@ def test_delete_sync_profile_input_empty_id():
     )
 
 
-def test_authorize_backend_input_valid():
+@pytest.mark.parametrize(
+    "redirect_uri",
+    [
+        settings.PRODUCTION_REDIRECT_URI,
+        settings.LOCAL_REDIRECT_URI,
+    ],
+)
+def test_authorize_backend_input_valid(redirect_uri: HttpUrl):
     """Ensure AuthorizeBackendInput validates with correct data."""
     data = {
         "authCode": "some-code-value",
-        "redirectUri": settings.PRODUCTION_REDIRECT_URI,
+        "redirectUri": redirect_uri,
         "provider": "google",
         "providerAccountId": "1122334455",
     }
     obj = AuthorizeBackendInput.model_validate(data)
     assert obj.authCode == "some-code-value"
-    assert obj.redirectUri == settings.PRODUCTION_REDIRECT_URI
+    assert obj.redirectUri == redirect_uri
     assert obj.provider == "google"
     assert obj.providerAccountId == "1122334455"
 
@@ -241,3 +248,15 @@ def test_authorize_backend_input_unknown_redirect_uri():
     with pytest.raises(ValidationError) as exc_info:
         AuthorizeBackendInput.model_validate(data)
     assert "Invalid redirect URI" in str(exc_info.value)
+
+
+def test_authorize_backend_input_redirect_uri_no_trailing_slash():
+    """Test that the string serialization of redirectUri doesn't have a trailing slash."""
+    data = {
+        "authCode": "some-code-value",
+        "redirectUri": settings.PRODUCTION_REDIRECT_URI,
+        "provider": "google",
+        "providerAccountId": "1122334455",
+    }
+    obj = AuthorizeBackendInput.model_validate(data)
+    assert not str(obj.redirectUri).endswith("/")

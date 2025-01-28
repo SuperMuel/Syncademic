@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, Field, HttpUrl, field_validator
 
 from functions.models.sync_profile import SyncType
-from functions.settings import settings
+from functions.settings import RedirectUri, settings
 
 
 class ValidateIcsUrlInput(BaseModel):
@@ -70,16 +70,6 @@ class DeleteSyncProfileInput(BaseModel):
 ALLOWED_REDIRECT_URIS = [settings.LOCAL_REDIRECT_URI, settings.PRODUCTION_REDIRECT_URI]
 
 
-def is_valid_redirect_uri(uri: HttpUrl) -> HttpUrl:
-    # TODO : Check if this is safe
-    if uri not in ALLOWED_REDIRECT_URIS:
-        raise ValueError("Invalid redirect URI")
-    return uri
-
-
-RedirectUri = Annotated[HttpUrl, AfterValidator(is_valid_redirect_uri)]
-
-
 class AuthorizeBackendInput(BaseModel):
     authCode: str = Field(
         ..., description="Authorization code from the frontend", min_length=1
@@ -94,6 +84,14 @@ class AuthorizeBackendInput(BaseModel):
     @classmethod
     def _validate_provider(cls, v: str) -> str:
         return v.lower()
+
+    @field_validator("redirectUri")
+    @classmethod
+    def _validate_redirect_uri(cls, uri: HttpUrl) -> HttpUrl:
+        """Validate that the redirect URI is allowed"""
+        if uri not in ALLOWED_REDIRECT_URIS:
+            raise ValueError(f"Invalid redirect URI: `{uri}`")
+        return uri
 
     providerAccountId: str = Field(
         ..., description="ID of the provider account", min_length=1

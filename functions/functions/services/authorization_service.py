@@ -93,6 +93,7 @@ class AuthorizationService:
             flow.fetch_token(code=auth_code)
             credentials = flow.credentials
         except Exception as e:
+            logger.error(f"Error exchanging authorization code: {e}")
             raise BaseAuthorizationError(
                 message="Error exchanging authorization code",
                 original_exception=e,
@@ -114,6 +115,7 @@ class AuthorizationService:
                 audience=settings.CLIENT_ID,
             )
         except Exception as e:
+            logger.error(f"Error verifying ID token: {e}")
             raise BaseAuthorizationError(
                 message="Error verifying ID token",
                 original_exception=e,

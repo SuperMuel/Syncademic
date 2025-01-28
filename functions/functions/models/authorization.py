@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr
+from pydantic import AwareDatetime, BaseModel, EmailStr, NaiveDatetime, field_validator
 
 
 class BackendAuthorization(BaseModel):
@@ -20,10 +20,28 @@ class BackendAuthorization(BaseModel):
 
     userId: str
     provider: Literal["google"] = "google"
+
+    @field_validator("provider", mode="before")
+    @classmethod
+    def _validate_provider(cls, v: str) -> str:
+        return v.lower()
+
     providerAccountId: str
 
     providerAccountEmail: EmailStr
 
     accessToken: str
     refreshToken: str | None = None
-    expirationDate: datetime | None = None
+
+    # We require a naive because the OAuth token exchange library uses naive datetimes
+    expirationDate: NaiveDatetime | None = None
+
+    @field_validator("expirationDate", mode="before")
+    @classmethod
+    def _validate_expiration_date(cls, v: datetime | None) -> datetime | None:
+        if v is None:
+            return None
+        if v.tzinfo is not None:
+            # Convert to UTC first, then remove timezone
+            return v.astimezone(timezone.utc).replace(tzinfo=None)
+        return v

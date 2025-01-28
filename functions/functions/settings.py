@@ -5,7 +5,7 @@ from pydantic import Field, HttpUrl
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        env_file=".env.syncademic-36c18",
+        env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )

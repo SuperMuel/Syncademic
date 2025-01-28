@@ -221,6 +221,7 @@ class AuthorizationService:
             try:
                 credentials.refresh(Request())
             except Exception as e:
+                logger.error(f"Error refreshing Google credentials: {e}")
                 raise BaseAuthorizationError(
                     "Error refreshing Google credentials", original_exception=e
                 )

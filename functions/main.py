@@ -148,7 +148,7 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     try:
         authorization_service.test_authorization(user_id, provider_account_id)
     except SyncademicError as e:
-        logger.error(f"Failed to test authorization: {e}")
+        logger.info(f"Failed to test authorization: {e}")
         return IsAuthorizedOutput(authorized=False).model_dump()
 
     logger.info("Authorization successful")

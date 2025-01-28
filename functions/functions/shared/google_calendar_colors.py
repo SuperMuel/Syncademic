@@ -75,4 +75,3 @@ class GoogleEventColor(str, Enum):
                 return "10"
             case GoogleEventColor.TOMATO:
                 return "11"
-        raise ValueError(f"Unknown color: {self}")

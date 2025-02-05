@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import AfterValidator, Field, HttpUrl
+from pydantic import AfterValidator, Field, HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RedirectUri = Annotated[HttpUrl, AfterValidator(lambda x: str(x).rstrip("/"))]
@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     RULES_BUILDER_LLM: str = Field(default="gpt-4o")
 
     CLIENT_ID: str = Field(default="mock-client-id")
-    CLIENT_SECRET: str = Field(default="mock-client-secret")
+    CLIENT_SECRET: SecretStr = Field(default=SecretStr("mock-client-secret"))
+
+    OPENAI_API_KEY: SecretStr = Field(default=SecretStr("mock-openai-api-key"))
 
     LOCAL_REDIRECT_URI: RedirectUri = Field(default=HttpUrl("http://localhost:7357"))
 

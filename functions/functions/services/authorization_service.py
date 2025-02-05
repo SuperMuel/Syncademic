@@ -80,7 +80,7 @@ class AuthorizationService:
             {
                 "web": {
                     "client_id": settings.CLIENT_ID,
-                    "client_secret": settings.CLIENT_SECRET,
+                    "client_secret": settings.CLIENT_SECRET.get_secret_value(),
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                     "token_uri": "https://oauth2.googleapis.com/token",
                 }
@@ -213,7 +213,7 @@ class AuthorizationService:
             token=authorization.accessToken,
             refresh_token=authorization.refreshToken,
             token_uri="https://oauth2.googleapis.com/token",
-            client_secret=settings.CLIENT_SECRET,
+            client_secret=settings.CLIENT_SECRET.get_secret_value(),
             expiry=authorization.expirationDate,
         )
 

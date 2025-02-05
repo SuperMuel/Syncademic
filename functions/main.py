@@ -75,6 +75,8 @@ ai_ruleset_service = AiRulesetService(
 )
 error_mapping = ErrorMapping()
 
+logger.info(f"Settings: {settings}")
+
 
 def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
     """

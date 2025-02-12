@@ -275,7 +275,7 @@ if failed_profiles:
 
     for profile in failed_profiles:
         with st.expander(
-            f"{all_users_dict.get(profile.user_id, {}).get('email', 'Unknown User')} - {profile.title}"
+            f"{all_users_dict.get(profile.user_id, {}).get('email', 'Unknown User')} - {profile.title} - Error: {profile.status.message}"
         ):
             st.write("Profile Details:")
             st.json(profile.model_dump())
@@ -342,6 +342,8 @@ if failed_profiles:
                     st.cache_data.clear()
                     st.rerun()
 
+
+st.header(f"Users ({len(all_users)})")
 
 # Create dataframe with image column
 df = st.dataframe(

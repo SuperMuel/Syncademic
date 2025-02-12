@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable, TypeVar
 
 from firebase_admin import initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
@@ -8,7 +8,7 @@ from firebase_functions.firestore_fn import (
 )
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from langchain.chat_models import init_chat_model
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
@@ -50,6 +50,7 @@ from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
 
+
 initialize_app()
 
 backend_auth_repo: IBackendAuthorizationRepository = (
@@ -67,6 +68,7 @@ sync_profile_service = SyncProfileService(
     authorization_service=authorization_service,
     ics_service=ics_service,
 )
+
 ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
 ai_ruleset_service = AiRulesetService(
     ics_service=ics_service,
@@ -90,18 +92,60 @@ def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
     return req.auth.uid
 
 
+T = TypeVar("T", bound=BaseModel)
+
+
+def validate_request(input_model: type[T]):
+    """
+    Decorator to validate and deserialize the input for an HTTPS callable function using a specified Pydantic model.
+
+    This decorator first retrieves the user ID from the provided callable request using `get_user_id_or_raise`.
+    It then validates the incoming request data against the given Pydantic model. If validation fails,
+    an `https_fn.HttpsError` is raised with the INVALID_ARGUMENT error code. Otherwise, the decorated function
+    is called with the extracted user ID and the validated model instance.
+
+    This helps eliminate repetitive validation logic across different endpoints.
+
+    Example usage:
+        @validate_request(MyPydanticModel)
+        def my_function(user_id: str, validated_data: MyPydanticModel) -> dict:
+            # Function implementation
+
+    Args:
+        input_model: The Pydantic model class used to validate and deserialize the request data.
+
+    Returns:
+        Callable: A decorator that transforms a function expecting a user ID and a validated model instance
+                  into one that accepts an HTTPS callable request.
+
+    Raises:
+        https_fn.HttpsError: If the incoming request data does not conform to the provided model.
+    """
+
+    def decorator(func: Callable[[str, T], Any]):
+        def wrapper(req: https_fn.CallableRequest):
+            user_id = get_user_id_or_raise(req)
+
+            try:
+                request = input_model.model_validate(req.data)
+            except ValidationError as e:
+                raise https_fn.HttpsError(
+                    https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e)
+                )
+
+            return func(user_id, request)
+
+        return wrapper
+
+    return decorator
+
+
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def validate_ics_url(req: https_fn.CallableRequest) -> dict:
-    get_user_id_or_raise(req)
-
-    try:
-        request = ValidateIcsUrlInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-
+@validate_request(ValidateIcsUrlInput)
+def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
     return ics_service.validate_ics_url(
         UrlIcsSource(url=request.url),
         # In case of error, we want to understand what went wrong by looking at the ICS file.
@@ -113,15 +157,9 @@ def validate_ics_url(req: https_fn.CallableRequest) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
     memory=options.MemoryOption.MB_512,
 )
-def list_user_calendars(req: https_fn.CallableRequest) -> dict:
-    user_id = get_user_id_or_raise(req)
-
+@validate_request(ListUserCalendarsInput)
+def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
     logger.info(f"Listing calendars for {user_id}")
-
-    try:
-        request = ListUserCalendarsInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
 
     try:
         calendars = google_calendar_service.list_calendars(
@@ -137,13 +175,9 @@ def list_user_calendars(req: https_fn.CallableRequest) -> dict:
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def is_authorized(req: https_fn.CallableRequest) -> dict:
-    user_id = get_user_id_or_raise(req)
-
-    try:
-        request = IsAuthorizedInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
+@validate_request(IsAuthorizedInput)
+def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
+    logger.info(f"Checking authorization for {user_id}")
 
     provider_account_id = request.providerAccountId
 
@@ -161,13 +195,9 @@ def is_authorized(req: https_fn.CallableRequest) -> dict:
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def create_new_calendar(req: https_fn.CallableRequest) -> dict:
-    user_id = get_user_id_or_raise(req)
-
-    try:
-        request = CreateNewCalendarInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
+@validate_request(CreateNewCalendarInput)
+def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
+    logger.info(f"Creating new calendar for {user_id}")
 
     try:
         result = google_calendar_service.create_new_calendar(
@@ -223,14 +253,8 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def request_sync(req: https_fn.CallableRequest) -> Any:
-    user_id = get_user_id_or_raise(req)
-
-    try:
-        request = RequestSyncInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-
+@validate_request(RequestSyncInput)
+def request_sync(user_id: str, request: RequestSyncInput) -> Any:
     sync_profile_id = request.syncProfileId
     sync_type = request.syncType
 
@@ -275,13 +299,9 @@ def scheduled_sync(event: Any) -> None:
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
-def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
-    user_id = get_user_id_or_raise(req)
-
-    try:
-        request = DeleteSyncProfileInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
+@validate_request(DeleteSyncProfileInput)
+def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
+    logger.info(f"Deleting sync profile for {user_id}")
 
     try:
         sync_profile_service.delete_sync_profile(
@@ -296,14 +316,8 @@ def delete_sync_profile(req: https_fn.CallableRequest) -> Any:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
     memory=options.MemoryOption.MB_512,
 )
-def authorize_backend(req: https_fn.CallableRequest) -> dict:
-    user_id = get_user_id_or_raise(req)
-
-    try:
-        request = AuthorizeBackendInput.model_validate(req.data)
-    except ValidationError as e:
-        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, str(e))
-
+@validate_request(AuthorizeBackendInput)
+def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
     try:
         authorization_service.authorize_backend_with_auth_code(
             user_id=user_id,
@@ -316,3 +330,50 @@ def authorize_backend(req: https_fn.CallableRequest) -> dict:
         raise error_mapping.to_http_error(e)
 
     return {"success": True}
+
+
+# create a cloud function that triggers every 15 minutes
+# and checks the status of a
+
+
+@scheduler_fn.on_schedule(
+    schedule="*/15 * * * *",
+    memory=options.MemoryOption.MB_512,
+    max_instances=1,
+)
+def monitor_ics_source(event: scheduler_fn.ScheduledEvent) -> None:
+    """
+    Cloud function that monitors an ICS source every 15 minutes.
+
+    Args:
+        event: The scheduled event that triggered this function
+    """
+
+    sync_profile_ids = [
+        ("TLvvrFjQsmO3Rb7Dna5iOKUSxS53", "c9676fa8-1adc-4504-b3c0-eef587913632"),
+        ("fD18u7XMNwUnuSgW70v0JfEnNKw2", "086fcf7e-fff2-4960-94c2-84541fcb3bbb"),
+        ("fD18u7XMNwUnuSgW70v0JfEnNKw2", "ad41d013-3adb-4d64-b22c-052ebbb46717"),
+    ]
+
+    for user_id, sync_profile_id in sync_profile_ids:
+        sync_profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
+        if not sync_profile:
+            logger.error(f"Sync profile not found for {user_id}/{sync_profile_id}")
+            continue
+
+        sync_title = sync_profile.title
+        user_email = sync_profile.targetCalendar.providerAccountEmail
+
+        try:
+            ics_service.try_fetch_and_parse(
+                sync_profile.scheduleSource.to_ics_source(),
+                save_to_storage=True,
+                metadata={
+                    "sync_profile_id": sync_profile_id,
+                    "user_id": user_id,
+                },
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch and parse ICS URL for {user_email}/{sync_title}: {e}"
+            )

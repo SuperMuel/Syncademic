@@ -2,7 +2,7 @@ import streamlit as st
 
 from functions.services.user_service import UserService
 
-st.title("🔑 Dashboard")
+st.title("🏠 Dashboard")
 
 # Initialize services
 user_service = UserService()
@@ -41,20 +41,15 @@ recent_signups = get_recent_signups()
 col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("Total Users", total_users)
-col2.metric("Total Sync Profiles", 523)  # TODO: Implement sync profile metrics
-col3.metric("Sync Profiles - In Progress", 25)  # TODO: Implement sync profile metrics
-col4.metric(
-    "Sync Profiles - Failed",
-    12,  # TODO: Implement sync profile metrics
-    delta=-12,
-    delta_color="inverse",
-)
+# col2.metric("Total Sync Profiles", 523)  # TODO: Implement sync profile metrics
+# col3.metric("Sync Profiles - In Progress", 25)  # TODO: Implement sync profile metrics
+# col4.metric(
+#     "Sync Profiles - Failed",
+#     12,  # TODO: Implement sync profile metrics
+#     delta=-12,
+#     delta_color="inverse",
+# )
 
-col1, col2, col3, col4 = st.columns(4)
-col1.empty()  # Empty column for spacing
-col2.empty()  # Empty column for spacing
-col3.metric("Sync Profiles - Successful", 486)  # TODO: Implement sync profile metrics
-col4.empty()  # Empty column for spacing
 
 # --- Recent Sign-ups ---
 st.header("Recent User Sign-ups")

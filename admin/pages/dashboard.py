@@ -1,11 +1,11 @@
 import streamlit as st
 
-from functions.services.user_service import UserService
+from functions.services.user_service import FirebaseAuthUserService
 
 st.title("🏠 Dashboard")
 
 # Initialize services
-user_service = UserService()
+user_service = FirebaseAuthUserService()
 
 
 @st.cache_data(ttl=60)  # Cache for 1 minute

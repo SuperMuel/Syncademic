@@ -108,62 +108,6 @@ page.run()
 # profiles = fetch_profiles()
 
 
-# @st.cache_data(ttl=60)
-# def list_all_users(max_results=1000, page_token=None):
-#     """
-#     Lists all Firebase users in your project, handling pagination.
-
-#     Args:
-#         max_results: The maximum number of users to return per page (max 1000).
-#         page_token: The next page token from a previous call (for pagination).
-
-#     Returns:
-#         A list of UserRecord objects and the next page token (if available).
-#     """
-#     page = auth.list_users(max_results=max_results, page_token=page_token)
-#     users = []
-
-#     for user in page.users:
-#         user_data = {
-#             "uid": user.uid,
-#             "email": user.email,
-#             "display_name": user.display_name,
-#             "photo_url": user.photo_url,
-#             "phone_number": user.phone_number,
-#             "disabled": user.disabled,
-#             "email_verified": user.email_verified,
-#             "provider_data": [
-#                 {
-#                     "provider_id": provider.provider_id,
-#                     "uid": provider.uid,
-#                     "email": provider.email,
-#                     "display_name": provider.display_name,
-#                     "photo_url": provider.photo_url,
-#                     "phone_number": provider.phone_number,
-#                 }
-#                 for provider in user.provider_data
-#             ],  # Information about the providers used to sign in (e.g., Google, Facebook)
-#             "custom_claims": user.custom_claims,
-#             "password_hash": user.password_hash,
-#             "password_salt": user.password_salt,
-#             "tokens_valid_after_time": user.tokens_valid_after_timestamp,
-#             "user_metadata": {
-#                 "creation_timestamp": user.user_metadata.creation_timestamp,
-#                 "last_sign_in_timestamp": user.user_metadata.last_sign_in_timestamp,
-#             },
-#         }
-#         users.append(user_data)
-
-#     # If there's another page, recursively call list_all_users
-#     if page.has_next_page:
-#         next_page_users, _ = list_all_users(
-#             max_results=max_results, page_token=page.next_page_token
-#         )
-#         users.extend(next_page_users)
-
-#     return users, page.next_page_token
-
-
 # all_users, _ = list_all_users()
 # all_users_dict = {user["uid"]: user for user in all_users}
 

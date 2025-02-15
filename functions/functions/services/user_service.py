@@ -7,7 +7,7 @@ from firebase_admin.auth import UserRecord, UserInfo
 from ..models.user import User, UserMetadata, UserProviderData
 
 
-class UserService:
+class FirebaseAuthUserService:
     """Service for managing Firebase users."""
 
     def __init__(self) -> None:

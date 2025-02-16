@@ -82,9 +82,9 @@ class ISyncProfileRepository(Protocol):
         ...
 
     def update_ruleset_error(
-        self, user_id: str, sync_profile_id: str, error_str: str
+        self, user_id: str, sync_profile_id: str, error_str: str | None = None
     ) -> None:
-        """Updates the ruleset_error field with the provided error message."""
+        """Updates the ruleset_error field with the provided error message, or clears it if None."""
         ...
 
     def update_ruleset(
@@ -293,9 +293,12 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         doc_ref.update({"lastSuccessfulSync": firestore.SERVER_TIMESTAMP})
 
     def update_ruleset_error(
-        self, user_id: str, sync_profile_id: str, error_str: str
+        self,
+        user_id: str,
+        sync_profile_id: str,
+        error_str: str | None = None,
     ) -> None:
-        """Updates the ruleset_error field with the provided error message."""
+        """Updates the ruleset_error field with the provided error message, or clears it if None."""
         logger.info(
             f"Updating ruleset_error for sync profile {sync_profile_id} for user {user_id} with error {error_str}"
         )
@@ -421,7 +424,7 @@ class MockSyncProfileRepository(ISyncProfileRepository):
         self._storage[user_id][sync_profile_id] = updated_profile
 
     def update_ruleset_error(
-        self, user_id: str, sync_profile_id: str, error_str: str
+        self, user_id: str, sync_profile_id: str, error_str: str | None = None
     ) -> None:
         # Set the ruleset_error field
         if user_id not in self._storage:

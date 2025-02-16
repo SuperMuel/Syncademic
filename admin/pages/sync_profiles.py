@@ -6,6 +6,7 @@ from functions.models.sync_profile import (
     SyncTrigger,
     SyncType,
 )
+from functions.models.rules import Ruleset
 from functions.models.user import User
 from functions.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
@@ -287,6 +288,37 @@ def delete_sync_profile_dialog(profile: SyncProfile) -> None:
             st.exception(e)
 
 
+@st.dialog(title="Edit Ruleset")
+def edit_ruleset_dialog(profile: SyncProfile) -> None:
+    """Dialog to edit a sync profile's ruleset."""
+    st.header(f"`{profile.title}`")
+    st.write(
+        "Paste a valid ruleset JSON below. The ruleset must contain at least one rule with a condition and actions."
+    )
+
+    # Default to current ruleset if it exists
+    default_json = profile.ruleset.model_dump_json() if profile.ruleset else "{}"
+    ruleset_json = st.text_area("Ruleset JSON", value=default_json, height=300)
+
+    if st.button("Update Ruleset", use_container_width=True):
+        try:
+            # Validate the JSON string can be parsed into a Ruleset
+            new_ruleset = Ruleset.model_validate_json(ruleset_json)
+
+            # Update the ruleset in the database
+            sync_profile_repo.update_ruleset(profile.user_id, profile.id, new_ruleset)
+
+            # Clear any previous ruleset error
+            sync_profile_repo.update_ruleset_error(profile.user_id, profile.id, None)
+
+            st.success("Ruleset updated successfully!", icon="✅")
+            _clear_cache_and_rerun()
+
+        except Exception as e:
+            st.error("Failed to update ruleset", icon="❌")
+            st.exception(e)
+
+
 # Display selected profile details
 if profile := _get_selected_profile():
     st.header("Selected Profile Details")
@@ -317,10 +349,6 @@ if profile := _get_selected_profile():
         st.write(f"**Calendar Email:** {profile.targetCalendar.providerAccountEmail}")
         st.write(f"**Source URL:** {profile.scheduleSource.url}")
 
-    # Show ruleset if exists
-    if profile.ruleset:
-        with st.expander("View Ruleset"):
-            st.json(profile.ruleset.model_dump())
     if profile.ruleset_error:
         st.error(profile.ruleset_error)
 
@@ -350,3 +378,12 @@ if profile := _get_selected_profile():
     with col3:
         if st.button("🗑️ Delete Profile", type="primary", use_container_width=True):
             delete_sync_profile_dialog(profile)
+
+    # Add ruleset editing section
+    st.subheader("Ruleset")
+    if profile.ruleset:
+        with st.expander("Current Ruleset"):
+            st.json(profile.ruleset.model_dump())
+
+    if st.button("✏️ Edit Ruleset", use_container_width=True):
+        edit_ruleset_dialog(profile)

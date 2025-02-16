@@ -129,12 +129,13 @@ class SyncProfileService:
             SyncProfileStatusType.IN_PROGRESS
         )  # TODO : this should be an atomic operation
 
-        # Enforce daily limit
-        try:
-            self._enforce_daily_sync_limit(user_id)
-        except DailySyncLimitExceededError as e:
-            _update_status(SyncProfileStatusType.FAILED, str(e))
-            return
+        # Enforce daily limit only if not force sync
+        if not force:
+            try:
+                self._enforce_daily_sync_limit(user_id)
+            except DailySyncLimitExceededError as e:
+                _update_status(SyncProfileStatusType.FAILED, str(e))
+                return
 
         try:
             calendar_manager = (

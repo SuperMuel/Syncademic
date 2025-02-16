@@ -590,3 +590,164 @@ def test_deletion_failed_event_cleanup(
     # Profile should still exist, but status should be DELETION_FAILED
     assert updated_profile.status.type == SyncProfileStatusType.DELETION_FAILED
     assert "Could not delete events" in updated_profile.status.message
+
+
+def test_force_sync_bypasses_status_check(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    sync_stats_repo,
+    future_event,
+):
+    """
+    Force sync should work even when profile is in IN_PROGRESS state.
+    """
+    user_id = "user123"
+    prof_id = "profile_force"
+
+    # Return one future event
+    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+
+    # Put a profile in IN_PROGRESS state (which would normally block syncing)
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.IN_PROGRESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    manager = MockGoogleCalendarManager()
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    # Act - with force=True
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=SyncType.REGULAR,
+        force=True,
+    )
+
+    # Event was created despite IN_PROGRESS state
+    all_events = manager.get_all_events(sync_profile_id=prof_id)
+    assert len(all_events) == 1
+    assert all_events[0]["summary"] == "Future Event"
+
+    # Final status is SUCCESS
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
+    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+
+
+def test_force_sync_bypasses_daily_limit(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    sync_stats_repo,
+    future_event,
+):
+    """
+    Force sync should bypass the daily limit check.
+    """
+    from functions.settings import settings
+
+    user_id = "userX"
+    prof_id = "profile_force_limit"
+
+    # Saturate daily limit
+    for _ in range(settings.MAX_SYNCHRONIZATIONS_PER_DAY):
+        sync_stats_repo.increment_sync_count(user_id)
+
+    # Put a profile in IN_PROGRESS state
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.IN_PROGRESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    manager = MockGoogleCalendarManager()
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    # Return one future event
+    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+
+    # Act - with force=True
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=SyncType.REGULAR,
+        force=True,
+    )
+
+    # Profile should be in SUCCESS state
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
+
+    # ICS was called despite being over limit
+    ics_service_mock.try_fetch_and_parse.assert_called_once()
+
+    # Event was created despite being over limit
+    all_events = manager.get_all_events(sync_profile_id=prof_id)
+    assert len(all_events) == 1
+    assert all_events[0]["summary"] == "Future Event"
+
+    # Usage was incremented beyond the max
+    assert (
+        sync_stats_repo.get_daily_sync_count(user_id)
+        == settings.MAX_SYNCHRONIZATIONS_PER_DAY + 1
+    )
+
+
+def test_force_sync_follows_normal_flow_on_error(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    sync_stats_repo,
+):
+    """
+    Force sync should still handle errors normally (e.g. ICS errors).
+    """
+    user_id = "userABC"
+    prof_id = "profile_force_error"
+
+    # Simulate ICS error
+    ics_service_mock.try_fetch_and_parse.side_effect = IcsSourceError("Failed to fetch")
+
+    # Put a profile in IN_PROGRESS state
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.IN_PROGRESS,
+    )
+    sync_profile_repo.store_sync_profile(profile)
+
+    manager = MockGoogleCalendarManager()
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    # Act - with force=True
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=SyncType.REGULAR,
+        force=True,
+    )
+
+    # Profile should be in FAILED state with error message
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.FAILED
+    assert "Failed to fetch" in updated_profile.status.message
+
+    # No events created
+    assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
+
+    # Usage not incremented due to error
+    assert sync_stats_repo.get_daily_sync_count(user_id) == 0

@@ -181,13 +181,14 @@ class GoogleCalendarManager:
 
     def check_calendar_exists(self) -> bool:
         """
-        Check if the calendar exists and is accessible.
+        Check if the calendar exists.
 
         Returns:
-            bool: True if calendar exists and is accessible, False otherwise
+            bool: True if calendar exists, False otherwise
 
         Raises: All exception occuring except HttpError 404
         """
+
         try:
             self._service.calendars().get(calendarId=self._calendar_id).execute()
             return True

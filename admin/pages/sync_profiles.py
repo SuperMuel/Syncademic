@@ -1,7 +1,4 @@
-from datetime import datetime, timedelta
-
 import streamlit as st
-from firebase_admin import auth, storage
 
 from functions.models.sync_profile import (
     SyncProfile,
@@ -30,9 +27,6 @@ from functions.services.sync_profile_service import (
 )
 from functions.services.user_service import (
     FirebaseAuthUserService,
-)
-from functions.synchronizer.ics_cache import (
-    FirebaseIcsFileStorage,
 )
 
 st.title("🔄 Sync Profiles")
@@ -63,9 +57,37 @@ def get_all_users() -> dict[str, User]:
 
 
 @st.cache_data(ttl=60)
-def get_all_sync_profiles():
-    """Get all sync profiles including invalid ones."""
-    return sync_profile_repo.try_list_all_sync_profiles()
+def get_all_sync_profiles() -> list[SyncProfile]:
+    """Get all valid sync profiles."""
+    return sync_profile_repo.list_all_sync_profiles()
+
+
+def _clear_cache_and_rerun():
+    get_all_users.clear()
+    get_all_sync_profiles.clear()
+    st.rerun()
+
+
+def _get_selected_profile() -> SyncProfile | None:
+    user_id_profile_id = st.session_state.get("user_id_profile_id")
+    assert (
+        isinstance(user_id_profile_id, tuple)
+        and len(user_id_profile_id) == 2
+        and isinstance(user_id_profile_id[0], str)
+        and isinstance(user_id_profile_id[1], str)
+    )
+
+    if not user_id_profile_id:
+        return None
+
+    user_id, profile_id = user_id_profile_id
+
+    result = sync_profile_repo.get_sync_profile(user_id, profile_id)
+    if result is None:
+        st.error(f"Selected sync profile with id {profile_id} not found", icon="❌")
+        return None
+
+    return result
 
 
 # Sidebar with refresh button and filters
@@ -74,10 +96,7 @@ with st.sidebar:
 
     refresh_button = st.button("🔄 Refresh Data", use_container_width=True)
     if refresh_button:
-        get_all_users.clear()
-        get_all_sync_profiles.clear()
-        del st.session_state.sync_profile
-        st.rerun()
+        _clear_cache_and_rerun()
 
     # Status filter
     status_filter = st.multiselect(
@@ -90,7 +109,7 @@ with st.sidebar:
     # Error filter
     error_filter = st.checkbox(
         "Show Only Profiles with Errors",
-        help="Show only profiles that have errors or are invalid",
+        help="Show only profiles that have errors (Satus failed), or Ruleset geneartion error.",
     )
 
 # Fetch data
@@ -120,20 +139,13 @@ if error_filter:
 # Display stats
 st.header("Statistics")
 total_profiles = len(all_profiles)
-valid_profiles = len([p for p in all_profiles if isinstance(p, SyncProfile)])
-invalid_profiles = total_profiles - valid_profiles
 failed_profiles = len(
-    [
-        p
-        for p in all_profiles
-        if isinstance(p, SyncProfile) and p.status.type == SyncProfileStatusType.FAILED
-    ]
+    [p for p in all_profiles if p.status.type == SyncProfileStatusType.FAILED]
 )
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 col1.metric("Total Profiles", total_profiles)
 col2.metric("Failed Profiles", failed_profiles)
-col3.metric("Invalid Profiles", invalid_profiles)
 
 
 if not filtered_profiles:
@@ -142,46 +154,25 @@ else:
     # Convert profiles to display format
     display_data = []
     for profile in filtered_profiles:
-        if isinstance(profile, dict):
-            # Handle invalid profile
-            user = all_users.get(profile.get("user_id", ""), None)
-            display_data.append(
-                {
-                    "Status": "❌ Invalid",
-                    "User Email": user.email if user else "Unknown",
-                    "User Name": user.display_name if user else "Unknown",
-                    "Title": profile.get("title", "Invalid"),
-                    "Created": "Unknown",
-                    "Last Sync": "Never",
-                    "Error": str(profile.get("ruleset_error", "Invalid profile data")),
-                    "Calendar": profile.get("targetCalendar", {}).get("id", "Invalid"),
-                    "Source": profile.get("scheduleSource", {}).get("url", "Invalid"),
-                    # "_raw": profile,  # Store raw data for actions
-                }
-            )
-        else:
-            # Handle valid profile
-            user = all_users.get(profile.user_id, None)
-            display_data.append(
-                {
-                    "Status": profile.status.type.value,
-                    "User Email": user.email if user else "Unknown",
-                    "User Name": user.display_name if user else "Unknown",
-                    "Title": profile.title,
-                    "Created": profile.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                    if profile.created_at
-                    else "Unknown",
-                    "Last Sync": profile.lastSuccessfulSync.strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
-                    if profile.lastSuccessfulSync
-                    else "Never",
-                    "Error": profile.ruleset_error or profile.status.message or "",
-                    "Calendar": profile.targetCalendar.id,
-                    "Source": str(profile.scheduleSource.url),
-                    # "_raw": profile,  # Store raw data for actions
-                }
-            )
+        user = all_users.get(profile.user_id, None)
+        display_data.append(
+            {
+                "Status": profile.status.type.value,
+                "User Email": user.email if user else "Unknown",
+                "User Name": user.display_name if user else "Unknown",
+                "Title": profile.title,
+                "Created": profile.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if profile.created_at
+                else "Unknown",
+                "Last Sync": profile.lastSuccessfulSync.strftime("%Y-%m-%d %H:%M:%S")
+                if profile.lastSuccessfulSync
+                else "Never",
+                "Error": profile.status.message,
+                "Calendar": profile.targetCalendar.id,
+                "Source": str(profile.scheduleSource.url),
+                "Ruleset Error": profile.ruleset_error,
+            }
+        )
 
     # Display as dataframe with expandable rows
     selected = st.dataframe(
@@ -232,10 +223,6 @@ else:
                 help="Source schedule URL",
                 width="large",
             ),
-            "_raw": st.column_config.Column(
-                "Raw Data",
-                help="Raw profile data",
-            ),
         },
         hide_index=True,
         use_container_width=True,
@@ -243,104 +230,126 @@ else:
         on_select="rerun",
     )
 
-    if selected["selection"]["rows"]:
-        profile = filtered_profiles[selected["selection"]["rows"][0]]
-        st.session_state.sync_profile = profile  # TODO : instead of the full object, store the id. That way, we can always get updated data, or re-select by id when data change
+    if selected["selection"]["rows"]:  # type: ignore
+        profile = filtered_profiles[selected["selection"]["rows"][0]]  # type: ignore
+        st.session_state.user_id_profile_id = (profile.user_id, profile.id)
+
+
+def _check_calendar(user_id: str, profile: SyncProfile) -> None:
+    """
+    Verify authorization and check the existence of the target Google Calendar for a sync profile.
+
+    This function first tests whether the specified user is authorized to access the Google Calendar
+    associated with the provided sync profile. If the authorization passes, it retrieves an authenticated
+    Google Calendar manager and checks if the target calendar exists.
+
+    Args:
+        user_id (str): The identifier of the user who owns the sync profile.
+        profile (SyncProfile): The synchronization profile containing calendar and authorization details.
+
+    Returns:
+        None
+    """
+    with st.spinner("Checking authorization..."):
+        try:
+            authorization_service.test_authorization(
+                user_id=profile.user_id,
+                provider_account_id=profile.targetCalendar.providerAccountId,
+            )
+            st.success("Authorization valid", icon="✅")
+        except Exception as e:
+            st.error(f"Failed to check authorization: {str(e)}", icon="❌")
+            return
+
+    calendar_manager = authorization_service.get_authenticated_google_calendar_manager(
+        user_id=profile.user_id,
+        provider_account_id=profile.targetCalendar.providerAccountId,
+        calendar_id=profile.targetCalendar.id,
+    )
+
+    if calendar_manager.check_calendar_exists():
+        st.success("Calendar exists and is accessible", icon="✅")
+    else:
+        st.error("Calendar does not exist", icon="❌")
+
+
+@st.dialog(title="Delete Profile")
+def delete_sync_profile_dialog(profile: SyncProfile) -> None:
+    if st.button("Confirm Delete", use_container_width=True):
+        try:
+            sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
+            st.success("Profile deleted successfully!", icon="✅")
+            _clear_cache_and_rerun()
+        except Exception as e:
+            st.error(f"Failed to delete profile: {str(e)}", icon="❌")
 
 
 # Display selected profile details
-if st.session_state.get("sync_profile"):
+if profile := _get_selected_profile():
     st.header("Selected Profile Details")
-    profile = st.session_state.sync_profile
 
-    if isinstance(profile, dict):
-        st.error("Invalid Profile Data")
-        st.json(profile)
+    # Show profile details
+    col1, col2 = st.columns(2)
 
-        # Add delete button for invalid profiles
-        if st.button("🗑️ Delete Invalid Profile", type="primary"):
-            try:
-                sync_profile_repo.delete_sync_profile(
-                    profile.get("user_id", ""), profile.get("id", "")
-                )
-                st.success("Profile deleted successfully!")
-                # Clear cache and rerun
-                get_all_sync_profiles.clear()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed to delete profile: {str(e)}")
+    with col1:
+        st.subheader("Profile Info")
+        st.write(f"**ID:** {profile.id}")
+        st.write(f"**User ID:** {profile.user_id}")
+        st.write(f"**Title:** {profile.title}")
+        st.write(f"**Status:** {profile.status.type.value}")
+        if profile.status.message:
+            st.write("**Status Error:**")
+            st.error(profile.status.message)
 
-    else:
-        # Show profile details
-        col1, col2 = st.columns(2)
+        st.write(
+            f"**Created:** {profile.created_at.strftime('%Y-%m-%d %H:%M:%S') if profile.created_at else 'Unknown'}"
+        )
+        st.write(
+            f"**Last Sync:** {profile.lastSuccessfulSync.strftime('%Y-%m-%d %H:%M:%S') if profile.lastSuccessfulSync else 'Never'}"
+        )
 
-        with col1:
-            st.subheader("Profile Info")
-            st.write(f"**ID:** {profile.id}")
-            st.write(f"**User ID:** {profile.user_id}")
-            st.write(f"**Title:** {profile.title}")
-            st.write(f"**Status:** {profile.status.type.value}")
-            if profile.status.message:
-                st.write(f"**Status Message:** {profile.status.message}")
+    with col2:
+        st.subheader("Calendar Info")
+        st.write(f"**Calendar ID:** {profile.targetCalendar.id}")
+        st.write(f"**Calendar Email:** {profile.targetCalendar.providerAccountEmail}")
+        st.write(f"**Source URL:** {profile.scheduleSource.url}")
 
-            st.write(
-                f"**Created:** {profile.created_at.strftime('%Y-%m-%d %H:%M:%S') if profile.created_at else 'Unknown'}"
-            )
-            st.write(
-                f"**Last Sync:** {profile.lastSuccessfulSync.strftime('%Y-%m-%d %H:%M:%S') if profile.lastSuccessfulSync else 'Never'}"
-            )
+    # Show ruleset if exists
+    if profile.ruleset:
+        with st.expander("View Ruleset"):
+            st.json(profile.ruleset.model_dump())
+    if profile.ruleset_error:
+        st.error(profile.ruleset_error)
 
-        with col2:
-            st.subheader("Calendar Info")
-            st.write(f"**Calendar ID:** {profile.targetCalendar.id}")
-            st.write(
-                f"**Calendar Email:** {profile.targetCalendar.providerAccountEmail}"
-            )
-            st.write(f"**Source URL:** {profile.scheduleSource.url}")
+    # Add action buttons
+    col1, col2, col3 = st.columns(3)
 
-        # Show ruleset if exists
-        if profile.ruleset:
-            with st.expander("View Ruleset"):
-                st.json(profile.ruleset.model_dump())
-
-        # Add action buttons
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            if st.button("🔄 Retry Sync", use_container_width=True):
+    with col1:
+        if st.button("🔄 Retry Sync", use_container_width=True):
+            with st.spinner("Retrying sync..."):
                 try:
                     sync_profile_service.synchronize(
                         user_id=profile.user_id,
                         sync_profile_id=profile.id,
                         sync_trigger=SyncTrigger.MANUAL,
                         sync_type=SyncType.REGULAR,
+                        force=True,
                     )
                     st.success("Sync triggered successfully!")
                 except Exception as e:
                     st.error(f"Failed to trigger sync: {str(e)}")
 
-        with col2:
-            if st.button("🔍 Check Calendar", use_container_width=True):
-                try:
-                    calendar_manager = authorization_service.get_authenticated_google_calendar_manager(
-                        user_id=profile.user_id,
-                        provider_account_id=profile.targetCalendar.providerAccountId,
-                        calendar_id=profile.targetCalendar.id,
-                    )
-                    if calendar_manager.check_calendar_exists():
-                        st.success("✅ Calendar exists and is accessible")
-                    else:
-                        st.error("❌ Calendar does not exist or is not accessible")
-                except Exception as e:
-                    st.error(f"Failed to check calendar: {str(e)}")
+            _clear_cache_and_rerun()
+    with col2:
+        if st.button("🔍 Check Calendar", use_container_width=True):
+            _check_calendar(profile.user_id, profile)
 
-        with col3:
-            if st.button("🗑️ Delete Profile", type="primary", use_container_width=True):
-                try:
-                    sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
-                    st.success("Profile deleted successfully!")
-                    # Clear cache and rerun
-                    get_all_sync_profiles.clear()
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to delete profile: {str(e)}")
+    with col3:
+        if st.button("🗑️ Delete Profile", type="primary", use_container_width=True):
+            try:
+                sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
+                st.success("Profile deleted successfully!", icon="✅")
+                # Clear cache and rerun
+                _clear_cache_and_rerun()
+            except Exception as e:
+                st.error(f"Failed to delete profile: {str(e)}", icon="❌")

@@ -37,6 +37,9 @@ def display_file_details(file: IcsFileInfo) -> None:
 def display_file_content(storage: FirebaseIcsFileStorage, filename: str) -> str:
     """Display and return the content of the ICS file."""
     file_content = storage.get_file_content(filename)
+    if not file_content:
+        st.error("No content found for the selected file.")
+        return ""
     with st.expander("Raw ICS Content"):
         st.code(file_content, language="ics")
     return file_content
@@ -63,62 +66,73 @@ def display_parsed_events(parser: IcsParser, content: str) -> None:
         st.dataframe(event_data, use_container_width=True)
 
 
-def main() -> None:
-    st.title("🐛 ICS Studio")
+st.title("🐛 ICS Studio")
 
-    # Initialize services
-    ics_storage, ics_parser = initialize_services()
+# Initialize services
+ics_storage, ics_parser = initialize_services()
 
-    # Sidebar filters form
-    with st.sidebar:
-        st.header("Filters")
-        with st.form("ics_filters"):
-            selected_profile_id = st.text_input(
-                "Sync Profile ID", placeholder="Enter ID"
-            )
-            # Add more filters here as needed
-            st.form_submit_button("Apply Filters", use_container_width=True)
 
-    # Fetch and display files
-    try:
-        files = ics_storage.list_files(prefix=selected_profile_id)
-    except Exception as e:
-        st.error(f"Error listing files: {e}")
-        st.stop()
+@st.cache_data
+def get_all_files() -> list[dict]:
+    return ics_storage.list_files()
 
-    if not files:
-        st.error("No ICS files found matching the filters.")
-        st.stop()
 
-    # Sort files by updated date (newest first)
-    files = sorted(files, key=lambda x: x["updated"], reverse=True)
+all_files = get_all_files()
 
-    # File selection
-    with st.sidebar:
-        selected_file = st.selectbox(
-            "Select ICS File", options=files, format_func=lambda x: x["name"]
+# Sidebar filters form
+with st.sidebar:
+    st.header("Filters")
+    with st.form("search_form"):
+        str_search = st.text_input("String Search")
+        # Add more filters here as needed
+        st.form_submit_button("Apply Filters", use_container_width=True)
+
+# Fetch and display files
+try:
+    filtered_files = all_files
+    if str_search:
+        filtered_files = [
+            file for file in filtered_files if str_search.lower() in str(file).lower()
+        ]
+
+except Exception as e:
+    st.error(f"Error listing files: {e}")
+    st.stop()
+
+if not filtered_files:
+    st.error("No ICS files found matching the filters.")
+    st.stop()
+
+# Sort files by updated date (newest first)
+filtered_files = sorted(filtered_files, key=lambda x: x["updated"], reverse=True)
+
+with st.expander("All Files"):
+    st.write(filtered_files)
+
+# File selection
+with st.sidebar:
+    selected_file = st.selectbox(
+        "Select ICS File", options=filtered_files, format_func=lambda x: x["name"]
+    )
+
+    if selected_file:
+        # Download button
+        file_content = ics_storage.get_file_content(selected_file["name"])
+        st.download_button(
+            "Download ICS File",
+            data=file_content,
+            file_name=selected_file["name"],
+            mime="text/calendar",
+            use_container_width=True,
+            icon="📥",
         )
 
-        if selected_file:
-            # Download button
-            file_content = ics_storage.get_file_content(selected_file["name"])
-            st.download_button(
-                "Download ICS File",
-                data=file_content,
-                file_name=selected_file["name"],
-                mime="text/calendar",
-                use_container_width=True,
-                icon="📥",
-            )
+if not selected_file:
+    st.error("Select a file to continue")
+    st.stop()
 
-    if not selected_file:
-        st.error("Select a file to continue")
-        st.stop()
-
-    # Display file information
-    display_file_details(cast(IcsFileInfo, selected_file))
-    file_content = display_file_content(ics_storage, selected_file["name"])
+# Display file information
+display_file_details(cast(IcsFileInfo, selected_file))
+file_content = display_file_content(ics_storage, selected_file["name"])
+if file_content:
     display_parsed_events(ics_parser, file_content)
-
-
-main()

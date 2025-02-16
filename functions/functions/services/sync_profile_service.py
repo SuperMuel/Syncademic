@@ -122,7 +122,7 @@ class SyncProfileService:
             # If status is incompatible, skip
             if not self._can_sync(profile.status.type):
                 logger.info(f"Synchronization is {profile.status.type}, skipping")
-            return
+                return
 
         # Mark as IN_PROGRESS
         _update_status(

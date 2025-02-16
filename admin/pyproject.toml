@@ -10,5 +10,10 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["functions", "python-dotenv>=1.0.1", "streamlit>=1.41.1"]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.9.6",
+]
+
 [tool.uv.sources]
 functions = { path = "../functions", editable = true }

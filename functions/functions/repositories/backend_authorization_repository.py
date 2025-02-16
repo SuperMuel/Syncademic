@@ -95,3 +95,12 @@ class FirestoreBackendAuthorizationRepository(IBackendAuthorizationRepository):
         doc_id = user_id + provider_account_id
         doc_ref = self._db.collection("backendAuthorizations").document(doc_id)
         return doc_ref.get().exists
+
+    def list_all_authorizations(self) -> list[BackendAuthorization]:
+        """
+        Returns all backend authorizations from Firestore.
+        """
+        return [
+            BackendAuthorization.model_validate(doc.to_dict())
+            for doc in self._db.collection("backendAuthorizations").stream()
+        ]

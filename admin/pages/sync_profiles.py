@@ -150,89 +150,90 @@ col2.metric("Failed Profiles", failed_profiles)
 
 if not filtered_profiles:
     st.info("No sync profiles match the current filters")
-else:
-    # Convert profiles to display format
-    display_data = []
-    for profile in filtered_profiles:
-        user = all_users.get(profile.user_id, None)
-        display_data.append(
-            {
-                "Status": profile.status.type.value,
-                "User Email": user.email if user else "Unknown",
-                "User Name": user.display_name if user else "Unknown",
-                "Title": profile.title,
-                "Created": profile.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                if profile.created_at
-                else "Unknown",
-                "Last Sync": profile.lastSuccessfulSync.strftime("%Y-%m-%d %H:%M:%S")
-                if profile.lastSuccessfulSync
-                else "Never",
-                "Error": profile.status.message,
-                "Calendar": profile.targetCalendar.id,
-                "Source": str(profile.scheduleSource.url),
-                "Ruleset Error": profile.ruleset_error,
-            }
-        )
+    st.stop()
 
-    # Display as dataframe with expandable rows
-    selected = st.dataframe(
-        display_data,
-        column_config={
-            "Status": st.column_config.TextColumn(
-                "Status",
-                help="Current status of the sync profile",
-                width="small",
-            ),
-            "User Email": st.column_config.TextColumn(
-                "User Email",
-                help="Email of the profile owner",
-                width="medium",
-            ),
-            "User Name": st.column_config.TextColumn(
-                "User Name",
-                help="Name of the profile owner",
-                width="medium",
-            ),
-            "Title": st.column_config.TextColumn(
-                "Title",
-                help="Profile title",
-                width="medium",
-            ),
-            "Created": st.column_config.TextColumn(
-                "Created",
-                help="When the profile was created",
-                width="medium",
-            ),
-            "Last Sync": st.column_config.TextColumn(
-                "Last Sync",
-                help="Last successful synchronization",
-                width="medium",
-            ),
-            "Error": st.column_config.TextColumn(
-                "Error",
-                help="Error message if any",
-                width="large",
-            ),
-            "Calendar": st.column_config.TextColumn(
-                "Calendar ID",
-                help="Target Google Calendar ID",
-                width="medium",
-            ),
-            "Source": st.column_config.LinkColumn(
-                "Source URL",
-                help="Source schedule URL",
-                width="large",
-            ),
-        },
-        hide_index=True,
-        use_container_width=True,
-        selection_mode="single-row",
-        on_select="rerun",
+# Convert profiles to display format
+display_data = []
+for profile in filtered_profiles:
+    user = all_users.get(profile.user_id, None)
+    display_data.append(
+        {
+            "Status": profile.status.type.value,
+            "User Email": user.email if user else "Unknown",
+            "User Name": user.display_name if user else "Unknown",
+            "Title": profile.title,
+            "Created": profile.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            if profile.created_at
+            else "Unknown",
+            "Last Sync": profile.lastSuccessfulSync.strftime("%Y-%m-%d %H:%M:%S")
+            if profile.lastSuccessfulSync
+            else "Never",
+            "Error": profile.status.message,
+            "Calendar": profile.targetCalendar.id,
+            "Source": str(profile.scheduleSource.url),
+            "Ruleset Error": profile.ruleset_error,
+        }
     )
 
-    if selected["selection"]["rows"]:  # type: ignore
-        profile = filtered_profiles[selected["selection"]["rows"][0]]  # type: ignore
-        st.session_state.user_id_profile_id = (profile.user_id, profile.id)
+# Display as dataframe with expandable rows
+selected = st.dataframe(
+    display_data,
+    column_config={
+        "Status": st.column_config.TextColumn(
+            "Status",
+            help="Current status of the sync profile",
+            width="small",
+        ),
+        "User Email": st.column_config.TextColumn(
+            "User Email",
+            help="Email of the profile owner",
+            width="medium",
+        ),
+        "User Name": st.column_config.TextColumn(
+            "User Name",
+            help="Name of the profile owner",
+            width="medium",
+        ),
+        "Title": st.column_config.TextColumn(
+            "Title",
+            help="Profile title",
+            width="medium",
+        ),
+        "Created": st.column_config.TextColumn(
+            "Created",
+            help="When the profile was created",
+            width="medium",
+        ),
+        "Last Sync": st.column_config.TextColumn(
+            "Last Sync",
+            help="Last successful synchronization",
+            width="medium",
+        ),
+        "Error": st.column_config.TextColumn(
+            "Error",
+            help="Error message if any",
+            width="large",
+        ),
+        "Calendar": st.column_config.TextColumn(
+            "Calendar ID",
+            help="Target Google Calendar ID",
+            width="medium",
+        ),
+        "Source": st.column_config.LinkColumn(
+            "Source URL",
+            help="Source schedule URL",
+            width="large",
+        ),
+    },
+    hide_index=True,
+    use_container_width=True,
+    selection_mode="single-row",
+    on_select="rerun",
+)
+
+if selected["selection"]["rows"]:  # type: ignore
+    profile = filtered_profiles[selected["selection"]["rows"][0]]  # type: ignore
+    st.session_state.user_id_profile_id = (profile.user_id, profile.id)
 
 
 def _check_calendar(user_id: str, profile: SyncProfile) -> None:
@@ -277,11 +278,13 @@ def _check_calendar(user_id: str, profile: SyncProfile) -> None:
 def delete_sync_profile_dialog(profile: SyncProfile) -> None:
     if st.button("Confirm Delete", use_container_width=True):
         try:
-            sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
-            st.success("Profile deleted successfully!", icon="✅")
-            _clear_cache_and_rerun()
+            with st.spinner("Deleting profile..."):
+                sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
+                st.success("Profile deleted successfully!", icon="✅")
+                _clear_cache_and_rerun()
         except Exception as e:
-            st.error(f"Failed to delete profile: {str(e)}", icon="❌")
+            st.error("Failed to delete profile:", icon="❌")
+            st.exception(e)
 
 
 # Display selected profile details
@@ -346,10 +349,4 @@ if profile := _get_selected_profile():
 
     with col3:
         if st.button("🗑️ Delete Profile", type="primary", use_container_width=True):
-            try:
-                sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
-                st.success("Profile deleted successfully!", icon="✅")
-                # Clear cache and rerun
-                _clear_cache_and_rerun()
-            except Exception as e:
-                st.error(f"Failed to delete profile: {str(e)}", icon="❌")
+            delete_sync_profile_dialog(profile)

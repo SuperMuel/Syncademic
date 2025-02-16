@@ -1,8 +1,12 @@
 from datetime import datetime
-from typing import Any, Iterable, List, Optional, TypeAlias, Dict
 from itertools import islice
+from typing import Any, Dict, Iterable, List, Optional, TypeAlias
+
+import googleapiclient
 import pytz
 from firebase_functions import logger
+from googleapiclient.errors import HttpError
+
 from functions.shared.event import Event
 
 ExtendedProperties: TypeAlias = dict[str, Any]
@@ -174,6 +178,30 @@ class GoogleCalendarManager:
                 )
             batch.execute()
             logger.info(f"Deleted {i * batch_size + len(sublist)}/{len(ids)} events.")
+
+    def check_calendar_exists(self) -> bool:
+        """
+        Check if the calendar exists.
+
+        Returns:
+            bool: True if calendar exists, False otherwise
+
+        Raises: All exception occuring except HttpError 404
+        """
+
+        try:
+            self._service.calendars().get(calendarId=self._calendar_id).execute()
+            return True
+        except HttpError as e:
+            if e.status_code == 404:
+                logger.info(f"Calendar {self._calendar_id} not found")
+                return False
+            raise
+        except Exception as e:
+            logger.error(
+                f"Unexpected error checking calendar: {e.__class__.__name__}: {e}"
+            )
+            raise
 
 
 class MockGoogleCalendarManager(GoogleCalendarManager):

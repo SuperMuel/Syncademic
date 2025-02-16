@@ -330,3 +330,50 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         raise error_mapping.to_http_error(e)
 
     return {"success": True}
+
+
+# create a cloud function that triggers every 15 minutes
+# and checks the status of a
+
+
+@scheduler_fn.on_schedule(
+    schedule="*/15 * * * *",
+    memory=options.MemoryOption.MB_512,
+    max_instances=1,
+)
+def monitor_ics_source(event: scheduler_fn.ScheduledEvent) -> None:
+    """
+    Cloud function that monitors an ICS source every 15 minutes.
+
+    Args:
+        event: The scheduled event that triggered this function
+    """
+
+    sync_profile_ids = [
+        ("TLvvrFjQsmO3Rb7Dna5iOKUSxS53", "c9676fa8-1adc-4504-b3c0-eef587913632"),
+        ("fD18u7XMNwUnuSgW70v0JfEnNKw2", "086fcf7e-fff2-4960-94c2-84541fcb3bbb"),
+        ("fD18u7XMNwUnuSgW70v0JfEnNKw2", "ad41d013-3adb-4d64-b22c-052ebbb46717"),
+    ]
+
+    for user_id, sync_profile_id in sync_profile_ids:
+        sync_profile = sync_profile_repo.get_sync_profile(user_id, sync_profile_id)
+        if not sync_profile:
+            logger.error(f"Sync profile not found for {user_id}/{sync_profile_id}")
+            continue
+
+        sync_title = sync_profile.title
+        user_email = sync_profile.targetCalendar.providerAccountEmail
+
+        try:
+            ics_service.try_fetch_and_parse(
+                sync_profile.scheduleSource.to_ics_source(),
+                save_to_storage=True,
+                metadata={
+                    "sync_profile_id": sync_profile_id,
+                    "user_id": user_id,
+                },
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch and parse ICS URL for {user_email}/{sync_title}: {e}"
+            )

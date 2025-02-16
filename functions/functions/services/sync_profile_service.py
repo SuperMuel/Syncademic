@@ -4,13 +4,6 @@ from typing import Any
 
 from firebase_functions import logger
 
-from functions.services.exceptions.ics import BaseIcsError, IcsParsingError
-from functions.services.ics_service import IcsService
-from functions.services.exceptions.sync import (
-    DailySyncLimitExceededError,
-    SyncProfileNotFoundError,
-)
-from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.models import (
     SyncProfile,
     SyncProfileStatus,
@@ -21,7 +14,14 @@ from functions.models import (
 from functions.repositories.sync_profile_repository import ISyncProfileRepository
 from functions.repositories.sync_stats_repository import ISyncStatsRepository
 from functions.services.authorization_service import AuthorizationService
+from functions.services.exceptions.ics import BaseIcsError, IcsParsingError
+from functions.services.exceptions.sync import (
+    DailySyncLimitExceededError,
+    SyncProfileNotFoundError,
+)
+from functions.services.ics_service import IcsService
 from functions.settings import settings
+from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
 
 
@@ -69,12 +69,13 @@ class SyncProfileService:
         sync_profile_id: str,
         sync_trigger: SyncTrigger,
         sync_type: SyncType = SyncType.REGULAR,
+        force: bool = False,
     ) -> None:
         """
         Synchronizes a user's schedule with their target calendar.
 
         This method:
-        1. Verifies the SyncProfile status to ensure it can be synchronized.
+        1. Verifies the SyncProfile status to ensure it can be synchronized. Skip this step if `force` is True,
         2. Sets the profile status to IN_PROGRESS if allowable.
         3. Enforces the user's daily synchronization limit.
         4. Obtains an authorized Google Calendar manager for the target calendar.
@@ -115,22 +116,26 @@ class SyncProfileService:
                 ),
             )
 
-        # If status is incompatible, skip
-        if not self._can_sync(profile.status.type):
-            logger.info(f"Synchronization is {profile.status.type}, skipping")
-            return
+        if force:
+            logger.info("Force sync triggered")
+        else:
+            # If status is incompatible, skip
+            if not self._can_sync(profile.status.type):
+                logger.info(f"Synchronization is {profile.status.type}, skipping")
+                return
 
         # Mark as IN_PROGRESS
         _update_status(
             SyncProfileStatusType.IN_PROGRESS
         )  # TODO : this should be an atomic operation
 
-        # Enforce daily limit
-        try:
-            self._enforce_daily_sync_limit(user_id)
-        except DailySyncLimitExceededError as e:
-            _update_status(SyncProfileStatusType.FAILED, str(e))
-            return
+        # Enforce daily limit only if not force sync
+        if not force:
+            try:
+                self._enforce_daily_sync_limit(user_id)
+            except DailySyncLimitExceededError as e:
+                _update_status(SyncProfileStatusType.FAILED, str(e))
+                return
 
         try:
             calendar_manager = (

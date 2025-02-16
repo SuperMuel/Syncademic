@@ -63,3 +63,30 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         }
         blob.upload_from_string(ics_str, content_type="text/calendar")
         logger.info(f"Stored ics string in firebase storage: {filename}")
+
+    def list_files(self, prefix: str | None = None) -> list[dict[str, Any]]:
+        """Lists files in the bucket, optionally filtering by prefix."""
+        blobs = self.firebase_storage_bucket.list_blobs(prefix=prefix)
+        file_list = []
+        for blob in blobs:
+            file_list.append(
+                {
+                    "name": blob.name,
+                    "updated": blob.updated,
+                    "metadata": blob.metadata,
+                    "size": blob.size,
+                }
+            )
+        return file_list
+
+    def get_file_content(self, filename: str) -> str:
+        """Retrieves the content of a specific ICS file as a string."""
+        blob = self.firebase_storage_bucket.blob(filename)
+        return blob.download_as_text()
+
+    def get_file_metadata(self, filename: str) -> dict[str, Any]:
+        """Retrieves the metadata of a specific ICS file."""
+        blob = self.firebase_storage_bucket.blob(filename)
+        # Need to call reload to get the metadata
+        blob.reload()
+        return blob.metadata or {}  # Return empty dict if no metadata

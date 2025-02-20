@@ -47,9 +47,8 @@ class FirebaseIcsFileStorage(IcsFileStorage):
 
         # format exceptions in the metadata
         metadata = {
-            k: format_exception(v)
+            k: format_exception(v) if isinstance(v, Exception) else v
             for k, v in metadata.items()
-            if isinstance(v, Exception)
         }
 
         sync_profile_id = metadata.get("sync_profile_id", "unknown-sync-profile")

@@ -34,15 +34,12 @@ def display_file_details(file: IcsFileInfo) -> None:
     st.json(file["metadata"])
 
 
-def display_file_content(storage: FirebaseIcsFileStorage, filename: str) -> str:
+def display_file_content(file_content: str) -> None:
     """Display and return the content of the ICS file."""
-    file_content = storage.get_file_content(filename)
     if not file_content:
-        st.error("No content found for the selected file.")
-        return ""
+        return st.error("No content found for the selected file.")
     with st.expander("Raw ICS Content"):
         st.code(file_content, language="ics")
-    return file_content
 
 
 def display_parsed_events(parser: IcsParser, content: str) -> None:
@@ -115,24 +112,21 @@ with st.sidebar:
         "Select ICS File", options=filtered_files, format_func=lambda x: x["name"]
     )
 
-    if selected_file:
-        # Download button
-        file_content = ics_storage.get_file_content(selected_file["name"])
-        st.download_button(
-            "Download ICS File",
-            data=file_content,
-            file_name=selected_file["name"],
-            mime="text/calendar",
-            use_container_width=True,
-            icon="📥",
-        )
+    if not selected_file:
+        st.error("Select a file to continue")
+        st.stop()
 
-if not selected_file:
-    st.error("Select a file to continue")
-    st.stop()
+    # Download button
+    file_content = ics_storage.get_file_content(selected_file["name"])
+    st.download_button(
+        "Download ICS File",
+        data=file_content,
+        file_name=selected_file["name"],
+        mime="text/calendar",
+        use_container_width=True,
+        icon="📥",
+    )
 
-# Display file information
 display_file_details(cast(IcsFileInfo, selected_file))
-file_content = display_file_content(ics_storage, selected_file["name"])
-if file_content:
-    display_parsed_events(ics_parser, file_content)
+display_file_content(file_content)
+display_parsed_events(ics_parser, file_content)

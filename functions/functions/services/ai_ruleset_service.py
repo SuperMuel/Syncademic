@@ -68,6 +68,10 @@ class AiRulesetService:
         events_or_error = self.ics_service.try_fetch_and_parse(
             ics_source=sync_profile.scheduleSource.to_ics_source(),
             save_to_storage=True,
+            metadata={
+                "sync_profile_id": sync_profile.id,
+                "user_id": sync_profile.user_id,
+            },
         )
 
         if isinstance(events_or_error, Exception):
@@ -88,7 +92,7 @@ class AiRulesetService:
 
             logger.info(
                 f"Compressed schedule to {len(compressed_schedule)=} "
-                f"({len(compressed_schedule)/len(events)*100:.2f}% of original)"
+                f"({len(compressed_schedule) / len(events) * 100:.2f}% of original)"
             )
 
             # Generate ruleset

@@ -180,17 +180,28 @@ def test_update_timestamps(
     repo.store_sync_profile(sample_sync_profile)
     initial_created_at = sample_sync_profile.created_at
 
-    # Update timestamps
+    # Test default behavior (current timestamp)
     repo.update_created_at(sample_sync_profile.user_id, sample_sync_profile.id)
     repo.update_last_successful_sync(
         sample_sync_profile.user_id, sample_sync_profile.id
     )
 
-    # Verify updates
+    # Verify updates with default behavior
     updated = repo.get_sync_profile(sample_sync_profile.user_id, sample_sync_profile.id)
     assert updated is not None
     assert updated.created_at > initial_created_at
     assert updated.lastSuccessfulSync is not None
+
+    # Test with custom datetime
+    custom_dt = datetime(2024, 1, 1, tzinfo=UTC)
+    repo.update_created_at(
+        sample_sync_profile.user_id, sample_sync_profile.id, created_at=custom_dt
+    )
+
+    # Verify update with custom datetime
+    updated = repo.get_sync_profile(sample_sync_profile.user_id, sample_sync_profile.id)
+    assert updated is not None
+    assert updated.created_at == custom_dt
 
 
 def test_update_ruleset(

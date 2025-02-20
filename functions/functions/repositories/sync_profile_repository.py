@@ -69,9 +69,11 @@ class ISyncProfileRepository(Protocol):
 
         ...
 
-    def update_created_at(self, user_id: str, sync_profile_id: str) -> None:
+    def update_created_at(
+        self, user_id: str, sync_profile_id: str, created_at: datetime | None = None
+    ) -> None:
         """
-        Updates the created_at field with the server timestamp.
+        Updates the created_at field with the provided datetime or server timestamp if None.
         """
         ...
 
@@ -244,7 +246,9 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
 
         doc_ref.delete()
 
-    def update_created_at(self, user_id: str, sync_profile_id: str) -> None:
+    def update_created_at(
+        self, user_id: str, sync_profile_id: str, created_at: datetime | None = None
+    ) -> None:
         logger.info(
             f"Updating created_at for sync profile {sync_profile_id} for user {user_id}"
         )
@@ -254,7 +258,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
             .collection("syncProfiles")
             .document(sync_profile_id)
         )
-        doc_ref.update({"created_at": firestore.SERVER_TIMESTAMP})
+        doc_ref.update({"created_at": created_at or firestore.SERVER_TIMESTAMP})
 
     def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
         logger.info(
@@ -369,7 +373,9 @@ class MockSyncProfileRepository(ISyncProfileRepository):
         if user_id in self._storage and sync_profile_id in self._storage[user_id]:
             del self._storage[user_id][sync_profile_id]
 
-    def update_created_at(self, user_id: str, sync_profile_id: str) -> None:
+    def update_created_at(
+        self, user_id: str, sync_profile_id: str, created_at: datetime | None = None
+    ) -> None:
         # No-op if profile doesn't exist.
         if user_id not in self._storage:
             return
@@ -379,7 +385,7 @@ class MockSyncProfileRepository(ISyncProfileRepository):
         existing_profile = self._storage[user_id][sync_profile_id]
         updated_profile = existing_profile.model_copy(
             update={
-                "created_at": datetime.now(timezone.utc),
+                "created_at": created_at or datetime.now(timezone.utc),
             }
         )
         self._storage[user_id][sync_profile_id] = updated_profile

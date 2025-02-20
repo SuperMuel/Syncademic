@@ -17,7 +17,7 @@ from functions.models.rules import Ruleset
 from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
-def utc_datetime_factory():
+def utc_datetime_factory() -> datetime:
     return datetime.now(UTC)
 
 

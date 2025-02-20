@@ -71,6 +71,10 @@ def _clear_cache_and_rerun():
 
 def _get_selected_profile() -> SyncProfile | None:
     user_id_profile_id = st.session_state.get("user_id_profile_id")
+
+    if not user_id_profile_id:
+        return None
+
     assert (
         isinstance(user_id_profile_id, tuple)
         and len(user_id_profile_id) == 2
@@ -117,6 +121,8 @@ with st.sidebar:
 all_users = get_all_users()
 all_profiles = get_all_sync_profiles()
 
+all_profiles.sort(key=lambda x: x.created_at, reverse=True)
+
 # Apply filters
 filtered_profiles = all_profiles
 
@@ -153,6 +159,9 @@ if not filtered_profiles:
     st.info("No sync profiles match the current filters")
     st.stop()
 
+if not st.session_state.get("user_id_profile_id"):
+    st.info("Select a profile to view details", icon="ℹ️")
+
 # Convert profiles to display format
 display_data = []
 for profile in filtered_profiles:
@@ -160,15 +169,11 @@ for profile in filtered_profiles:
     display_data.append(
         {
             "Status": profile.status.type.value,
-            "User Email": user.email if user else "Unknown",
-            "User Name": user.display_name if user else "Unknown",
+            "User Email": user.email if user else None,
+            "User Name": user.display_name if user else None,
             "Title": profile.title,
-            "Created": profile.created_at.strftime("%Y-%m-%d %H:%M:%S")
-            if profile.created_at
-            else "Unknown",
-            "Last Sync": profile.lastSuccessfulSync.strftime("%Y-%m-%d %H:%M:%S")
-            if profile.lastSuccessfulSync
-            else "Never",
+            "Created": profile.created_at,
+            "Last Sync": profile.lastSuccessfulSync,
             "Error": profile.status.message,
             "Calendar": profile.targetCalendar.id,
             "Source": str(profile.scheduleSource.url),
@@ -200,12 +205,12 @@ selected = st.dataframe(
             help="Profile title",
             width="medium",
         ),
-        "Created": st.column_config.TextColumn(
+        "Created": st.column_config.DatetimeColumn(
             "Created",
             help="When the profile was created",
             width="medium",
         ),
-        "Last Sync": st.column_config.TextColumn(
+        "Last Sync": st.column_config.DatetimeColumn(
             "Last Sync",
             help="Last successful synchronization",
             width="medium",

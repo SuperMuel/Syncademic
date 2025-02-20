@@ -1,6 +1,6 @@
 # tests/test_sync_profile_repository.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import HttpUrl
 import pytest
 from mockfirestore import MockFirestore
@@ -187,7 +187,7 @@ def test_update_created_at(mock_db):
         sync_profile_id
     ).set(sync_profile1.model_dump())
 
-    # Update created_at
+    # Test default behavior (server timestamp)
     repo.update_created_at(user_id, sync_profile_id)
 
     # Verify document was updated with server timestamp
@@ -199,6 +199,20 @@ def test_update_created_at(mock_db):
         .get()
     )
     assert doc.to_dict()["created_at"] is not None
+
+    # Test with custom datetime
+    custom_dt = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    repo.update_created_at(user_id, sync_profile_id, created_at=custom_dt)
+
+    # Verify document was updated with custom datetime
+    doc = (
+        mock_db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+        .get()
+    )
+    assert doc.to_dict()["created_at"] == custom_dt
 
 
 def test_update_ruleset(mock_db):

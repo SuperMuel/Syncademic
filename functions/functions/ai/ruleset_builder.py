@@ -1,3 +1,4 @@
+from functions import settings
 from functions.ai.types import RulesetOutput
 import uuid
 from langchain.chat_models.base import BaseChatModel
@@ -12,6 +13,7 @@ from langchain_core.messages import (
 )
 
 from .prompts import EXAMPLE_COMPRESSION_1, EXAMPLE_OUTPUT_1, SYSTEM_PROMPT
+from functions.settings import settings
 
 
 def format_structured_output_examples(
@@ -55,7 +57,7 @@ def format_structured_output_examples(
 class RulesetBuilder:
     llm: BaseChatModel
 
-    def __init__(self, llm: BaseChatModel | str):
+    def __init__(self, llm: BaseChatModel | str = settings.RULES_BUILDER_LLM):
         if isinstance(llm, str):
             self.llm = init_chat_model(llm)
         else:

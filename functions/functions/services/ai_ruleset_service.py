@@ -48,7 +48,7 @@ class AiRulesetService:
         self,
         sync_profile: SyncProfile,
     ) -> None:
-        """Creates and stores an AI-generated ruleset for a sync profile.
+        """Creates or updates an AI-generated ruleset for a sync profile.
 
         This method fetches and parses the ICS calendar data from the sync profile's schedule source,
         compresses the schedule to reduce redundancy, generates an AI ruleset based on the events,

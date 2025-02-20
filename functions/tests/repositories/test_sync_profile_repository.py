@@ -252,6 +252,28 @@ def test_update_ruleset_error(mock_db):
     assert updated.ruleset_error == error_message
 
 
+def test_update_ruleset_clears_error(mock_db):
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = "user123"
+    sync_profile_id = "syncProf_ABC"
+
+    # Create initial profile doc with an error
+    profile_with_error = sync_profile1.model_copy()
+    profile_with_error.ruleset_error = "Previous error message"
+    mock_db.collection("users").document(user_id).collection("syncProfiles").document(
+        sync_profile_id
+    ).set(profile_with_error.model_dump())
+
+    # Update with new ruleset
+    repo.update_ruleset(user_id, sync_profile_id, VALID_RULESET)
+
+    # Verify ruleset is updated and error is cleared
+    updated = repo.get_sync_profile(user_id, sync_profile_id)
+    assert updated is not None
+    assert updated.ruleset == VALID_RULESET
+    assert updated.ruleset_error is None  # should be cleared
+
+
 def test_update_last_successful_sync(mock_db):
     repo = FirestoreSyncProfileRepository(db=mock_db)
     user_id = "user123"

@@ -1,3 +1,4 @@
+from functions.ai.ruleset_builder import RulesetBuilder
 import streamlit as st
 
 from functions.models.sync_profile import (
@@ -29,6 +30,9 @@ from functions.services.sync_profile_service import (
 from functions.services.user_service import (
     FirebaseAuthUserService,
 )
+from functions.services.ai_ruleset_service import (
+    AiRulesetService,
+)  # Import AiRulesetService
 
 st.title("🔄 Sync Profiles")
 
@@ -49,10 +53,18 @@ sync_profile_service = SyncProfileService(
     ics_service=IcsService(ics_storage=None),
 )
 
+# Initialize AI ruleset service  <-- Add this
+ai_ruleset_service = AiRulesetService(
+    ics_service=IcsService(ics_storage=None),
+    sync_profile_repo=sync_profile_repo,
+    ruleset_builder=RulesetBuilder(),
+)
+
 
 @st.cache_data(ttl=60)
 def get_all_users() -> dict[str, User]:
     """Get all users with their data."""
+    print("Getting all users")
     users, _ = user_service.list_all_users()
     return {user.uid: user for user in users}
 
@@ -60,6 +72,7 @@ def get_all_users() -> dict[str, User]:
 @st.cache_data(ttl=60)
 def get_all_sync_profiles() -> list[SyncProfile]:
     """Get all valid sync profiles."""
+    print("Getting all sync profiles")
     return sync_profile_repo.list_all_sync_profiles()
 
 
@@ -230,6 +243,11 @@ selected = st.dataframe(
             help="Source schedule URL",
             width="large",
         ),
+        "Ruleset Error": st.column_config.TextColumn(
+            "Ruleset Error",
+            help="Error message if any",
+            width="large",
+        ),
     },
     hide_index=True,
     use_container_width=True,
@@ -358,7 +376,7 @@ if profile := _get_selected_profile():
         st.error(profile.ruleset_error)
 
     # Add action buttons
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)  # Add a column for the new button
 
     with col1:
         if st.button("🔄 Retry Sync", use_container_width=True):
@@ -383,6 +401,15 @@ if profile := _get_selected_profile():
     with col3:
         if st.button("🗑️ Delete Profile", type="primary", use_container_width=True):
             delete_sync_profile_dialog(profile)
+
+    with col4:  # New button for regenerating ruleset
+        if st.button("✨ Regenerate Ruleset", use_container_width=True):
+            with st.spinner("Regenerating ruleset..."):
+                try:
+                    ai_ruleset_service.create_ruleset_for_sync_profile(profile)
+                except Exception as e:
+                    st.error(f"Failed to regenerate ruleset: {str(e)}", icon="❌")
+            _clear_cache_and_rerun()
 
     # Add ruleset editing section
     st.subheader("Ruleset")

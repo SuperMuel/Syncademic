@@ -93,7 +93,7 @@ class ISyncProfileRepository(Protocol):
         self, user_id: str, sync_profile_id: str, ruleset: Ruleset
     ) -> None:
         """
-        Updates the ruleset field of a sync profile.
+        Updates the ruleset field of a sync profile and clears any previous error.
         """
         ...
 
@@ -294,7 +294,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         self, user_id: str, sync_profile_id: str, ruleset: Ruleset
     ) -> None:
         """
-        Updates the ruleset field of a sync profile.
+        Updates the ruleset field of a sync profile and clears any previous error.
         """
         logger.info(
             f"Updating ruleset for sync profile {sync_profile_id} for user {user_id}"
@@ -307,7 +307,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         )
 
         # We store the ruleset as a JSON string in Firestore.
-        doc_ref.update({"ruleset": ruleset.model_dump_json()})
+        doc_ref.update({"ruleset": ruleset.model_dump_json(), "ruleset_error": None})
 
 
 class MockSyncProfileRepository(ISyncProfileRepository):

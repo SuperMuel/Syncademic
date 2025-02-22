@@ -5,6 +5,7 @@ from typing import Any
 
 from pydantic import (
     BaseModel,
+    ConfigDict,
     EmailStr,
     Field,
     HttpUrl,
@@ -82,6 +83,8 @@ class ScheduleSource(BaseModel):
     Example:
         url = "https://example.com/some_schedule.ics"
     """
+
+    model_config = ConfigDict(frozen=True)
 
     url: HttpUrl = Field(..., description="Publicly accessible URL to the ICS file")
 

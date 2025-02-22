@@ -22,32 +22,32 @@ init_firebase()
 
 # --- Page Definitions ---
 dashboard_page = st.Page(
-    "pages/dashboard.py",
+    "src/admin/pages/dashboard.py",
     title="Dashboard",  # Optional: Customize the page name in the navigation
     icon="🏠",  # Optional: Add an icon
 )
 users_page = st.Page(
-    "pages/users.py",
+    "src/admin/pages/users.py",
     title="Users",
     icon="🧑‍🤝‍🧑",
 )
 sync_profiles_page = st.Page(
-    "pages/sync_profiles.py",
+    "src/admin/pages/sync_profiles.py",
     title="Sync Profiles",
     icon="🔄",
 )
 authorizations_page = st.Page(
-    "pages/authorizations.py",
+    "src/admin/pages/authorizations.py",
     title="Authorizations",
     icon="🔑",
 )
 ics_studio_page = st.Page(
-    "pages/ics_studio.py",
+    "src/admin/pages/ics_studio.py",
     title="ICS Studio",
     icon="🐛",
 )
 ai_studio_page = st.Page(
-    "pages/ai_studio.py",
+    "src/admin/pages/ai_studio.py",
     title="AI Studio",
     icon="🤖",
 )

@@ -2,6 +2,7 @@ from functions.ai.ruleset_builder import RulesetBuilder
 import streamlit as st
 
 from functions.models.sync_profile import (
+    ScheduleSource,
     SyncProfile,
     SyncProfileStatusType,
     SyncTrigger,
@@ -21,6 +22,7 @@ from functions.repositories.sync_stats_repository import (
 from functions.services.authorization_service import (
     AuthorizationService,
 )
+from functions.services.exceptions.ics import IcsParsingError, IcsSourceError
 from functions.services.ics_service import (
     IcsService,
 )
@@ -33,6 +35,8 @@ from functions.services.user_service import (
 from functions.services.ai_ruleset_service import (
     AiRulesetService,
 )  # Import AiRulesetService
+from admin.shared.event_display import display_events
+from functions.shared.event import Event
 
 st.title("🔄 Sync Profiles")
 
@@ -342,6 +346,29 @@ def edit_ruleset_dialog(profile: SyncProfile) -> None:
             st.exception(e)
 
 
+@st.cache_data(
+    ttl=60,
+    show_spinner="Fetching events...",
+    hash_funcs={ScheduleSource: lambda x: x.model_dump_json()},
+)
+def fetch_events(
+    source: ScheduleSource,
+):
+    """
+    Fetch and parse events for a sync profile.
+
+    Args:
+        source: The source to fetch events for
+
+    Returns:
+        Either a list of events if successful, or an error message string
+    """
+    return IcsService(ics_storage=None).try_fetch_and_parse(
+        ics_source=source.to_ics_source(),
+        save_to_storage=False,
+    )
+
+
 # Display selected profile details
 if profile := _get_selected_profile():
     st.header("Selected Profile Details")
@@ -419,3 +446,20 @@ if profile := _get_selected_profile():
 
     if st.button("✏️ Edit Ruleset", use_container_width=True):
         edit_ruleset_dialog(profile)
+
+    # Add events section
+    st.subheader("Events")
+
+    # Fetch events
+    events_or_error = fetch_events(profile.scheduleSource)
+    if not isinstance(events_or_error, list):
+        st.error(f"Failed to fetch events: {str(events_or_error)}")
+    else:
+        # Show events before rules
+        st.subheader("Original Events")
+        display_events(events_or_error)
+
+        # Show events after rules if ruleset exists
+        if profile.ruleset:
+            st.subheader("Events After Rules")
+            display_events(events_or_error, profile.ruleset)

@@ -37,7 +37,8 @@ def display_file_details(file: IcsFileInfo) -> None:
 def display_file_content(file_content: str) -> None:
     """Display and return the content of the ICS file."""
     if not file_content:
-        return st.error("No content found for the selected file.")
+        st.error("No content found for the selected file.")
+        return
     with st.expander("Raw ICS Content"):
         st.code(file_content, language="ics")
 

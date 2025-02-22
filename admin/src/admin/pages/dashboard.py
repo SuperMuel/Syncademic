@@ -1,4 +1,5 @@
 import streamlit as st
+from admin.shared.event_display import display_events
 
 from functions.models.user import User
 from functions.services.user_service import FirebaseAuthUserService

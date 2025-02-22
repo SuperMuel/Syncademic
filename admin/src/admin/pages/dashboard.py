@@ -1,60 +1,31 @@
 import streamlit as st
-from admin.shared.event_display import display_events
 
-from functions.models.user import User
-from functions.services.user_service import FirebaseAuthUserService
+from admin.shared.data_service import data_service
 
 st.title("🏠 Dashboard")
-
-# Initialize services
-user_service = FirebaseAuthUserService()
-
-
-@st.cache_data(ttl=60)  # Cache for 1 minute
-def get_total_users() -> int:
-    """Get the total number of users."""
-    print("Getting total users")
-    users, _ = user_service.list_all_users()
-    return len(users)
-
-
-@st.cache_data(ttl=60)  # Cache for 1 minute
-def get_recent_signups(n: int = 10) -> list[User]:
-    """Get the n most recent user signups."""
-    print("Getting recent signups")
-    return user_service.get_recent_signups(limit=n)
-
 
 # Sidebar with refresh button
 with st.sidebar:
     refresh_button = st.button("🔄 Refresh Cached Data", use_container_width=True)
-
     if refresh_button:
-        print("Refreshing")
-        get_total_users.clear()
-        get_recent_signups.clear()
-
+        data_service.clear_all_caches()
+        st.rerun()
 
 # --- Fetch Data ---
-total_users = get_total_users()
-recent_signups = get_recent_signups()
+total_users = len(data_service.get_all_users())
+recent_signups = data_service.get_recent_signups()
+sync_profile_stats = data_service.get_sync_profile_stats()
 
 # --- Display Metrics ---
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Total Users", total_users)
-# col2.metric("Total Sync Profiles", 523)  # TODO: Implement sync profile metrics
-# col3.metric("Sync Profiles - In Progress", 25)  # TODO: Implement sync profile metrics
-# col4.metric(
-#     "Sync Profiles - Failed",
-#     12,  # TODO: Implement sync profile metrics
-#     delta=-12,
-#     delta_color="inverse",
-# )
-
+col1.metric("👤 Total Users", total_users)
+col2.metric("🔄 Total Sync Profiles", sync_profile_stats["total"])
+col3.metric("🏃 In Progress", sync_profile_stats["in_progress"])
+col4.metric("❌ Failed", sync_profile_stats["failed"])
 
 # --- Recent Sign-ups ---
-st.header("Recent User Sign-ups")
+st.header("👤 Recent User Sign-ups")
 
 # Convert recent signups to a format suitable for the dataframe
 recent_signup_data = [

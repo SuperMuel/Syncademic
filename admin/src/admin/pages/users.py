@@ -1,19 +1,9 @@
 from datetime import datetime
 import streamlit as st
-from functions.services.user_service import FirebaseAuthUserService
+
+from admin.shared.data_service import data_service
 
 st.title("🧑‍🤝‍🧑 Users")
-
-user_service = FirebaseAuthUserService()
-
-
-@st.cache_data(ttl=60)  # Cache for 1 minute
-def get_all_users():
-    """Fetches all users from Firebase Auth."""
-    print("Fetching all users from Firebase Auth")
-    users, _ = user_service.list_all_users()
-    return users
-
 
 # --- Sidebar Filters ---
 with st.sidebar:
@@ -21,17 +11,16 @@ with st.sidebar:
 
     if refresh_button:
         del st.session_state.user
-        get_all_users.clear()  # Clear cache on refresh
-
+        data_service.clear_all_caches()
+        st.rerun()
 
 # --- Fetch and Filter Users ---
-all_users = get_all_users()
+all_users = list(data_service.get_all_users().values())
 
 # Sort users by signup date
 all_users.sort(
     key=lambda x: x.user_metadata.creation_timestamp or datetime.min, reverse=True
 )
-
 
 # --- Display Users ---
 user_data = [

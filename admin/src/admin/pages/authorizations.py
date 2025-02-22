@@ -3,42 +3,19 @@ from datetime import datetime
 import streamlit as st
 
 from functions.models.authorization import BackendAuthorization
-from functions.models.user import User
 from functions.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
 )
 from functions.services.authorization_service import AuthorizationService
-from functions.services.user_service import FirebaseAuthUserService
+from admin.shared.data_service import data_service
 
 st.title("🔑 Backend Authorizations")
 
-user_service = FirebaseAuthUserService()
 # Initialize services and repositories
 authorization_service = AuthorizationService(
     backend_auth_repo=FirestoreBackendAuthorizationRepository()
 )
 backend_auth_repo = FirestoreBackendAuthorizationRepository()
-
-
-@st.cache_data(ttl=60)  # Cache for 1 minute
-def get_all_authorizations():
-    """Fetches all backend authorizations from Firestore."""
-    print("Fetching all backend authorizations from Firestore")
-    return backend_auth_repo.list_all_authorizations()
-
-
-@st.cache_data(ttl=60)
-def get_all_users() -> dict[str, User]:
-    """Get all users with their data."""
-    users, _ = user_service.list_all_users()
-    return {user.uid: user for user in users}
-
-
-def _clear_cache_and_rerun():
-    get_all_users.clear()
-    get_all_authorizations.clear()
-    st.rerun()
-
 
 # --- Sidebar Filters ---
 with st.sidebar:
@@ -46,11 +23,12 @@ with st.sidebar:
 
     refresh_button = st.button("🔄 Refresh Data", use_container_width=True)
     if refresh_button:
-        _clear_cache_and_rerun()
+        data_service.clear_all_caches()
+        st.rerun()
 
 # --- Fetch and Filter Authorizations ---
-all_users = get_all_users()
-all_authorizations = get_all_authorizations()
+all_users = data_service.get_all_users()
+all_authorizations = data_service.get_all_authorizations()
 
 # Apply filters
 filtered_authorizations = all_authorizations
@@ -122,7 +100,8 @@ def delete_authorization_dialog(authorization: BackendAuthorization) -> None:
                 f"Authorization deleted for {authorization.providerAccountEmail}",
                 icon="✅",
             )
-            _clear_cache_and_rerun()
+            data_service.clear_all_caches()
+            st.rerun()
 
 
 st.divider()

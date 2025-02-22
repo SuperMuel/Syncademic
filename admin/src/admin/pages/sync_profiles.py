@@ -9,7 +9,6 @@ from functions.models.sync_profile import (
     SyncType,
 )
 from functions.models.rules import Ruleset
-from functions.models.user import User
 from functions.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
 )
@@ -29,20 +28,16 @@ from functions.services.ics_service import (
 from functions.services.sync_profile_service import (
     SyncProfileService,
 )
-from functions.services.user_service import (
-    FirebaseAuthUserService,
-)
 from functions.services.ai_ruleset_service import (
     AiRulesetService,
-)  # Import AiRulesetService
+)
 from admin.shared.event_display import display_events
-from functions.shared.event import Event
+from admin.shared.data_service import data_service
 
 st.title("🔄 Sync Profiles")
 
 # Initialize services
 sync_profile_repo = FirestoreSyncProfileRepository()
-user_service = FirebaseAuthUserService()
 
 # Initialize authorization service
 authorization_service = AuthorizationService(
@@ -57,33 +52,12 @@ sync_profile_service = SyncProfileService(
     ics_service=IcsService(ics_storage=None),
 )
 
-# Initialize AI ruleset service  <-- Add this
+# Initialize AI ruleset service
 ai_ruleset_service = AiRulesetService(
     ics_service=IcsService(ics_storage=None),
     sync_profile_repo=sync_profile_repo,
     ruleset_builder=RulesetBuilder(),
 )
-
-
-@st.cache_data(ttl=60)
-def get_all_users() -> dict[str, User]:
-    """Get all users with their data."""
-    print("Getting all users")
-    users, _ = user_service.list_all_users()
-    return {user.uid: user for user in users}
-
-
-@st.cache_data(ttl=60)
-def get_all_sync_profiles() -> list[SyncProfile]:
-    """Get all valid sync profiles."""
-    print("Getting all sync profiles")
-    return sync_profile_repo.list_all_sync_profiles()
-
-
-def _clear_cache_and_rerun():
-    get_all_users.clear()
-    get_all_sync_profiles.clear()
-    st.rerun()
 
 
 def _get_selected_profile() -> SyncProfile | None:
@@ -118,7 +92,8 @@ with st.sidebar:
 
     refresh_button = st.button("🔄 Refresh Data", use_container_width=True)
     if refresh_button:
-        _clear_cache_and_rerun()
+        data_service.clear_all_caches()
+        st.rerun()
 
     # Status filter
     status_filter = st.multiselect(
@@ -135,8 +110,8 @@ with st.sidebar:
     )
 
 # Fetch data
-all_users = get_all_users()
-all_profiles = get_all_sync_profiles()
+all_users = data_service.get_all_users()
+all_profiles = data_service.get_all_sync_profiles()
 
 all_profiles.sort(key=lambda x: x.created_at, reverse=True)
 
@@ -162,14 +137,11 @@ if error_filter:
 
 # Display stats
 st.header("Statistics")
-total_profiles = len(all_profiles)
-failed_profiles = len(
-    [p for p in all_profiles if p.status.type == SyncProfileStatusType.FAILED]
-)
+sync_profile_stats = data_service.get_sync_profile_stats()
 
 col1, col2 = st.columns(2)
-col1.metric("Total Profiles", total_profiles)
-col2.metric("Failed Profiles", failed_profiles)
+col1.metric("Total Profiles", sync_profile_stats["total"])
+col2.metric("Failed Profiles", sync_profile_stats["failed"])
 
 
 if not filtered_profiles:
@@ -309,7 +281,8 @@ def delete_sync_profile_dialog(profile: SyncProfile) -> None:
             with st.spinner("Deleting profile..."):
                 sync_profile_repo.delete_sync_profile(profile.user_id, profile.id)
                 st.success("Profile deleted successfully!", icon="✅")
-                _clear_cache_and_rerun()
+                data_service.clear_all_caches()
+                st.rerun()
         except Exception as e:
             st.error("Failed to delete profile:", icon="❌")
             st.exception(e)
@@ -339,7 +312,8 @@ def edit_ruleset_dialog(profile: SyncProfile) -> None:
             sync_profile_repo.update_ruleset_error(profile.user_id, profile.id, None)
 
             st.success("Ruleset updated successfully!", icon="✅")
-            _clear_cache_and_rerun()
+            data_service.clear_all_caches()
+            st.rerun()
 
         except Exception as e:
             st.error("Failed to update ruleset", icon="❌")
@@ -420,7 +394,8 @@ if profile := _get_selected_profile():
                 except Exception as e:
                     st.error(f"Failed to trigger sync: {str(e)}")
 
-            _clear_cache_and_rerun()
+            data_service.clear_all_caches()
+            st.rerun()
     with col2:
         if st.button("🔍 Check Calendar", use_container_width=True):
             _check_calendar(profile.user_id, profile)
@@ -436,7 +411,8 @@ if profile := _get_selected_profile():
                     ai_ruleset_service.create_ruleset_for_sync_profile(profile)
                 except Exception as e:
                     st.error(f"Failed to regenerate ruleset: {str(e)}", icon="❌")
-            _clear_cache_and_rerun()
+            data_service.clear_all_caches()
+            st.rerun()
 
     # Add ruleset editing section
     st.subheader("Ruleset")

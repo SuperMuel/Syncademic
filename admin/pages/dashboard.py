@@ -1,5 +1,6 @@
 import streamlit as st
 
+from functions.models.user import User
 from functions.services.user_service import FirebaseAuthUserService
 
 st.title("🏠 Dashboard")
@@ -17,10 +18,10 @@ def get_total_users() -> int:
 
 
 @st.cache_data(ttl=60)  # Cache for 1 minute
-def get_recent_signups():
-    """Get the 5 most recent user signups."""
+def get_recent_signups(n: int = 10) -> list[User]:
+    """Get the n most recent user signups."""
     print("Getting recent signups")
-    return user_service.get_recent_signups(limit=5)
+    return user_service.get_recent_signups(limit=n)
 
 
 # Sidebar with refresh button
@@ -57,8 +58,8 @@ st.header("Recent User Sign-ups")
 # Convert recent signups to a format suitable for the dataframe
 recent_signup_data = [
     {
-        "email": user.email or "No Email",
-        "display_name": user.display_name or "No Name",
+        "email": user.email,
+        "display_name": user.display_name,
         "signup_date": user.user_metadata.creation_timestamp,
     }
     for user in recent_signups

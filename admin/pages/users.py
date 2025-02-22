@@ -1,3 +1,4 @@
+from datetime import datetime
 import streamlit as st
 from functions.services.user_service import FirebaseAuthUserService
 
@@ -26,13 +27,18 @@ with st.sidebar:
 # --- Fetch and Filter Users ---
 all_users = get_all_users()
 
+# Sort users by signup date
+all_users.sort(
+    key=lambda x: x.user_metadata.creation_timestamp or datetime.min, reverse=True
+)
+
 
 # --- Display Users ---
 user_data = [
     {
         "uid": user.uid,
-        "email": user.email or "No Email",
-        "display_name": user.display_name or "No Name",
+        "email": user.email,
+        "display_name": user.display_name,
         "signup_date": user.user_metadata.creation_timestamp,
         "last_sign_in_date": user.user_metadata.last_sign_in_timestamp,
         "disabled": user.disabled,

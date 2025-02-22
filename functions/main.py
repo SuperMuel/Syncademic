@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Any, Callable, TypeVar
 
 from firebase_admin import initialize_app, storage
@@ -123,6 +124,7 @@ def validate_request(input_model: type[T]):
     """
 
     def decorator(func: Callable[[str, T], Any]):
+        @wraps(func)
         def wrapper(req: https_fn.CallableRequest):
             user_id = get_user_id_or_raise(req)
 

@@ -8,10 +8,11 @@
             "name": "Syncademic Admin Panel",
             "type": "debugpy",
             "request": "launch",
+            "cwd": "${workspaceFolder}/admin",
             "module": "streamlit",
             "args": [
                 "run",
-                "admin/app.py"
+                "app.py"
             ],
             "console": "integratedTerminal"
         }

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import streamlit as st
 
 from admin.shared.data_service import data_service
@@ -21,6 +21,33 @@ all_users = list(data_service.get_all_users().values())
 all_users.sort(
     key=lambda x: x.user_metadata.creation_timestamp or datetime.min, reverse=True
 )
+
+# Calculate user metrics
+now = datetime.now()
+week_ago = now - timedelta(days=7)
+
+new_users_last_week = sum(
+    1
+    for user in all_users
+    if user.user_metadata.creation_timestamp
+    and user.user_metadata.creation_timestamp >= week_ago
+)
+
+active_users_last_week = sum(
+    1
+    for user in all_users
+    if user.user_metadata.last_sign_in_timestamp
+    and user.user_metadata.last_sign_in_timestamp >= week_ago
+)
+
+# Display metrics
+st.header("Statistics")
+col1, col2, col3 = st.columns(3)
+col1.metric("👥 Total Users", len(all_users))
+col2.metric("✨ New Users (Last Week)", new_users_last_week)
+col3.metric("🔥 Active Users (Last Week)", active_users_last_week)
+
+st.divider()
 
 # --- Display Users ---
 user_data = [

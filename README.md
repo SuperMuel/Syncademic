@@ -86,3 +86,7 @@ Syncademic relies on concepts like **Sync Profiles**, **Customization Rules**, a
 - **Event Change Notifications:** Notify users of changes in their academic schedules, such as updates to events or cancellations.
 - **General Notifications:** Provide reminders for synchronization status, errors, or important updates.
 - **Advanced AI Integration:** Leverage LangGraph and smaller, specialized LLMs to enhance customization, improve efficiency, and enable more dynamic workflows.
+
+
+# Limitations
+- **Editing Events:** Users might try to edit events in their calendar, but any changes they make will be overwritten by Syncademic in the next sync.

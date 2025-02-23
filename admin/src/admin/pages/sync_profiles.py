@@ -144,9 +144,10 @@ if error_filter:
 st.header("Statistics")
 sync_profile_stats = data_service.get_sync_profile_stats()
 
-col1, col2 = st.columns(2)
-col1.metric("Total Profiles", sync_profile_stats["total"])
-col2.metric("Failed Profiles", sync_profile_stats["failed"])
+col1, col2, col3 = st.columns(3)
+col1.metric("🔄 Total Profiles", sync_profile_stats["total"])
+col2.metric("🏃 In Progress", sync_profile_stats["in_progress"])
+col3.metric("❌ Failed", sync_profile_stats["failed"])
 
 
 if not filtered_profiles:
@@ -456,13 +457,15 @@ if profile := _get_selected_profile():
     if not isinstance(events_or_error, list):
         st.error(f"Failed to fetch events: {str(events_or_error)}")
     else:
-        events = events_or_error
+        before_events = events_or_error
 
         if st.checkbox("Apply Rules"):
-            events = apply_rules(events, profile.ruleset)
+            after_events = apply_rules(before_events, profile.ruleset)
+        else:
+            after_events = before_events
 
         print("displaying calendar")
-        calendar_value = display_events_calendar(events)
+        calendar_value = display_events_calendar(after_events)
 
         st.divider()
 
@@ -470,9 +473,9 @@ if profile := _get_selected_profile():
         st.write(calendar_value)
         # Show events before rules
         st.subheader("Original Events")
-        display_events_dataframe(events)
+        display_events_dataframe(before_events)
 
         # Show events after rules if ruleset exists
         if profile.ruleset:
             st.subheader("Events After Rules")
-            display_events_dataframe(events, profile.ruleset)
+            display_events_dataframe(after_events, profile.ruleset)

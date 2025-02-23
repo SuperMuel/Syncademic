@@ -802,6 +802,74 @@ def test_change_field_action_apply():
     assert new_event.location == event.location
 
 
+def test_change_field_action_rstrip_from():
+    event = Event(
+        title="Séminaire de rentrée - EFALYO 3 Gpe C",
+        description="Calcul formel",
+        location="Room 101",
+        start=start,
+        end=end,
+    )
+
+    action = ChangeFieldAction(
+        action="change_field",
+        field="title",
+        method="rstrip-from",
+        value=" - EFALYO",
+    )
+
+    new_event = action.apply(event)
+
+    assert new_event is not None
+    assert new_event.title == "Séminaire de rentrée"
+
+    # Test when value is not found
+    event2 = Event(
+        title="Pure title",
+        description="Calcul formel",
+        location="Room 101",
+        start=start,
+        end=end,
+    )
+    new_event2 = action.apply(event2)
+    assert new_event2 is not None
+    assert new_event2.title == "Pure title"
+
+
+def test_change_field_action_lstrip_from():
+    event = Event(
+        title="EFALYO 3 Gpe C - Séminaire de rentrée",
+        description="Calcul formel",
+        location="Room 101",
+        start=start,
+        end=end,
+    )
+
+    action = ChangeFieldAction(
+        action="change_field",
+        field="title",
+        method="lstrip-from",
+        value="EFALYO 3 Gpe C - ",
+    )
+
+    new_event = action.apply(event)
+
+    assert new_event is not None
+    assert new_event.title == "Séminaire de rentrée"
+
+    # Test when value is not found
+    event2 = Event(
+        title="Pure title",
+        description="Calcul formel",
+        location="Room 101",
+        start=start,
+        end=end,
+    )
+    new_event2 = action.apply(event2)
+    assert new_event2 is not None
+    assert new_event2.title == "Pure title"
+
+
 def test_change_color_action_apply():
     event = Event(
         title="HAI507I Lecture",

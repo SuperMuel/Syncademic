@@ -104,7 +104,7 @@ class CompoundCondition(BaseModel):
         raise ValueError(f"Unimplemented logical operator: {self.logical_operator}")
 
 
-ConditionType = Union[TextFieldCondition, CompoundCondition]
+ConditionType = TextFieldCondition | CompoundCondition
 
 CompoundCondition.model_rebuild()
 
@@ -112,7 +112,7 @@ CompoundCondition.model_rebuild()
 class ChangeFieldAction(BaseModel):
     action: Literal["change_field"] = "change_field"
     field: EventTextField
-    method: Literal["set", "append", "prepend"]
+    method: Literal["set", "append", "prepend", "rstrip-from", "lstrip-from"]
     value: str = Field(
         ..., min_length=0, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
     )
@@ -121,15 +121,27 @@ class ChangeFieldAction(BaseModel):
         field_value = getattr(event, self.field)
         assert isinstance(field_value, str)
 
-        new_value = self.value
-
         match self.method:
             case "set":
-                new_field_value = new_value
+                new_field_value = self.value
             case "append":
-                new_field_value = field_value + new_value
+                new_field_value = field_value + self.value
             case "prepend":
-                new_field_value = new_value + field_value
+                new_field_value = self.value + field_value
+            case "rstrip-from":
+                # Example : if title is "Séminaire de rentrée - EFALYO 3 Gpe C", and value is " - EFALYO", then strip " - EFALYO" and everything to the right of it
+                # Resulting title should be "Séminaire de rentrée"
+                if self.value in field_value:
+                    new_field_value = field_value[: field_value.index(self.value)]
+                else:
+                    new_field_value = field_value
+            case "lstrip-from":
+                if self.value in field_value:
+                    new_field_value = field_value[
+                        field_value.index(self.value) + len(self.value) :
+                    ]
+                else:
+                    new_field_value = field_value
 
         return replace(event, **{self.field: new_field_value})
 

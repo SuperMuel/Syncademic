@@ -112,7 +112,7 @@ CompoundCondition.model_rebuild()
 class ChangeFieldAction(BaseModel):
     action: Literal["change_field"] = "change_field"
     field: EventTextField
-    method: Literal["set", "append", "prepend", "rstrip-from", "lstrip-from"]
+    method: Literal["set", "append", "prepend", "cut-before", "cut-after"]
     value: str = Field(
         ..., min_length=0, max_length=settings.MAX_TEXT_FIELD_VALUE_LENGTH
     )
@@ -128,14 +128,12 @@ class ChangeFieldAction(BaseModel):
                 new_field_value = field_value + self.value
             case "prepend":
                 new_field_value = self.value + field_value
-            case "rstrip-from":
-                # Example : if title is "Séminaire de rentrée - EFALYO 3 Gpe C", and value is " - EFALYO", then strip " - EFALYO" and everything to the right of it
-                # Resulting title should be "Séminaire de rentrée"
+            case "cut-before":
                 if self.value in field_value:
                     new_field_value = field_value[: field_value.index(self.value)]
                 else:
                     new_field_value = field_value
-            case "lstrip-from":
+            case "cut-after":
                 if self.value in field_value:
                     new_field_value = field_value[
                         field_value.index(self.value) + len(self.value) :

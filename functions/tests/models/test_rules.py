@@ -814,7 +814,7 @@ def test_change_field_action_rstrip_from():
     action = ChangeFieldAction(
         action="change_field",
         field="title",
-        method="rstrip-from",
+        method="cut-before",
         value=" - EFALYO",
     )
 
@@ -848,7 +848,7 @@ def test_change_field_action_lstrip_from():
     action = ChangeFieldAction(
         action="change_field",
         field="title",
-        method="lstrip-from",
+        method="cut-after",
         value="EFALYO 3 Gpe C - ",
     )
 

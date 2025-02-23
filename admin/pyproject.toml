@@ -8,7 +8,12 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["functions", "python-dotenv>=1.0.1", "streamlit>=1.41.1"]
+dependencies = [
+    "functions",
+ "python-dotenv>=1.0.1",
+ "streamlit>=1.41.1",
+ "streamlit-calendar>=1.2.1",
+]
 
 [dependency-groups]
 dev = ["ipykernel>=6.29.5", "pytest>=8.3.4", "ruff>=0.9.6"]

@@ -27,7 +27,7 @@ class AdminDataService:
             backend_auth_repo=self.backend_auth_repo
         )
 
-    @st.cache_data(ttl=60)
+    @st.cache_data(ttl=60, show_spinner="Fetching users...")
     def get_all_users(_self) -> dict[str, User]:
         """Get all users with their data."""
         print("Getting all users")
@@ -44,13 +44,13 @@ class AdminDataService:
             reverse=True,
         )[:n]
 
-    @st.cache_data(ttl=60)
+    @st.cache_data(ttl=60, show_spinner="Fetching sync profiles...")
     def get_all_sync_profiles(_self) -> list[SyncProfile]:
         """Get all valid sync profiles."""
         print("Getting all sync profiles")
         return _self.sync_profile_repo.list_all_sync_profiles()
 
-    @st.cache_data(ttl=60)
+    @st.cache_data(ttl=60, show_spinner="Fetching authorizations...")
     def get_all_authorizations(_self) -> list[BackendAuthorization]:
         """Fetches all backend authorizations from Firestore."""
         print("Fetching all backend authorizations from Firestore")

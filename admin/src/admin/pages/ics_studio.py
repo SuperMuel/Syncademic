@@ -70,7 +70,7 @@ st.title("🐛 ICS Studio")
 ics_storage, ics_parser = initialize_services()
 
 
-@st.cache_data
+@st.cache_data(show_spinner="Fetching files...")
 def get_all_files() -> list[dict]:
     return ics_storage.list_files()
 

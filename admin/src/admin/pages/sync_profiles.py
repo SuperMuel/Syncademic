@@ -1,4 +1,5 @@
 from functions.ai.ruleset_builder import RulesetBuilder
+from streamlit_calendar import calendar
 import streamlit as st
 
 from functions.models.sync_profile import (
@@ -31,7 +32,11 @@ from functions.services.sync_profile_service import (
 from functions.services.ai_ruleset_service import (
     AiRulesetService,
 )
-from admin.shared.event_display import display_events
+from admin.shared.event_display import (
+    apply_rules,
+    display_events_calendar,
+    display_events_dataframe,
+)
 from admin.shared.data_service import data_service
 
 st.title("🔄 Sync Profiles")
@@ -151,13 +156,32 @@ if not filtered_profiles:
 if not st.session_state.get("user_id_profile_id"):
     st.info("Select a profile to view details", icon="ℹ️")
 
+
+def _status_to_label(status: SyncProfileStatusType) -> str:
+    match status:
+        case SyncProfileStatusType.FAILED:
+            return "❌ Failed"
+        case SyncProfileStatusType.IN_PROGRESS:
+            return "🏃 In Progress"
+        case SyncProfileStatusType.SUCCESS:
+            return "✅ Success"
+        case SyncProfileStatusType.DELETING:
+            return "🗑️ Deleting"
+        case SyncProfileStatusType.DELETION_FAILED:
+            return "❌ Deletion Failed"
+        case SyncProfileStatusType.NOT_STARTED:
+            return "⏳ Not Started"
+
+    raise ValueError(f"Unknown status: {status}")
+
+
 # Convert profiles to display format
 display_data = []
 for profile in filtered_profiles:
     user = all_users.get(profile.user_id, None)
     display_data.append(
         {
-            "Status": profile.status.type.value,
+            "Status": _status_to_label(profile.status.type),
             "User Email": user.email if user else None,
             "User Name": user.display_name if user else None,
             "Title": profile.title,
@@ -427,15 +451,28 @@ if profile := _get_selected_profile():
     st.subheader("Events")
 
     # Fetch events
+    print("fetching events")
     events_or_error = fetch_events(profile.scheduleSource)
     if not isinstance(events_or_error, list):
         st.error(f"Failed to fetch events: {str(events_or_error)}")
     else:
+        events = events_or_error
+
+        if st.checkbox("Apply Rules"):
+            events = apply_rules(events, profile.ruleset)
+
+        print("displaying calendar")
+        calendar_value = display_events_calendar(events)
+
+        st.divider()
+
+        # If you want to see what the user does (click events, etc.):
+        st.write(calendar_value)
         # Show events before rules
         st.subheader("Original Events")
-        display_events(events_or_error)
+        display_events_dataframe(events)
 
         # Show events after rules if ruleset exists
         if profile.ruleset:
             st.subheader("Events After Rules")
-            display_events(events_or_error, profile.ruleset)
+            display_events_dataframe(events, profile.ruleset)

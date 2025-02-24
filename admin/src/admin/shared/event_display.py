@@ -114,10 +114,15 @@ def display_events_calendar(
             # Convert to ISO-8601 strings:
             "start": event.start.datetime.isoformat(),
             "end": event.end.datetime.isoformat(),
-            # Optionally specify color, or extendedProps for debugging:
-            # "backgroundColor": "#F9C74F",
-            # "borderColor": "#F9C74F",
-            # "extendedProps": {"location": event.location},
+            # Set color from event.color if available, otherwise use grey
+            "backgroundColor": event.color.to_color_code()
+            if event.color
+            else "#808080",
+            "borderColor": event.color.to_color_code() if event.color else "#808080",
+            "extendedProps": {
+                "location": event.location,
+                "description": event.description,
+            },
         }
         for event in events
     ]

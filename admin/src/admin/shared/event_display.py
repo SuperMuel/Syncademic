@@ -100,6 +100,7 @@ def display_events_dataframe(
 
 def display_events_calendar(
     events: list[Event],
+    key: str | None = None,
 ) -> Any:
     """Display events in a Streamlit calendar, optionally applying a ruleset
 
@@ -148,5 +149,5 @@ def display_events_calendar(
         events=calendar_events,
         options=calendar_options,
         # custom_css=custom_css,  # optional
-        key="calendar_view",  # unique widget key to maintain state
+        key=key,  # unique widget key to maintain state
     )

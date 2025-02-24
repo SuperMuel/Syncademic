@@ -459,13 +459,15 @@ if profile := _get_selected_profile():
     else:
         before_events = events_or_error
 
-        if st.checkbox("Apply Rules"):
+        if should_apply_rules := st.checkbox("Apply Rules"):
             after_events = apply_rules(before_events, profile.ruleset)
         else:
             after_events = before_events
 
         print("displaying calendar")
-        calendar_value = display_events_calendar(after_events)
+        calendar_value = display_events_calendar(
+            after_events, key=f"calendar_view_{profile.id}_{str(should_apply_rules)}"
+        )
 
         st.divider()
 

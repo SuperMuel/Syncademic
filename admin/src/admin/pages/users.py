@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import streamlit as st
+import pandas as pd
 
 from admin.shared.data_service import data_service
 
@@ -46,6 +47,35 @@ col1, col2, col3 = st.columns(3)
 col1.metric("👥 Total Users", len(all_users))
 col2.metric("✨ New Users (Last Week)", new_users_last_week)
 col3.metric("🔥 Active Users (Last Week)", active_users_last_week)
+
+# Create user growth data
+# Get all signup dates and sort them
+signup_dates = [
+    user.user_metadata.creation_timestamp
+    for user in all_users
+    if user.user_metadata.creation_timestamp
+]
+signup_dates.sort()
+
+if signup_dates:
+    # Create a DataFrame with daily signups
+    df = pd.DataFrame({"date": signup_dates, "count": 1})
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    df = df.groupby("date").count().reset_index()
+
+    # Calculate cumulative sum
+    df["cumulative_users"] = df["count"].cumsum()
+
+    # Plot the graphs
+    st.subheader("User Growth Over Time")
+
+    tab1, tab2 = st.tabs(["📈 Cumulative Growth", "📊 Daily Signups"])
+
+    with tab1:
+        st.line_chart(df, x="date", y="cumulative_users", use_container_width=True)
+
+    with tab2:
+        st.bar_chart(df, x="date", y="count", use_container_width=True)
 
 st.divider()
 

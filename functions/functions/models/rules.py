@@ -128,12 +128,12 @@ class ChangeFieldAction(BaseModel):
                 new_field_value = field_value + self.value
             case "prepend":
                 new_field_value = self.value + field_value
-            case "cut-before":
+            case "cut-after":
                 if self.value in field_value:
                     new_field_value = field_value[: field_value.index(self.value)]
                 else:
                     new_field_value = field_value
-            case "cut-after":
+            case "cut-before":
                 if self.value in field_value:
                     new_field_value = field_value[
                         field_value.index(self.value) + len(self.value) :

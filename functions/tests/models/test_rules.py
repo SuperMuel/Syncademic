@@ -802,7 +802,7 @@ def test_change_field_action_apply():
     assert new_event.location == event.location
 
 
-def test_change_field_action_rstrip_from():
+def test_change_field_action_cut_after():
     event = Event(
         title="Séminaire de rentrée - EFALYO 3 Gpe C",
         description="Calcul formel",
@@ -814,7 +814,7 @@ def test_change_field_action_rstrip_from():
     action = ChangeFieldAction(
         action="change_field",
         field="title",
-        method="cut-before",
+        method="cut-after",
         value=" - EFALYO",
     )
 
@@ -836,9 +836,9 @@ def test_change_field_action_rstrip_from():
     assert new_event2.title == "Pure title"
 
 
-def test_change_field_action_lstrip_from():
+def test_change_field_action_cut_before():
     event = Event(
-        title="EFALYO 3 Gpe C - Séminaire de rentrée",
+        title="Séminaire de rentrée - EFALYO 3 Gpe C",
         description="Calcul formel",
         location="Room 101",
         start=start,
@@ -848,14 +848,14 @@ def test_change_field_action_lstrip_from():
     action = ChangeFieldAction(
         action="change_field",
         field="title",
-        method="cut-after",
-        value="EFALYO 3 Gpe C - ",
+        method="cut-before",
+        value="EFALYO",
     )
 
     new_event = action.apply(event)
 
     assert new_event is not None
-    assert new_event.title == "Séminaire de rentrée"
+    assert new_event.title == " 3 Gpe C"
 
     # Test when value is not found
     event2 = Event(

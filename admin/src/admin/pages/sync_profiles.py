@@ -480,4 +480,4 @@ if profile := _get_selected_profile():
         # Show events after rules if ruleset exists
         if profile.ruleset:
             st.subheader("Events After Rules")
-            display_events_dataframe(after_events, profile.ruleset)
+            display_events_dataframe(after_events)

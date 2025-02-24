@@ -45,16 +45,12 @@ def apply_rules(events: list[Event], ruleset: Ruleset | None = None) -> list[Eve
     return after
 
 
-def display_events_dataframe(
-    events: list[Event], ruleset: Ruleset | None = None
-) -> None:
-    """Display events in a Streamlit dataframe, optionally applying a ruleset
+def display_events_dataframe(events: list[Event]) -> None:
+    """Display events in a Streamlit dataframe
 
     Args:
         events: List of events to display
-        ruleset: Optional ruleset to apply to events before display
     """
-    events = apply_rules(events, ruleset)
 
     # Convert events to display format
     display_data = [event_to_display_data(event) for event in events]

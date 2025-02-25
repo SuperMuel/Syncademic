@@ -1,6 +1,7 @@
 # Syncademic.io
 
 [![codecov](https://codecov.io/github/SuperMuel/Syncademic/graph/badge.svg?token=7DXVVYQUVF)](https://codecov.io/github/SuperMuel/Syncademic)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/supermuel/syncademic)
 
 Introducing [Syncademic.io](https://syncademic.io) — the AI-enhanced solution for synchronizing your university schedule with Google Calendar. Enjoy a clutter-free, colorful calendar that updates automatically.
 

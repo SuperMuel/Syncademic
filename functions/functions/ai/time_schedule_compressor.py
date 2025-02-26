@@ -105,11 +105,11 @@ class TimeScheduleCompressor:
 
             # Append event titles
             output_lines.append("Events:")
-            N = len(cluster_events) if i == -1 else show_n_events_per_cluster
-            for event in cluster_events[:N]:
+            n = len(cluster_events) if i == -1 else show_n_events_per_cluster
+            for event in cluster_events[:n]:
                 output_lines.append(f"- {event.title}")
-            if len(cluster_events) > N:
-                output_lines.append(f"  ... and {len(cluster_events) - N} more events")
+            if len(cluster_events) > n:
+                output_lines.append(f"  ... and {len(cluster_events) - n} more events")
 
             # Longest description in the cluster
             longest_description_event = max(

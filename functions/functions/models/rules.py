@@ -82,7 +82,7 @@ class CompoundCondition(BaseModel):
 
     @model_validator(mode="after")
     def validate_nesting_depth(self) -> Self:
-        def check_depth(condition, current_depth=1):
+        def check_depth(condition: ConditionType, current_depth: int = 1) -> None:
             if isinstance(condition, CompoundCondition):
                 if current_depth > settings.MAX_NESTING_DEPTH:
                     raise ValueError("Maximum nesting depth exceeded.")

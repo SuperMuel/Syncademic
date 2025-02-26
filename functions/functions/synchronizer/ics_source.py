@@ -3,12 +3,11 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import requests
-import validators
 from firebase_functions import logger
 from pydantic import BaseModel, HttpUrl
 
 from functions.settings import settings
-from functions.services.exceptions.ics import BaseIcsError, IcsSourceError
+from functions.services.exceptions.ics import IcsSourceError
 
 
 class IcsSource(BaseModel, ABC):
@@ -99,7 +98,7 @@ class UrlIcsSource(IcsSource):
                     content_length = int(content_length)
                     if content_length > max_content_size_b:
                         logger.info(
-                            f"Content-Length is too large ({content_length/1_048_576:.2f}MB > {max_content_size_b/1_048_576:.2f}MB) ({response.headers=})"
+                            f"Content-Length is too large ({content_length / 1_048_576:.2f}MB > {max_content_size_b / 1_048_576:.2f}MB) ({response.headers=})"
                         )
                         raise IcsSourceError("ICS file is too large.")
 

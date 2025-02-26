@@ -84,13 +84,13 @@ class IcsService:
         except Exception as e:
             logger.error(f"Failed to save ICS file to storage: {e}")
 
-    def try_fetch_and_parse(
+    def try_fetch_and_parse_with_ics_str(
         self,
         ics_source: IcsSource,
         *,
         save_to_storage: bool = True,
         metadata: dict | None = None,
-    ) -> list[Event] | IcsSourceError | IcsParsingError:
+    ) -> tuple[list[Event] | IcsSourceError | IcsParsingError, str | None]:
         """
         Tries to fetch the ICS file and parse it. Optionally saves the ICS file to storage for debugging purposes.
 
@@ -109,7 +109,7 @@ class IcsService:
             ics_str = ics_source.get_ics_string()
         except IcsSourceError as e:
             logger.error(f"Failed to fetch ICS file from source: {e}")
-            return e
+            return e, None
 
         events_or_error = self.ics_parser.try_parse(ics_str)
 
@@ -120,6 +120,20 @@ class IcsService:
             metadata=metadata,
         )
 
+        return events_or_error, ics_str
+
+    def try_fetch_and_parse(
+        self,
+        ics_source: IcsSource,
+        *,
+        save_to_storage: bool = True,
+        metadata: dict | None = None,
+    ) -> list[Event] | IcsSourceError | IcsParsingError:
+        events_or_error, _ = self.try_fetch_and_parse_with_ics_str(
+            ics_source,
+            save_to_storage=save_to_storage,
+            metadata=metadata,
+        )
         return events_or_error
 
     def validate_ics_url(

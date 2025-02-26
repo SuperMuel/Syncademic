@@ -296,3 +296,35 @@ def test_update_last_successful_sync(mock_db):
         .get()
     )
     assert doc.to_dict()["lastSuccessfulSync"] is not None
+
+
+def test_delete_sync_profile(mock_db):
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = "user123"
+    sync_profile_id = "syncProf_ABC"
+
+    # Create initial profile doc
+    mock_db.collection("users").document(user_id).collection("syncProfiles").document(
+        sync_profile_id
+    ).set(sync_profile1.model_dump())
+
+    # Verify profile exists before deletion
+    profile_before = repo.get_sync_profile(user_id, sync_profile_id)
+    assert profile_before is not None
+
+    # Delete the profile
+    repo.delete_sync_profile(user_id, sync_profile_id)
+
+    # Verify profile no longer exists
+    profile_after = repo.get_sync_profile(user_id, sync_profile_id)
+    assert profile_after is None
+
+    # Verify directly in mock DB that document is gone
+    doc = (
+        mock_db.collection("users")
+        .document(user_id)
+        .collection("syncProfiles")
+        .document(sync_profile_id)
+        .get()
+    )
+    assert not doc.exists

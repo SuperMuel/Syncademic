@@ -65,7 +65,7 @@ class AiRulesetService:
             they are logged and stored in the sync profile repository rather than raised.
         """
 
-        events_or_error = self.ics_service.try_fetch_and_parse(
+        events_or_error, ics_str = self.ics_service.try_fetch_and_parse_with_ics_str(
             ics_source=sync_profile.scheduleSource.to_ics_source(),
             save_to_storage=True,
             metadata={
@@ -82,27 +82,18 @@ class AiRulesetService:
             )
 
         events = events_or_error
+        assert ics_str is not None
 
         try:
-            # Compress schedule
-            compressor = (
-                TimeScheduleCompressor()
-            )  # TODO : maybe this should be a part of the RuleSetBuilder
-            compressed_schedule = compressor.compress(events)
-
-            logger.info(
-                f"Compressed schedule to {len(compressed_schedule)=} "
-                f"({len(compressed_schedule) / len(events) * 100:.2f}% of original)"
-            )
-
             # Generate ruleset
             output = self.ruleset_builder.generate_ruleset(
-                compressed_schedule,
+                events,
                 metadata={
                     "ics_url": sync_profile.scheduleSource.url,
                     "user_id": sync_profile.user_id,
                     "sync_profile_id": sync_profile.id,
                 },
+                original_ics_size_chars=len(ics_str),
             )
         except Exception as e:
             logger.error(f"Failed to generate ruleset: {e}")

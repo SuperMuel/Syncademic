@@ -2,6 +2,7 @@
 
 import pytest
 from datetime import date
+from unittest.mock import patch
 
 from mockfirestore import MockFirestore
 
@@ -95,3 +96,60 @@ def test_increment_sync_count_existing_document(mock_db):
         .get()
     )
     assert doc.to_dict()["syncCount"] == 6
+
+
+def test_get_daily_sync_count_with_none_date(mock_db):
+    """Test that get_daily_sync_count uses today's date when day=None."""
+    repo = FirestoreSyncStatsRepository(db=mock_db)
+    user_id = "user123"
+    today = date(2025, 1, 1)
+
+    with patch("functions.repositories.sync_stats_repository.date") as mock_date:
+        mock_date.today.return_value = today
+
+        # Set up data for today
+        doc_id = today.isoformat()
+        (
+            mock_db.collection("users")
+            .document(user_id)
+            .collection("syncStats")
+            .document(doc_id)
+            .set({"syncCount": 3})
+        )
+
+        count = repo.get_daily_sync_count(user_id, day=None)
+        assert count == 3
+        mock_date.today.assert_called_once()
+
+
+def test_increment_sync_count_with_none_date(mock_db):
+    """Test that increment_sync_count uses today's date when day=None."""
+    repo = FirestoreSyncStatsRepository(db=mock_db)
+    user_id = "user123"
+    today = date(2025, 1, 1)
+
+    with patch("functions.repositories.sync_stats_repository.date") as mock_date:
+        mock_date.today.return_value = today
+
+        # First set up initial data
+        doc_id = today.isoformat()
+        (
+            mock_db.collection("users")
+            .document(user_id)
+            .collection("syncStats")
+            .document(doc_id)
+            .set({"syncCount": 5})
+        )
+
+        repo.increment_sync_count(user_id, day=None)
+
+        # Verify the increment happened for today's document
+        doc = (
+            mock_db.collection("users")
+            .document(user_id)
+            .collection("syncStats")
+            .document(doc_id)
+            .get()
+        )
+        assert doc.to_dict()["syncCount"] == 6
+        mock_date.today.assert_called_once()

@@ -1,4 +1,5 @@
 from functions import settings
+from functions.ai.time_schedule_compressor import TimeScheduleCompressor
 from functions.ai.types import RulesetOutput
 import uuid
 from langchain.chat_models.base import BaseChatModel
@@ -12,8 +13,11 @@ from langchain_core.messages import (
     ToolMessage,
 )
 
+from functions.shared.event import Event
+
 from .prompts import EXAMPLE_COMPRESSION_1, EXAMPLE_OUTPUT_1, SYSTEM_PROMPT
 from functions.settings import settings
+from firebase_functions import logger
 
 
 def format_structured_output_examples(
@@ -55,13 +59,17 @@ def format_structured_output_examples(
 
 
 class RulesetBuilder:
-    llm: BaseChatModel
-
-    def __init__(self, llm: BaseChatModel | str = settings.RULES_BUILDER_LLM):
+    def __init__(
+        self,
+        llm: BaseChatModel | str = settings.RULES_BUILDER_LLM,
+        compressor: TimeScheduleCompressor = TimeScheduleCompressor(),
+    ):
         if isinstance(llm, str):
             self.llm = init_chat_model(llm)
         else:
             self.llm = llm
+
+        self.compressor = compressor
 
     def create_chain(self) -> Runnable[dict, RulesetOutput]:
         llm = self.llm.with_structured_output(RulesetOutput)
@@ -85,15 +93,36 @@ class RulesetBuilder:
 
         return messages
 
+    def _compress_events(
+        self, events: list[Event], original_ics_size_chars: int | None = None
+    ) -> str:
+        """Compress the events into a smaller string.
+
+        If the original ICS size is provided, we can use it to compute a compression ratio.
+        """
+        logger.info(f"Compressing {len(events)} events")
+
+        compressed_schedule = self.compressor.compress(events)
+
+        if original_ics_size_chars is not None:
+            compression_ratio = (
+                original_ics_size_chars - len(compressed_schedule)
+            ) / original_ics_size_chars
+            logger.info(f"Compression ratio: {compression_ratio:.2f}")
+
+        return compressed_schedule
+
     def generate_ruleset(
         self,
-        compressed_schedule: str,
+        events: list[Event],
         *,
         metadata: dict | None = None,
+        original_ics_size_chars: int | None = None,
     ) -> RulesetOutput:
         chain = self.create_chain()
 
         examples = self.generate_examples()
+        compressed_schedule = self._compress_events(events, original_ics_size_chars)
 
         result = chain.invoke(
             {

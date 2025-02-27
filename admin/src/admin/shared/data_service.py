@@ -79,6 +79,11 @@ class AdminDataService:
         self.get_all_sync_profiles.clear()
         self.get_all_authorizations.clear()
 
+    def get_sync_profile(self, sync_profile_id: str) -> SyncProfile | None:
+        """Get a sync profile by ID."""
+        all_sync_profiles = self.get_all_sync_profiles()
+        return next((p for p in all_sync_profiles if p.id == sync_profile_id), None)
+
 
 # Create a singleton instance
 data_service = AdminDataService()

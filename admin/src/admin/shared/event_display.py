@@ -107,6 +107,9 @@ def display_events_calendar(
     Returns:
         Whatever the streamlit-calendar widget returns
     """
+    if not events:
+        st.warning("No events to display")
+        return None
 
     calendar_events = [
         {
@@ -137,9 +140,10 @@ def display_events_calendar(
             "center": "title",
             "end": "timeGridWeek,dayGridMonth",
         },
+        "firstDay": 1,
+        # "initialDate": To set if today's date falls outside of the time schedule range
     }
 
-    # You can optionally provide some custom CSS (optional).
     # custom_css = """
     #     .fc-event-title {
     #         font-weight: bold;

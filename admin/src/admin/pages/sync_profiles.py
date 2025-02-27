@@ -1,5 +1,4 @@
 from functions.ai.ruleset_builder import RulesetBuilder
-from streamlit_calendar import calendar
 import streamlit as st
 
 from functions.models.sync_profile import (
@@ -22,7 +21,6 @@ from functions.repositories.sync_stats_repository import (
 from functions.services.authorization_service import (
     AuthorizationService,
 )
-from functions.services.exceptions.ics import IcsParsingError, IcsSourceError
 from functions.services.ics_service import (
     IcsService,
 )

@@ -1,3 +1,6 @@
+# Syncademic's Admin Panel
+
+
 ## Setting up Google Cloud Credentials for Local Development
 
 To run the admin panel locally, you need to provide Google Cloud credentials so that the application can access Firebase services (Firestore, Storage, and Authentication). We use a service account for this.

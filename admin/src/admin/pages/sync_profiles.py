@@ -366,6 +366,36 @@ def fetch_events(
     )
 
 
+@st.dialog(title="Synchronize")
+def _synchronize_dialog(profile: SyncProfile) -> None:
+    sync_type = st.segmented_control(
+        "Type",
+        options=list(SyncType),
+        format_func=lambda x: x.value,
+        default=SyncType.REGULAR,
+    )
+    assert sync_type
+
+    force = st.checkbox("Force", value=False)
+
+    if st.button("🚀 Synchronize", use_container_width=True, type="primary"):
+        try:
+            with st.spinner("Synchronizing..."):
+                sync_profile_service.synchronize(
+                    user_id=profile.user_id,
+                    sync_profile_id=profile.id,
+                    sync_trigger=SyncTrigger.MANUAL,
+                    sync_type=sync_type,
+                    force=force,
+                )
+        except Exception as e:
+            st.error(f"Failed to synchronize: {str(e)}", icon="❌")
+            st.exception(e)
+
+        data_service.clear_all_caches()
+        st.rerun()
+
+
 # Display selected profile details
 if profile := _get_selected_profile():
     st.header("Selected Profile Details")
@@ -404,21 +434,8 @@ if profile := _get_selected_profile():
 
     with col1:
         if st.button("🔄 Retry Sync", use_container_width=True):
-            with st.spinner("Retrying sync..."):
-                try:
-                    sync_profile_service.synchronize(
-                        user_id=profile.user_id,
-                        sync_profile_id=profile.id,
-                        sync_trigger=SyncTrigger.MANUAL,
-                        sync_type=SyncType.REGULAR,
-                        force=True,
-                    )
-                    st.success("Sync triggered successfully!")
-                except Exception as e:
-                    st.error(f"Failed to trigger sync: {str(e)}")
+            _synchronize_dialog(profile)
 
-            data_service.clear_all_caches()
-            st.rerun()
     with col2:
         if st.button("🔍 Check Calendar", use_container_width=True):
             _check_calendar(profile.user_id, profile)

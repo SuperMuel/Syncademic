@@ -13,6 +13,7 @@ class Event:
     description: str = ""
     location: str = ""
     color: GoogleEventColor | None = None
+    is_all_day: bool = False
 
     def __post_init__(self):
         if self.start is None or self.end is None:

@@ -70,6 +70,27 @@ def test_event_to_google_event_with_color():
     }
 
 
+def test_all_day_event_to_google_event():
+    # Arrange
+    service = Mock()
+    calendar_id = "test_calendar_id"
+    manager = GoogleCalendarManager(service=service, calendar_id=calendar_id)
+
+    event = Event(
+        start=arrow.get("2023-01-01T00:00:00+00:00"),
+        end=arrow.get("2023-01-02T00:00:00+00:00"),
+        title="All Day Event",
+        is_all_day=True,
+    )
+
+    # Act
+    google_event = manager._event_to_google_event(event, {})
+
+    # Assert
+    assert google_event["start"] == {"date": "2023-01-01"}
+    assert google_event["end"] == {"date": "2023-01-02"}
+
+
 def test_get_syncademic_marker():
     # Arrange
     service = Mock()
@@ -145,9 +166,9 @@ def test_create_events_in_batches():
         Event(
             start=arrow.get(f"2023-01-{(i % 31) + 1:02d}T09:00:00+00:00"),
             end=arrow.get(f"2023-01-{(i % 31) + 1:02d}T10:00:00+00:00"),
-            title=f"Event {i+1}",
-            description=f"Description {i+1}",
-            location=f"Location {i+1}",
+            title=f"Event {i + 1}",
+            description=f"Description {i + 1}",
+            location=f"Location {i + 1}",
         )
         for i in range(n_events)
     ]

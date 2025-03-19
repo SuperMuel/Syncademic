@@ -244,3 +244,26 @@ END:VEVENT"""
 def test_empty_ics_string(ics_parser: IcsParser):
     error = ics_parser.try_parse("")
     assert isinstance(error, IcsParsingError)
+
+
+def test_all_day_event(ics_parser: IcsParser):
+    """Test parsing an all-day event with VALUE=DATE format."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
+DTSTAMP:20250318T060707Z
+UID:MockUID
+DTSTART;VALUE=DATE:20250609
+DTEND;VALUE=DATE:20250610
+SUMMARY;LANGUAGE=fr:This is an All day event
+END:VEVENT"""
+    )
+    events = ics_parser.try_parse(ics_str)
+
+    assert isinstance(events, list)
+    assert len(events) == 1
+
+    event = events[0]
+    assert event.title == "This is an All day event"
+    assert event.start.format("YYYY-MM-DD") == "2025-06-09"
+    assert event.end.format("YYYY-MM-DD") == "2025-06-10"
+    assert event.is_all_day

@@ -46,15 +46,22 @@ class GoogleCalendarManager:
     def _event_to_google_event(
         event: Event, extended_properties: ExtendedProperties
     ) -> dict:
-        # Format the start and end times to RFC 3339
-        start_time_rfc3339 = event.start.format("YYYY-MM-DDTHH:mm:ssZZ")
-        end_time_rfc3339 = event.end.format("YYYY-MM-DDTHH:mm:ssZZ")
+        if event.is_all_day:
+            start = {"date": event.start.strftime("%Y-%m-%d")}
+            end = {"date": event.end.strftime("%Y-%m-%d")}
+        else:
+            # Format the start and end times to RFC 3339
+            start_time_rfc3339 = event.start.format("YYYY-MM-DDTHH:mm:ssZZ")
+            end_time_rfc3339 = event.end.format("YYYY-MM-DDTHH:mm:ssZZ")
+
+            start = {"dateTime": start_time_rfc3339}
+            end = {"dateTime": end_time_rfc3339}
 
         body = {
             "summary": event.title,
             "description": event.description,
-            "start": {"dateTime": start_time_rfc3339},
-            "end": {"dateTime": end_time_rfc3339},
+            "start": start,
+            "end": end,
             "location": event.location,
             "extendedProperties": extended_properties,
         }

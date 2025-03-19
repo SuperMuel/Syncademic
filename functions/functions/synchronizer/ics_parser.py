@@ -101,6 +101,7 @@ class IcsParser:
                         start=event.begin,
                         end=event.end,
                         location=event.location or "",
+                        is_all_day=event.all_day,
                     )
                 )
             except Exception as e:

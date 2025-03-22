@@ -101,7 +101,7 @@ def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
 T = TypeVar("T", bound=BaseModel)
 
 
-def validate_request(input_model: type[T]):
+def validate_request(input_model: type[T]):  # noqa: ANN201
     """
     Decorator to validate and deserialize the input for an HTTPS callable function using a specified Pydantic model.
 

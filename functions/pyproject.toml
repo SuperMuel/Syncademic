@@ -54,10 +54,6 @@ select = [
     "SIM2", # Simplify boolean expressions
 
     "T20", # Find uses of 'print' or 'pprint'
-
-    "D101", # Missing docstring in public class
-    "D102", # Missing docstring in public method
-    "D103", # Missing docstring in public function
 ]
 
 [tool.ruff.lint.per-file-ignores]

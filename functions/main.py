@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
-from firebase_admin import initialize_app, storage
+from firebase_admin import initialize_app, storage, auth
 from firebase_functions import https_fn, logger, options, scheduler_fn
 from firebase_functions.firestore_fn import (
     Event,
@@ -50,6 +50,7 @@ from functions.settings import settings
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
+from functions.services.dev_notification_service import create_dev_notification_service
 
 
 initialize_app()
@@ -63,11 +64,15 @@ authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
 ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
 ics_service = IcsService(ics_storage=ics_file_storage)
+
+dev_notification_service = create_dev_notification_service()
+
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
     ics_service=ics_service,
+    dev_notification_service=dev_notification_service,
 )
 
 ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
@@ -96,7 +101,7 @@ def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
 T = TypeVar("T", bound=BaseModel)
 
 
-def validate_request(input_model: type[T]):
+def validate_request(input_model: type[T]):  # noqa: ANN201
     """
     Decorator to validate and deserialize the input for an HTTPS callable function using a specified Pydantic model.
 
@@ -239,6 +244,11 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     data["user_id"] = user_id
     sync_profile = SyncProfile.model_validate(data)
 
+    # Notify developers about the new sync profile
+    dev_notification_service.on_new_sync_profile(
+        user_id=user_id, sync_profile_id=sync_profile_id, title=sync_profile.title
+    )
+
     ai_ruleset_service.create_ruleset_for_sync_profile(
         sync_profile,
     )
@@ -332,3 +342,41 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         raise error_mapping.to_http_error(e)
 
     return {"success": True}
+
+
+@on_document_created(
+    document="users/{userId}",
+    memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+)  # type: ignore
+def on_user_created(event: Event[DocumentSnapshot]) -> None:
+    user_id = event.params["userId"]
+    logger.info(f"New user created: {user_id}")
+
+    # Get user data from the document
+    user_data = event.data.to_dict() or {}
+
+    # Get additional user info from Firebase Auth if possible
+    additional_data = {}
+    try:
+        firebase_user = auth.get_user(user_id)
+
+        # Add key user information to the notification
+        additional_data = {
+            "email": firebase_user.email or user_data.get("email", "Not provided"),
+            "display_name": firebase_user.display_name or "Not provided",
+            "email_verified": "Yes" if firebase_user.email_verified else "No",
+            "provider": firebase_user.provider_data[0].provider_id
+            if firebase_user.provider_data
+            else "Unknown",
+        }
+    except Exception as e:
+        # If we can't get Firebase Auth user, just use document data
+        logger.warn(f"Could not get Firebase Auth user: {str(e)}")
+        if "email" in user_data:
+            additional_data["email"] = user_data["email"]
+
+    # Notify developers about the new user with all available information
+    dev_notification_service.on_new_user(
+        user_id=user_id, additional_data=additional_data
+    )

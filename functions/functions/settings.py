@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     )
     MAX_CLOUD_FUNCTIONS_INSTANCES: int = Field(default=10)
 
+    # Telegram notification settings
+    TELEGRAM_BOT_TOKEN: SecretStr | None = Field(default=None)
+    TELEGRAM_CHAT_ID: str | None = Field(default=None)
+    TELEGRAM_MAX_TRACEBACK_LENGTH: int = Field(default=1000)
+
 
 settings = Settings()
 

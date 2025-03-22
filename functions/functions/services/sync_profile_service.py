@@ -23,7 +23,10 @@ from functions.services.ics_service import IcsService
 from functions.settings import settings
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
-from functions.services.dev_notification_service import IDevNotificationService
+from functions.services.dev_notification_service import (
+    IDevNotificationService,
+    NoOpDevNotificationService,
+)
 
 
 class SyncProfileService:
@@ -39,13 +42,15 @@ class SyncProfileService:
         sync_stats_repo: ISyncStatsRepository,
         authorization_service: AuthorizationService,
         ics_service: IcsService,
-        dev_notification_service: IDevNotificationService,
+        dev_notification_service: IDevNotificationService | None = None,
     ) -> None:
         self._sync_profile_repo = sync_profile_repo
         self._sync_stats_repo = sync_stats_repo
         self._authorization_service = authorization_service
         self._ics_service = ics_service
-        self.dev_notification_service = dev_notification_service
+        self.dev_notification_service = (
+            dev_notification_service or NoOpDevNotificationService()
+        )
 
     @staticmethod
     def _can_sync(status_type: SyncProfileStatusType) -> bool:

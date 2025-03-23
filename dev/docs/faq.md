@@ -6,7 +6,7 @@
 
 *   **Readability:** Many university systems generate .ics events with cryptic titles (e.g., "IF:5:S1::TCS1:CM..."). Syncademic uses AI to transform these into clear, understandable titles. While some universities *might* provide cleaner feeds, this isn't universally true, and Syncademic provides a consistent solution.
 *   **Color-Coding:**  .ics files themselves don't natively support per-event colors. While you can color-code an *entire* subscribed calendar in Google Calendar, you *cannot* easily color-code individual events or event types *within* that feed. Syncademic allows for fine-grained color customization, making it easier to distinguish different courses or event types at a glance.
-*   **Filtering Irrelevant Events:** University schedules often include events that aren't relevant to every student (e.g., optional sessions, different course groups).  Syncademic's AI can identify and remove these irrelevant events, creating a cleaner, more personalized calendar.  Ideally, universities would provide customized feeds, but in practice, they often don't.
+*   **Filtering Irrelevant Events:** University schedules often include events that aren't relevant to every student (e.g., optional sessions, different course groups).  Syncademic's AI can identify and remove these irrelevant events, creating a cleaner, more personalized calendar.
 
 ---
 
@@ -24,7 +24,7 @@ The AI (specifically, modern LLMs) provides the flexibility to:
 
 **Q: The setup process seems complicated. Is it really user-friendly?**
 
-**A:** The *technical stack* behind Syncademic is complex, but the *user experience* is designed to be simple. The setup is a one-time (or annual) process:
+**A:** The *technical stack* behind Syncademic is rather complex, but the *user experience* is designed to be simple. The setup is a one-time (or annual) process:
 
 1.  **Sign in with Google:**  Leverages familiar Google Sign-In for easy authentication.
 2.  **Create a Sync Profile:**  Provide a title, the .ics URL (which users likely already have if they're using Google Calendar with their university schedule), and a name for the target calendar.
@@ -57,7 +57,7 @@ The app guides users through these steps. The underlying complexity is handled b
 *   **Single Source of Truth:** You likely can't add *personal* events to your school's app. Google Calendar integrates *all* your commitments (academic, personal, professional) for easier scheduling and a complete view of your availability.
 *   **Home Screen Widgets:** Google Calendar offers convenient widgets for quick access to your schedule, a feature often missing in school apps.
 * **Cross-Platform Sync:** Google Calendar syncs across all your devices, while school or third-party apps often don't.
-
+* **Modern User Experience:** Google Calendar provides a more modern, visually attractive, and accessible interface that works consistently across all platforms, unlike many outdated institutional solutions."
 
 ---
 

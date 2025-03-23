@@ -320,7 +320,9 @@ def edit_ruleset_dialog(profile: SyncProfile) -> None:
     )
 
     # Default to current ruleset if it exists
-    default_json = profile.ruleset.model_dump_json() if profile.ruleset else "{}"
+    default_json = (
+        profile.ruleset.model_dump_json(indent=4) if profile.ruleset else "{}"
+    )
     ruleset_json = st.text_area("Ruleset JSON", value=default_json, height=300)
 
     if st.button("Update Ruleset", use_container_width=True):

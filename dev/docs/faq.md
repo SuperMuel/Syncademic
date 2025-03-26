@@ -57,7 +57,7 @@ The app guides users through these steps. The underlying complexity is handled b
 *   **Single Source of Truth:** You likely can't add *personal* events to your school's app. Google Calendar integrates *all* your commitments (academic, personal, professional) for easier scheduling and a complete view of your availability.
 *   **Home Screen Widgets:** Google Calendar offers convenient widgets for quick access to your schedule, a feature often missing in school apps.
 * **Cross-Platform Sync:** Google Calendar syncs across all your devices, while school or third-party apps often don't.
-* **Modern User Experience:** Google Calendar provides a more modern, visually attractive, and accessible interface that works consistently across all platforms, unlike many outdated institutional solutions."
+* **Modern User Experience:** Google Calendar provides a more modern, visually attractive, and accessible interface that works consistently across all platforms, unlike many outdated institutional solutions.
 
 ---
 
@@ -65,7 +65,7 @@ The app guides users through these steps. The underlying complexity is handled b
 
 **A:** No, Syncademic is a web application and does not have a mobile app yet. 
 
-Since it's only a one-time setup, it's not necessary to have a mobile app. 
+Since it's only a one-time/annually setup, it's not necessary to have a mobile app. 
 However, you can still add a shortcut to the Syncademic web app on your home screen which will allow you to quickly access the app and mobile-optimized view.
 
 

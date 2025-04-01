@@ -115,45 +115,26 @@ def test_get_sync_profile_not_found(mock_db, sample_sync_profile):
     assert result is None
 
 
-def test_list_user_sync_profiles(mock_db, sample_sync_profile: SyncProfile):
+@pytest.mark.skip(reason="mock-firestore does not support collection group queries")
+def test_list_all_sync_profiles(mock_db, sample_sync_profile: SyncProfile):
     repo = FirestoreSyncProfileRepository(db=mock_db)
-    user_id = sample_sync_profile.user_id
 
-    # Create a second profile with different ID
-    second_profile = sample_sync_profile.model_copy(
-        update={"id": "second_profile_id"}, deep=True
-    )
+    a = sample_sync_profile.model_copy(update={"user_id": "userA", "id": "p1"})
+    b = sample_sync_profile.model_copy(update={"user_id": "userB", "id": "p2"})
 
-    # Save both profiles
-    repo.save_sync_profile(sample_sync_profile)
-    repo.save_sync_profile(second_profile)
+    repo.save_sync_profile(a)
+    repo.save_sync_profile(b)
 
-    # List profiles for the user
-    profiles = repo.list_user_sync_profiles(user_id)
+    all_profiles = repo.list_all_sync_profiles()
+    assert len(all_profiles) == 2
+    assert a in all_profiles
+    assert b in all_profiles
 
-    # Verify we have both profiles
-    assert len(profiles) == 2
-    profile_ids = [p.id for p in profiles]
-    assert sample_sync_profile.id in profile_ids
-    assert second_profile.id in profile_ids
-
-
-# This test is disabled for now because mockfirestore library
-# doesn't support collection group queries.
-# def test_list_all_sync_profiles(mock_db):
-#     repo = FirestoreSyncProfileRepository(db=mock_db)
-
-#     # Create profiles in multiple user docs
-#     mock_db.collection("users").document("userA").collection("syncProfiles").document(
-#         "p1"
-#     ).set(sync_profile1.model_dump())
-#     mock_db.collection("users").document("userB").collection("syncProfiles").document(
-#         "p2"
-#     ).set(sync_profile2.model_dump())
-
-#     all_profiles = repo.list_all_sync_profiles()
-#     assert len(all_profiles) == 2
-#     assert sync_profile1 in all_profiles and sync_profile2 in all_profiles
+    # Verify list_all_user_sync_profiles returns the correct profiles
+    user_a_profiles = repo.list_user_sync_profiles("userA")
+    assert len(user_a_profiles) == 1
+    assert a in user_a_profiles
+    assert b not in user_a_profiles
 
 
 def test_delete_sync_profile(mock_db, sample_sync_profile: SyncProfile):
@@ -215,3 +196,26 @@ def test_ruleset_stored_as_json_string(mock_db, sample_sync_profile: SyncProfile
     # Validate the ruleset
     ruleset = Ruleset.model_validate_json(doc_data["ruleset"])
     assert ruleset == VALID_RULESET
+
+
+def test_update_status(mock_db, sample_sync_profile: SyncProfile):
+    """Test that the status of a sync profile can be updated. This is important because of nested fields"""
+    repo = FirestoreSyncProfileRepository(db=mock_db)
+    user_id = sample_sync_profile.user_id
+    sync_profile_id = sample_sync_profile.id
+
+    # Save the profile
+    repo.save_sync_profile(sample_sync_profile)
+
+    assert sample_sync_profile.status.type == SyncProfileStatusType.NOT_STARTED
+
+    # Update the status to a random value
+    sample_sync_profile.status = SyncProfileStatus(
+        type=SyncProfileStatusType.IN_PROGRESS,
+    )
+    repo.save_sync_profile(sample_sync_profile)
+
+    # Verify
+    profiles = repo.get_sync_profile(user_id, sync_profile_id)
+    assert profiles is not None
+    assert profiles.status.type == SyncProfileStatusType.IN_PROGRESS

@@ -28,7 +28,14 @@ dependencies = [
 [dependency-groups]
 dev = [
     "freezegun>=1.5.1",
+
+    # Important note regarding mock-firestore:
+    # We're using the official mock-firestore package (0.11.0) which doesn't support collection group queries.
+    # The fork at https://github.com/ainbr/python-mock-firestore does support collection group queries,
+    # but has issues with nested field operations in `set()` methods.
+    # Tests requiring collection group queries are currently skipped.
     "mock-firestore>=0.11.0",
+
     "pytest>=8.3.3",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
@@ -69,3 +76,6 @@ reportMissingTypeStubs = true
 reportUnusedImport = true
 reportUnusedVariable = true
 useLibraryCodeForTypes = true
+
+# [tool.uv.sources]
+# mock-firestore = { git = "https://github.com/ainbr/python-mock-firestore" }

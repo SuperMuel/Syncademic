@@ -75,11 +75,11 @@ class AiRulesetService:
         )
 
         if isinstance(events_or_error, Exception):
-            return self.sync_profile_repo.update_ruleset_error(
-                user_id=sync_profile.user_id,
-                sync_profile_id=sync_profile.id,
-                error_str=f"Failed to fetch and parse ICS: {str(events_or_error)}",
+            sync_profile.update_ruleset(
+                error=f"Failed to fetch and parse ICS: {str(events_or_error)}"
             )
+            self.sync_profile_repo.save_sync_profile(sync_profile)
+            return
 
         events = events_or_error
         assert ics_str is not None
@@ -97,17 +97,14 @@ class AiRulesetService:
             )
         except Exception as e:
             logger.error(f"Failed to generate ruleset: {e}")
-            self.sync_profile_repo.update_ruleset_error(
-                user_id=sync_profile.user_id,
-                sync_profile_id=sync_profile.id,
-                error_str=f"Failed to generate ruleset: {type(e).__name__}: {str(e)}",
+            sync_profile.update_ruleset(
+                error=f"Failed to generate ruleset: {type(e).__name__}: {str(e)}"
             )
+            self.sync_profile_repo.save_sync_profile(sync_profile)
             return
 
         logger.info(f"Generated ruleset: {str(output.ruleset)[:100]}...")
+
         # Store ruleset
-        self.sync_profile_repo.update_ruleset(
-            user_id=sync_profile.user_id,
-            sync_profile_id=sync_profile.id,
-            ruleset=output.ruleset,
-        )
+        sync_profile.update_ruleset(ruleset=output.ruleset)
+        self.sync_profile_repo.save_sync_profile(sync_profile)

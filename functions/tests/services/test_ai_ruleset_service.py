@@ -107,7 +107,7 @@ class TestAiRulesetService:
     ) -> None:
         """Test successful creation and storage of a ruleset."""
         # Arrange
-        mock_sync_profile_repo.store_sync_profile(sample_sync_profile)
+        mock_sync_profile_repo.save_sync_profile(sample_sync_profile)
         mock_ics_service.try_fetch_and_parse_with_ics_str.return_value = (
             sample_events,
             "ics_str",
@@ -140,7 +140,7 @@ class TestAiRulesetService:
             error,
             None,
         )
-        mock_sync_profile_repo.store_sync_profile(sample_sync_profile)
+        mock_sync_profile_repo.save_sync_profile(sample_sync_profile)
 
         # Act
         service.create_ruleset_for_sync_profile(sample_sync_profile)
@@ -176,7 +176,7 @@ class TestAiRulesetService:
         mock_ruleset_builder.generate_ruleset.side_effect = Exception(
             "Failed to generate ruleset"
         )
-        mock_sync_profile_repo.store_sync_profile(sample_sync_profile)
+        mock_sync_profile_repo.save_sync_profile(sample_sync_profile)
         # Act
         service.create_ruleset_for_sync_profile(sample_sync_profile)
 

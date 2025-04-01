@@ -142,7 +142,7 @@ def test_on_create_success(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.NOT_STARTED,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     # Provide a mock manager
     manager = MockGoogleCalendarManager()
@@ -196,7 +196,7 @@ def test_regular_sync_only_future(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     manager.create_events(
@@ -252,7 +252,7 @@ def test_full_sync_deletes_all(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     manager.create_events(
@@ -315,7 +315,7 @@ def test_ruleset_applied(
     user_id = "user123"
     prof_id = "profileABC"
     profile = _make_sync_profile(ruleset=ruleset)
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
@@ -358,7 +358,7 @@ def test_fails_on_ics_fetch_error(
     ics_service_mock.try_fetch_and_parse.return_value = IcsSourceError("Couldn't fetch")
 
     profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
@@ -398,7 +398,7 @@ def test_fails_on_ics_parse_error(
 
     # Store initial profile
     profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     # Setup mock calendar manager
     manager = MockGoogleCalendarManager()
@@ -446,7 +446,7 @@ def test_fails_on_daily_limit(
         sync_stats_repo.increment_sync_count(user_id)
 
     profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
@@ -491,7 +491,7 @@ def test_successful_deletion(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     # Mock calendar manager with existing events
     manager = MockGoogleCalendarManager()
@@ -521,7 +521,7 @@ def test_deletion_skipped_for_invalid_status(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.IN_PROGRESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     sync_profile_service.delete_sync_profile(user_id, prof_id)
 
@@ -545,7 +545,7 @@ def test_deletion_failed_authorization(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     # Simulate authorization failure
     auth_service_mock.get_authenticated_google_calendar_manager.side_effect = Exception(
@@ -571,7 +571,7 @@ def test_deletion_failed_event_cleanup(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.SUCCESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     # Mock manager that throws on delete
     manager = MockGoogleCalendarManager()
@@ -615,7 +615,7 @@ def test_force_sync_bypasses_status_check(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.IN_PROGRESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
@@ -667,7 +667,7 @@ def test_force_sync_bypasses_daily_limit(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.IN_PROGRESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
@@ -726,7 +726,7 @@ def test_force_sync_follows_normal_flow_on_error(
         sync_profile_id=prof_id,
         status_type=SyncProfileStatusType.IN_PROGRESS,
     )
-    sync_profile_repo.store_sync_profile(profile)
+    sync_profile_repo.save_sync_profile(profile)
 
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager

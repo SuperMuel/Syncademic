@@ -260,15 +260,13 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
 
     assert data, "Sync Profile Document was just created : it should not be empty"
 
-    # Add created_at field
-    sync_profile_repo.update_created_at(
-        user_id=user_id, sync_profile_id=sync_profile_id
-    )
-
     # Validate document using Pydantic
     data["id"] = sync_profile_id
     data["user_id"] = user_id
     sync_profile = SyncProfile.model_validate(data)
+
+    # Populate `created_at` and other default fields
+    sync_profile_repo.save_sync_profile(sync_profile)
 
     # Notify developers about the new sync profile
     dev_notification_service.on_new_sync_profile(

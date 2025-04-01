@@ -1,17 +1,13 @@
 import logging
-from datetime import datetime, timezone
-from typing import Dict, Protocol
+from typing import Protocol
 
 from firebase_admin.firestore import firestore
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.collection import CollectionReference
 from google.cloud.firestore_v1.document import DocumentReference
-from pydantic import ValidationError
 
-from functions.models.rules import Ruleset
 from functions.models.sync_profile import (
     SyncProfile,
-    SyncProfileStatus,
     SyncProfileStatusType,
 )
 
@@ -51,50 +47,17 @@ class ISyncProfileRepository(Protocol):
         """
         ...
 
-    def update_sync_profile_status(
-        self,
-        *,
-        user_id: str,
-        sync_profile_id: str,
-        status: SyncProfileStatus,
-    ) -> None:
+    def save_sync_profile(self, profile: SyncProfile) -> None:
         """
-        Replaces the status field of the SyncProfile document with the provided status.
+        Saves (creates or updates) a SyncProfile by overwriting.
         """
+        ...
 
     def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
         """
         Deletes a SyncProfile document.
         """
 
-        ...
-
-    def update_created_at(
-        self, user_id: str, sync_profile_id: str, created_at: datetime | None = None
-    ) -> None:
-        """
-        Updates the created_at field with the provided datetime or server timestamp if None.
-        """
-        ...
-
-    def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
-        """
-        Updates the lastSuccessfulSync field with the server timestamp.
-        """
-        ...
-
-    def update_ruleset_error(
-        self, user_id: str, sync_profile_id: str, error_str: str | None = None
-    ) -> None:
-        """Updates the ruleset_error field with the provided error message, or clears it if None."""
-        ...
-
-    def update_ruleset(
-        self, user_id: str, sync_profile_id: str, ruleset: Ruleset
-    ) -> None:
-        """
-        Updates the ruleset field of a sync profile and clears any previous error.
-        """
         ...
 
 
@@ -110,6 +73,15 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         """
         self._db = db or firestore.Client()
 
+    def _get_doc_ref(self, user_id: str, sync_profile_id: str) -> DocumentReference:
+        """Helper to get the document reference."""
+        return (
+            self._db.collection("users")
+            .document(user_id)
+            .collection("syncProfiles")
+            .document(sync_profile_id)
+        )
+
     def get_sync_profile(
         self, user_id: str, sync_profile_id: str
     ) -> SyncProfile | None:
@@ -119,12 +91,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         """
         logger.info(f"Getting sync profile {sync_profile_id} for user {user_id}")
 
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
+        doc_ref: DocumentReference = self._get_doc_ref(user_id, sync_profile_id)
 
         data = doc_ref.get().to_dict()
 
@@ -135,6 +102,16 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         data["user_id"] = user_id
 
         return SyncProfile.model_validate(data)
+
+    def save_sync_profile(self, profile: SyncProfile) -> None:
+        """Saves (creates or updates) a SyncProfile by overwriting."""
+        logger.info(f"Saving SyncProfile {profile.id} for user {profile.user_id}")
+        doc_ref = self._get_doc_ref(profile.user_id, profile.id)
+
+        data_to_save = profile.model_dump()
+
+        doc_ref.set(data_to_save)
+        logger.info(f"Saved SyncProfile {profile.id}")
 
     def list_user_sync_profiles(self, user_id: str) -> list[SyncProfile]:
         """
@@ -205,29 +182,6 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
 
         return profiles
 
-    def update_sync_profile_status(
-        self,
-        *,
-        user_id: str,
-        sync_profile_id: str,
-        status: SyncProfileStatus,
-    ) -> None:
-        """
-        Replaces the status field of the SyncProfile document with the provided status.
-        """
-
-        logger.info(
-            f"Updating sync profile {sync_profile_id} for user {user_id} to status {status.model_dump()}"
-        )
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
-
-        doc_ref.update({"status": status.model_dump()})
-
     def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
         """
         Deletes a SyncProfile document.
@@ -237,77 +191,8 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         """
         logger.info(f"Deleting sync profile {sync_profile_id} for user {user_id}")
 
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
-
+        doc_ref: DocumentReference = self._get_doc_ref(user_id, sync_profile_id)
         doc_ref.delete()
-
-    def update_created_at(
-        self, user_id: str, sync_profile_id: str, created_at: datetime | None = None
-    ) -> None:
-        logger.info(
-            f"Updating created_at for sync profile {sync_profile_id} for user {user_id}"
-        )
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
-        doc_ref.update({"created_at": created_at or firestore.SERVER_TIMESTAMP})
-
-    def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
-        logger.info(
-            f"Updating lastSuccessfulSync for sync profile {sync_profile_id} for user {user_id}"
-        )
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
-        doc_ref.update({"lastSuccessfulSync": firestore.SERVER_TIMESTAMP})
-
-    def update_ruleset_error(
-        self,
-        user_id: str,
-        sync_profile_id: str,
-        error_str: str | None = None,
-    ) -> None:
-        """Updates the ruleset_error field with the provided error message, or clears it if None."""
-        logger.info(
-            f"Updating ruleset_error for sync profile {sync_profile_id} for user {user_id} with error {error_str}"
-        )
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
-        doc_ref.update({"ruleset_error": error_str})
-
-    def update_ruleset(
-        self, user_id: str, sync_profile_id: str, ruleset: Ruleset
-    ) -> None:
-        """
-        Updates the ruleset field of a sync profile and clears any previous error.
-        """
-        logger.info(
-            f"Updating ruleset for sync profile {sync_profile_id} for user {user_id}"
-        )
-        doc_ref: DocumentReference = (
-            self._db.collection("users")
-            .document(user_id)
-            .collection("syncProfiles")
-            .document(sync_profile_id)
-        )
-
-        # We store the ruleset as a JSON string in Firestore.
-        doc_ref.update({"ruleset": ruleset.model_dump_json(), "ruleset_error": None})
 
 
 class MockSyncProfileRepository(ISyncProfileRepository):
@@ -328,6 +213,10 @@ class MockSyncProfileRepository(ISyncProfileRepository):
     ) -> SyncProfile | None:
         user_profiles = self._storage.get(user_id, {})
         return user_profiles.get(sync_profile_id, None)
+
+    def save_sync_profile(self, profile: SyncProfile) -> None:
+        user_profiles = self._storage.setdefault(profile.user_id, {})
+        user_profiles[profile.id] = profile
 
     def list_user_sync_profiles(self, user_id: str) -> list[SyncProfile]:
         # Return all SyncProfiles for a single user, or an empty list if not found.
@@ -351,101 +240,6 @@ class MockSyncProfileRepository(ISyncProfileRepository):
                     active_profiles.append(profile)
         return active_profiles
 
-    def update_sync_profile_status(
-        self,
-        *,
-        user_id: str,
-        sync_profile_id: str,
-        status: SyncProfileStatus,
-    ) -> None:
-        # Update the status of an existing profile. No-op if not found.
-        if user_id not in self._storage:
-            return
-        if sync_profile_id not in self._storage[user_id]:
-            return
-
-        existing_profile = self._storage[user_id][sync_profile_id]
-        # Replace existing status
-        updated_profile = existing_profile.model_copy(update={"status": status})
-        self._storage[user_id][sync_profile_id] = updated_profile
-
     def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
         if user_id in self._storage and sync_profile_id in self._storage[user_id]:
             del self._storage[user_id][sync_profile_id]
-
-    def update_created_at(
-        self, user_id: str, sync_profile_id: str, created_at: datetime | None = None
-    ) -> None:
-        # No-op if profile doesn't exist.
-        if user_id not in self._storage:
-            return
-        if sync_profile_id not in self._storage[user_id]:
-            return
-
-        existing_profile = self._storage[user_id][sync_profile_id]
-        updated_profile = existing_profile.model_copy(
-            update={
-                "created_at": created_at or datetime.now(timezone.utc),
-            }
-        )
-        self._storage[user_id][sync_profile_id] = updated_profile
-
-    def update_last_successful_sync(self, user_id: str, sync_profile_id: str) -> None:
-        # Same as above, but for lastSuccessfulSync.
-        if user_id not in self._storage:
-            return
-        if sync_profile_id not in self._storage[user_id]:
-            return
-
-        existing_profile = self._storage[user_id][sync_profile_id]
-        updated_profile = existing_profile.model_copy(
-            update={
-                "lastSuccessfulSync": datetime.now(timezone.utc),
-            }
-        )
-        self._storage[user_id][sync_profile_id] = updated_profile
-
-    def update_ruleset_error(
-        self, user_id: str, sync_profile_id: str, error_str: str | None = None
-    ) -> None:
-        # Set the ruleset_error field
-        if user_id not in self._storage:
-            return
-        if sync_profile_id not in self._storage[user_id]:
-            return
-
-        existing_profile = self._storage[user_id][sync_profile_id]
-        updated_profile = existing_profile.model_copy(
-            update={
-                "ruleset_error": error_str,
-            }
-        )
-        self._storage[user_id][sync_profile_id] = updated_profile
-
-    def update_ruleset(
-        self, user_id: str, sync_profile_id: str, ruleset: Ruleset
-    ) -> None:
-        # Update the ruleset field in memory.
-        if user_id not in self._storage:
-            return
-        if sync_profile_id not in self._storage[user_id]:
-            return
-
-        existing_profile = self._storage[user_id][sync_profile_id]
-        updated_profile = existing_profile.model_copy(
-            update={
-                "ruleset": ruleset,
-                "ruleset_error": None,  # clear any previous error
-            }
-        )
-        self._storage[user_id][sync_profile_id] = updated_profile
-
-    # Optional: a helper to create or store a profile (like "create_sync_profile")
-    # to facilitate tests that require a pre-existing profile in the repository.
-    def store_sync_profile(self, profile: SyncProfile) -> None:
-        """
-        A convenience method (not in the Protocol) to manually store or overwrite
-        a SyncProfile in memory. Useful for tests that need a pre-existing profile.
-        """
-        user_profiles = self._storage.setdefault(profile.user_id, {})
-        user_profiles[profile.id] = profile

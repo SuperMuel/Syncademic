@@ -110,18 +110,14 @@ class SyncProfileService:
 
         profile = self._get_profile_or_raise(user_id, sync_profile_id)
 
-        def _update_status(
+        def _new_status(
             status_type: SyncProfileStatusType, error_message: str | None = None
-        ) -> None:
-            self._sync_profile_repo.update_sync_profile_status(
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
-                status=SyncProfileStatus(
-                    type=status_type,
-                    syncTrigger=sync_trigger,
-                    syncType=sync_type,
-                    message=error_message,
-                ),
+        ) -> SyncProfileStatus:
+            return SyncProfileStatus(
+                type=status_type,
+                syncTrigger=sync_trigger,
+                syncType=sync_type,
+                message=error_message,
             )
 
         if force:
@@ -133,16 +129,16 @@ class SyncProfileService:
                 return
 
         # Mark as IN_PROGRESS
-        _update_status(
-            SyncProfileStatusType.IN_PROGRESS
-        )  # TODO : this should be an atomic operation
+        profile.status = _new_status(SyncProfileStatusType.IN_PROGRESS)
+        self._sync_profile_repo.save_sync_profile(profile)
 
         # Enforce daily limit only if not force sync
         if not force:
             try:
                 self._enforce_daily_sync_limit(user_id)
             except DailySyncLimitExceededError as e:
-                _update_status(SyncProfileStatusType.FAILED, str(e))
+                profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
+                self._sync_profile_repo.save_sync_profile(profile)
                 return
 
         try:
@@ -155,7 +151,8 @@ class SyncProfileService:
             )
         except Exception as e:
             logger.error(f"Failed to get calendar service: {e}")
-            _update_status(SyncProfileStatusType.FAILED, str(e))
+            profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
+            self._sync_profile_repo.save_sync_profile(profile)
             return
 
         # Actually do the synchronization steps
@@ -171,7 +168,8 @@ class SyncProfileService:
             logger.info("Synchronization successful")
         except Exception as e:
             logger.error(f"Failed to sync: {e}")
-            _update_status(SyncProfileStatusType.FAILED, str(e))
+            profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
+            self._sync_profile_repo.save_sync_profile(profile)
 
             # Notify developers about the failure
             self.dev_notification_service.on_sync_failed(
@@ -184,8 +182,10 @@ class SyncProfileService:
             return
 
         # On success
-        _update_status(SyncProfileStatusType.SUCCESS)
-        self._sync_profile_repo.update_last_successful_sync(user_id, sync_profile_id)
+        profile.status = _new_status(SyncProfileStatusType.SUCCESS)
+        profile.lastSuccessfulSync = datetime.now(timezone.utc)
+
+        self._sync_profile_repo.save_sync_profile(profile)
         self._sync_stats_repo.increment_sync_count(user_id)
 
         logger.info("Synchronization successful")
@@ -346,20 +346,12 @@ class SyncProfileService:
         """
         profile = self._get_profile_or_raise(user_id, sync_profile_id)
 
-        def _update_status(
-            status_type: SyncProfileStatusType, message: str | None = None
-        ) -> None:
-            self._sync_profile_repo.update_sync_profile_status(
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
-                status=SyncProfileStatus(type=status_type, message=message),
-            )
-
         if not self._can_delete(profile.status.type):
             logger.info(f"Profile is {profile.status.type}, skipping deletion")
             return
 
-        _update_status(SyncProfileStatusType.DELETING)
+        profile.status = SyncProfileStatus(type=SyncProfileStatusType.DELETING)
+        self._sync_profile_repo.save_sync_profile(profile)
 
         try:
             calendar_manager = (
@@ -371,9 +363,11 @@ class SyncProfileService:
             )
         except Exception as e:
             logger.error(f"Authorization failed: {e}")
-            _update_status(
-                SyncProfileStatusType.DELETION_FAILED, f"Authorization failed."
+            profile.status = SyncProfileStatus(
+                type=SyncProfileStatusType.DELETION_FAILED,
+                message=f"Authorization failed.",
             )
+            self._sync_profile_repo.save_sync_profile(profile)
             return
 
         try:
@@ -390,7 +384,8 @@ class SyncProfileService:
 
         except Exception as e:
             logger.error(f"Unexpected error during event deletion: {e}")
-            _update_status(
-                SyncProfileStatusType.DELETION_FAILED,
-                f"Could not delete events from calendar.",
+            profile.status = SyncProfileStatus(
+                type=SyncProfileStatusType.DELETION_FAILED,
+                message=f"Could not delete events from calendar.",
             )
+            self._sync_profile_repo.save_sync_profile(profile)

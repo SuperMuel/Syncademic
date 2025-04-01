@@ -1,17 +1,13 @@
 import logging
-from datetime import datetime, timezone
-from typing import Dict, Protocol
+from typing import Protocol
 
 from firebase_admin.firestore import firestore
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.collection import CollectionReference
 from google.cloud.firestore_v1.document import DocumentReference
-from pydantic import ValidationError
 
-from functions.models.rules import Ruleset
 from functions.models.sync_profile import (
     SyncProfile,
-    SyncProfileStatus,
     SyncProfileStatusType,
 )
 
@@ -56,17 +52,6 @@ class ISyncProfileRepository(Protocol):
         Saves (creates or updates) a SyncProfile by overwriting.
         """
         ...
-
-    # def update_sync_profile_status(
-    #     self,
-    #     *,
-    #     user_id: str,
-    #     sync_profile_id: str,
-    #     status: SyncProfileStatus,
-    # ) -> None:
-    #     """
-    #     Replaces the status field of the SyncProfile document with the provided status.
-    #     """
 
     def delete_sync_profile(self, user_id: str, sync_profile_id: str) -> None:
         """

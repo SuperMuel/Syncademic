@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from enum import Enum
 from json import loads
-from typing import Any
+from typing import Any, Self
 
 from pydantic import (
     BaseModel,
@@ -12,6 +12,7 @@ from pydantic import (
     PastDatetime,
     field_serializer,
     field_validator,
+    model_validator,
 )
 
 from functions.models.rules import Ruleset
@@ -192,3 +193,19 @@ class SyncProfile(BaseModel):
     @classmethod
     def _decode_ruleset_from_json_str(cls, value: Any) -> Any:
         return _decode_ruleset_from_str(value)
+
+    @model_validator(mode="after")
+    def validate_ruleset_and_error(self) -> Self:
+        if self.ruleset is not None and self.ruleset_error is not None:
+            raise ValueError("ruleset and ruleset_error cannot both be set")
+        return self
+
+    def update_ruleset(
+        self, *, ruleset: Ruleset | None = None, error: str | None = None
+    ) -> None:
+        if ruleset and error:
+            raise ValueError(
+                "When updating the ruleset, either provide a new ruleset or an error, but not both."
+            )
+        self.ruleset = ruleset
+        self.ruleset_error = error

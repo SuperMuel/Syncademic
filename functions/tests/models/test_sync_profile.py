@@ -145,3 +145,132 @@ def test_sync_profile_ruleset_serde_from_and_to_string():
     deserialised_profile = SyncProfile(**profile_dict)
     assert deserialised_profile.ruleset == VALID_RULESET
     assert deserialised_profile.ruleset == profile.ruleset
+
+
+def test_sync_profile_update_ruleset_with_new_ruleset():
+    """
+    Tests updating a SyncProfile's ruleset with a new ruleset instance.
+    """
+    profile = SyncProfile(
+        id=SYNC_PROFILE_ID,
+        user_id=USER_ID,
+        title="My New Profile",
+        scheduleSource=VALID_SCHEDULE_SOURCE,
+        targetCalendar=VALID_TARGET_CALENDAR,
+        status=VALID_SYNC_PROFILE_STATUS,
+        ruleset_error="Previous error",
+    )
+
+    # Initially has an error, no ruleset
+    assert profile.ruleset is None
+    assert profile.ruleset_error == "Previous error"
+
+    # Update with a new ruleset
+    profile.update_ruleset(ruleset=VALID_RULESET)
+
+    # Should have ruleset and no error
+    assert profile.ruleset == VALID_RULESET
+    assert profile.ruleset_error is None
+
+
+def test_sync_profile_update_ruleset_with_error():
+    """
+    Tests updating a SyncProfile's ruleset with an error message.
+    """
+    profile = SyncProfile(
+        id=SYNC_PROFILE_ID,
+        user_id=USER_ID,
+        title="My New Profile",
+        scheduleSource=VALID_SCHEDULE_SOURCE,
+        targetCalendar=VALID_TARGET_CALENDAR,
+        status=VALID_SYNC_PROFILE_STATUS,
+        ruleset=VALID_RULESET,
+    )
+
+    # Initially has a ruleset, no error
+    assert profile.ruleset == VALID_RULESET
+    assert profile.ruleset_error is None
+
+    # Update with an error
+    profile.update_ruleset(error="Failed to process ruleset")
+
+    # Should have error and no ruleset
+    assert profile.ruleset is None
+    assert profile.ruleset_error == "Failed to process ruleset"
+
+
+def test_sync_profile_update_ruleset_validation_error():
+    """
+    Tests that providing both ruleset and error to update_ruleset raises ValueError.
+    """
+    profile = SyncProfile(
+        id=SYNC_PROFILE_ID,
+        user_id=USER_ID,
+        title="My New Profile",
+        scheduleSource=VALID_SCHEDULE_SOURCE,
+        targetCalendar=VALID_TARGET_CALENDAR,
+        status=VALID_SYNC_PROFILE_STATUS,
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        profile.update_ruleset(ruleset=VALID_RULESET, error="This should fail")
+
+    # Check error message is as expected
+    assert "either provide a new ruleset or an error, but not both" in str(
+        exc_info.value
+    )
+
+
+def test_sync_profile_validate_ruleset_and_error():
+    """
+    Tests the model validator that prevents both ruleset and ruleset_error from being set.
+    """
+    with pytest.raises(ValueError) as exc_info:
+        SyncProfile(
+            id=SYNC_PROFILE_ID,
+            user_id=USER_ID,
+            title="My New Profile",
+            scheduleSource=VALID_SCHEDULE_SOURCE,
+            targetCalendar=VALID_TARGET_CALENDAR,
+            status=VALID_SYNC_PROFILE_STATUS,
+            ruleset=VALID_RULESET,
+            ruleset_error="This should fail",
+        )
+
+    # Check error message is as expected
+    assert "ruleset and ruleset_error cannot both be set" in str(exc_info.value)
+
+
+def test_sync_profile_model_validate_default_created_at():
+    """
+    Tests that SyncProfile.model_validate() sets a default created_at when not provided.
+    """
+    from datetime import datetime, timezone
+
+    # Create data without created_at
+    data = {
+        "id": SYNC_PROFILE_ID,
+        "user_id": USER_ID,
+        "title": "My New Profile",
+        "scheduleSource": VALID_SCHEDULE_SOURCE.model_dump(),
+        "targetCalendar": VALID_TARGET_CALENDAR.model_dump(),
+        "status": VALID_SYNC_PROFILE_STATUS.model_dump(),
+    }
+
+    # Get current time for comparison
+    before_validation = datetime.now(timezone.utc)
+
+    # Validate the model
+    profile = SyncProfile.model_validate(data)
+
+    # Get time after validation
+    after_validation = datetime.now(timezone.utc)
+
+    # Check that created_at was set automatically
+    assert profile.created_at is not None
+
+    # Check that created_at is a UTC datetime
+    assert profile.created_at.tzinfo == timezone.utc
+
+    # Check that created_at is between before and after validation times
+    assert before_validation <= profile.created_at <= after_validation

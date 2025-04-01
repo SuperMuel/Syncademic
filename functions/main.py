@@ -319,11 +319,10 @@ def request_sync(user_id: str, request: RequestSyncInput) -> Any:
         raise error_mapping.to_http_error(e)
 
 
-# Every day at 2:00 AM and 6:00 AM UTC
 @scheduler_fn.on_schedule(
-    schedule="0 2,6 * * *",
+    schedule=settings.SCHEDULED_SYNC_CRON_SCHEDULE,
     memory=options.MemoryOption.MB_512,
-    timeout_sec=3600,
+    timeout_sec=settings.SCHEDULED_SYNC_TIMEOUT_SEC,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )
 def scheduled_sync(event: Any) -> None:

@@ -49,6 +49,16 @@ class Settings(BaseSettings):
     )
     MAX_CLOUD_FUNCTIONS_INSTANCES: int = Field(default=10)
 
+    # Scheduled sync configuration
+    SCHEDULED_SYNC_CRON_SCHEDULE: str = Field(
+        default="0 5 * * *",  # Every day at 5:00 AM UTC
+        description="Cron schedule for automatic synchronization",
+    )
+    SCHEDULED_SYNC_TIMEOUT_SEC: int = Field(
+        default=3600,
+        description="Timeout in seconds before scheduled synchronization of all profiles is cancelled",
+    )
+
     # Telegram notification settings
     TELEGRAM_BOT_TOKEN: SecretStr | None = Field(default=None)
     TELEGRAM_CHAT_ID: str | None = Field(default=None)

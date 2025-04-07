@@ -253,7 +253,6 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
 
     logger.info(
         f"Sync profile created.",
-        event=event.data,
         user_id=user_id,
         sync_profile_id=sync_profile_id,
     )

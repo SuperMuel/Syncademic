@@ -219,7 +219,7 @@ def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
     logger.info(
         f"Creating new calendar.",
         user_id=user_id,
-        request=request.model_dump(),
+        request=request.model_dump_json(),
     )
     try:
         result = google_calendar_service.create_new_calendar(
@@ -385,7 +385,8 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
     logger.info(
         f"Authorizing backend.",
         user_id=user_id,
-        redirect_uri=request.redirectUri,
+        request=request.model_dump_json(),
+        redirect_uri=str(request.redirectUri),
         provider_account_id=request.providerAccountId,
     )
     try:
@@ -399,7 +400,7 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         logger.error(
             f"Failed to authorize backend.",
             user_id=user_id,
-            redirect_uri=request.redirectUri,
+            redirect_uri=str(request.redirectUri),
             provider_account_id=request.providerAccountId,
             error_type=type(e).__name__,
         )

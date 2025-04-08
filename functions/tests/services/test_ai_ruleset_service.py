@@ -3,7 +3,6 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 from arrow import Arrow
-from firebase_functions import logger
 from pydantic import HttpUrl
 from pytest_mock import MockFixture
 

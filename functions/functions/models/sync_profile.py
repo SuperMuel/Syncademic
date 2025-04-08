@@ -89,6 +89,11 @@ class ScheduleSource(BaseModel):
 
     url: HttpUrl = Field(..., description="Publicly accessible URL to the ICS file")
 
+    @field_serializer("url")
+    def _serialize_url(self, url: HttpUrl) -> str:
+        """Convert HttpUrl to string for Firestore compatibility"""
+        return str(url)
+
     def to_ics_source(self) -> IcsSource:
         """
         Converts the schedule source definition to an actual IcsSource object.

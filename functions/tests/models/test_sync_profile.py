@@ -274,3 +274,15 @@ def test_sync_profile_model_validate_default_created_at():
 
     # Check that created_at is between before and after validation times
     assert before_validation <= profile.created_at <= after_validation
+
+
+def test_schedule_source_url_is_serialised_as_string():
+    """
+    Tests that ScheduleSource.url is serialised as a string, for Firestore compatibility.
+    """
+    schedule_source = ScheduleSource(url=HttpUrl("https://example.com/test.ics"))
+
+    data = schedule_source.model_dump()
+
+    assert isinstance(data["url"], str)
+    assert data["url"] == "https://example.com/test.ics"

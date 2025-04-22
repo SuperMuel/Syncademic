@@ -331,10 +331,8 @@ def edit_ruleset_dialog(profile: SyncProfile) -> None:
             new_ruleset = Ruleset.model_validate_json(ruleset_json)
 
             # Update the ruleset in the database
-            sync_profile_repo.update_ruleset(profile.user_id, profile.id, new_ruleset)
-
-            # Clear any previous ruleset error
-            sync_profile_repo.update_ruleset_error(profile.user_id, profile.id, None)
+            profile.update_ruleset(ruleset=new_ruleset)
+            sync_profile_repo.save_sync_profile(profile)
 
             st.success("Ruleset updated successfully!", icon="✅")
             data_service.clear_all_caches()
@@ -366,6 +364,46 @@ def fetch_events(
         ics_source=source.to_ics_source(),
         save_to_storage=False,
     )
+
+
+@st.dialog(title="Retry Sync")
+def retry_sync_dialog(profile: SyncProfile) -> None:
+    """Dialog to select sync type and trigger a sync."""
+    st.write("Choose the type of synchronization to perform:")
+
+    def _format_sync_type(x: SyncType) -> str:
+        match x:
+            case SyncType.REGULAR:
+                return "Regular (only future events)"
+            case SyncType.FULL:
+                return "Full (all events)"
+
+    sync_type = st.segmented_control(
+        "Sync Type",
+        options=[SyncType.REGULAR, SyncType.FULL],
+        default=SyncType.REGULAR,
+        format_func=_format_sync_type,
+        help="Regular sync only updates future events, while full sync refreshes all events.",
+    )
+
+    if not sync_type:
+        st.error("Please select a sync type", icon="❌")
+    elif st.button("Start Sync", use_container_width=True, type="primary"):
+        with st.spinner("Syncing..."):
+            try:
+                sync_profile_service.synchronize(
+                    user_id=profile.user_id,
+                    sync_profile_id=profile.id,
+                    sync_trigger=SyncTrigger.MANUAL,
+                    sync_type=sync_type,
+                    force=True,
+                )
+                st.success("Sync triggered successfully!")
+            except Exception as e:
+                st.error(f"Failed to trigger sync: {str(e)}")
+
+        data_service.clear_all_caches()
+        st.rerun()
 
 
 # Display selected profile details
@@ -406,21 +444,8 @@ if profile := _get_selected_profile():
 
     with col1:
         if st.button("🔄 Retry Sync", use_container_width=True):
-            with st.spinner("Retrying sync..."):
-                try:
-                    sync_profile_service.synchronize(
-                        user_id=profile.user_id,
-                        sync_profile_id=profile.id,
-                        sync_trigger=SyncTrigger.MANUAL,
-                        sync_type=SyncType.REGULAR,
-                        force=True,
-                    )
-                    st.success("Sync triggered successfully!")
-                except Exception as e:
-                    st.error(f"Failed to trigger sync: {str(e)}")
+            retry_sync_dialog(profile)
 
-            data_service.clear_all_caches()
-            st.rerun()
     with col2:
         if st.button("🔍 Check Calendar", use_container_width=True):
             _check_calendar(profile.user_id, profile)
@@ -459,7 +484,10 @@ if profile := _get_selected_profile():
     else:
         before_events = events_or_error
 
-        if should_apply_rules := st.checkbox("Apply Rules"):
+        if should_apply_rules := st.checkbox(
+            "Apply Rules",
+            value=profile.ruleset is not None,
+        ):
             after_events = apply_rules(before_events, profile.ruleset)
         else:
             after_events = before_events

@@ -253,3 +253,12 @@ def test_different_source_types_inequality():
     assert url_source != file_source
     assert url_source != string_source
     assert file_source != string_source
+
+
+def test_webcal_to_http_url_conversion():
+    webcal_url = "webcal://example.com/calendar.ics?version=2.0&type=personal"
+    converted = UrlIcsSource.from_str(webcal_url)
+    assert (
+        str(converted.url)
+        == "http://example.com/calendar.ics?version=2.0&type=personal"
+    )

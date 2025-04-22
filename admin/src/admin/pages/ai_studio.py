@@ -1,6 +1,7 @@
 import streamlit as st
 from pydantic import HttpUrl
 import json
+from typing import cast
 
 # --- Admin imports ---
 from admin.shared.data_service import data_service
@@ -13,10 +14,12 @@ from admin.shared.event_display import (
 # --- Functions/Services imports ---
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
+from functions.ai.types import RulesetOutput
 from functions.models.rules import Ruleset
 from functions.models.sync_profile import SyncProfile
 from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.ics_service import IcsService
+from functions.shared.event import Event
 from functions.synchronizer.ics_source import IcsSource, StringIcsSource, UrlIcsSource
 
 # Initialize services
@@ -39,6 +42,12 @@ if "events_before" not in st.session_state:
     st.session_state.events_before = None
 if "events_after" not in st.session_state:
     st.session_state.events_after = None
+if "generated_ruleset" not in st.session_state:
+    st.session_state.generated_ruleset = None
+if "generating_ruleset" not in st.session_state:
+    st.session_state.generating_ruleset = False
+if "brainstorming" not in st.session_state:
+    st.session_state.brainstorming = None
 
 
 @st.cache_data()
@@ -58,6 +67,27 @@ def _fetch_and_parse_ics(source: IcsSource):
         ics_source=source,
         save_to_storage=False,
     )
+
+
+def generate_ai_ruleset(events: list[Event]) -> Ruleset | None:
+    """Generates a ruleset using the RulesetBuilder for the provided events."""
+    st.session_state.generating_ruleset = True
+
+    try:
+        ruleset_output: RulesetOutput = ruleset_builder.generate_ruleset(
+            events=events,
+            metadata={"source": "ai_studio"},
+        )
+
+        st.session_state.ruleset = ruleset_output.ruleset
+        st.session_state.generated_ruleset = ruleset_output
+        st.session_state.brainstorming = ruleset_output.brainstorming
+        return ruleset_output.ruleset
+    except Exception as e:
+        st.error(f"Error generating ruleset: {e}")
+        return None
+    finally:
+        st.session_state.generating_ruleset = False
 
 
 # ICS INPUT
@@ -83,7 +113,7 @@ with st.sidebar:
         ics_url = st.text_input("ICS URL")
         st.session_state["ics_url"] = ics_url
         try:
-            source = UrlIcsSource(url=HttpUrl(ics_url))
+            source = UrlIcsSource.from_str(ics_url)
         except Exception as e:
             st.error(f"Invalid URL: {e}")
             st.stop()
@@ -146,14 +176,40 @@ with st.sidebar:
         # Custom ruleset input
         custom_ruleset_json = st.text_area(
             "Ruleset JSON",
+            value=st.session_state.ruleset.model_dump_json()
+            if st.session_state.ruleset
+            else "",
         )
         if custom_ruleset_json:
             try:
                 ruleset = Ruleset.model_validate_json(custom_ruleset_json)
+                st.session_state.ruleset = ruleset
             except Exception as e:
                 st.error(f"Error parsing ruleset: {e}")
                 st.stop()
 
+    # Add a divider before the AI generation section
+    st.divider()
+
+    # AI Ruleset Generation Section
+    st.subheader("AI Ruleset Generation")
+
+    if st.button(
+        "Generate Ruleset with AI", disabled=st.session_state.generating_ruleset
+    ):
+        with st.spinner("Generating ruleset..."):
+            # Cast events_before to list[Event] since we already checked it's not an Exception
+            events_list = cast(list[Event], events_before)
+            generated_ruleset = generate_ai_ruleset(events_list)
+            if generated_ruleset:
+                ruleset = generated_ruleset
+                st.success("Ruleset generated successfully!")
+            st.rerun()
+
+    # Show brainstorming if a ruleset was generated
+    if st.session_state.brainstorming:
+        with st.expander("AI Brainstorming", expanded=False):
+            st.markdown(st.session_state.brainstorming)
 
 # Create tabs for different views
 tab_titles = ["Raw ICS", "Compressed View", "Raw Events"]

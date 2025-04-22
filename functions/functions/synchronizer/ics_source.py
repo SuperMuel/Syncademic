@@ -46,9 +46,13 @@ class UrlIcsSource(IcsSource):
 
     Example:
         ```python
-        from pydantic import HttpUrl
+        # Create from string URL, automatically converting webcal to http
+        source = UrlIcsSource.from_str("webcal://example.com/calendar.ics")
 
+        # Or create directly with an HttpUrl
+        from pydantic import HttpUrl
         source = UrlIcsSource(url=HttpUrl("https://example.com/calendar.ics"))
+
         try:
             ics_data = source.get_ics_string()
         except IcsSourceError as e:
@@ -57,6 +61,21 @@ class UrlIcsSource(IcsSource):
     """
 
     url: HttpUrl
+
+    @classmethod
+    def from_str(cls, url_str: str) -> "UrlIcsSource":
+        """
+        Create a UrlIcsSource from a string URL, converting webcal:// to http:// if needed.
+
+        Args:
+            url_str: The URL string, which may use webcal:// or http(s)://
+
+        Returns:
+            UrlIcsSource: A new instance with the processed URL
+        """
+        if url_str.startswith("webcal://"):
+            url_str = "http://" + url_str[9:]
+        return cls(url=HttpUrl(url_str))
 
     def get_ics_string(
         self,

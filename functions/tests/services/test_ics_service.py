@@ -6,7 +6,7 @@ from pydantic import HttpUrl
 
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.services.exceptions.ics import IcsParsingError, IcsSourceError
-from functions.services.ics_service import IcsService
+from functions.services.ics_service import IcsService, IcsFetchAndParseResult
 from functions.shared.event import Event
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
@@ -67,7 +67,9 @@ class TestTryFetchAndParse:
         result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
 
         # Assert
-        assert result == expected_events
+        assert isinstance(result, IcsFetchAndParseResult)
+        assert result.events == expected_events
+        assert result.raw_ics == ics_content
         mock_ics_source.get_ics_string.assert_called_once()
         mock_ics_parser.try_parse.assert_called_once_with(ics_content)
         mock_ics_storage.save_to_cache.assert_called_once_with(
@@ -139,7 +141,9 @@ class TestTryFetchAndParse:
         result = service.try_fetch_and_parse(mock_ics_source, save_to_storage=False)
 
         # Assert
-        assert result == expected_events
+        assert isinstance(result, IcsFetchAndParseResult)
+        assert result.events == expected_events
+        assert result.raw_ics == ics_content
         mock_ics_storage.save_to_cache.assert_not_called()
 
     def test_storage_error_handled(
@@ -160,7 +164,9 @@ class TestTryFetchAndParse:
         result = service.try_fetch_and_parse(mock_ics_source)
 
         # Assert
-        assert result == expected_events  # Operation succeeds despite storage error
+        assert isinstance(result, IcsFetchAndParseResult)
+        assert result.events == expected_events
+        assert result.raw_ics == ics_content
         mock_ics_storage.save_to_cache.assert_called_once()
 
     def test_no_storage_configured(self, mock_ics_parser: Mock) -> None:
@@ -176,7 +182,9 @@ class TestTryFetchAndParse:
         result = service.try_fetch_and_parse(mock_ics_source)
 
         # Assert
-        assert result == expected_events
+        assert isinstance(result, IcsFetchAndParseResult)
+        assert result.events == expected_events
+        assert result.raw_ics == ics_content
 
 
 class TestValidateIcsUrl:
@@ -187,7 +195,12 @@ class TestValidateIcsUrl:
         mock_events: list[Event],
     ) -> None:
         # Arrange
-        service.try_fetch_and_parse = Mock(return_value=mock_events)  # type: ignore
+        service.try_fetch_and_parse = Mock(  # type: ignore
+            return_value=IcsFetchAndParseResult(
+                events=mock_events,
+                raw_ics="mock irrelevant ics value",
+            )
+        )
 
         # Act
         result = service.validate_ics_url(mock_ics_source)
@@ -244,7 +257,12 @@ class TestValidateIcsUrl:
         mock_events: list[Event],
     ) -> None:
         # Arrange
-        service.try_fetch_and_parse = Mock(return_value=mock_events)  # type: ignore
+        service.try_fetch_and_parse = Mock(  # type: ignore
+            return_value=IcsFetchAndParseResult(
+                events=mock_events,
+                raw_ics="mock irrelevant ics value",
+            )
+        )
 
         # Act
         service.validate_ics_url(mock_ics_source, save_to_storage=False)

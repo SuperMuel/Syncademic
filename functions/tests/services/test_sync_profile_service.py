@@ -16,6 +16,7 @@ from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.services.sync_profile_service import SyncProfileService
 from functions.services.exceptions.ics import (
+    IcsParsingError,
     IcsSourceError,
 )
 from functions.services.ics_service import IcsFetchAndParseResult
@@ -406,7 +407,7 @@ def test_fails_on_ics_parse_error(
     prof_id = "profileParseError"
 
     # Simulate ICS parse error
-    error = IcsSourceError("Failed to parse ICS")
+    error = IcsParsingError("Failed to parse ICS")
     ics_service_mock.try_fetch_and_parse.return_value = error
 
     # Store initial profile

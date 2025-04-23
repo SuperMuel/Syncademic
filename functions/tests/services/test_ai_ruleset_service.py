@@ -21,7 +21,7 @@ from functions.repositories.sync_profile_repository import (
     MockSyncProfileRepository,
 )
 from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.exceptions.ics import BaseIcsError
+from functions.services.exceptions.ics import IcsSourceError
 from functions.services.ics_service import IcsService, IcsFetchAndParseResult
 from functions.shared.event import Event
 from tests.util import VALID_RULESET
@@ -135,7 +135,7 @@ class TestAiRulesetService:
     ) -> None:
         """Test handling of ICS fetch errors."""
         # Arrange
-        error = BaseIcsError("Failed to fetch ICS")
+        error = IcsSourceError("Failed to fetch ICS")
         mock_ics_service.try_fetch_and_parse.return_value = error
         mock_sync_profile_repo.save_sync_profile(sample_sync_profile)
 

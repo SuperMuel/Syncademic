@@ -18,6 +18,7 @@ from functions.services.sync_profile_service import SyncProfileService
 from functions.services.exceptions.ics import (
     IcsSourceError,
 )
+from functions.services.ics_service import IcsFetchAndParseResult
 from functions.repositories.sync_stats_repository import MockSyncStatsRepository
 from functions.repositories.sync_profile_repository import MockSyncProfileRepository
 from functions.synchronizer.google_calendar_manager import MockGoogleCalendarManager
@@ -134,7 +135,10 @@ def test_on_create_success(
     prof_id = "profile_on_create"
 
     # ICS returns 2 events
-    ics_service_mock.try_fetch_and_parse.return_value = [past_event, future_event]
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[past_event, future_event],
+        raw_ics="mock irrelevant ics value",
+    )
 
     # Put a NOT_STARTED profile into the repository
     profile = _make_sync_profile(
@@ -188,7 +192,10 @@ def test_regular_sync_only_future(
     user_id = "user123"
     prof_id = "profile_reg"
 
-    ics_service_mock.try_fetch_and_parse.return_value = [past_event, future_event]
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[past_event, future_event],
+        raw_ics="mock irrelevant ics value",
+    )
 
     # Put a profile in SUCCESS state
     profile = _make_sync_profile(
@@ -245,7 +252,10 @@ def test_full_sync_deletes_all(
     user_id = "user123"
     prof_id = "profile_full"
 
-    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[future_event],
+        raw_ics="mock irrelevant ics value",
+    )
 
     profile = _make_sync_profile(
         user_id=user_id,
@@ -299,7 +309,10 @@ def test_ruleset_applied(
     """
     now = arrow.now()
     raw_event = Event(start=now, end=now.shift(hours=1), title="Lecture")
-    ics_service_mock.try_fetch_and_parse.return_value = [raw_event]
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[raw_event],
+        raw_ics="mock irrelevant ics value",
+    )
 
     from functions.models.rules import (
         Rule,
@@ -355,7 +368,8 @@ def test_fails_on_ics_fetch_error(
     user_id = "userXYZ"
     prof_id = "profileFail"
 
-    ics_service_mock.try_fetch_and_parse.return_value = IcsSourceError("Couldn't fetch")
+    error = IcsSourceError("Couldn't fetch")
+    ics_service_mock.try_fetch_and_parse.return_value = error
 
     profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
     sync_profile_repo.save_sync_profile(profile)
@@ -392,9 +406,8 @@ def test_fails_on_ics_parse_error(
     prof_id = "profileParseError"
 
     # Simulate ICS parse error
-    ics_service_mock.try_fetch_and_parse.side_effect = IcsSourceError(
-        "Failed to parse ICS"
-    )
+    error = IcsSourceError("Failed to parse ICS")
+    ics_service_mock.try_fetch_and_parse.return_value = error
 
     # Store initial profile
     profile = _make_sync_profile(user_id=user_id, sync_profile_id=prof_id)
@@ -607,7 +620,10 @@ def test_force_sync_bypasses_status_check(
     prof_id = "profile_force"
 
     # Return one future event
-    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[future_event],
+        raw_ics="mock irrelevant ics value",
+    )
 
     # Put a profile in IN_PROGRESS state (which would normally block syncing)
     profile = _make_sync_profile(
@@ -673,7 +689,10 @@ def test_force_sync_bypasses_daily_limit(
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
 
     # Return one future event
-    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[future_event],
+        raw_ics="mock irrelevant ics value",
+    )
 
     # Act - with force=True
     sync_profile_service.synchronize(
@@ -718,7 +737,8 @@ def test_force_sync_follows_normal_flow_on_error(
     prof_id = "profile_force_error"
 
     # Simulate ICS error
-    ics_service_mock.try_fetch_and_parse.side_effect = IcsSourceError("Failed to fetch")
+    error = IcsSourceError("Failed to fetch")
+    ics_service_mock.try_fetch_and_parse.return_value = error
 
     # Put a profile in IN_PROGRESS state
     profile = _make_sync_profile(

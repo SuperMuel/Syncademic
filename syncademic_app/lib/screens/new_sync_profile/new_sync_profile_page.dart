@@ -276,7 +276,7 @@ class _UrlStepContentState extends State<UrlStepContent> {
                   context.read<NewSyncProfileCubit>().validateIcs,
             ),
             const SizedBox(height: 16),
-            const InsaLyonIcsUrlHelp(),
+            const CalendarUrlHelp(),
             const SizedBox(height: 16),
             UrlVerificationButtonAndText(
               icsValidationStatus: state.icsValidationStatus,
@@ -289,10 +289,10 @@ class _UrlStepContentState extends State<UrlStepContent> {
   }
 }
 
-/// Help message for INSA Lyon students to get their
+/// Help message to guide users in finding their
 /// time schedule URL.
-class InsaLyonIcsUrlHelp extends StatelessWidget {
-  const InsaLyonIcsUrlHelp({
+class CalendarUrlHelp extends StatelessWidget {
+  const CalendarUrlHelp({
     super.key,
   });
 
@@ -300,11 +300,11 @@ class InsaLyonIcsUrlHelp extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
-        text: 'Students from INSA Lyon can get their URL by visiting ',
+        text: 'Need help finding your calendar URL? Check out our ',
         style: const TextStyle(color: Colors.black),
         children: <TextSpan>[
           TextSpan(
-            text: 'ADE Outils (insa-lyon.fr)',
+            text: 'help guide',
             style: const TextStyle(
               color: Colors.blue,
               decoration: TextDecoration.underline,
@@ -312,7 +312,7 @@ class InsaLyonIcsUrlHelp extends StatelessWidget {
             ),
             recognizer: TapGestureRecognizer()
               ..onTap = () => launchUrl(Uri.parse(
-                  'https://ade-outils.insa-lyon.fr/ADE-iCal@2024-2025')),
+                  'https://syncademic.notion.site/find-calendar-url')),
           ),
           const TextSpan(
             text: '.',

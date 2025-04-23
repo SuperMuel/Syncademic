@@ -59,3 +59,19 @@ class FirebaseIcsValidationService extends IcsValidationService {
     }
   }
 }
+
+class MockIcsValidationService extends IcsValidationService {
+  const MockIcsValidationService();
+
+  @override
+  Future<Either<String, IcsValidationResult>> validateUrl(String url) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    return right(IcsValidationResult(
+      isValid: true,
+      error: null,
+      nbEvents: 42, // Mock number of events
+    ));
+  }
+}

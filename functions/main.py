@@ -155,7 +155,7 @@ def validate_request(input_model: type[T]):  # noqa: ANN201
 def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
     logger.info(f"Validating ICS URL.", user_id=user_id)
     return ics_service.validate_ics_url(
-        UrlIcsSource(url=request.url),
+        UrlIcsSource.from_str(request.url),
         # In case of error, we want to understand what went wrong by looking at the ICS file.
         save_to_storage=True,
     ).model_dump()

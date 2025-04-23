@@ -7,7 +7,7 @@ from functions.settings import RedirectUri, settings
 
 
 class ValidateIcsUrlInput(BaseModel):
-    url: HttpUrl = Field(..., description="URL to the ICS file")
+    url: str = Field(..., description="URL to the ICS file")
 
 
 class ValidateIcsUrlOutput(BaseModel):

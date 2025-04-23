@@ -16,20 +16,15 @@ from functions.models.sync_profile import SyncType
 from functions.settings import settings
 
 
-def test_validate_ics_url_input_valid():
+@pytest.mark.parametrize(
+    "scheme",
+    ["http", "https", "webcal"],
+)
+def test_validate_ics_url_input_valid(scheme: str):
     """Ensure ValidateIcsUrlInput works with a valid ICS URL."""
-
-    data = {"url": "https://example.com/calendar.ics"}
+    data = {"url": f"{scheme}://example.com/calendar.ics"}
     obj = ValidateIcsUrlInput.model_validate(data)
-    assert str(obj.url) == "https://example.com/calendar.ics"
-
-
-def test_validate_ics_url_input_invalid_scheme():
-    """Ensure ValidateIcsUrlInput fails on invalid URL schemes."""
-    data = {"url": "ftp://example.com/calendar.ics"}
-    with pytest.raises(ValidationError) as exc_info:
-        ValidateIcsUrlInput.model_validate(data)
-    assert "URL scheme should be 'http' or 'https'" in str(exc_info.value)
+    assert str(obj.url) == f"{scheme}://example.com/calendar.ics"
 
 
 def test_validate_ics_url_output_valid_minimum():

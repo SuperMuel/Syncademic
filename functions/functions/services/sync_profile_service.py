@@ -201,7 +201,7 @@ class SyncProfileService:
     ) -> None:
         logger.info(f"Running synchronization for profile {profile.id}")
 
-        events_or_error = self._ics_service.try_fetch_and_parse(
+        result_or_error = self._ics_service.try_fetch_and_parse(
             ics_source=profile.scheduleSource.to_ics_source(),
             metadata={
                 "sync_profile_id": profile.id,
@@ -210,10 +210,10 @@ class SyncProfileService:
                 "sync_type": sync_type,
             },
         )
-        if not isinstance(error := events_or_error, list):
-            raise error
+        if isinstance(result_or_error, BaseIcsError):
+            raise result_or_error
 
-        assert isinstance(events := events_or_error, list)
+        assert isinstance(events := result_or_error.events, list)
 
         logger.info(f"Found {len(events)} events in ics")
 

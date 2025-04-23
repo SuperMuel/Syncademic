@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.services.exceptions.ics import (
@@ -12,6 +13,12 @@ from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class IcsFetchAndParseResult:
+    events: list[Event]
+    raw_ics: str
 
 
 class IcsService:
@@ -45,12 +52,13 @@ class IcsService:
             print(f"Invalid calendar: {result.error}")
 
         # Fetch and parse events
-        events = service.try_fetch_and_parse(
+        result = service.try_fetch_and_parse(
             ics_source=UrlIcsSource(url="https://example.com/calendar.ics")
         )
-        if not isinstance(events, BaseIcsError):
-            for event in events:
+        if not isinstance(result, BaseIcsError):
+            for event in result.events:
                 print(f"Event: {event.title}")
+            print(f"Raw ICS content: {result.raw_ics[:100]}...")
         ```
     """
 
@@ -84,13 +92,13 @@ class IcsService:
         except Exception as e:
             logger.error(f"Failed to save ICS file to storage: {e}")
 
-    def try_fetch_and_parse_with_ics_str(
+    def try_fetch_and_parse(
         self,
         ics_source: IcsSource,
         *,
         save_to_storage: bool = True,
         metadata: dict | None = None,
-    ) -> tuple[list[Event] | IcsSourceError | IcsParsingError, str | None]:
+    ) -> IcsFetchAndParseResult | IcsSourceError | IcsParsingError:
         """
         Tries to fetch the ICS file and parse it. Optionally saves the ICS file to storage for debugging purposes.
 
@@ -100,7 +108,7 @@ class IcsService:
             metadata: Metadata to add to the ICS file in storage.
 
         Returns:
-            list[Event] if successful, otherwise a BaseIcsError.
+            IcsFetchAndParseResult (with events and raw_ics) if successful, otherwise a BaseIcsError.
 
         Raises:
             Exception: When an error other than BaseIcsError occurs.
@@ -109,9 +117,7 @@ class IcsService:
             ics_str = ics_source.get_ics_string()
         except IcsSourceError as e:
             logger.error(f"Failed to fetch ICS file from source: {e}")
-            return e, None
-
-        events_or_error = self.ics_parser.try_parse(ics_str)
+            return e
 
         self._try_save_to_storage(
             ics_source=ics_source,
@@ -120,21 +126,12 @@ class IcsService:
             metadata=metadata,
         )
 
-        return events_or_error, ics_str
+        events_or_error = self.ics_parser.try_parse(ics_str)
 
-    def try_fetch_and_parse(
-        self,
-        ics_source: IcsSource,
-        *,
-        save_to_storage: bool = True,
-        metadata: dict | None = None,
-    ) -> list[Event] | IcsSourceError | IcsParsingError:
-        events_or_error, _ = self.try_fetch_and_parse_with_ics_str(
-            ics_source,
-            save_to_storage=save_to_storage,
-            metadata=metadata,
-        )
-        return events_or_error
+        if isinstance(events_or_error, IcsParsingError):
+            return events_or_error
+
+        return IcsFetchAndParseResult(events=events_or_error, raw_ics=ics_str)
 
     def validate_ics_url(
         self,
@@ -155,17 +152,20 @@ class IcsService:
                 - error: Error message if validation failed
                 - nbEvents: Number of events if validation succeeded
         """
-        events_or_error = self.try_fetch_and_parse(
+        result_or_error = self.try_fetch_and_parse(
             ics_source,
             save_to_storage=save_to_storage,
         )
 
+        if isinstance(result_or_error, BaseIcsError):
+            return ValidateIcsUrlOutput(
+                valid=False,
+                error=str(result_or_error),
+                nbEvents=None,
+            )
+
         return ValidateIcsUrlOutput(
-            valid=not isinstance(events_or_error, BaseIcsError),
-            error=str(events_or_error)
-            if isinstance(events_or_error, BaseIcsError)
-            else None,
-            nbEvents=len(events_or_error)
-            if not isinstance(events_or_error, BaseIcsError)
-            else None,
+            valid=True,
+            error=None,
+            nbEvents=len(result_or_error.events),
         )

@@ -1,5 +1,4 @@
 import streamlit as st
-from pydantic import HttpUrl
 import json
 from typing import cast
 
@@ -20,7 +19,9 @@ from functions.models.sync_profile import SyncProfile
 from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.ics_service import IcsService
 from functions.shared.event import Event
+from functions.services.exceptions.ics import IcsParsingError
 from functions.synchronizer.ics_source import IcsSource, StringIcsSource, UrlIcsSource
+from functions.synchronizer.ics_parser import IcsParser
 
 # Initialize services
 ics_service = IcsService(ics_storage=None)
@@ -62,11 +63,8 @@ def _get_sync_profile(sync_profile_id: str) -> SyncProfile | None:
         StringIcsSource: lambda x: x.model_dump_json(),
     },
 )
-def _fetch_and_parse_ics(source: IcsSource):
-    return ics_service.try_fetch_and_parse_with_ics_str(
-        ics_source=source,
-        save_to_storage=False,
-    )
+def _fetch_ics(source: IcsSource):
+    return source.get_ics_string()
 
 
 def generate_ai_ruleset(events: list[Event]) -> Ruleset | None:
@@ -136,13 +134,16 @@ with st.sidebar:
         st.error("Invalid input method.")
         st.stop()
 
-events_or_error, ics_str = _fetch_and_parse_ics(source)
 
-if isinstance(events_or_error, Exception):
+ics_str = _fetch_ics(source)
+events_or_error = IcsParser().try_parse(ics_str)
+
+if isinstance(events_or_error, IcsParsingError):
     st.error(f"Error parsing ICS: {events_or_error}")
     st.stop()
 
 events_before = events_or_error
+
 
 ### Ruleset selection
 ruleset: Ruleset | None = None

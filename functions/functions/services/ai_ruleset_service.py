@@ -11,6 +11,7 @@ from functions.repositories.sync_profile_repository import (
     ISyncProfileRepository,
 )
 from functions.services.exceptions.ruleset import RulesetGenerationError
+from functions.services.exceptions.ics import BaseIcsError
 from functions.services.ics_service import IcsService
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
@@ -65,7 +66,7 @@ class AiRulesetService:
             they are logged and stored in the sync profile repository rather than raised.
         """
 
-        events_or_error, ics_str = self.ics_service.try_fetch_and_parse_with_ics_str(
+        result_or_error = self.ics_service.try_fetch_and_parse(
             ics_source=sync_profile.scheduleSource.to_ics_source(),
             save_to_storage=True,
             metadata={
@@ -74,15 +75,14 @@ class AiRulesetService:
             },
         )
 
-        if isinstance(events_or_error, Exception):
+        if isinstance(result_or_error, BaseIcsError):
             sync_profile.update_ruleset(
-                error=f"Failed to fetch and parse ICS: {str(events_or_error)}"
+                error=f"Failed to fetch and parse ICS: {str(result_or_error)}"
             )
             self.sync_profile_repo.save_sync_profile(sync_profile)
             return
 
-        events = events_or_error
-        assert ics_str is not None
+        events, ics_str = result_or_error.events, result_or_error.raw_ics
 
         try:
             # Generate ruleset

@@ -21,7 +21,8 @@ from functions.repositories.sync_profile_repository import (
     MockSyncProfileRepository,
 )
 from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.ics_service import IcsService
+from functions.services.exceptions.ics import IcsSourceError
+from functions.services.ics_service import IcsService, IcsFetchAndParseResult
 from functions.shared.event import Event
 from tests.util import VALID_RULESET
 
@@ -107,9 +108,9 @@ class TestAiRulesetService:
         """Test successful creation and storage of a ruleset."""
         # Arrange
         mock_sync_profile_repo.save_sync_profile(sample_sync_profile)
-        mock_ics_service.try_fetch_and_parse_with_ics_str.return_value = (
-            sample_events,
-            "ics_str",
+        mock_ics_service.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+            events=sample_events,
+            raw_ics="mock irrelevant ics value",
         )
         mock_ruleset_builder.generate_ruleset.return_value = Mock(ruleset=VALID_RULESET)
 
@@ -134,18 +135,14 @@ class TestAiRulesetService:
     ) -> None:
         """Test handling of ICS fetch errors."""
         # Arrange
-        error = Exception("Failed to fetch ICS")
-        mock_ics_service.try_fetch_and_parse_with_ics_str.return_value = (
-            error,
-            None,
-        )
+        error = IcsSourceError("Failed to fetch ICS")
+        mock_ics_service.try_fetch_and_parse.return_value = error
         mock_sync_profile_repo.save_sync_profile(sample_sync_profile)
 
         # Act
         service.create_ruleset_for_sync_profile(sample_sync_profile)
 
         # Assert
-
         sync_profile = mock_sync_profile_repo.get_sync_profile(
             user_id=sample_sync_profile.user_id,
             sync_profile_id=sample_sync_profile.id,
@@ -168,9 +165,9 @@ class TestAiRulesetService:
     ) -> None:
         """Test handling of ruleset generation errors."""
         # Arrange
-        mock_ics_service.try_fetch_and_parse_with_ics_str.return_value = (
-            sample_events,
-            "ics_str",
+        mock_ics_service.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+            events=sample_events,
+            raw_ics="mock irrelevant ics value",
         )
         mock_ruleset_builder.generate_ruleset.side_effect = Exception(
             "Failed to generate ruleset"

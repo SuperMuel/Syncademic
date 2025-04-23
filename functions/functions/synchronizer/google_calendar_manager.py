@@ -7,6 +7,7 @@ import pytz
 from firebase_functions import logger
 from googleapiclient.errors import HttpError
 
+from functions.settings import settings
 from functions.shared.event import Event
 
 ExtendedProperties: TypeAlias = dict[str, Any]
@@ -82,7 +83,7 @@ class GoogleCalendarManager:
         events: list[Event],
         *,
         sync_profile_id: str,
-        batch_size: int = 50,
+        batch_size: int = settings.GOOGLE_API_BATCH_SIZE,
     ) -> None:
         """Create multiple events in Google Calendar using batch requests.
 
@@ -167,14 +168,17 @@ class GoogleCalendarManager:
         self,
         ids: list[str],
         *,
-        batch_size: int = 50,
+        batch_size: int = settings.GOOGLE_API_BATCH_SIZE,
     ) -> None:
         """
         Delete events from the calendar by their ids.
         """
-        logger.info(f"Deleting {len(ids)} events.")
+        logger.info(f"Will delete {len(ids)} events.")
 
         for i, sublist in enumerate(batched(ids, batch_size)):
+            logger.info(
+                f"Processing batch {i + 1}/{(len(ids) + batch_size - 1) // batch_size} ({len(sublist)} events)"
+            )
             batch = self._service.new_batch_http_request()
             for id in sublist:
                 batch.add(
@@ -185,6 +189,7 @@ class GoogleCalendarManager:
                 )
             batch.execute()
             logger.info(f"Deleted {i * batch_size + len(sublist)}/{len(ids)} events.")
+        logger.info(f"Deleted {len(ids)} events.")
 
     def check_calendar_exists(self) -> bool:
         """
@@ -230,7 +235,7 @@ class MockGoogleCalendarManager(GoogleCalendarManager):
         events: list[Event],
         *,
         sync_profile_id: str,
-        batch_size: int = 50,
+        batch_size: int = settings.GOOGLE_API_BATCH_SIZE,
     ) -> None:
         """Store events in memory with generated IDs."""
         for event in events:
@@ -274,7 +279,7 @@ class MockGoogleCalendarManager(GoogleCalendarManager):
         self,
         ids: list[str],
         *,
-        batch_size: int = 50,
+        batch_size: int = settings.GOOGLE_API_BATCH_SIZE,
     ) -> None:
         """Remove events from in-memory storage."""
         for event_id in ids:

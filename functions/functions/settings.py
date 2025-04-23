@@ -64,6 +64,8 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: str | None = Field(default=None)
     TELEGRAM_MAX_TRACEBACK_LENGTH: int = Field(default=1000)
 
+    GOOGLE_API_BATCH_SIZE: int = Field(default=25)
+
 
 settings = Settings()
 

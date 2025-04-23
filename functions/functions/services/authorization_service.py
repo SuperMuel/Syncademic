@@ -1,30 +1,27 @@
+import os
 from typing import Any
 
+from firebase_functions import logger
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-import os
-
 from pydantic import HttpUrl
-
-from functions.synchronizer.google_calendar_manager import (
-    GoogleCalendarManager,
-)
-from functions.services.exceptions.auth import ProviderUserIdMismatchError
-from functions.services.exceptions import (
-    BaseAuthorizationError,
-    UnauthorizedError,
-)
-
-from firebase_functions import logger
 
 from functions.models.authorization import BackendAuthorization
 from functions.repositories.backend_authorization_repository import (
     IBackendAuthorizationRepository,
 )
+from functions.services.exceptions import (
+    BaseAuthorizationError,
+    UnauthorizedError,
+)
+from functions.services.exceptions.auth import ProviderUserIdMismatchError
 from functions.settings import settings
+from functions.synchronizer.google_calendar_manager import (
+    GoogleCalendarManager,
+)
 
 
 class AuthorizationService:
@@ -222,6 +219,7 @@ class AuthorizationService:
             logger.info("Refreshing Google credentials.")
             try:
                 credentials.refresh(Request())
+                # TODO : Save credentials after refresh
             except Exception as e:
                 logger.error(f"Error refreshing Google credentials: {e}")
                 raise BaseAuthorizationError(

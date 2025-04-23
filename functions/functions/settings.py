@@ -64,6 +64,8 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: str | None = Field(default=None)
     TELEGRAM_MAX_TRACEBACK_LENGTH: int = Field(default=1000)
 
+    # A size of 50 caused "The read operation timed out" errors,
+    # so we're using a size of 25 for now.
     GOOGLE_API_BATCH_SIZE: int = Field(default=25)
 
 

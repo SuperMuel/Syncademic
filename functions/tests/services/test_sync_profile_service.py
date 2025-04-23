@@ -70,7 +70,7 @@ def auth_service_mock():
 def ics_service_mock():
     """
     Mock of IcsService.
-    We'll control the return value of try_fetch_and_parse(...) (list[Event] or a BaseIcsError).
+    We'll control the return value of try_fetch_and_parse(...) (IcsFetchAndParseResult or a BaseIcsError).
     """
     return Mock()
 

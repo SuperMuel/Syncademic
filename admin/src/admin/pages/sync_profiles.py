@@ -479,10 +479,10 @@ if profile := _get_selected_profile():
     # Fetch events
     print("fetching events")
     events_or_error = fetch_events(profile.scheduleSource)
-    if not isinstance(events_or_error, list):
+    if isinstance(events_or_error, Exception):
         st.error(f"Failed to fetch events: {str(events_or_error)}")
     else:
-        before_events = events_or_error
+        before_events = events_or_error.events
 
         if should_apply_rules := st.checkbox(
             "Apply Rules",

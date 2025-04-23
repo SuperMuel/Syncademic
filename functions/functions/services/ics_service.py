@@ -52,12 +52,13 @@ class IcsService:
             print(f"Invalid calendar: {result.error}")
 
         # Fetch and parse events
-        events = service.try_fetch_and_parse(
+        result = service.try_fetch_and_parse(
             ics_source=UrlIcsSource(url="https://example.com/calendar.ics")
         )
-        if not isinstance(events, BaseIcsError):
-            for event in events:
+        if not isinstance(result, BaseIcsError):
+            for event in result.events:
                 print(f"Event: {event.title}")
+            print(f"Raw ICS content: {result.raw_ics[:100]}...")
         ```
     """
 

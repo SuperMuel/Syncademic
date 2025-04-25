@@ -1,18 +1,19 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
-from firebase_admin import initialize_app, storage, auth
+from firebase_admin import auth, initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
 from firebase_functions.firestore_fn import (
     Event,
     on_document_created,
 )
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
-from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
+from functions.bootstrap import bootstrap_event_bus
+from functions.infrastructure.event_bus import Handler, LocalEventBus
 from functions.models import (
     SyncTrigger,
 )
@@ -41,17 +42,19 @@ from functions.repositories.sync_stats_repository import (
 )
 from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.authorization_service import AuthorizationService
+from functions.services.dev_notification_service import create_dev_notification_service
 from functions.services.exceptions.base import SyncademicError
 from functions.services.exceptions.mapping import ErrorMapping
 from functions.services.google_calendar_service import GoogleCalendarService
 from functions.services.ics_service import IcsService
 from functions.services.sync_profile_service import SyncProfileService
+from functions.services.user_service import FirebaseAuthUserService
 from functions.settings import settings
+from functions.shared import domain_events
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
-from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
-from functions.services.dev_notification_service import create_dev_notification_service
 
+logger.info(f"Settings: {settings}")
 
 initialize_app()
 
@@ -63,9 +66,21 @@ sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
 ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
-ics_service = IcsService(ics_storage=ics_file_storage)
+user_service = FirebaseAuthUserService()
 
-dev_notification_service = create_dev_notification_service()
+dev_notification_service = create_dev_notification_service(
+    user_service=user_service,
+    sync_profile_repo=sync_profile_repo,
+)
+
+error_mapping = ErrorMapping()
+
+event_bus = bootstrap_event_bus(
+    ics_file_storage=ics_file_storage,
+    dev_notification_service=dev_notification_service,
+)
+
+ics_service = IcsService(event_bus=event_bus)
 
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
@@ -81,9 +96,6 @@ ai_ruleset_service = AiRulesetService(
     sync_profile_repo=sync_profile_repo,
     ruleset_builder=ruleset_builder,
 )
-error_mapping = ErrorMapping()
-
-logger.info(f"Settings: {settings}")
 
 
 def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
@@ -156,8 +168,7 @@ def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
     logger.info(f"Validating ICS URL.", user_id=user_id)
     return ics_service.validate_ics_url(
         UrlIcsSource.from_str(request.url),
-        # In case of error, we want to understand what went wrong by looking at the ICS file.
-        save_to_storage=True,
+        metadata={"user_id": user_id},
     ).model_dump()
 
 
@@ -267,9 +278,11 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     # Populate `created_at` and other default fields
     sync_profile_repo.save_sync_profile(sync_profile)
 
-    # Notify developers about the new sync profile
-    dev_notification_service.on_new_sync_profile(
-        user_id=user_id, sync_profile_id=sync_profile_id, title=sync_profile.title
+    event_bus.publish(
+        domain_events.SyncProfileCreated(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+        )
     )
 
     ai_ruleset_service.create_ruleset_for_sync_profile(
@@ -422,16 +435,16 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
     user_data = event.data.to_dict() or {}
 
     # Get additional user info from Firebase Auth if possible
-    additional_data = {}
+    event_data = {}
     try:
         firebase_user = auth.get_user(user_id)
 
         # Add key user information to the notification
-        additional_data = {
+        event_data = {
             "email": firebase_user.email or user_data.get("email", "Not provided"),
             "display_name": firebase_user.display_name or "Not provided",
             "email_verified": "Yes" if firebase_user.email_verified else "No",
-            "provider": firebase_user.provider_data[0].provider_id
+            "provider_id": firebase_user.provider_data[0].provider_id
             if firebase_user.provider_data
             else "Unknown",
         }
@@ -443,9 +456,13 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
             error_type=type(e).__name__,
         )
         if "email" in user_data:
-            additional_data["email"] = user_data["email"]
+            event_data["email"] = user_data["email"]
 
-    # Notify developers about the new user with all available information
-    dev_notification_service.on_new_user(
-        user_id=user_id, additional_data=additional_data
+    event_bus.publish(
+        domain_events.UserCreated(
+            user_id=user_id,
+            email=event_data.get("email"),
+            display_name=event_data.get("display_name"),
+            provider_id=event_data.get("provider_id"),
+        )
     )

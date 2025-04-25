@@ -1,12 +1,15 @@
 import logging
 from dataclasses import dataclass
+from typing import Any
 
+from functions.infrastructure.event_bus import IEventBus, LocalEventBus
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.services.exceptions.ics import (
     BaseIcsError,
     IcsParsingError,
     IcsSourceError,
 )
+from functions.shared import domain_events
 from functions.shared.event import Event
 from functions.synchronizer.ics_cache import IcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
@@ -64,67 +67,41 @@ class IcsService:
 
     def __init__(
         self,
-        ics_storage: IcsFileStorage | None,
+        event_bus: IEventBus,
         ics_parser: IcsParser | None = None,
     ) -> None:
         self.ics_parser = ics_parser or IcsParser()
-        self.ics_storage = ics_storage
-
-    def _try_save_to_storage(
-        self,
-        *,
-        ics_source: IcsSource,
-        ics_str: str,
-        save_to_storage: bool,
-        metadata: dict | None = None,
-    ) -> None:
-        if not save_to_storage or not self.ics_storage:
-            logger.info("Not saving to storage")
-            return
-
-        try:
-            self.ics_storage.save_to_cache(
-                ics_source=ics_source,
-                ics_str=ics_str,
-                metadata=metadata,
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to save ICS file to storage: {e}")
+        self.event_bus = event_bus
 
     def try_fetch_and_parse(
         self,
         ics_source: IcsSource,
-        *,
-        save_to_storage: bool = True,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> IcsFetchAndParseResult | IcsSourceError | IcsParsingError:
         """
-        Tries to fetch the ICS file and parse it. Optionally saves the ICS file to storage for debugging purposes.
+        Tries to fetch the ICS file and parse it.
 
         Args:
             ics_source: The source to fetch the ICS file from
-            save_to_storage: If True, the ICS file is stored in storage, whether the parsing is successful or not.
-            metadata: Metadata to add to the ICS file in storage.
-
+            metadata: Additional metadata to pass to the event bus (e.g. sync_profile_id, user_id,...)
         Returns:
             IcsFetchAndParseResult (with events and raw_ics) if successful, otherwise a BaseIcsError.
 
         Raises:
             Exception: When an error other than BaseIcsError occurs.
         """
+
         try:
             ics_str = ics_source.get_ics_string()
+            self.event_bus.publish(
+                domain_events.IcsFetched(
+                    ics_str=ics_str,
+                    metadata=metadata,
+                )
+            )
         except IcsSourceError as e:
             logger.error(f"Failed to fetch ICS file from source: {e}")
             return e
-
-        self._try_save_to_storage(
-            ics_source=ics_source,
-            ics_str=ics_str,
-            save_to_storage=save_to_storage,
-            metadata=metadata,
-        )
 
         events_or_error = self.ics_parser.try_parse(ics_str)
 
@@ -136,15 +113,14 @@ class IcsService:
     def validate_ics_url(
         self,
         ics_source: UrlIcsSource,
-        *,
-        save_to_storage: bool = True,
+        metadata: dict[str, Any] | None = None,
     ) -> ValidateIcsUrlOutput:
         """
         Validates an ICS URL by attempting to fetch and parse its contents.
 
         Args:
             ics_source: The source to fetch the ICS file from
-            save_to_storage: If True, the ICS file is stored in storage.
+            metadata: Additional metadata to pass to the event bus (e.g. sync_profile_id, user_id,...)
 
         Returns:
             ValidateIcsUrlOutput: Contains validation results including:
@@ -154,7 +130,7 @@ class IcsService:
         """
         result_or_error = self.try_fetch_and_parse(
             ics_source,
-            save_to_storage=save_to_storage,
+            metadata=metadata,
         )
 
         if isinstance(result_or_error, BaseIcsError):

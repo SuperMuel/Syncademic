@@ -13,7 +13,6 @@ class IcsFileStorage(ABC):
         self,
         ics_str: str,
         *,
-        ics_source: IcsSource,
         metadata: dict | None = None,
     ) -> None:
         pass
@@ -38,7 +37,6 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         self,
         ics_str: str,
         *,
-        ics_source: IcsSource,
         metadata: dict | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
@@ -56,7 +54,6 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         blob = self.firebase_storage_bucket.blob(filename)
 
         blob.metadata = {
-            "ics_source": ics_source.model_dump(),
             "blob_created_at": now.isoformat(),
             **metadata,
         }

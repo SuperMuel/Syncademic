@@ -1,5 +1,6 @@
 from dataclasses import replace
 from datetime import datetime, timezone
+import traceback
 from typing import Any
 
 from firebase_functions import logger
@@ -21,6 +22,7 @@ from functions.services.exceptions.sync import (
 )
 from functions.services.ics_service import IcsService
 from functions.settings import settings
+from functions.shared import domain_events
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
 from functions.services.dev_notification_service import (
@@ -171,12 +173,14 @@ class SyncProfileService:
             profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
             self._sync_profile_repo.save_sync_profile(profile)
 
-            # Notify developers about the failure
             self.dev_notification_service.on_sync_failed(
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
-                title=profile.title,
-                error=e,
+                domain_event=domain_events.SyncFailed(
+                    user_id=user_id,
+                    sync_profile_id=sync_profile_id,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    formatted_traceback=traceback.format_exc(),
+                )
             )
 
             return
@@ -208,6 +212,7 @@ class SyncProfileService:
                 "user_id": user_id,
                 "sync_trigger": sync_trigger,
                 "sync_type": sync_type,
+                "source": profile.scheduleSource.model_dump(),
             },
         )
         if isinstance(result_or_error, BaseIcsError):

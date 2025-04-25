@@ -1,19 +1,19 @@
-from functools import wraps
-from typing import Any, Callable, TypeVar
+from functools import partial, wraps
+from typing import Any, Callable, TypeVar, cast
 
-from firebase_admin import initialize_app, storage, auth
+from firebase_admin import auth, initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
 from firebase_functions.firestore_fn import (
     Event,
     on_document_created,
 )
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
-from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, ValidationError
 
+from functions import handlers
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.infrastructure.event_bus import LocalEventBus
+from functions.infrastructure.event_bus import LocalEventBus, Handler
 from functions.models import (
     SyncTrigger,
 )
@@ -42,6 +42,7 @@ from functions.repositories.sync_stats_repository import (
 )
 from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.authorization_service import AuthorizationService
+from functions.services.dev_notification_service import create_dev_notification_service
 from functions.services.exceptions.base import SyncademicError
 from functions.services.exceptions.mapping import ErrorMapping
 from functions.services.google_calendar_service import GoogleCalendarService
@@ -49,11 +50,16 @@ from functions.services.ics_service import IcsService
 from functions.services.sync_profile_service import SyncProfileService
 from functions.settings import settings
 from functions.shared import domain_events
+from functions.shared.domain_events import (
+    DomainEvent,
+    IcsFetched,
+    SyncFailed,
+    SyncProfileCreated,
+)
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
-from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
-from functions.services.dev_notification_service import create_dev_notification_service
 
+logger.info(f"Settings: {settings}")
 
 initialize_app()
 
@@ -68,12 +74,44 @@ ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
 
 dev_notification_service = create_dev_notification_service()
 
+error_mapping = ErrorMapping()
+
+
 event_bus = LocalEventBus(
-    ics_file_storage=ics_file_storage,
-    dev_notification_service=dev_notification_service,
+    handlers=cast(
+        dict[type[DomainEvent], list[Handler]],
+        {
+            domain_events.IcsFetched: [
+                partial(
+                    handlers.handle_ics_fetched,
+                    ics_file_storage=ics_file_storage,
+                )
+            ],
+            domain_events.SyncFailed: [
+                partial(
+                    handlers.handle_sync_failed,
+                    dev_notification_service=dev_notification_service,
+                )
+            ],
+            domain_events.SyncProfileCreated: [
+                partial(
+                    handlers.handle_sync_profile_created,
+                    dev_notification_service=dev_notification_service,
+                )
+            ],
+            domain_events.UserCreated: [
+                partial(
+                    handlers.handle_user_created,
+                    dev_notification_service=dev_notification_service,
+                )
+            ],
+        },
+    )
 )
 
+
 ics_service = IcsService(event_bus=event_bus)
+
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
@@ -88,10 +126,6 @@ ai_ruleset_service = AiRulesetService(
     sync_profile_repo=sync_profile_repo,
     ruleset_builder=ruleset_builder,
 )
-error_mapping = ErrorMapping()
-
-
-logger.info(f"Settings: {settings}")
 
 
 def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:

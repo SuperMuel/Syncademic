@@ -1,19 +1,9 @@
 import logging
 from typing import Callable, Protocol, TypeVar
 
-from functions.services.dev_notification_service import IDevNotificationService
-from functions.shared.domain_events import (
-    DomainEvent,
-    IcsFetched,
-    SyncFailed,
-    SyncProfileCreated,
-    UserCreated,
-)
-from functions.synchronizer.ics_cache import IcsFileStorage
+from functions.shared.domain_events import DomainEvent
 
 Handler = Callable[[DomainEvent], None]
-
-T = TypeVar("T", bound=DomainEvent)
 
 
 class IEventBus(Protocol):
@@ -42,6 +32,9 @@ class LocalEventBus:
                 handler(event)
             except Exception as e:
                 self.logger.error(f"Error handling event {event.__class__}: {e}")
+
+
+T = TypeVar("T", bound=DomainEvent)
 
 
 class MockEventBus(IEventBus):
@@ -134,46 +127,3 @@ class MockEventBus(IEventBus):
             assert (
                 actual_value == expected_value
             ), f"Event {event_type.__name__} attribute '{key}' expected '{expected_value}', but got '{actual_value}'"
-
-
-def handle_ics_fetched(
-    event: IcsFetched,
-    *,
-    ics_file_storage: IcsFileStorage,
-) -> None:
-    ics_file_storage.save_to_cache(
-        ics_str=event.ics_str,
-        metadata=event.context,
-    )
-
-
-def handle_sync_profile_created(
-    event: SyncProfileCreated,
-    *,
-    dev_notification_service: IDevNotificationService,
-) -> None:
-    dev_notification_service.on_new_sync_profile(event)
-
-
-def handle_user_created(
-    event: UserCreated,
-    *,
-    dev_notification_service: IDevNotificationService,
-) -> None:
-    dev_notification_service.on_new_user(event)
-
-
-def handle_sync_failed(
-    event: SyncFailed,
-    *,
-    dev_notification_service: IDevNotificationService,
-) -> None:
-    dev_notification_service.on_sync_failed(event)
-
-
-HANDLERS: dict[type[DomainEvent], list[Handler]] = {
-    IcsFetched: [handle_ics_fetched],
-    SyncProfileCreated: [handle_sync_profile_created],
-    UserCreated: [handle_user_created],
-    SyncFailed: [handle_sync_failed],
-}  # type: ignore

@@ -52,12 +52,12 @@ sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     authorization_service=authorization_service,
     sync_stats_repo=FirestoreSyncStatsRepository(),
-    ics_service=IcsService(ics_storage=None),
+    ics_service=IcsService(),
 )
 
 # Initialize AI ruleset service
 ai_ruleset_service = AiRulesetService(
-    ics_service=IcsService(ics_storage=None),
+    ics_service=IcsService(),
     sync_profile_repo=sync_profile_repo,
     ruleset_builder=RulesetBuilder(),
 )
@@ -360,9 +360,9 @@ def fetch_events(
     Returns:
         Either a list of events if successful, or an error message string
     """
-    return IcsService(ics_storage=None).try_fetch_and_parse(
+    return IcsService().try_fetch_and_parse(
         ics_source=source.to_ics_source(),
-        save_to_storage=False,
+        context={"source": source.model_dump()},
     )
 
 

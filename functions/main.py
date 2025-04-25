@@ -13,6 +13,7 @@ from pydantic import BaseModel, ValidationError
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
+from functions.infrastructure.event_bus import LocalEventBus
 from functions.models import (
     SyncTrigger,
 )
@@ -47,6 +48,7 @@ from functions.services.google_calendar_service import GoogleCalendarService
 from functions.services.ics_service import IcsService
 from functions.services.sync_profile_service import SyncProfileService
 from functions.settings import settings
+from functions.shared import domain_events
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
@@ -63,10 +65,15 @@ sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
 ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
-ics_service = IcsService(ics_storage=ics_file_storage)
 
 dev_notification_service = create_dev_notification_service()
 
+event_bus = LocalEventBus(
+    ics_file_storage=ics_file_storage,
+    dev_notification_service=dev_notification_service,
+)
+
+ics_service = IcsService(event_bus=event_bus)
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
@@ -82,6 +89,7 @@ ai_ruleset_service = AiRulesetService(
     ruleset_builder=ruleset_builder,
 )
 error_mapping = ErrorMapping()
+
 
 logger.info(f"Settings: {settings}")
 
@@ -156,8 +164,7 @@ def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
     logger.info(f"Validating ICS URL.", user_id=user_id)
     return ics_service.validate_ics_url(
         UrlIcsSource.from_str(request.url),
-        # In case of error, we want to understand what went wrong by looking at the ICS file.
-        save_to_storage=True,
+        context={"user_id": user_id},
     ).model_dump()
 
 
@@ -267,9 +274,11 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     # Populate `created_at` and other default fields
     sync_profile_repo.save_sync_profile(sync_profile)
 
-    # Notify developers about the new sync profile
-    dev_notification_service.on_new_sync_profile(
-        user_id=user_id, sync_profile_id=sync_profile_id, title=sync_profile.title
+    event_bus.publish(
+        domain_events.SyncProfileCreated(
+            user_id=user_id,
+            sync_profile_id=sync_profile_id,
+        )
     )
 
     ai_ruleset_service.create_ruleset_for_sync_profile(
@@ -422,16 +431,16 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
     user_data = event.data.to_dict() or {}
 
     # Get additional user info from Firebase Auth if possible
-    additional_data = {}
+    event_data = {}
     try:
         firebase_user = auth.get_user(user_id)
 
         # Add key user information to the notification
-        additional_data = {
+        event_data = {
             "email": firebase_user.email or user_data.get("email", "Not provided"),
             "display_name": firebase_user.display_name or "Not provided",
             "email_verified": "Yes" if firebase_user.email_verified else "No",
-            "provider": firebase_user.provider_data[0].provider_id
+            "provider_id": firebase_user.provider_data[0].provider_id
             if firebase_user.provider_data
             else "Unknown",
         }
@@ -443,9 +452,13 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
             error_type=type(e).__name__,
         )
         if "email" in user_data:
-            additional_data["email"] = user_data["email"]
+            event_data["email"] = user_data["email"]
 
-    # Notify developers about the new user with all available information
-    dev_notification_service.on_new_user(
-        user_id=user_id, additional_data=additional_data
+    event_bus.publish(
+        domain_events.UserCreated(
+            user_id=user_id,
+            email=event_data.get("email"),
+            display_name=event_data.get("display_name"),
+            provider_id=event_data.get("provider_id"),
+        )
     )

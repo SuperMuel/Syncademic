@@ -8,7 +8,7 @@ from ..models.user import User, UserMetadata, UserProviderData
 
 
 class FirebaseAuthUserService:
-    """Service for managing Firebase users."""
+    """Service for managing Firebase users, mostly for admin purposes."""
 
     def __init__(self) -> None:
         """Initialize the UserService."""
@@ -97,3 +97,21 @@ class FirebaseAuthUserService:
             users.extend(next_page_users)
 
         return users, page.next_page_token
+
+    def get_user(self, user_id: str) -> User | None:
+        """Get a user by their Firebase user ID.
+
+        Args:
+            user_id: The Firebase user ID to look up
+
+        Returns:
+            The User model for the specified user ID
+            None if the user ID doesn't exist
+
+        """
+        try:
+            user_record = auth.get_user(user_id)
+        except auth.UserNotFoundError:
+            return None
+
+        return self._convert_user_record(user_record)

@@ -1,33 +1,40 @@
 import logging
-from typing import Callable, Protocol
+from typing import Callable, Protocol, TypeVar
 
 from functions.services.dev_notification_service import IDevNotificationService
-from functions.shared import domain_events
+from functions.shared.domain_events import (
+    DomainEvent,
+    IcsFetched,
+    SyncFailed,
+    SyncProfileCreated,
+    UserCreated,
+)
 from functions.synchronizer.ics_cache import IcsFileStorage
 
-Handler = Callable[[domain_events.DomainEvent], None]
+Handler = Callable[[DomainEvent], None]
+
+T = TypeVar("T", bound=DomainEvent)
 
 
 class IEventBus(Protocol):
     """Interface for an event bus."""
 
-    def publish(self, event: domain_events.DomainEvent) -> None: ...
+    def publish(self, event: DomainEvent) -> None: ...
 
 
 class LocalEventBus:
     def __init__(
         self,
-        ics_file_storage: IcsFileStorage,
-        dev_notification_service: IDevNotificationService,
+        handlers: dict[type[DomainEvent], list[Handler]],
     ) -> None:
-        self.handlers: dict[type[domain_events.DomainEvent], list[Handler]] = HANDLERS
+        self.handlers: dict[type[DomainEvent], list[Handler]] = handlers
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info(f"{self.__class__.__name__} initialized")
-        self.ics_file_storage = ics_file_storage
-        self.dev_notification_service = dev_notification_service
 
-    def publish(self, event: domain_events.DomainEvent) -> None:
+    def publish(self, event: DomainEvent) -> None:
         if event.__class__ not in self.handlers:
+            # Note : Crashing here counter the event pattern philosophy, but for now
+            # it's better than silently ignoring the event.
             raise ValueError(f"No handler registered for event type: {event.__class__}")
         for handler in self.handlers[event.__class__]:
             self.logger.info(f"Publishing event {event.__class__} to handler {handler}")
@@ -44,11 +51,11 @@ class MockEventBus(IEventBus):
     """
 
     def __init__(self):
-        self.published_events: list[domain_events.DomainEvent] = []
+        self.published_events: list[DomainEvent] = []
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info("MockEventBus initialized")
 
-    def publish(self, event: domain_events.DomainEvent) -> None:
+    def publish(self, event: DomainEvent) -> None:
         """Records the event instead of dispatching."""
         event_type = type(event)
         self.logger.info(f"Mock publish called with event: {event_type.__name__}")
@@ -56,7 +63,7 @@ class MockEventBus(IEventBus):
 
     # --- Helper methods for assertions ---
 
-    def get_published_events(self) -> list[domain_events.DomainEvent]:
+    def get_published_events(self) -> list[DomainEvent]:
         """Returns a copy of the list of published events."""
         return self.published_events[:]
 
@@ -65,29 +72,41 @@ class MockEventBus(IEventBus):
         self.logger.debug("Clearing published events")
         self.published_events = []
 
-    def get_last_event(self) -> domain_events.DomainEvent | None:
+    def get_last_event(self) -> DomainEvent | None:
         """Returns the last published event, or None if none were published."""
         return self.published_events[-1] if self.published_events else None
 
-    def find_event(
-        self, event_type: type[domain_events.DomainEvent]
-    ) -> domain_events.DomainEvent | None:
-        """Finds the first published event of a specific type."""
+    def find_event(self, event_type: type[T]) -> T | None:
+        """
+        Finds the first published event of a specific type.
+
+        Args:
+            event_type: The type of event to find
+
+        Returns:
+            The first matching event or None if not found
+        """
         return next(
             (event for event in self.published_events if isinstance(event, event_type)),
             None,
         )
 
-    def find_events(
-        self, event_type: type[domain_events.DomainEvent]
-    ) -> list[domain_events.DomainEvent]:
-        """Finds all published events of a specific type."""
+    def find_events(self, event_type: type[T]) -> list[T]:
+        """
+        Finds all published events of a specific type.
+
+        Args:
+            event_type: The type of event to find
+
+        Returns:
+            List of all matching events
+        """
         return [
             event for event in self.published_events if isinstance(event, event_type)
         ]
 
     def assert_event_published(
-        self, event_type: type[domain_events.DomainEvent], count: int = 1
+        self, event_type: type[DomainEvent], count: int = 1
     ) -> None:
         """Asserts that exactly 'count' events of the specified type were published."""
         matching_events = self.find_events(event_type)
@@ -102,7 +121,7 @@ class MockEventBus(IEventBus):
         ), f"Expected no events to be published, but found {len(self.published_events)}. Events: {self.published_events}"
 
     def assert_event_published_with_data(
-        self, event_type: type[domain_events.DomainEvent], **kwargs
+        self, event_type: type[DomainEvent], **kwargs
     ) -> None:
         """Asserts that an event of the specified type was published and contains the specified data."""
         found_event = self.find_event(event_type)
@@ -118,7 +137,7 @@ class MockEventBus(IEventBus):
 
 
 def handle_ics_fetched(
-    event: domain_events.IcsFetched,
+    event: IcsFetched,
     *,
     ics_file_storage: IcsFileStorage,
 ) -> None:
@@ -129,7 +148,7 @@ def handle_ics_fetched(
 
 
 def handle_sync_profile_created(
-    event: domain_events.SyncProfileCreated,
+    event: SyncProfileCreated,
     *,
     dev_notification_service: IDevNotificationService,
 ) -> None:
@@ -137,7 +156,7 @@ def handle_sync_profile_created(
 
 
 def handle_user_created(
-    event: domain_events.UserCreated,
+    event: UserCreated,
     *,
     dev_notification_service: IDevNotificationService,
 ) -> None:
@@ -145,16 +164,16 @@ def handle_user_created(
 
 
 def handle_sync_failed(
-    event: domain_events.SyncFailed,
+    event: SyncFailed,
     *,
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_sync_failed(event)
 
 
-HANDLERS: dict[type[domain_events.DomainEvent], list[Handler]] = {
-    domain_events.IcsFetched: [handle_ics_fetched],
-    domain_events.SyncProfileCreated: [handle_sync_profile_created],
-    domain_events.UserCreated: [handle_user_created],
-    domain_events.SyncFailed: [handle_sync_failed],
+HANDLERS: dict[type[DomainEvent], list[Handler]] = {
+    IcsFetched: [handle_ics_fetched],
+    SyncProfileCreated: [handle_sync_profile_created],
+    UserCreated: [handle_user_created],
+    SyncFailed: [handle_sync_failed],
 }  # type: ignore

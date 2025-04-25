@@ -186,8 +186,8 @@ class TelegramDevNotificationService(IDevNotificationService):
 
 
 def create_dev_notification_service(
-    user_service: FirebaseAuthUserService | None = None,
-    sync_profile_repo: ISyncProfileRepository | None = None,
+    user_service: FirebaseAuthUserService,
+    sync_profile_repo: ISyncProfileRepository,
 ) -> IDevNotificationService:
     """Factory function to create the appropriate notification service based on settings."""
     if not settings.TELEGRAM_BOT_TOKEN or not settings.TELEGRAM_CHAT_ID:

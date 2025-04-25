@@ -48,6 +48,7 @@ from functions.services.exceptions.mapping import ErrorMapping
 from functions.services.google_calendar_service import GoogleCalendarService
 from functions.services.ics_service import IcsService
 from functions.services.sync_profile_service import SyncProfileService
+from functions.services.user_service import FirebaseAuthUserService
 from functions.settings import settings
 from functions.shared import domain_events
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
@@ -65,8 +66,12 @@ sync_profile_repo: ISyncProfileRepository = FirestoreSyncProfileRepository()
 authorization_service = AuthorizationService(backend_auth_repo)
 google_calendar_service = GoogleCalendarService(authorization_service)
 ics_file_storage = FirebaseIcsFileStorage(bucket=storage.bucket())
+user_service = FirebaseAuthUserService()
 
-dev_notification_service = create_dev_notification_service()
+dev_notification_service = create_dev_notification_service(
+    user_service=user_service,
+    sync_profile_repo=sync_profile_repo,
+)
 
 error_mapping = ErrorMapping()
 

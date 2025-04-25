@@ -70,7 +70,7 @@ def firebase_storage(
 
 
 @patch("functions.synchronizer.ics_cache.datetime")
-def test_save_to_cache_with_url_source(
+def test_save_to_cache_with_metadata(
     mock_datetime: MagicMock,
     firebase_storage: FirebaseIcsFileStorage,
     bucket_mock: MagicMock,
@@ -78,17 +78,17 @@ def test_save_to_cache_with_url_source(
 ) -> None:
     """Test saving to cache with a UrlIcsSource"""
     # Arrange
-    ics_source = UrlIcsSource(url=HttpUrl("https://example.com/calendar.ics"))
-    metadata = {"sync_profile_id": "test-profile-123"}
+    metadata = {
+        "sync_profile_id": "test-profile-123",
+        "source_url": "https://example.com/calendar.ics",
+    }
 
     # Mock the datetime to return a predictable value
     mock_now = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
     mock_datetime.now.return_value = mock_now
 
     # Act
-    firebase_storage.save_to_cache(
-        valid_ics_content, ics_source=ics_source, metadata=metadata
-    )
+    firebase_storage.save_to_cache(valid_ics_content, metadata=metadata)
 
     # Assert
     expected_filename = "test-profile-123_2023-01-01_12-00-00.ics"
@@ -99,9 +99,9 @@ def test_save_to_cache_with_url_source(
 
     # Check that metadata was properly set
     expected_metadata = {
-        "ics_source": ics_source.model_dump(),
         "blob_created_at": mock_now.isoformat(),
         "sync_profile_id": "test-profile-123",
+        "source_url": "https://example.com/calendar.ics",
     }
     assert blob_mock.metadata == expected_metadata
 
@@ -122,7 +122,7 @@ def test_save_to_cache_with_no_metadata(
     mock_datetime.now.return_value = mock_now
 
     # Act
-    firebase_storage.save_to_cache(valid_ics_content, ics_source=ics_source)
+    firebase_storage.save_to_cache(valid_ics_content)
 
     # Assert
     filename = mock_now.strftime("unknown-sync-profile_%Y-%m-%d_%H-%M-%S.ics")
@@ -130,7 +130,6 @@ def test_save_to_cache_with_no_metadata(
 
     # Check that metadata was properly set with default values
     expected_metadata = {
-        "ics_source": ics_source.model_dump(),
         "blob_created_at": mock_now.isoformat(),
     }
     assert blob_mock.metadata == expected_metadata
@@ -146,9 +145,7 @@ def test_save_to_cache_with_exception_in_metadata(
     metadata = {"sync_profile_id": "test-profile-456", "error": test_exception}
 
     # Act
-    firebase_storage.save_to_cache(
-        valid_ics_content, ics_source=ics_source, metadata=metadata
-    )
+    firebase_storage.save_to_cache(valid_ics_content, metadata=metadata)
 
     # Assert
     blob_mock.upload_from_string.assert_called_once_with(

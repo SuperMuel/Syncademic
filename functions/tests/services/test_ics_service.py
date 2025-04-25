@@ -4,9 +4,11 @@ import arrow
 import pytest
 from pydantic import HttpUrl
 
+from functions.infrastructure.event_bus import MockEventBus
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.services.exceptions.ics import IcsParsingError, IcsSourceError
 from functions.services.ics_service import IcsService, IcsFetchAndParseResult
+from functions.shared import domain_events
 from functions.shared.event import Event
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
@@ -42,10 +44,17 @@ def mock_url_ics_source() -> Mock:
 
 
 @pytest.fixture
-def service(mock_ics_parser: Mock, mock_ics_storage: Mock) -> IcsService:
+def mock_event_bus() -> MockEventBus:
+    return MockEventBus()
+
+
+@pytest.fixture
+def service(
+    mock_ics_parser: Mock, mock_ics_storage: Mock, mock_event_bus: MockEventBus
+) -> IcsService:
     return IcsService(
         ics_parser=mock_ics_parser,
-        ics_storage=mock_ics_storage,
+        event_bus=mock_event_bus,
     )
 
 
@@ -55,7 +64,7 @@ class TestTryFetchAndParse:
         service: IcsService,
         mock_ics_source: Mock,
         mock_ics_parser: Mock,
-        mock_ics_storage: Mock,
+        mock_event_bus: MockEventBus,
     ) -> None:
         # Arrange
         ics_content = "BEGIN:VCALENDAR..."
@@ -64,7 +73,7 @@ class TestTryFetchAndParse:
         mock_ics_parser.try_parse.return_value = expected_events
 
         # Act
-        result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
+        result = service.try_fetch_and_parse(mock_ics_source, context={"test": "test"})
 
         # Assert
         assert isinstance(result, IcsFetchAndParseResult)
@@ -72,10 +81,10 @@ class TestTryFetchAndParse:
         assert result.raw_ics == ics_content
         mock_ics_source.get_ics_string.assert_called_once()
         mock_ics_parser.try_parse.assert_called_once_with(ics_content)
-        mock_ics_storage.save_to_cache.assert_called_once_with(
-            ics_source=mock_ics_source,
+        mock_event_bus.assert_event_published_with_data(
+            domain_events.IcsFetched,
             ics_str=ics_content,
-            metadata={"test": "test"},
+            context={"test": "test"},
         )
 
     def test_fetch_error(
@@ -103,7 +112,7 @@ class TestTryFetchAndParse:
         service: IcsService,
         mock_ics_source: Mock,
         mock_ics_parser: Mock,
-        mock_ics_storage: Mock,
+        mock_event_bus: MockEventBus,
     ) -> None:
         # Arrange
         ics_content = "BEGIN:VCALENDAR..."
@@ -112,79 +121,17 @@ class TestTryFetchAndParse:
         mock_ics_parser.try_parse.return_value = error
 
         # Act
-        result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
+        result = service.try_fetch_and_parse(mock_ics_source, context={"test": "test"})
 
         # Assert
         assert result == error
         mock_ics_source.get_ics_string.assert_called_once()
         mock_ics_parser.try_parse.assert_called_once_with(ics_content)
-        mock_ics_storage.save_to_cache.assert_called_once_with(
-            ics_source=mock_ics_source,
+        mock_event_bus.assert_event_published_with_data(
+            domain_events.IcsFetched,
             ics_str=ics_content,
-            metadata={"test": "test"},
+            context={"test": "test"},
         )
-
-    def test_storage_disabled(
-        self,
-        service: IcsService,
-        mock_ics_source: Mock,
-        mock_ics_parser: Mock,
-        mock_ics_storage: Mock,
-    ) -> None:
-        # Arrange
-        ics_content = "BEGIN:VCALENDAR..."
-        expected_events = [Mock(spec=Event)]
-        mock_ics_source.get_ics_string.return_value = ics_content
-        mock_ics_parser.try_parse.return_value = expected_events
-
-        # Act
-        result = service.try_fetch_and_parse(mock_ics_source, save_to_storage=False)
-
-        # Assert
-        assert isinstance(result, IcsFetchAndParseResult)
-        assert result.events == expected_events
-        assert result.raw_ics == ics_content
-        mock_ics_storage.save_to_cache.assert_not_called()
-
-    def test_storage_error_handled(
-        self,
-        service: IcsService,
-        mock_ics_source: Mock,
-        mock_ics_parser: Mock,
-        mock_ics_storage: Mock,
-    ) -> None:
-        # Arrange
-        ics_content = "BEGIN:VCALENDAR..."
-        expected_events = [Mock(spec=Event)]
-        mock_ics_source.get_ics_string.return_value = ics_content
-        mock_ics_parser.try_parse.return_value = expected_events
-        mock_ics_storage.save_to_cache.side_effect = Exception("Storage error")
-
-        # Act
-        result = service.try_fetch_and_parse(mock_ics_source)
-
-        # Assert
-        assert isinstance(result, IcsFetchAndParseResult)
-        assert result.events == expected_events
-        assert result.raw_ics == ics_content
-        mock_ics_storage.save_to_cache.assert_called_once()
-
-    def test_no_storage_configured(self, mock_ics_parser: Mock) -> None:
-        # Arrange
-        service = IcsService(ics_parser=mock_ics_parser, ics_storage=None)
-        mock_ics_source = Mock(spec=UrlIcsSource)
-        ics_content = "BEGIN:VCALENDAR..."
-        expected_events = [Mock(spec=Event)]
-        mock_ics_source.get_ics_string.return_value = ics_content
-        mock_ics_parser.try_parse.return_value = expected_events
-
-        # Act
-        result = service.try_fetch_and_parse(mock_ics_source)
-
-        # Assert
-        assert isinstance(result, IcsFetchAndParseResult)
-        assert result.events == expected_events
-        assert result.raw_ics == ics_content
 
 
 class TestValidateIcsUrl:
@@ -203,7 +150,7 @@ class TestValidateIcsUrl:
         )
 
         # Act
-        result = service.validate_ics_url(mock_ics_source)
+        result = service.validate_ics_url(mock_ics_source, context={"test": "test"})
 
         # Assert
         assert isinstance(result, ValidateIcsUrlOutput)
@@ -211,7 +158,7 @@ class TestValidateIcsUrl:
         assert result.error is None
         assert result.nbEvents == len(mock_events)
         service.try_fetch_and_parse.assert_called_once_with(
-            mock_ics_source, save_to_storage=True
+            mock_ics_source, context={"test": "test"}
         )
 
     def test_source_error(
@@ -249,25 +196,3 @@ class TestValidateIcsUrl:
         assert result.valid is False
         assert result.error == str(error)
         assert result.nbEvents is None
-
-    def test_storage_parameter_passed(
-        self,
-        service: IcsService,
-        mock_ics_source: Mock,
-        mock_events: list[Event],
-    ) -> None:
-        # Arrange
-        service.try_fetch_and_parse = Mock(  # type: ignore
-            return_value=IcsFetchAndParseResult(
-                events=mock_events,
-                raw_ics="mock irrelevant ics value",
-            )
-        )
-
-        # Act
-        service.validate_ics_url(mock_ics_source, save_to_storage=False)
-
-        # Assert
-        service.try_fetch_and_parse.assert_called_once_with(
-            mock_ics_source, save_to_storage=False
-        )

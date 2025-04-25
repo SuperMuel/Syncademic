@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from functions.infrastructure.event_bus import LocalEventBus
+from functions.infrastructure.event_bus import IEventBus, LocalEventBus
 from functions.models.schemas import ValidateIcsUrlOutput
 from functions.services.exceptions.ics import (
     BaseIcsError,
@@ -67,7 +67,7 @@ class IcsService:
 
     def __init__(
         self,
-        event_bus: LocalEventBus,
+        event_bus: IEventBus,
         ics_parser: IcsParser | None = None,
     ) -> None:
         self.ics_parser = ics_parser or IcsParser()

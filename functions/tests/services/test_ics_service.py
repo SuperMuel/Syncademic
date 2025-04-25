@@ -73,7 +73,7 @@ class TestTryFetchAndParse:
         mock_ics_parser.try_parse.return_value = expected_events
 
         # Act
-        result = service.try_fetch_and_parse(mock_ics_source, context={"test": "test"})
+        result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
 
         # Assert
         assert isinstance(result, IcsFetchAndParseResult)
@@ -84,7 +84,7 @@ class TestTryFetchAndParse:
         mock_event_bus.assert_event_published_with_data(
             domain_events.IcsFetched,
             ics_str=ics_content,
-            context={"test": "test"},
+            metadata={"test": "test"},
         )
 
     def test_fetch_error(
@@ -121,7 +121,7 @@ class TestTryFetchAndParse:
         mock_ics_parser.try_parse.return_value = error
 
         # Act
-        result = service.try_fetch_and_parse(mock_ics_source, context={"test": "test"})
+        result = service.try_fetch_and_parse(mock_ics_source, metadata={"test": "test"})
 
         # Assert
         assert result == error
@@ -130,7 +130,7 @@ class TestTryFetchAndParse:
         mock_event_bus.assert_event_published_with_data(
             domain_events.IcsFetched,
             ics_str=ics_content,
-            context={"test": "test"},
+            metadata={"test": "test"},
         )
 
 
@@ -150,7 +150,7 @@ class TestValidateIcsUrl:
         )
 
         # Act
-        result = service.validate_ics_url(mock_ics_source, context={"test": "test"})
+        result = service.validate_ics_url(mock_ics_source, metadata={"test": "test"})
 
         # Assert
         assert isinstance(result, ValidateIcsUrlOutput)
@@ -158,7 +158,7 @@ class TestValidateIcsUrl:
         assert result.error is None
         assert result.nbEvents == len(mock_events)
         service.try_fetch_and_parse.assert_called_once_with(
-            mock_ics_source, context={"test": "test"}
+            mock_ics_source, metadata={"test": "test"}
         )
 
     def test_source_error(

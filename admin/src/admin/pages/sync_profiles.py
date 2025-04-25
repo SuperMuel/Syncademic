@@ -366,7 +366,7 @@ def fetch_events(
     """
     return IcsService(event_bus=event_bus).try_fetch_and_parse(
         ics_source=source.to_ics_source(),
-        context={"source": source.model_dump()},
+        metadata={"source": source.model_dump()},
     )
 
 

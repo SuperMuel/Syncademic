@@ -76,14 +76,14 @@ class IcsService:
     def try_fetch_and_parse(
         self,
         ics_source: IcsSource,
-        context: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> IcsFetchAndParseResult | IcsSourceError | IcsParsingError:
         """
         Tries to fetch the ICS file and parse it.
 
         Args:
             ics_source: The source to fetch the ICS file from
-            context: Additional context to pass to the event bus (e.g. sync_profile_id, user_id,...)
+            metadata: Additional metadata to pass to the event bus (e.g. sync_profile_id, user_id,...)
         Returns:
             IcsFetchAndParseResult (with events and raw_ics) if successful, otherwise a BaseIcsError.
 
@@ -96,7 +96,7 @@ class IcsService:
             self.event_bus.publish(
                 domain_events.IcsFetched(
                     ics_str=ics_str,
-                    context=context,
+                    metadata=metadata,
                 )
             )
         except IcsSourceError as e:
@@ -113,14 +113,14 @@ class IcsService:
     def validate_ics_url(
         self,
         ics_source: UrlIcsSource,
-        context: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ValidateIcsUrlOutput:
         """
         Validates an ICS URL by attempting to fetch and parse its contents.
 
         Args:
             ics_source: The source to fetch the ICS file from
-            context: Additional context to pass to the event bus (e.g. sync_profile_id, user_id,...)
+            metadata: Additional metadata to pass to the event bus (e.g. sync_profile_id, user_id,...)
 
         Returns:
             ValidateIcsUrlOutput: Contains validation results including:
@@ -130,7 +130,7 @@ class IcsService:
         """
         result_or_error = self.try_fetch_and_parse(
             ics_source,
-            context=context,
+            metadata=metadata,
         )
 
         if isinstance(result_or_error, BaseIcsError):

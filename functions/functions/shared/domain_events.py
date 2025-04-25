@@ -57,6 +57,6 @@ class IcsFetched(DomainEvent):
     ics_str: str = Field(..., description="The raw ICS content as a string.")
 
     # Metadata passed down from the caller (e.g., sync_profile_id, user_id)
-    context: dict[str, Any] | None = Field(
-        None, description="Additional context associated with the fetch."
+    metadata: dict[str, Any] | None = Field(
+        None, description="Additional metadata associated with the fetch."
     )

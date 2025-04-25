@@ -168,7 +168,7 @@ def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
     logger.info(f"Validating ICS URL.", user_id=user_id)
     return ics_service.validate_ics_url(
         UrlIcsSource.from_str(request.url),
-        context={"user_id": user_id},
+        metadata={"user_id": user_id},
     ).model_dump()
 
 

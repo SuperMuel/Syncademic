@@ -207,7 +207,7 @@ class SyncProfileService:
 
         result_or_error = self._ics_service.try_fetch_and_parse(
             ics_source=profile.scheduleSource.to_ics_source(),
-            context={
+            metadata={
                 "sync_profile_id": profile.id,
                 "user_id": user_id,
                 "sync_trigger": sync_trigger,

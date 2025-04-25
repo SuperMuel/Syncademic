@@ -11,7 +11,7 @@ from functions.synchronizer.ics_cache import IcsFileStorage
 def handle_ics_fetched(event: IcsFetched, ics_file_storage: IcsFileStorage) -> None:
     ics_file_storage.save_to_cache(
         ics_str=event.ics_str,
-        metadata=event.context,
+        metadata=event.metadata,
     )
 
 

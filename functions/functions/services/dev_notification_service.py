@@ -3,7 +3,7 @@ import requests
 import json
 import traceback
 from firebase_functions import logger
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from functions.models.sync_profile import SyncProfile
 from functions.repositories.sync_profile_repository import ISyncProfileRepository

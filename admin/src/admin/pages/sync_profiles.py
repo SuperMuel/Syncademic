@@ -1,4 +1,5 @@
 from functions.ai.ruleset_builder import RulesetBuilder
+from functions.infrastructure.event_bus import MockEventBus
 import streamlit as st
 
 from functions.models.sync_profile import (
@@ -40,6 +41,9 @@ from admin.shared.data_service import data_service
 st.title("🔄 Sync Profiles")
 
 # Initialize services
+
+event_bus = MockEventBus()
+
 sync_profile_repo = FirestoreSyncProfileRepository()
 
 # Initialize authorization service
@@ -52,12 +56,12 @@ sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     authorization_service=authorization_service,
     sync_stats_repo=FirestoreSyncStatsRepository(),
-    ics_service=IcsService(),
+    ics_service=IcsService(event_bus=event_bus),
 )
 
 # Initialize AI ruleset service
 ai_ruleset_service = AiRulesetService(
-    ics_service=IcsService(),
+    ics_service=IcsService(event_bus=event_bus),
     sync_profile_repo=sync_profile_repo,
     ruleset_builder=RulesetBuilder(),
 )
@@ -360,7 +364,7 @@ def fetch_events(
     Returns:
         Either a list of events if successful, or an error message string
     """
-    return IcsService().try_fetch_and_parse(
+    return IcsService(event_bus=event_bus).try_fetch_and_parse(
         ics_source=source.to_ics_source(),
         context={"source": source.model_dump()},
     )

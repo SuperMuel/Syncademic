@@ -1,3 +1,4 @@
+from functions.infrastructure.event_bus import MockEventBus
 import streamlit as st
 import json
 from typing import cast
@@ -24,7 +25,8 @@ from functions.synchronizer.ics_source import IcsSource, StringIcsSource, UrlIcs
 from functions.synchronizer.ics_parser import IcsParser
 
 # Initialize services
-ics_service = IcsService(ics_storage=None)
+event_bus = MockEventBus()
+ics_service = IcsService(event_bus=event_bus)
 ruleset_builder = RulesetBuilder()
 ai_ruleset_service = AiRulesetService(
     ics_service=ics_service,

@@ -83,27 +83,16 @@ class SyncProfileService:
     ) -> None:
         """
         Synchronizes a user's schedule with their target calendar.
-
-        This method:
-        1. Verifies the SyncProfile status to ensure it can be synchronized. Skip this step if `force` is True,
-        2. Sets the profile status to IN_PROGRESS if allowable.
-        3. Enforces the user's daily synchronization limit.
-        4. Obtains an authorized Google Calendar manager for the target calendar.
-        5. Fetches and parses the ICS data from the user's specified schedule source.
-        6. Applies any defined customization rules (AI ruleset) to the events.
-        7. Deletes or replaces relevant events on the target calendar based on the sync type:
-            - REGULAR: Only future events are updated, leaving past events untouched.
-            - FULL: All events previously created by this profile are removed and replaced.
-            Note: This parameter is irrelevant for the first sync, which is always a full sync.
-        8. Updates the SyncProfile status, marks a successful sync time,
-            and increments the daily usage count on success.
-
+        
+        Validates the sync profile's status, enforces daily sync limits unless forced, and performs synchronization by fetching and parsing ICS data, applying any customization rules, and updating the target calendar according to the specified sync type. Updates the sync profile's status and usage statistics on completion. If synchronization fails, updates the profile status and notifies developers with detailed error information.
+        
         Args:
             user_id: The Firebase Auth user ID.
             sync_profile_id: The ID of the SyncProfile to synchronize.
-            sync_trigger: Describes what triggered this sync (e.g., MANUAL, SCHEDULED).
-            sync_type: Specifies whether to do a REGULAR or FULL synchronization.
-
+            sync_trigger: The trigger for this synchronization (e.g., MANUAL, SCHEDULED).
+            sync_type: The type of synchronization to perform (REGULAR or FULL). Defaults to REGULAR.
+            force: If True, bypasses status and daily limit checks.
+        
         Raises:
             SyncProfileNotFoundError: If the SyncProfile does not exist.
         """
@@ -203,6 +192,11 @@ class SyncProfileService:
         user_id: str,
         calendar_manager: GoogleCalendarManager,
     ) -> None:
+        """
+        Performs synchronization of a user's schedule with their target calendar.
+        
+        Fetches and parses ICS data, applies any ruleset to the events, and updates the target calendar by creating or deleting events as needed based on the synchronization trigger and type. Raises an ICS parsing error if encountered.
+        """
         logger.info(f"Running synchronization for profile {profile.id}")
 
         result_or_error = self._ics_service.try_fetch_and_parse(

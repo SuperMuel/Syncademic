@@ -17,6 +17,11 @@ def bootstrap_event_bus(
     ics_file_storage: IcsFileStorage,
     dev_notification_service: IDevNotificationService,
 ) -> LocalEventBus:
+    """
+    Initializes and returns a LocalEventBus with handlers for domain events.
+    
+    The event bus is configured to dispatch specific domain events to their corresponding handlers, with required dependencies injected.
+    """
     return LocalEventBus(
         handlers=cast(
             dict[type[DomainEvent], list[Handler]],

@@ -356,13 +356,13 @@ def fetch_events(
     source: ScheduleSource,
 ):
     """
-    Fetch and parse events for a sync profile.
-
+    Fetches and parses calendar events from the given schedule source.
+    
     Args:
-        source: The source to fetch events for
-
+        source: The schedule source from which to retrieve events.
+    
     Returns:
-        Either a list of events if successful, or an error message string
+        A list of parsed events if successful, or an error message string if fetching or parsing fails.
     """
     return IcsService(event_bus=event_bus).try_fetch_and_parse(
         ics_source=source.to_ics_source(),

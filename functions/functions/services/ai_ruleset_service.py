@@ -49,21 +49,10 @@ class AiRulesetService:
         self,
         sync_profile: SyncProfile,
     ) -> None:
-        """Creates or updates an AI-generated ruleset for a sync profile.
-
-        This method fetches and parses the ICS calendar data from the sync profile's schedule source,
-        compresses the schedule to reduce redundancy, generates an AI ruleset based on the events,
-        and stores the result in the sync profile repository.
-
-        Args:
-            sync_profile: The sync profile containing the schedule source and user information.
-
-        Raises:
-            None: Errors are handled internally and stored in the sync profile repository.
-
-        Note:
-            If any errors occur during fetching, parsing, or ruleset generation,
-            they are logged and stored in the sync profile repository rather than raised.
+        """
+        Generates and stores an AI-powered ruleset for the given sync profile.
+        
+        Fetches and parses ICS calendar data from the sync profile's schedule source, generates an AI-based ruleset from the extracted events, and updates the sync profile repository with the result. Any errors encountered during the process are logged and recorded in the sync profile rather than being raised.
         """
 
         result_or_error = self.ics_service.try_fetch_and_parse(

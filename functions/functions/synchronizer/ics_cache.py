@@ -15,6 +15,13 @@ class IcsFileStorage(ABC):
         *,
         metadata: dict | None = None,
     ) -> None:
+        """
+        Saves an ICS calendar string to the cache or storage backend.
+        
+        Args:
+            ics_str: The ICS calendar data as a string.
+            metadata: Optional dictionary of metadata to associate with the stored file.
+        """
         pass
 
 
@@ -39,6 +46,11 @@ class FirebaseIcsFileStorage(IcsFileStorage):
         *,
         metadata: dict | None = None,
     ) -> None:
+        """
+        Saves an ICS string to Firebase Cloud Storage with optional metadata.
+        
+        The ICS file is stored as a blob with a filename based on the current UTC timestamp and a sync profile identifier from the metadata. Any Exception objects in the metadata are formatted for storage. The blob's metadata includes the creation timestamp and all provided metadata.
+        """
         now = datetime.now(timezone.utc)
         if not metadata:
             metadata = {}

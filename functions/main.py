@@ -100,7 +100,10 @@ ai_ruleset_service = AiRulesetService(
 
 def get_user_id_or_raise(req: https_fn.CallableRequest) -> str:
     """
-    Get the user ID from the request, or raise an error if the request is not authenticated.
+    Retrieves the authenticated user ID from a callable request.
+    
+    Raises:
+        HttpsError: If the request is not authenticated.
     """
 
     if not req.auth or not req.auth.uid:
@@ -165,6 +168,16 @@ def validate_request(input_model: type[T]):  # noqa: ANN201
 )
 @validate_request(ValidateIcsUrlInput)
 def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
+    """
+    Validates an ICS URL for the specified user.
+    
+    Args:
+        user_id: The unique identifier of the user performing the validation.
+        request: Contains the ICS URL to be validated.
+    
+    Returns:
+        A dictionary with the validation result of the ICS URL.
+    """
     logger.info(f"Validating ICS URL.", user_id=user_id)
     return ics_service.validate_ics_url(
         UrlIcsSource.from_str(request.url),
@@ -258,6 +271,11 @@ def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
 )  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
+    """
+    Handles Firestore document creation for a new sync profile.
+    
+    Validates the new sync profile document, saves it to the repository, publishes a domain event, generates an AI ruleset, and initiates an initial synchronization for the created profile.
+    """
     user_id = event.params["userId"]
     sync_profile_id = event.params["syncProfileId"]
     data = event.data.to_dict()
@@ -428,6 +446,11 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
 )  # type: ignore
 def on_user_created(event: Event[DocumentSnapshot]) -> None:
+    """
+    Handles Firestore user document creation by publishing a UserCreated domain event.
+    
+    Extracts user information from the Firestore document and Firebase Authentication, then publishes a UserCreated event to the event bus with the user's details.
+    """
     user_id = event.params["userId"]
     logger.info(f"New user created: {user_id}")
 

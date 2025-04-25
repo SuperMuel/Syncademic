@@ -45,6 +45,9 @@ def mock_url_ics_source() -> Mock:
 
 @pytest.fixture
 def mock_event_bus() -> MockEventBus:
+    """
+    Creates and returns a new instance of MockEventBus for use in tests.
+    """
     return MockEventBus()
 
 
@@ -52,6 +55,16 @@ def mock_event_bus() -> MockEventBus:
 def service(
     mock_ics_parser: Mock, mock_ics_storage: Mock, mock_event_bus: MockEventBus
 ) -> IcsService:
+    """
+    Creates an instance of IcsService with the provided ICS parser and event bus mocks.
+    
+    Args:
+        mock_ics_parser: Mocked ICS parser to be used by the service.
+        mock_event_bus: Mocked event bus for publishing domain events.
+    
+    Returns:
+        An IcsService instance configured with the given parser and event bus.
+    """
     return IcsService(
         ics_parser=mock_ics_parser,
         event_bus=mock_event_bus,
@@ -67,6 +80,10 @@ class TestTryFetchAndParse:
         mock_event_bus: MockEventBus,
     ) -> None:
         # Arrange
+        """
+        Tests that try_fetch_and_parse successfully fetches and parses ICS content, returning
+        the expected events and raw ICS string, and publishes an IcsFetched event with the correct data.
+        """
         ics_content = "BEGIN:VCALENDAR..."
         expected_events = [Mock(spec=Event), Mock(spec=Event)]
         mock_ics_source.get_ics_string.return_value = ics_content
@@ -115,6 +132,11 @@ class TestTryFetchAndParse:
         mock_event_bus: MockEventBus,
     ) -> None:
         # Arrange
+        """
+        Tests that try_fetch_and_parse returns a parsing error when ICS parsing fails.
+        
+        Simulates a scenario where the ICS source returns valid content but the parser returns an IcsParsingError. Verifies that the error is returned, the appropriate methods are called once, and an IcsFetched event is published with the correct data.
+        """
         ics_content = "BEGIN:VCALENDAR..."
         error = IcsParsingError("Invalid format")
         mock_ics_source.get_ics_string.return_value = ics_content
@@ -142,6 +164,9 @@ class TestValidateIcsUrl:
         mock_events: list[Event],
     ) -> None:
         # Arrange
+        """
+        Tests that validate_ics_url returns a valid result with the correct event count when ICS parsing succeeds.
+        """
         service.try_fetch_and_parse = Mock(  # type: ignore
             return_value=IcsFetchAndParseResult(
                 events=mock_events,
@@ -167,6 +192,10 @@ class TestValidateIcsUrl:
         mock_ics_source: Mock,
     ) -> None:
         # Arrange
+        """
+        Tests that validate_ics_url returns an invalid result with the correct error message
+        when try_fetch_and_parse raises an IcsSourceError.
+        """
         error = IcsSourceError("Failed to fetch calendar")
         service.try_fetch_and_parse = Mock(return_value=error)  # type: ignore
 
@@ -185,6 +214,11 @@ class TestValidateIcsUrl:
         mock_ics_source: Mock,
     ) -> None:
         # Arrange
+        """
+        Tests that validate_ics_url returns an invalid result with an error message when parsing fails.
+        
+        Simulates a parsing error from try_fetch_and_parse and verifies that validate_ics_url produces a ValidateIcsUrlOutput with valid set to False, the correct error message, and nbEvents as None.
+        """
         error = IcsParsingError("Invalid calendar format")
         service.try_fetch_and_parse = Mock(return_value=error)  # type: ignore
 

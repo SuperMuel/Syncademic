@@ -11,7 +11,9 @@ class FirebaseAuthUserService:
     """Service for managing Firebase users, mostly for admin purposes."""
 
     def __init__(self) -> None:
-        """Initialize the UserService."""
+        """
+        Initializes the FirebaseAuthUserService instance.
+        """
         pass
 
     def _convert_provider_data(self, provider: UserInfo) -> UserProviderData:
@@ -73,15 +75,16 @@ class FirebaseAuthUserService:
         page_token: str | None = None,
         progress_callback: Callable[[list[User], str | None], None] | None = None,
     ) -> tuple[list[User], str | None]:
-        """List all Firebase users in the project.
-
+        """
+        Retrieves all Firebase users in the project, supporting pagination and optional progress updates.
+        
         Args:
-            max_results: Maximum number of users to return per page
-            page_token: Token for the next page from a previous call
-            progress_callback: Optional callback for progress updates, receives the current page of users and next page token
-
+            max_results: Maximum number of users to return per page.
+            page_token: Token indicating the starting point for the next page of results.
+            progress_callback: Optional function called with each page of users and the next page token.
+        
         Returns:
-            A tuple containing the list of users and the next page token (if available)
+            A tuple containing the list of retrieved users and the next page token, or None if there are no more pages.
         """
         page = auth.list_users(max_results=max_results, page_token=page_token)
         users = [self._convert_user_record(user) for user in page.users]
@@ -99,15 +102,14 @@ class FirebaseAuthUserService:
         return users, page.next_page_token
 
     def get_user(self, user_id: str) -> User | None:
-        """Get a user by their Firebase user ID.
-
+        """
+        Retrieves a user by their Firebase user ID.
+        
         Args:
-            user_id: The Firebase user ID to look up
-
+            user_id: The unique identifier of the Firebase user.
+        
         Returns:
-            The User model for the specified user ID
-            None if the user ID doesn't exist
-
+            The corresponding User model if the user exists, or None if not found.
         """
         try:
             user_record = auth.get_user(user_id)

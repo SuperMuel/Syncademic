@@ -1,5 +1,5 @@
-from functools import partial, wraps
-from typing import Any, Callable, TypeVar, cast
+from functools import wraps
+from typing import Any, Callable, TypeVar
 
 from firebase_admin import auth, initialize_app, storage
 from firebase_functions import https_fn, logger, options, scheduler_fn
@@ -10,10 +10,10 @@ from firebase_functions.firestore_fn import (
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from pydantic import BaseModel, ValidationError
 
-from functions import handlers
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.infrastructure.event_bus import LocalEventBus, Handler
+from functions.bootstrap import bootstrap_event_bus
+from functions.infrastructure.event_bus import Handler, LocalEventBus
 from functions.models import (
     SyncTrigger,
 )
@@ -50,12 +50,6 @@ from functions.services.ics_service import IcsService
 from functions.services.sync_profile_service import SyncProfileService
 from functions.settings import settings
 from functions.shared import domain_events
-from functions.shared.domain_events import (
-    DomainEvent,
-    IcsFetched,
-    SyncFailed,
-    SyncProfileCreated,
-)
 from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
 from functions.synchronizer.ics_source import UrlIcsSource
 
@@ -76,39 +70,10 @@ dev_notification_service = create_dev_notification_service()
 
 error_mapping = ErrorMapping()
 
-
-event_bus = LocalEventBus(
-    handlers=cast(
-        dict[type[DomainEvent], list[Handler]],
-        {
-            domain_events.IcsFetched: [
-                partial(
-                    handlers.handle_ics_fetched,
-                    ics_file_storage=ics_file_storage,
-                )
-            ],
-            domain_events.SyncFailed: [
-                partial(
-                    handlers.handle_sync_failed,
-                    dev_notification_service=dev_notification_service,
-                )
-            ],
-            domain_events.SyncProfileCreated: [
-                partial(
-                    handlers.handle_sync_profile_created,
-                    dev_notification_service=dev_notification_service,
-                )
-            ],
-            domain_events.UserCreated: [
-                partial(
-                    handlers.handle_user_created,
-                    dev_notification_service=dev_notification_service,
-                )
-            ],
-        },
-    )
+event_bus = bootstrap_event_bus(
+    ics_file_storage=ics_file_storage,
+    dev_notification_service=dev_notification_service,
 )
-
 
 ics_service = IcsService(event_bus=event_bus)
 

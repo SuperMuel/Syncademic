@@ -13,7 +13,9 @@ from functions.models.sync_profile import (
     ScheduleSource,
     TargetCalendar,
 )
+from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.exceptions.sync import DailySyncLimitExceededError
+from functions.services.google_calendar_service import GoogleCalendarService
 from functions.shared import domain_events
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
@@ -91,12 +93,24 @@ def mock_event_bus() -> MockEventBus:
 
 
 @pytest.fixture
+def google_calendar_service() -> GoogleCalendarService:
+    return Mock()
+
+
+@pytest.fixture
+def ai_ruleset_service() -> AiRulesetService:
+    return Mock()
+
+
+@pytest.fixture
 def sync_profile_service(
     sync_profile_repo,
     sync_stats_repo,
     auth_service_mock,
     ics_service_mock,
     mock_event_bus,
+    google_calendar_service,
+    ai_ruleset_service,
 ):
     """Create a SyncProfileService with the real MockSyncProfileRepository."""
     return SyncProfileService(
@@ -105,6 +119,8 @@ def sync_profile_service(
         authorization_service=auth_service_mock,
         ics_service=ics_service_mock,
         event_bus=mock_event_bus,
+        google_calendar_service=google_calendar_service,
+        ai_ruleset_service=ai_ruleset_service,
     )
 
 

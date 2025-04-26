@@ -7,6 +7,7 @@ from pydantic import HttpUrl
 from pytest_mock import MockFixture
 
 from functions.ai.ruleset_builder import RulesetBuilder
+from functions.infrastructure.event_bus import MockEventBus
 from functions.models.sync_profile import (
     ScheduleSource,
     SyncProfile,
@@ -23,6 +24,7 @@ from functions.repositories.sync_profile_repository import (
 from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.exceptions.ics import IcsSourceError
 from functions.services.ics_service import IcsService, IcsFetchAndParseResult
+from functions.shared.domain_events import RulesetGenerationFailed
 from functions.shared.event import Event
 from tests.util import VALID_RULESET
 
@@ -43,15 +45,22 @@ def mock_ruleset_builder() -> Mock:
 
 
 @pytest.fixture
+def mock_event_bus() -> MockEventBus:
+    return MockEventBus()
+
+
+@pytest.fixture
 def service(
     mock_ics_service: Mock,
     mock_sync_profile_repo: ISyncProfileRepository,
     mock_ruleset_builder: Mock,
+    mock_event_bus: MockEventBus,
 ) -> AiRulesetService:
     return AiRulesetService(
         ics_service=mock_ics_service,
         sync_profile_repo=mock_sync_profile_repo,
         ruleset_builder=mock_ruleset_builder,
+        event_bus=mock_event_bus,
     )
 
 
@@ -104,6 +113,7 @@ class TestAiRulesetService:
         mock_ruleset_builder: Mock,
         sample_sync_profile: SyncProfile,
         sample_events: list[Event],
+        mock_event_bus: MockEventBus,
     ) -> None:
         """Test successful creation and storage of a ruleset."""
         # Arrange
@@ -132,6 +142,7 @@ class TestAiRulesetService:
         mock_sync_profile_repo: MockSyncProfileRepository,
         mock_ruleset_builder: Mock,
         sample_sync_profile: SyncProfile,
+        mock_event_bus: MockEventBus,
     ) -> None:
         """Test handling of ICS fetch errors."""
         # Arrange
@@ -153,6 +164,12 @@ class TestAiRulesetService:
             == "Failed to fetch and parse ICS: Failed to fetch ICS"
         )
         mock_ruleset_builder.generate_ruleset.assert_not_called()
+        event = mock_event_bus.find_event(RulesetGenerationFailed)
+        assert event is not None
+        assert event.user_id == sample_sync_profile.user_id
+        assert event.sync_profile_id == sample_sync_profile.id
+        assert event.error_type == IcsSourceError.__name__
+        assert "Failed to fetch ICS" in event.error_message
 
     def test_handles_ruleset_generation_error(
         self,
@@ -162,6 +179,7 @@ class TestAiRulesetService:
         mock_ruleset_builder: Mock,
         sample_sync_profile: SyncProfile,
         sample_events: list[Event],
+        mock_event_bus: MockEventBus,
     ) -> None:
         """Test handling of ruleset generation errors."""
         # Arrange
@@ -186,3 +204,9 @@ class TestAiRulesetService:
             sync_profile.ruleset_error
             == "Failed to generate ruleset: Exception: Failed to generate ruleset"
         )
+        event = mock_event_bus.find_event(RulesetGenerationFailed)
+        assert event is not None
+        assert event.user_id == sample_sync_profile.user_id
+        assert event.sync_profile_id == sample_sync_profile.id
+        assert event.error_type == Exception.__name__
+        assert "Failed to generate ruleset" in event.error_message

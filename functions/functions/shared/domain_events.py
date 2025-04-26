@@ -2,10 +2,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Any
 
-from functions.models.rules import Ruleset
-from functions.synchronizer.ics_source import (
-    IcsSource,
-)
+from functions.models.sync_profile import SyncProfile
 
 
 class DomainEvent(BaseModel):
@@ -76,6 +73,18 @@ class SyncProfileDeletionFailed(DomainEvent):
     sync_profile_id: str = Field(..., description="The ID of the sync profile.")
     error_type: str = Field(..., description="The type/class name of the error.")
     error_message: str = Field(..., description="Description of the deletion error.")
+    formatted_traceback: str | None = Field(
+        None, description="The full error traceback if available."
+    )
+
+
+class RulesetGenerationFailed(DomainEvent):
+    """Published when a ruleset generation fails."""
+
+    user_id: str = Field(..., description="The ID of the user.")
+    sync_profile_id: str = Field(..., description="The ID of the sync profile.")
+    error_type: str = Field(..., description="The type/class name of the error.")
+    error_message: str = Field(..., description="Description of the generation error.")
     formatted_traceback: str | None = Field(
         None, description="The full error traceback if available."
     )

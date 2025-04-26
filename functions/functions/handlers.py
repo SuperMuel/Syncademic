@@ -1,5 +1,7 @@
+from functions.models.sync_profile import SyncTrigger
 from functions.repositories.sync_stats_repository import ISyncStatsRepository
 from functions.services.dev_notification_service import IDevNotificationService
+from functions.services.sync_profile_service import SyncProfileService
 from functions.shared.domain_events import (
     IcsFetched,
     SyncFailed,
@@ -11,35 +13,35 @@ from functions.shared.domain_events import (
 from functions.synchronizer.ics_cache import IcsFileStorage
 
 
-def handle_ics_fetched(event: IcsFetched, ics_file_storage: IcsFileStorage) -> None:
+def save_ics_to_storage(event: IcsFetched, ics_file_storage: IcsFileStorage) -> None:
     ics_file_storage.save_to_cache(
         ics_str=event.ics_str,
         metadata=event.metadata,
     )
 
 
-def handle_sync_profile_created(
+def notify_developer_on_sync_profile_creation(
     event: SyncProfileCreated,
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_new_sync_profile(event)
 
 
-def handle_user_created(
+def notify_developer_on_new_user(
     event: UserCreated,
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_new_user(event)
 
 
-def handle_sync_failed(
+def notify_developer_on_sync_failure(
     event: SyncFailed,
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_sync_failed(event)
 
 
-def handle_sync_succeeded(
+def increment_sync_count_on_sync_success(
     event: SyncSucceeded,
     sync_stats_repo: ISyncStatsRepository,
 ) -> None:
@@ -48,7 +50,7 @@ def handle_sync_succeeded(
     )
 
 
-def handle_sync_profile_deletion_failed(
+def notify_developer_on_sync_profile_deletion_failure(
     event: SyncProfileDeletionFailed,
     dev_notification_service: IDevNotificationService,
 ) -> None:

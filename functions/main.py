@@ -84,20 +84,24 @@ event_bus = bootstrap_event_bus(
 
 ics_service = IcsService(event_bus=event_bus)
 
+
+ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
+
+ai_ruleset_service = AiRulesetService(
+    ics_service=ics_service,
+    sync_profile_repo=sync_profile_repo,
+    ruleset_builder=ruleset_builder,
+    event_bus=event_bus,
+)
+
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
     ics_service=ics_service,
     google_calendar_service=google_calendar_service,
+    ai_ruleset_service=ai_ruleset_service,
     event_bus=event_bus,
-)
-
-ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
-ai_ruleset_service = AiRulesetService(
-    ics_service=ics_service,
-    sync_profile_repo=sync_profile_repo,
-    ruleset_builder=ruleset_builder,
 )
 
 

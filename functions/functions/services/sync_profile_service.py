@@ -21,6 +21,7 @@ from functions.repositories.backend_authorization_repository import (
 )
 from functions.repositories.sync_profile_repository import ISyncProfileRepository
 from functions.repositories.sync_stats_repository import ISyncStatsRepository
+from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.authorization_service import AuthorizationService
 from functions.services.exceptions.ics import BaseIcsError, IcsParsingError
 from functions.services.exceptions.sync import (
@@ -55,6 +56,7 @@ class SyncProfileService:
         sync_stats_repo: ISyncStatsRepository,
         ics_service: IcsService,
         google_calendar_service: GoogleCalendarService,
+        ai_ruleset_service: AiRulesetService,
         event_bus: IEventBus,
     ) -> None:
         self._sync_profile_repo = sync_profile_repo
@@ -62,6 +64,7 @@ class SyncProfileService:
         self._sync_stats_repo = sync_stats_repo
         self._google_calendar_service = google_calendar_service
         self._ics_service = ics_service
+        self._ai_ruleset_service = ai_ruleset_service
         self._event_bus = event_bus
 
     @staticmethod
@@ -543,17 +546,23 @@ class SyncProfileService:
             "SyncProfile persisted.", user_id=user_id, sync_profile_id=sync_profile_id
         )
 
-        # 7. Publish Event (delegates AI generation and initial sync)
+        # 7. Generate initial ruleset
+        # It does not raise any error so that even if it fails, the sync profile is still created
+        self._ai_ruleset_service.create_ruleset_for_sync_profile(sync_profile)
+
+        # 8. Publish Event
         self._event_bus.publish(
             domain_events.SyncProfileCreated(
                 user_id=user_id,
                 sync_profile_id=sync_profile_id,
             )
         )
-        logger.info(
-            "SyncProfileCreated event published.",
+
+        # 9. Launch initial sync
+        self.synchronize(
             user_id=user_id,
             sync_profile_id=sync_profile_id,
+            sync_trigger=SyncTrigger.ON_CREATE,
         )
 
         return sync_profile

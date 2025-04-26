@@ -371,6 +371,15 @@ class SyncProfileService:
                 message=f"Authorization failed.",
             )
             self._sync_profile_repo.save_sync_profile(profile)
+            self._event_bus.publish(
+                domain_events.SyncProfileDeletionFailed(
+                    user_id=user_id,
+                    sync_profile_id=sync_profile_id,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    formatted_traceback=traceback.format_exc(),
+                )
+            )
             return
 
         try:
@@ -392,3 +401,12 @@ class SyncProfileService:
                 message=f"Could not delete events from calendar.",
             )
             self._sync_profile_repo.save_sync_profile(profile)
+            self._event_bus.publish(
+                domain_events.SyncProfileDeletionFailed(
+                    user_id=user_id,
+                    sync_profile_id=sync_profile_id,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    formatted_traceback=traceback.format_exc(),
+                )
+            )

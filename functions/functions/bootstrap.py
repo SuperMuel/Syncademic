@@ -11,6 +11,7 @@ from functions.shared.domain_events import (
     SyncProfileCreated,
     SyncSucceeded,
     UserCreated,
+    SyncProfileDeletionFailed,
 )
 from functions.synchronizer.ics_cache import IcsFileStorage
 
@@ -52,6 +53,12 @@ def bootstrap_event_bus(
                     partial(
                         handlers.handle_sync_succeeded,
                         sync_stats_repo=sync_stats_repo,
+                    )
+                ],
+                SyncProfileDeletionFailed: [
+                    partial(
+                        handlers.handle_sync_profile_deletion_failed,
+                        dev_notification_service=dev_notification_service,
                     )
                 ],
             },

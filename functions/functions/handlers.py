@@ -6,6 +6,7 @@ from functions.shared.domain_events import (
     SyncProfileCreated,
     SyncSucceeded,
     UserCreated,
+    SyncProfileDeletionFailed,
 )
 from functions.synchronizer.ics_cache import IcsFileStorage
 
@@ -45,3 +46,10 @@ def handle_sync_succeeded(
     sync_stats_repo.increment_sync_count(
         user_id=event.user_id,
     )
+
+
+def handle_sync_profile_deletion_failed(
+    event: SyncProfileDeletionFailed,
+    dev_notification_service: IDevNotificationService,
+) -> None:
+    dev_notification_service.on_sync_profile_deletion_failed(event)

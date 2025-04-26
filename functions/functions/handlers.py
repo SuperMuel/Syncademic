@@ -4,6 +4,7 @@ from functions.services.dev_notification_service import IDevNotificationService
 from functions.services.sync_profile_service import SyncProfileService
 from functions.shared.domain_events import (
     IcsFetched,
+    RulesetGenerationFailed,
     SyncFailed,
     SyncProfileCreated,
     SyncSucceeded,
@@ -55,3 +56,10 @@ def notify_developer_on_sync_profile_deletion_failure(
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_sync_profile_deletion_failed(event)
+
+
+def notify_developer_on_ruleset_generation_failure(
+    event: RulesetGenerationFailed,
+    dev_notification_service: IDevNotificationService,
+) -> None:
+    dev_notification_service.on_ruleset_generation_failed(event)

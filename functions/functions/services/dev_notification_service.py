@@ -43,6 +43,14 @@ class IDevNotificationService(ABC):
         """Notify when a sync profile deletion fails."""
         pass
 
+    @abstractmethod
+    def on_ruleset_generation_failed(
+        self,
+        domain_event: domain_events.RulesetGenerationFailed,
+    ) -> None:
+        """Notify when a ruleset generation fails."""
+        pass
+
 
 class NoOpDevNotificationService(IDevNotificationService):
     """No-operation implementation of the notification service."""
@@ -64,6 +72,12 @@ class NoOpDevNotificationService(IDevNotificationService):
     def on_sync_profile_deletion_failed(
         self,
         domain_event: domain_events.SyncProfileDeletionFailed,
+    ) -> None:
+        pass
+
+    def on_ruleset_generation_failed(
+        self,
+        domain_event: domain_events.RulesetGenerationFailed,
     ) -> None:
         pass
 
@@ -221,6 +235,25 @@ class TelegramDevNotificationService(IDevNotificationService):
             message += (
                 f"\nTraceback: <code>{domain_event.formatted_traceback[:1000]}</code>"
             )
+
+        self._send_message(message)
+
+    def on_ruleset_generation_failed(
+        self,
+        domain_event: domain_events.RulesetGenerationFailed,
+    ) -> None:
+        message = (
+            f"❌ <b>Ruleset Generation Failed</b>\n"
+            f"User ID: <code>{domain_event.user_id}</code>\n"
+            f"Profile ID: <code>{domain_event.sync_profile_id}</code>\n"
+        )
+        if user_info := self._get_user_info(domain_event.user_id):
+            message += f"\n{self._format_user_info(user_info)}"
+
+        if sync_profile := self._get_sync_profile(
+            domain_event.user_id, domain_event.sync_profile_id
+        ):
+            message += f"\n{self._format_sync_profile(sync_profile)}"
 
         self._send_message(message)
 

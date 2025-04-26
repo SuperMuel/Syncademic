@@ -8,6 +8,7 @@ from functions.services.dev_notification_service import IDevNotificationService
 from functions.shared.domain_events import (
     DomainEvent,
     IcsFetched,
+    RulesetGenerationFailed,
     SyncFailed,
     SyncProfileCreated,
     SyncSucceeded,
@@ -59,6 +60,12 @@ def bootstrap_event_bus(
                 SyncProfileDeletionFailed: [
                     partial(
                         handlers.notify_developer_on_sync_profile_deletion_failure,
+                        dev_notification_service=dev_notification_service,
+                    )
+                ],
+                RulesetGenerationFailed: [
+                    partial(
+                        handlers.notify_developer_on_ruleset_generation_failure,
                         dev_notification_service=dev_notification_service,
                     )
                 ],

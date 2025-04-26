@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, Field, HttpUrl, field_validator
 
-from functions.models.sync_profile import SyncType
+from functions.models.sync_profile import ScheduleSource, SyncType, TargetCalendar
 from functions.settings import RedirectUri, settings
 
 
@@ -95,4 +95,49 @@ class AuthorizeBackendInput(BaseModel):
 
     providerAccountId: str = Field(
         ..., description="ID of the provider account", min_length=1
+    )
+
+
+class CreateNewTargetCalendarInput(BaseModel):
+    """Specifies details for creating a new target calendar during sync profile creation."""
+
+    type: Literal["createNew"]
+    colorId: int | None = Field(
+        None,
+        description="Optional color ID for the new calendar (1-25).",
+        ge=1,
+        le=25,
+    )
+    providerAccountId: str = Field(
+        ..., description="ID of the provider account", min_length=1
+    )
+
+
+class UseExistingTargetCalendarInput(BaseModel):
+    """Specifies details for using an existing target calendar during sync profile creation."""
+
+    type: Literal["useExisting"]
+    calendarId: str = Field(
+        ..., description="ID of the existing calendar", min_length=1
+    )
+    providerAccountId: str = Field(
+        ..., description="ID of the provider account", min_length=1
+    )
+
+
+class CreateSyncProfileInput(BaseModel):
+    title: str = Field(
+        ...,
+        description="User-defined title for the sync profile.",
+        min_length=3,
+        max_length=50,
+        examples=["My University Schedule", "Master IF Semestre 1"],
+    )
+
+    scheduleSource: ScheduleSource
+    targetCalendar: CreateNewTargetCalendarInput | UseExistingTargetCalendarInput = (
+        Field(
+            ...,
+            discriminator="type",
+        )
     )

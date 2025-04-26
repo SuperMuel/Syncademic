@@ -262,53 +262,6 @@ def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
         raise error_mapping.to_http_error(e)
 
 
-@on_document_created(
-    document="users/{userId}/syncProfiles/{syncProfileId}",
-    memory=options.MemoryOption.MB_512,
-    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-    region=settings.CLOUD_FUNCTIONS_REGION,
-)  # type: ignore
-def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
-    # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
-    user_id = event.params["userId"]
-    sync_profile_id = event.params["syncProfileId"]
-    data = event.data.to_dict()
-
-    logger.info(
-        f"Sync profile created.",
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
-    )
-
-    assert data, "Sync Profile Document was just created : it should not be empty"
-
-    # Validate document using Pydantic
-    data["id"] = sync_profile_id
-    data["user_id"] = user_id
-    sync_profile = SyncProfile.model_validate(data)
-
-    # Populate `created_at` and other default fields
-    sync_profile_repo.save_sync_profile(sync_profile)
-
-    event_bus.publish(
-        domain_events.SyncProfileCreated(
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-        )
-    )
-
-    ai_ruleset_service.create_ruleset_for_sync_profile(
-        sync_profile,
-    )
-
-    # Initial synchronization
-    sync_profile_service.synchronize(
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
-        sync_trigger=SyncTrigger.ON_CREATE,
-    )
-
-
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,

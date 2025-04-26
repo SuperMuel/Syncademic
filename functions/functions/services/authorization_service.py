@@ -262,3 +262,15 @@ class AuthorizationService:
                 "Failed to test authorization",
                 original_exception=e,
             )
+
+    def get_provider_account_email(
+        self,
+        user_id: str,
+        provider_account_id: str,
+    ) -> str:
+        authorization = self._auth_repo.get_authorization(user_id, provider_account_id)
+        if authorization is None:
+            raise ValueError(
+                "Cannot get provider account email: No valid authorization found for this user/account."
+            )
+        return authorization.providerAccountEmail

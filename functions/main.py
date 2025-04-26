@@ -89,6 +89,7 @@ sync_profile_service = SyncProfileService(
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
     ics_service=ics_service,
+    google_calendar_service=google_calendar_service,
     event_bus=event_bus,
 )
 
@@ -486,165 +487,20 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
 )
 @validate_request(CreateSyncProfileInput)
 def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:
-    """
-    Backend endpoint to create a new SyncProfile atomically and securely.
-    Handles all validation, resource creation, and Firestore write.
-    """
     logger.info(
-        "Creating sync profile (backend-driven)",
+        f"User {user_id} is creating a new sync profile.",
         user_id=user_id,
         request=request.model_dump_json(),
     )
     try:
-        # 1. Validate ICS URL
-        from functions.synchronizer.ics_source import UrlIcsSource
-
-        ics_source = request.scheduleSource.to_ics_source()
-        if not isinstance(ics_source, UrlIcsSource):
-            raise https_fn.HttpsError(
-                https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                "scheduleSource must be a URL-based ICS source.",
-            )
-        ics_validation = ics_service.validate_ics_url(
-            ics_source,
-            metadata={"user_id": user_id, "context": "create_sync_profile"},
-        )
-        if not ics_validation.valid:
-            logger.error(
-                "ICS URL validation failed.",
-                user_id=user_id,
-                error=ics_validation.error,
-            )
-            raise https_fn.HttpsError(
-                https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                f"ICS URL validation failed: {ics_validation.error}",
-            )
-
-        # 2. Check backend authorization
-        try:
-            authorization_service.test_authorization(
-                user_id, request.targetCalendar.providerAccountId
-            )
-        except SyncademicError as e:
-            logger.error(
-                "Authorization check failed.",
-                user_id=user_id,
-                provider_account_id=request.targetCalendar.providerAccountId,
-                error_type=type(e).__name__,
-            )
-            raise error_mapping.to_http_error(e)
-
-        # 3. Handle target calendar (create or validate existing)
-        if request.targetCalendar.type == "createNew":
-            # Create new calendar
-            cal_result = google_calendar_service.create_new_calendar(
-                user_id=user_id,
-                provider_account_id=request.targetCalendar.providerAccountId,
-                summary=request.title,
-                description="",
-                color_id=request.targetCalendar.colorId,
-            )
-            calendar_id = cal_result["id"]
-            calendar_title = cal_result.get("summary", request.title)
-            calendar_description = cal_result.get("description", "")
-        else:
-            # Use existing calendar: validate existence and ownership
-            calendar_id = request.targetCalendar.calendarId
-            calendars = google_calendar_service.list_calendars(
-                user_id=user_id,
-                provider_account_id=request.targetCalendar.providerAccountId,
-            )
-            found = next((c for c in calendars if c.get("id") == calendar_id), None)
-            if not found:
-                logger.error(
-                    "Selected existing calendar not found or not owned by user.",
-                    user_id=user_id,
-                    calendar_id=calendar_id,
-                )
-                raise https_fn.HttpsError(
-                    https_fn.FunctionsErrorCode.NOT_FOUND,
-                    "Selected calendar not found or not accessible.",
-                )
-            calendar_title = found.get("summary", "Untitled")
-            calendar_description = found.get("description", "")
-
-        # 4. Get the provider account email from the authorization repository
-        backend_authorization = backend_auth_repo.get_authorization(
-            user_id, request.targetCalendar.providerAccountId
-        )
-        if not backend_authorization:
-            logger.error(
-                "No authorization found for provider account.",
-                user_id=user_id,
-                provider_account_id=request.targetCalendar.providerAccountId,
-            )
-            raise https_fn.HttpsError(
-                https_fn.FunctionsErrorCode.NOT_FOUND,
-                "No authorization found for provider account.",
-            )
-
-        target_calendar = TargetCalendar(
-            id=calendar_id,
-            title=calendar_title,
-            description=calendar_description,
-            providerAccountId=request.targetCalendar.providerAccountId,
-            providerAccountEmail=backend_authorization.providerAccountEmail,
-        )
-
-        # 5. Construct SyncProfile model
-        from uuid import uuid4
-        from functions.models.sync_profile import (
-            SyncProfileStatus,
-            SyncProfileStatusType,
-        )
-
-        sync_profile_id = str(uuid4())
-        sync_profile = SyncProfile(
-            id=sync_profile_id,
-            user_id=user_id,
-            title=request.title,
-            scheduleSource=request.scheduleSource,
-            targetCalendar=target_calendar,
-            status=SyncProfileStatus(
-                type=SyncProfileStatusType.NOT_STARTED,
-                message=None,
-                syncTrigger=None,
-                syncType=None,
-            ),
-        )
-
-        # 6. Save to Firestore
-        sync_profile_repo.save_sync_profile(sync_profile)
-
-        logger.info(
-            "Sync profile created successfully.",
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-        )
-        event_bus.publish(  # Defer AI Ruleset creation and first sync to the event bus
-            domain_events.SyncProfileCreated(
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
-            )
-        )
-        return {"success": True, "syncProfileId": sync_profile_id}
-
-    except https_fn.HttpsError:
-        raise  # Already mapped
+        sync_profile = sync_profile_service.create_sync_profile(user_id, request)
     except SyncademicError as e:
         logger.error(
-            "Syncademic error during sync profile creation.",
+            f"Failed to create sync profile.",
             user_id=user_id,
+            request=request.model_dump_json(),
             error_type=type(e).__name__,
         )
         raise error_mapping.to_http_error(e)
-    except Exception as e:
-        logger.error(
-            "Unexpected error during sync profile creation.",
-            user_id=user_id,
-            error_type=type(e).__name__,
-        )
-        raise https_fn.HttpsError(
-            https_fn.FunctionsErrorCode.INTERNAL,
-            f"Unexpected error: {str(e)}",
-        )
+
+    return sync_profile.model_dump()

@@ -32,7 +32,7 @@ def sync_stats_repo() -> MockSyncStatsRepository:
 def event_bus(
     ics_file_storage: Mock,
     dev_notification_service: Mock,
-    sync_stats_repo: Mock,
+    sync_stats_repo: MockSyncStatsRepository,
 ):
     return bootstrap_event_bus(
         ics_file_storage=ics_file_storage,
@@ -88,6 +88,21 @@ def test_handle_user_created(event_bus, dev_notification_service) -> None:
     dev_notification_service.on_new_user.assert_called_once_with(event)
 
 
+def test_handle_sync_succeeded(event_bus, sync_stats_repo) -> None:
+    # Given
+    assert sync_stats_repo.get_daily_sync_count("user123") == 0
+    event = SyncSucceeded(
+        user_id="user123",
+        sync_profile_id="profile123",
+    )
+
+    # When
+    event_bus.publish(event)
+
+    # Then
+    assert sync_stats_repo.get_daily_sync_count("user123") == 1
+
+
 def test_handle_sync_failed(event_bus, dev_notification_service) -> None:
     # Given
     event = SyncFailed(
@@ -103,23 +118,6 @@ def test_handle_sync_failed(event_bus, dev_notification_service) -> None:
 
     # Then
     dev_notification_service.on_sync_failed.assert_called_once_with(event)
-
-
-def test_handle_sync_succeeded(event_bus, sync_stats_repo) -> None:
-    user_id = "user123"
-
-    # Given
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
-    event = SyncSucceeded(
-        user_id=user_id,
-        sync_profile_id="profile123",
-    )
-
-    # When
-    event_bus.publish(event)
-
-    # Then
-    assert sync_stats_repo.get_daily_sync_count(event.user_id) == 1
 
 
 def test_handle_sync_failed_no_increment(event_bus, sync_stats_repo) -> None:

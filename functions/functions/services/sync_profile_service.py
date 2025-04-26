@@ -1,7 +1,7 @@
 from dataclasses import replace
 from datetime import datetime, timezone
 import traceback
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
 
 from firebase_functions import logger
@@ -16,9 +16,6 @@ from functions.models import (
 )
 from functions.models.schemas import CreateSyncProfileInput
 from functions.models.sync_profile import TargetCalendar
-from functions.repositories.backend_authorization_repository import (
-    IBackendAuthorizationRepository,
-)
 from functions.repositories.sync_profile_repository import ISyncProfileRepository
 from functions.repositories.sync_stats_repository import ISyncStatsRepository
 from functions.services.ai_ruleset_service import AiRulesetService
@@ -35,10 +32,6 @@ from functions.settings import settings
 from functions.shared import domain_events
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
-from functions.services.dev_notification_service import (
-    IDevNotificationService,
-    NoOpDevNotificationService,
-)
 from functions.synchronizer.ics_source import UrlIcsSource
 
 
@@ -426,7 +419,10 @@ class SyncProfileService:
             )
 
     def create_sync_profile(
-        self, user_id: str, request: CreateSyncProfileInput
+        self,
+        user_id: str,
+        request: CreateSyncProfileInput,
+        uuid_factory: Callable[[], str] | None = None,
     ) -> SyncProfile:
         """
         Creates a new SyncProfile based on user input, performing necessary
@@ -447,104 +443,123 @@ class SyncProfileService:
             SyncademicError: For other specific creation errors.
             Exception: For unexpected errors during the process.
         """
-        logger.info(
-            "Creating sync profile",
-            user_id=user_id,
-            request_title=request.title,
-        )
+        try:
+            logger.info(
+                "Creating sync profile",
+                user_id=user_id,
+                request_title=request.title,
+            )
 
-        # 1. Fetch Auth & Validate Provider Account
-        self._authorization_service.test_authorization(
-            user_id, request.targetCalendar.providerAccountId
-        )
-        logger.info(
-            "Authorization test successful.",
-            user_id=user_id,
-            provider_account_id=request.targetCalendar.providerAccountId,
-        )
-
-        # 2. Validate ICS URL
-        ics_source = request.scheduleSource.to_ics_source()
-
-        self._ics_service.validate_ics_url_or_raise(
-            ics_source,
-            metadata={"user_id": user_id, "context": "create_sync_profile"},
-        )
-        logger.info(
-            "ICS URL validated successfully.",
-            user_id=user_id,
-            url=str(ics_source.url) if isinstance(ics_source, UrlIcsSource) else None,
-        )
-
-        sync_profile_id = str(uuid4())
-
-        # 3. Handle Target Calendar
-        if request.targetCalendar.type == "createNew":
-            logger.info("Creating new target calendar.", user_id=user_id)
-            cal_result = self._google_calendar_service.create_new_calendar(
+            # Fetch Auth & Validate Provider Account
+            self._authorization_service.test_authorization(
+                user_id, request.targetCalendar.providerAccountId
+            )
+            logger.info(
+                "Authorization test successful.",
                 user_id=user_id,
                 provider_account_id=request.targetCalendar.providerAccountId,
-                summary=request.title,
-                description=f"Syncademic calendar for '{request.title}' ({sync_profile_id=})",
-                color_id=request.targetCalendar.colorId,
             )
-            calendar_id = cal_result["id"]
-            calendar_title = cal_result.get("summary", request.title)
-            calendar_description = cal_result.get("description", "")
+
+            # Validate ICS URL
+            ics_source = request.scheduleSource.to_ics_source()
+
+            self._ics_service.validate_ics_url_or_raise(
+                ics_source,
+                metadata={"user_id": user_id, "context": "create_sync_profile"},
+            )
             logger.info(
-                "New target calendar created.", user_id=user_id, calendar_id=calendar_id
-            )
-        else:  # useExisting
-            calendar_id = request.targetCalendar.calendarId
-            logger.info(
-                f"Validating existing target calendar: {calendar_id}", user_id=user_id
-            )
-            found_calendar = self._google_calendar_service.get_calendar_by_id(
+                "ICS URL validated successfully.",
                 user_id=user_id,
-                provider_account_id=request.targetCalendar.providerAccountId,
-                calendar_id=calendar_id,
+                url=str(ics_source.url)
+                if isinstance(ics_source, UrlIcsSource)
+                else None,
             )
-            if not found_calendar:
-                raise TargetCalendarNotFoundError(
-                    f"Calendar not found for ID: {calendar_id}"
+
+            sync_profile_id = uuid_factory() if uuid_factory else str(uuid4())
+
+            # Handle Target Calendar
+            if request.targetCalendar.type == "createNew":
+                logger.info("Creating new target calendar.", user_id=user_id)
+                cal_result = self._google_calendar_service.create_new_calendar(
+                    user_id=user_id,
+                    provider_account_id=request.targetCalendar.providerAccountId,
+                    summary=request.title,
+                    description=f"Syncademic calendar for '{request.title}' ({sync_profile_id=})",
+                    color_id=request.targetCalendar.colorId,
+                )
+                calendar_id = cal_result["id"]
+                calendar_title = cal_result.get("summary", request.title)
+                calendar_description = cal_result.get("description", "")
+                logger.info(
+                    "New target calendar created.",
+                    user_id=user_id,
+                    calendar_id=calendar_id,
+                )
+            else:  # useExisting
+                calendar_id = request.targetCalendar.calendarId
+                logger.info(
+                    f"Validating existing target calendar: {calendar_id}",
+                    user_id=user_id,
+                )
+                found_calendar = self._google_calendar_service.get_calendar_by_id(
+                    user_id=user_id,
+                    provider_account_id=request.targetCalendar.providerAccountId,
+                    calendar_id=calendar_id,
+                )
+                if not found_calendar:
+                    raise TargetCalendarNotFoundError(
+                        f"Calendar not found for ID: {calendar_id}"
+                    )
+
+                calendar_title = found_calendar.get("summary", "Untitled")
+                calendar_description = found_calendar.get("description", "")
+                logger.info(
+                    "Existing target calendar validated.",
+                    user_id=user_id,
+                    calendar_id=calendar_id,
+                    title=calendar_title,
                 )
 
-            calendar_title = found_calendar.get("summary", "Untitled")
-            calendar_description = found_calendar.get("description", "")
-            logger.info(
-                "Existing target calendar validated.",
-                user_id=user_id,
-                calendar_id=calendar_id,
+            # Construct TargetCalendar Model
+            target_calendar = TargetCalendar(
+                id=calendar_id,
                 title=calendar_title,
+                description=calendar_description,
+                providerAccountId=request.targetCalendar.providerAccountId,
+                providerAccountEmail=self._authorization_service.get_provider_account_email(
+                    user_id, request.targetCalendar.providerAccountId
+                ),
             )
 
-        # 4. Construct TargetCalendar Model
-        target_calendar = TargetCalendar(
-            id=calendar_id,
-            title=calendar_title,
-            description=calendar_description,
-            providerAccountId=request.targetCalendar.providerAccountId,
-            providerAccountEmail=self._authorization_service.get_provider_account_email(
-                user_id, request.targetCalendar.providerAccountId
-            ),
-        )
+            # Construct SyncProfile Model
+            sync_profile = SyncProfile(
+                id=sync_profile_id,
+                user_id=user_id,
+                title=request.title,
+                scheduleSource=request.scheduleSource,
+                targetCalendar=target_calendar,
+                status=SyncProfileStatus(type=SyncProfileStatusType.NOT_STARTED),
+                # ruleset and ruleset_error are None initially
+            )
 
-        # 5. Construct SyncProfile Model
-        sync_profile = SyncProfile(
-            id=sync_profile_id,
-            user_id=user_id,
-            title=request.title,
-            scheduleSource=request.scheduleSource,
-            targetCalendar=target_calendar,
-            status=SyncProfileStatus(type=SyncProfileStatusType.NOT_STARTED),
-            # ruleset and ruleset_error are None initially
-        )
+            # Persist SyncProfile
+            self._sync_profile_repo.save_sync_profile(sync_profile)
+            logger.info(
+                "SyncProfile persisted.",
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+            )
 
-        # 6. Persist SyncProfile
-        self._sync_profile_repo.save_sync_profile(sync_profile)
-        logger.info(
-            "SyncProfile persisted.", user_id=user_id, sync_profile_id=sync_profile_id
-        )
+        except Exception as e:
+            self._event_bus.publish(
+                domain_events.SyncProfileCreationFailed(
+                    user_id=user_id,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    formatted_traceback=traceback.format_exc(),
+                )
+            )
+            raise
 
         # 7. Generate initial ruleset
         # It does not raise any error so that even if it fails, the sync profile is still created

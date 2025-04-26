@@ -12,6 +12,7 @@ from functions.shared.domain_events import (
     SyncSucceeded,
     UserCreated,
     SyncProfileDeletionFailed,
+    SyncProfileCreationFailed,
 )
 
 
@@ -180,3 +181,24 @@ def test_dev_notified_when_ruleset_generation_failed(
 
     # Then
     dev_notification_service.on_ruleset_generation_failed.assert_called_once_with(event)
+
+
+def test_dev_notified_when_sync_profile_creation_failed(
+    event_bus, dev_notification_service
+) -> None:
+    # Given
+    event = SyncProfileCreationFailed(
+        user_id="user123",
+        sync_profile_id="profile123",
+        error_type="SomeError",
+        error_message="Failed to create profile",
+        formatted_traceback="Traceback (most recent call last):\n...",
+    )
+
+    # When
+    event_bus.publish(event)
+
+    # Then
+    dev_notification_service.on_sync_profile_creation_failed.assert_called_once_with(
+        event
+    )

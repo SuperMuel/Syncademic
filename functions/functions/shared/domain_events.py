@@ -66,6 +66,17 @@ class SyncSucceeded(DomainEvent):
     sync_profile_id: str = Field(..., description="The ID of the sync profile.")
 
 
+class SyncProfileCreationFailed(DomainEvent):
+    """Published when a sync profile creation fails."""
+
+    user_id: str = Field(..., description="The ID of the user.")
+    error_type: str = Field(..., description="The type/class name of the error.")
+    error_message: str = Field(..., description="Description of the creation error.")
+    formatted_traceback: str | None = Field(
+        None, description="The full error traceback if available."
+    )
+
+
 class SyncProfileDeletionFailed(DomainEvent):
     """Published when a sync profile deletion fails."""
 

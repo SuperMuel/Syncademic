@@ -10,6 +10,7 @@ from functions.shared.domain_events import (
     SyncSucceeded,
     UserCreated,
     SyncProfileDeletionFailed,
+    SyncProfileCreationFailed,
 )
 from functions.synchronizer.ics_cache import IcsFileStorage
 
@@ -63,3 +64,10 @@ def notify_developer_on_ruleset_generation_failure(
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_ruleset_generation_failed(event)
+
+
+def notify_developer_on_sync_profile_creation_failure(
+    event: SyncProfileCreationFailed,
+    dev_notification_service: IDevNotificationService,
+) -> None:
+    dev_notification_service.on_sync_profile_creation_failed(event)

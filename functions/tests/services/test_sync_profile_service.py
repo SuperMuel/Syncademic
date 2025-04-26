@@ -3,6 +3,7 @@ import pytest
 import arrow
 from unittest.mock import Mock
 
+from functions.infrastructure.event_bus import MockEventBus
 from functions.models.sync_profile import (
     SyncProfile,
     SyncProfileStatus,
@@ -12,6 +13,8 @@ from functions.models.sync_profile import (
     ScheduleSource,
     TargetCalendar,
 )
+from functions.services.exceptions.sync import DailySyncLimitExceededError
+from functions.shared import domain_events
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
 from functions.services.sync_profile_service import SyncProfileService
@@ -83,11 +86,17 @@ def sync_stats_repo() -> MockSyncStatsRepository:
 
 
 @pytest.fixture
+def mock_event_bus() -> MockEventBus:
+    return MockEventBus()
+
+
+@pytest.fixture
 def sync_profile_service(
     sync_profile_repo,
     sync_stats_repo,
     auth_service_mock,
     ics_service_mock,
+    mock_event_bus,
 ):
     """Create a SyncProfileService with the real MockSyncProfileRepository."""
     return SyncProfileService(
@@ -95,6 +104,7 @@ def sync_profile_service(
         sync_stats_repo=sync_stats_repo,
         authorization_service=auth_service_mock,
         ics_service=ics_service_mock,
+        event_bus=mock_event_bus,
     )
 
 
@@ -123,9 +133,9 @@ def test_on_create_success(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
     future_event,
     past_event,
+    mock_event_bus,
 ):
     """
     ON_CREATE scenario: ICS returns 2 events, both get created.
@@ -173,8 +183,11 @@ def test_on_create_success(
     assert updated_profile is not None
     assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
 
-    # daily usage = 1
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
 
 
 def test_regular_sync_only_future(
@@ -182,9 +195,9 @@ def test_regular_sync_only_future(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
     future_event,
     past_event,
+    mock_event_bus,
 ):
     """
     REGULAR sync scenario: ICS returns 1 past + 1 future event.
@@ -234,8 +247,11 @@ def test_regular_sync_only_future(
     assert updated_profile is not None
     assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
 
-    # daily usage = 1
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
 
 
 def test_full_sync_deletes_all(
@@ -243,9 +259,9 @@ def test_full_sync_deletes_all(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
     past_event,
     future_event,
+    mock_event_bus,
 ):
     """
     FULL sync: ICS returns 1 event, we remove all old events, create the new one.
@@ -294,7 +310,12 @@ def test_full_sync_deletes_all(
     updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
     assert updated_profile is not None
     assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
 
 
 def test_ruleset_applied(
@@ -302,7 +323,7 @@ def test_ruleset_applied(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
+    mock_event_bus,
 ):
     """
     ICS returns 1 event "Lecture", we have a ruleset that changes it to "Modified Lecture".
@@ -353,7 +374,12 @@ def test_ruleset_applied(
     updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
     assert updated_profile is not None
     assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
 
 
 def test_fails_on_ics_fetch_error(
@@ -361,7 +387,7 @@ def test_fails_on_ics_fetch_error(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
+    mock_event_bus,
 ):
     """
     ICS returns an IcsSourceError => final status=FAILED in repository, no events, usage=0.
@@ -390,7 +416,19 @@ def test_fails_on_ics_fetch_error(
     assert updated_profile.status.type == SyncProfileStatusType.FAILED
 
     assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
+
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncFailed,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        error_type=type(error).__name__,
+        error_message=str(error),
+    )
+
+    assert (
+        "most recent call last"
+        in mock_event_bus.find_event(domain_events.SyncFailed).formatted_traceback
+    )
 
 
 def test_fails_on_ics_parse_error(
@@ -398,7 +436,7 @@ def test_fails_on_ics_parse_error(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
+    mock_event_bus,
 ):
     """
     ICS returns an IcsParseError => final status=FAILED in repository, no events, usage=0.
@@ -434,17 +472,22 @@ def test_fails_on_ics_parse_error(
     # Assert no events were created
     assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
 
-    # Assert sync count was not incremented
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
+    # Assert sync failed event was published (which will not increment sync count)
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncFailed,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
 
 
-def test_fails_on_daily_limit(
+def test_raise_on_daily_limit(
     sync_profile_service,
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
     future_event,
+    mock_event_bus,
 ):
     """
     If user exceeded daily limit, we fail early (status=FAILED in the repo),
@@ -465,19 +508,16 @@ def test_fails_on_daily_limit(
     manager = MockGoogleCalendarManager()
     auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
 
-    # If ICS were fetched, we'd return future_event, but we won't get that far:
-    ics_service_mock.try_fetch_and_parse.return_value = [future_event]
+    with pytest.raises(DailySyncLimitExceededError):
+        sync_profile_service.synchronize(
+            user_id=user_id,
+            sync_profile_id=prof_id,
+            sync_trigger=SyncTrigger.MANUAL,
+            sync_type=SyncType.REGULAR,
+        )
 
-    sync_profile_service.synchronize(
-        user_id=user_id,
-        sync_profile_id=prof_id,
-        sync_trigger=SyncTrigger.MANUAL,
-        sync_type=SyncType.REGULAR,
-    )
-
-    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
-    assert updated_profile is not None
-    assert updated_profile.status.type == SyncProfileStatusType.FAILED
+    # Assert profile hasn't been touched
+    assert sync_profile_repo.get_sync_profile(user_id, prof_id) == profile
 
     # ICS never called
     ics_service_mock.try_fetch_and_parse.assert_not_called()
@@ -485,11 +525,9 @@ def test_fails_on_daily_limit(
     # No new events
     assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
 
-    # usage remains maxed
-    assert (
-        sync_stats_repo.get_daily_sync_count(user_id)
-        == settings.MAX_SYNCHRONIZATIONS_PER_DAY
-    )
+    # Assert no SyncFailed event was published, because it's not
+    # a failure of the sync itself, but a precondition failure.
+    assert not mock_event_bus.find_event(domain_events.SyncFailed)
 
 
 def test_successful_deletion(
@@ -611,8 +649,8 @@ def test_force_sync_bypasses_status_check(
     sync_profile_repo,
     auth_service_mock,
     ics_service_mock,
-    sync_stats_repo,
     future_event,
+    mock_event_bus,
 ):
     """
     Force sync should work even when profile is in IN_PROGRESS state.
@@ -655,7 +693,11 @@ def test_force_sync_bypasses_status_check(
     updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
     assert updated_profile is not None
     assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 1
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
 
 
 def test_force_sync_bypasses_daily_limit(
@@ -665,6 +707,7 @@ def test_force_sync_bypasses_daily_limit(
     ics_service_mock,
     sync_stats_repo,
     future_event,
+    mock_event_bus,
 ):
     """
     Force sync should bypass the daily limit check.
@@ -717,10 +760,11 @@ def test_force_sync_bypasses_daily_limit(
     assert len(all_events) == 1
     assert all_events[0]["summary"] == "Future Event"
 
-    # Usage was incremented beyond the max
-    assert (
-        sync_stats_repo.get_daily_sync_count(user_id)
-        == settings.MAX_SYNCHRONIZATIONS_PER_DAY + 1
+    # Assert sync succeeded event was published (which will increment sync count)
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
     )
 
 
@@ -730,6 +774,7 @@ def test_force_sync_follows_normal_flow_on_error(
     auth_service_mock,
     ics_service_mock,
     sync_stats_repo,
+    mock_event_bus,
 ):
     """
     Force sync should still handle errors normally (e.g. ICS errors).
@@ -770,5 +815,9 @@ def test_force_sync_follows_normal_flow_on_error(
     # No events created
     assert len(manager.get_all_events(sync_profile_id=prof_id)) == 0
 
-    # Usage not incremented due to error
-    assert sync_stats_repo.get_daily_sync_count(user_id) == 0
+    # Assert sync failed event was published (which will not increment sync count)
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncFailed,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )

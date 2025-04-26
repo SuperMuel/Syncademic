@@ -78,6 +78,7 @@ error_mapping = ErrorMapping()
 event_bus = bootstrap_event_bus(
     ics_file_storage=ics_file_storage,
     dev_notification_service=dev_notification_service,
+    sync_stats_repo=sync_stats_repo,
 )
 
 ics_service = IcsService(event_bus=event_bus)
@@ -87,7 +88,7 @@ sync_profile_service = SyncProfileService(
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
     ics_service=ics_service,
-    dev_notification_service=dev_notification_service,
+    event_bus=event_bus,
 )
 
 ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)

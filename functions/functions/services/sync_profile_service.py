@@ -5,6 +5,7 @@ from typing import Any
 
 from firebase_functions import logger
 
+from functions.infrastructure.event_bus import IEventBus
 from functions.models import (
     SyncProfile,
     SyncProfileStatus,
@@ -41,18 +42,16 @@ class SyncProfileService:
         self,
         *,
         sync_profile_repo: ISyncProfileRepository,
-        sync_stats_repo: ISyncStatsRepository,
         authorization_service: AuthorizationService,
+        sync_stats_repo: ISyncStatsRepository,
         ics_service: IcsService,
-        dev_notification_service: IDevNotificationService | None = None,
+        event_bus: IEventBus,
     ) -> None:
         self._sync_profile_repo = sync_profile_repo
-        self._sync_stats_repo = sync_stats_repo
         self._authorization_service = authorization_service
+        self._sync_stats_repo = sync_stats_repo
         self._ics_service = ics_service
-        self.dev_notification_service = (
-            dev_notification_service or NoOpDevNotificationService()
-        )
+        self._event_bus = event_bus
 
     @staticmethod
     def _can_sync(status_type: SyncProfileStatusType) -> bool:
@@ -130,18 +129,12 @@ class SyncProfileService:
                 logger.info(f"Synchronization is {profile.status.type}, skipping")
                 return
 
+            # If sync count is exceeded, raise DailySyncLimitExceededError
+            self._enforce_daily_sync_limit(user_id)
+
         # Mark as IN_PROGRESS
         profile.status = _new_status(SyncProfileStatusType.IN_PROGRESS)
         self._sync_profile_repo.save_sync_profile(profile)
-
-        # Enforce daily limit only if not force sync
-        if not force:
-            try:
-                self._enforce_daily_sync_limit(user_id)
-            except DailySyncLimitExceededError as e:
-                profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
-                self._sync_profile_repo.save_sync_profile(profile)
-                return
 
         try:
             calendar_manager = (
@@ -167,14 +160,13 @@ class SyncProfileService:
                 calendar_manager=calendar_manager,
             )
 
-            logger.info("Synchronization successful")
         except Exception as e:
             logger.error(f"Failed to sync: {e}")
             profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
             self._sync_profile_repo.save_sync_profile(profile)
 
-            self.dev_notification_service.on_sync_failed(
-                domain_event=domain_events.SyncFailed(
+            self._event_bus.publish(
+                domain_events.SyncFailed(
                     user_id=user_id,
                     sync_profile_id=sync_profile_id,
                     error_type=type(e).__name__,
@@ -190,7 +182,13 @@ class SyncProfileService:
         profile.lastSuccessfulSync = datetime.now(timezone.utc)
 
         self._sync_profile_repo.save_sync_profile(profile)
-        self._sync_stats_repo.increment_sync_count(user_id)
+
+        self._event_bus.publish(
+            domain_events.SyncSucceeded(
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+            )
+        )
 
         logger.info("Synchronization successful")
 

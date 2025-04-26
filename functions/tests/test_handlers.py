@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from functions.bootstrap import bootstrap_event_bus
+from functions.repositories.sync_stats_repository import MockSyncStatsRepository
 from functions.shared.domain_events import (
     IcsFetched,
     SyncFailed,
@@ -22,10 +23,20 @@ def dev_notification_service() -> Mock:
 
 
 @pytest.fixture
-def event_bus(ics_file_storage: Mock, dev_notification_service: Mock):
+def sync_stats_repo() -> MockSyncStatsRepository:
+    return MockSyncStatsRepository()
+
+
+@pytest.fixture
+def event_bus(
+    ics_file_storage: Mock,
+    dev_notification_service: Mock,
+    sync_stats_repo: MockSyncStatsRepository,
+):
     return bootstrap_event_bus(
         ics_file_storage=ics_file_storage,
         dev_notification_service=dev_notification_service,
+        sync_stats_repo=sync_stats_repo,
     )
 
 

@@ -60,3 +60,10 @@ class IcsFetched(DomainEvent):
     metadata: dict[str, Any] | None = Field(
         None, description="Additional metadata associated with the fetch."
     )
+
+
+class SyncSucceeded(DomainEvent):
+    """Published when a synchronization succeeds."""
+
+    user_id: str = Field(..., description="The ID of the user.")
+    sync_profile_id: str = Field(..., description="The ID of the sync profile.")

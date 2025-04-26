@@ -1,5 +1,6 @@
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.infrastructure.event_bus import MockEventBus
+from functions.services.google_calendar_service import GoogleCalendarService
 import streamlit as st
 
 from functions.models.sync_profile import (
@@ -51,19 +52,24 @@ authorization_service = AuthorizationService(
     backend_auth_repo=FirestoreBackendAuthorizationRepository()
 )
 
+# Initialize AI ruleset service
+ai_ruleset_service = AiRulesetService(
+    ics_service=IcsService(event_bus=event_bus),
+    sync_profile_repo=sync_profile_repo,
+    ruleset_builder=RulesetBuilder(),
+    event_bus=event_bus,
+)
 # Initialize sync profile service
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     authorization_service=authorization_service,
     sync_stats_repo=FirestoreSyncStatsRepository(),
     ics_service=IcsService(event_bus=event_bus),
-)
-
-# Initialize AI ruleset service
-ai_ruleset_service = AiRulesetService(
-    ics_service=IcsService(event_bus=event_bus),
-    sync_profile_repo=sync_profile_repo,
-    ruleset_builder=RulesetBuilder(),
+    google_calendar_service=GoogleCalendarService(
+        authorization_service=authorization_service
+    ),
+    ai_ruleset_service=ai_ruleset_service,
+    event_bus=event_bus,
 )
 
 

@@ -1,8 +1,10 @@
+from functions.repositories.sync_stats_repository import ISyncStatsRepository
 from functions.services.dev_notification_service import IDevNotificationService
 from functions.shared.domain_events import (
     IcsFetched,
     SyncFailed,
     SyncProfileCreated,
+    SyncSucceeded,
     UserCreated,
 )
 from functions.synchronizer.ics_cache import IcsFileStorage
@@ -34,3 +36,12 @@ def handle_sync_failed(
     dev_notification_service: IDevNotificationService,
 ) -> None:
     dev_notification_service.on_sync_failed(event)
+
+
+def handle_sync_succeeded(
+    event: SyncSucceeded,
+    sync_stats_repo: ISyncStatsRepository,
+) -> None:
+    sync_stats_repo.increment_sync_count(
+        user_id=event.user_id,
+    )

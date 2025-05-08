@@ -163,6 +163,7 @@ def validate_request(input_model: type[T]):  # noqa: ANN201
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(ValidateIcsUrlInput)
 def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
@@ -176,6 +177,7 @@ def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
 @https_fn.on_call(
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
     memory=options.MemoryOption.MB_512,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(ListUserCalendarsInput)
 def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
@@ -200,6 +202,7 @@ def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(IsAuthorizedInput)
 def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
@@ -225,6 +228,7 @@ def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(CreateNewCalendarInput)
 def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
@@ -256,6 +260,7 @@ def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
     document="users/{userId}/syncProfiles/{syncProfileId}",
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )  # type: ignore
 def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
     # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
@@ -301,6 +306,7 @@ def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(RequestSyncInput)
 def request_sync(user_id: str, request: RequestSyncInput) -> Any:
@@ -335,6 +341,7 @@ def request_sync(user_id: str, request: RequestSyncInput) -> Any:
     memory=options.MemoryOption.MB_512,
     timeout_sec=settings.SCHEDULED_SYNC_TIMEOUT_SEC,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region="europe-west3",  # Frankfurt, Germany, because Cloud Scheduler is not available in Paris/europe-west9
 )
 def scheduled_sync(event: Any) -> None:
     logger.info("Scheduled synchronization started.")
@@ -366,6 +373,7 @@ def scheduled_sync(event: Any) -> None:
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(DeleteSyncProfileInput)
 def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
@@ -393,6 +401,7 @@ def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
 @https_fn.on_call(
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
     memory=options.MemoryOption.MB_512,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(AuthorizeBackendInput)
 def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
@@ -427,6 +436,7 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
     document="users/{userId}",
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )  # type: ignore
 def on_user_created(event: Event[DocumentSnapshot]) -> None:
     user_id = event.params["userId"]

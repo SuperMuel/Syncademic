@@ -73,6 +73,17 @@ class IcsService:
         self.ics_parser = ics_parser or IcsParser()
         self.event_bus = event_bus
 
+    def _enrich_metadata(
+        self, metadata: dict[str, Any] | None, ics_source: IcsSource
+    ) -> dict[str, Any]:
+        if metadata is None:
+            metadata = {}
+
+        if isinstance(ics_source, UrlIcsSource) and "url" not in metadata:
+            metadata["url"] = str(ics_source.url)
+
+        return metadata
+
     def try_fetch_and_parse(
         self,
         ics_source: IcsSource,
@@ -90,6 +101,8 @@ class IcsService:
         Raises:
             Exception: When an error other than BaseIcsError occurs.
         """
+
+        metadata = self._enrich_metadata(metadata, ics_source)
 
         try:
             ics_str = ics_source.get_ics_string()

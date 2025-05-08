@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import arrow
 import pytest
-from pydantic import HttpUrl
+from pydantic import HttpUrl, parse_obj_as
 
 from functions.infrastructure.event_bus import MockEventBus
 from functions.models.schemas import ValidateIcsUrlOutput
@@ -11,7 +11,7 @@ from functions.services.ics_service import IcsService, IcsFetchAndParseResult
 from functions.shared import domain_events
 from functions.shared.event import Event
 from functions.synchronizer.ics_parser import IcsParser
-from functions.synchronizer.ics_source import UrlIcsSource
+from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def mock_events() -> list[Event]:
 
 @pytest.fixture
 def mock_ics_source() -> Mock:
-    return Mock(spec=UrlIcsSource)
+    return Mock(spec=IcsSource)
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def mock_ics_storage() -> Mock:
 
 @pytest.fixture
 def mock_url_ics_source() -> Mock:
-    return Mock(spec=UrlIcsSource)
+    return Mock(spec=IcsSource)
 
 
 @pytest.fixture
@@ -196,3 +196,37 @@ class TestValidateIcsUrl:
         assert result.valid is False
         assert result.error == str(error)
         assert result.nbEvents is None
+
+
+def test_enrich_metadata_adds_url_when_missing():
+    from functions.services.ics_service import IcsService
+    from functions.synchronizer.ics_source import UrlIcsSource, IcsSource
+    from unittest.mock import Mock
+    from pydantic import HttpUrl
+
+    event_bus = Mock()
+    event_bus.publish = Mock()
+    service = IcsService(event_bus=event_bus)
+    ics_source = UrlIcsSource(url=HttpUrl("https://example.com/test.ics"))
+
+    # Case 1: metadata is None
+    result = service._enrich_metadata(None, ics_source)
+    assert result["url"] == "https://example.com/test.ics"
+
+    # Case 2: metadata is present but no url
+    result = service._enrich_metadata({"foo": "bar"}, ics_source)
+    assert result["url"] == "https://example.com/test.ics"
+    assert result["foo"] == "bar"
+
+    # Case 3: metadata already has url
+    result = service._enrich_metadata({"url": "should-not-change"}, ics_source)
+    assert result["url"] == "should-not-change"
+
+    # Case 4: ics_source is not UrlIcsSource
+    class DummySource(IcsSource):
+        def get_ics_string(self):
+            return ""
+
+    dummy_source = DummySource()
+    result = service._enrich_metadata({"foo": "bar"}, dummy_source)
+    assert result == {"foo": "bar"}

@@ -341,7 +341,7 @@ def request_sync(user_id: str, request: RequestSyncInput) -> Any:
     memory=options.MemoryOption.MB_512,
     timeout_sec=settings.SCHEDULED_SYNC_TIMEOUT_SEC,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-    region=settings.CLOUD_FUNCTIONS_REGION,
+    region="europe-west3",  # Frankfurt, Germany, because Cloud Scheduler is not available in Paris/europe-west9
 )
 def scheduled_sync(event: Any) -> None:
     logger.info("Scheduled synchronization started.")

@@ -252,6 +252,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       url: state.url,
     );
 
+    if (state.providerAccount == null) {
+      throw StateError('Provider account must be selected before submitting');
+    }
+
     final targetCalendar =
         state.targetCalendarChoice == TargetCalendarChoice.createNew
             ? TargetCalendarPayload.createNew(

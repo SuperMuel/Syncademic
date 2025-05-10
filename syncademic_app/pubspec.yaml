@@ -61,6 +61,7 @@ dependencies:
   sentry_flutter: ^8.9.0
   feedback_sentry: ^3.0.1
   fpdart: ^1.1.1
+  json_serializable: ^6.9.5
 
 dev_dependencies:
   flutter_test:

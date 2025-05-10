@@ -11,7 +11,7 @@ sealed class TargetCalendarPayload with _$TargetCalendarPayload {
   @FreezedUnionValue('createNew')
   const factory TargetCalendarPayload.createNew({
     required String providerAccountId,
-    String? colorId, // Google Calendar color ID (1-25)
+    int? colorId, // Google Calendar color ID (1-25)
   }) = CreateNewTargetCalendarPayload;
 
   @FreezedUnionValue('useExisting')
@@ -26,6 +26,8 @@ sealed class TargetCalendarPayload with _$TargetCalendarPayload {
 
 @freezed
 class CreateSyncProfileRequest with _$CreateSyncProfileRequest {
+  // ignore: invalid_annotation_target
+  @JsonSerializable(explicitToJson: true)
   const factory CreateSyncProfileRequest({
     required String title,
     required ScheduleSource scheduleSource,

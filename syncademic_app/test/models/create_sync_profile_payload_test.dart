@@ -10,26 +10,17 @@ void main() {
         scheduleSource: ScheduleSource(url: 'https://example.com/ics'),
         targetCalendar: TargetCalendarPayload.createNew(
           providerAccountId: 'provider-123',
-          colorId: '5',
+          colorId: 5,
         ),
       );
 
-      final json = payload.toJson();
-      expect({
-        'title': json['title'],
-        'scheduleSource': {'url': 'https://example.com/ics'},
-        'targetCalendar': {
-          'type': 'createNew',
-          'providerAccountId': 'provider-123',
-          'colorId': '5',
-        },
-      }, {
+      expect(payload.toJson(), {
         'title': 'Test Profile',
         'scheduleSource': {'url': 'https://example.com/ics'},
         'targetCalendar': {
           'type': 'createNew',
           'providerAccountId': 'provider-123',
-          'colorId': '5',
+          'colorId': 5,
         },
       });
     });
@@ -39,12 +30,12 @@ void main() {
     test('toJson returns correct map for createNew', () {
       const payload = TargetCalendarPayload.createNew(
         providerAccountId: 'provider-123',
-        colorId: '5',
+        colorId: 5,
       );
       expect(payload.toJson(), {
         'type': 'createNew',
         'providerAccountId': 'provider-123',
-        'colorId': '5',
+        'colorId': 5,
       });
     });
 
@@ -64,13 +55,13 @@ void main() {
       final json = {
         'type': 'createNew',
         'providerAccountId': 'provider-123',
-        'colorId': '5',
+        'colorId': 5,
       };
       final payload = TargetCalendarPayload.fromJson(json);
       expect(payload, isA<CreateNewTargetCalendarPayload>());
       expect((payload as CreateNewTargetCalendarPayload).providerAccountId,
           'provider-123');
-      expect(payload.colorId, '5');
+      expect(payload.colorId, 5);
     });
 
     test('fromJson creates correct useExisting instance', () {

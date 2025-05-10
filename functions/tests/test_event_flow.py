@@ -189,7 +189,6 @@ def test_dev_notified_when_sync_profile_creation_failed(
     # Given
     event = SyncProfileCreationFailed(
         user_id="user123",
-        sync_profile_id="profile123",
         error_type="SomeError",
         error_message="Failed to create profile",
         formatted_traceback="Traceback (most recent call last):\n...",

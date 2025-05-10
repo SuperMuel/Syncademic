@@ -278,7 +278,6 @@ class TelegramDevNotificationService(IDevNotificationService):
         message = (
             f"❌ <b>Sync Profile Creation Failed</b>\n"
             f"User ID: <code>{domain_event.user_id}</code>\n"
-            f"Profile ID: <code>{domain_event.sync_profile_id}</code>\n"
         )
         if user_info := self._get_user_info(domain_event.user_id):
             message += f"\n{self._format_user_info(user_info)}"

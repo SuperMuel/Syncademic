@@ -10,14 +10,12 @@ sealed class TargetCalendarPayload with _$TargetCalendarPayload {
 
   @FreezedUnionValue('createNew')
   const factory TargetCalendarPayload.createNew({
-    @Default('createNew') String type,
     required String providerAccountId,
     String? colorId, // Google Calendar color ID (1-25)
   }) = CreateNewTargetCalendarPayload;
 
   @FreezedUnionValue('useExisting')
   const factory TargetCalendarPayload.useExisting({
-    @Default('useExisting') String type,
     required String providerAccountId,
     required String calendarId,
   }) = UseExistingTargetCalendarPayload;

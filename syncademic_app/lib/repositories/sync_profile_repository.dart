@@ -11,7 +11,6 @@ abstract class SyncProfileRepository {
   Future<SyncProfile?> getSyncProfile(ID id);
   Stream<List<SyncProfile>> getSyncProfiles();
 
-  Future<void> createSyncProfile(SyncProfile syncProfile);
   Stream<SyncProfile?> watchSyncProfile(ID id);
 
   Future<void> deleteSyncProfile(ID id);
@@ -33,17 +32,6 @@ class MockSyncProfileRepository implements SyncProfileRepository {
   Stream<List<SyncProfile>> getSyncProfiles() async* {
     yield _syncProfiles.values.toList();
     yield* _syncProfilesController.stream;
-  }
-
-  @override
-  Future<void> createSyncProfile(SyncProfile syncProfile) async {
-    if (_syncProfiles.containsKey(syncProfile.id)) {
-      throw Exception('SyncProfile already exists');
-    }
-
-    _syncProfiles[syncProfile.id] = syncProfile;
-
-    _syncProfilesController.add(_syncProfiles.values.toList());
   }
 
   SyncProfile createRandomProfile() {

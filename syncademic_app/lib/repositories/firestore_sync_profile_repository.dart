@@ -16,27 +16,6 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
   final _db = FirebaseFirestore.instance;
 
   @override
-  Future<void> createSyncProfile(SyncProfile syncProfile) async =>
-      _syncProfilesCollection.doc(syncProfile.id.value).set({
-        'title': syncProfile.title,
-        'scheduleSource': {
-          'url': syncProfile.scheduleSource.url,
-        },
-        'targetCalendar': {
-          'id': syncProfile.targetCalendar.id.value,
-          'title': syncProfile.targetCalendar.title,
-          'description': syncProfile.targetCalendar.description,
-          'providerAccountId': syncProfile.targetCalendar.providerAccountId,
-          'providerAccountEmail':
-              syncProfile.targetCalendar.providerAccountEmail,
-        },
-        'status': {
-          'type': 'notStarted',
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-      });
-
-  @override
   Stream<SyncProfile?> watchSyncProfile(ID id) {
     return _syncProfilesCollection.doc(id.value).snapshots().map((doc) {
       if (!doc.exists) {

@@ -53,10 +53,6 @@ enum GoogleCalendarColor {
 
 abstract class TargetCalendarRepository {
   Future<List<TargetCalendar>> getCalendars(ProviderAccount providerAccount);
-
-  Future<TargetCalendar> createCalendar(
-      String providerAccountId, TargetCalendar calendar,
-      {GoogleCalendarColor? color});
 }
 
 class MockTargetCalendarRepository implements TargetCalendarRepository {
@@ -73,17 +69,6 @@ class MockTargetCalendarRepository implements TargetCalendarRepository {
 
   @override
   Future<List<TargetCalendar>> getCalendars(
-          ProviderAccount providerAccount
-  ) async =>
+          ProviderAccount providerAccount) async =>
       _calendars;
-
-  @override
-  Future<TargetCalendar> createCalendar(
-      String providerAccountId, TargetCalendar calendar,
-      {GoogleCalendarColor? color}) {
-    final newCalendar = calendar.copyWith(createdBySyncademic: true);
-
-    _calendars.add(newCalendar);
-    return Future.value(newCalendar);
-  }
 }

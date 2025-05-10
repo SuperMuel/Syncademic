@@ -236,37 +236,6 @@ def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
     region=settings.CLOUD_FUNCTIONS_REGION,
 )
-@validate_request(CreateNewCalendarInput)
-def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
-    logger.info(
-        f"Creating new calendar.",
-        user_id=user_id,
-        request=request.model_dump_json(),
-    )
-    try:
-        result = google_calendar_service.create_new_calendar(
-            user_id=user_id,
-            provider_account_id=request.providerAccountId,
-            summary=request.summary,
-            description=request.description,
-            color_id=request.colorId,
-        )
-        return result
-    except SyncademicError as e:
-        logger.error(
-            f"Failed to create new calendar.",
-            user_id=user_id,
-            provider_account_id=request.providerAccountId,
-            error_type=type(e).__name__,
-        )
-        raise error_mapping.to_http_error(e)
-
-
-@https_fn.on_call(
-    memory=options.MemoryOption.MB_512,
-    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-    region=settings.CLOUD_FUNCTIONS_REGION,
-)
 @validate_request(RequestSyncInput)
 def request_sync(user_id: str, request: RequestSyncInput) -> Any:
     sync_profile_id = request.syncProfileId
@@ -441,6 +410,7 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
 @https_fn.on_call(
     memory=options.MemoryOption.MB_512,
     max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
 )
 @validate_request(CreateSyncProfileInput)
 def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:

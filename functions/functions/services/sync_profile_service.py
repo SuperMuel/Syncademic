@@ -574,10 +574,23 @@ class SyncProfileService:
         )
 
         # 9. Launch initial sync
-        self.synchronize(
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-            sync_trigger=SyncTrigger.ON_CREATE,
-        )
+        try:
+            self.synchronize(
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+                sync_trigger=SyncTrigger.ON_CREATE,
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to perform initial sync after profile creation.",
+                user_id=user_id,
+                sync_profile_id=sync_profile_id,
+                error_type=type(e).__name__,
+                error_message=str(e),
+            )
+            # Let the normal flow continue, i.e returning the created sync profile.
+            # Ideally, we shouldn't trigger the initial sync here, as it
+            # violates the single responsibility principle.
+            # TODO : react to the SyncProfileCreated event to initiate the first sync
 
         return sync_profile

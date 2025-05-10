@@ -430,4 +430,4 @@ def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:
         )
         raise error_mapping.to_http_error(e)
 
-    return sync_profile.model_dump()
+    return sync_profile.model_dump(mode="json")

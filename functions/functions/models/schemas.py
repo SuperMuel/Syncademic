@@ -108,6 +108,16 @@ class CreateNewTargetCalendarInput(BaseModel):
         ge=1,
         le=25,
     )
+
+    @field_validator("colorId", mode="before")
+    @classmethod
+    def _validate_color_id(cls, v: str | int | None) -> int | None:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return int(v)  # Allow string input for colorId (e.g. "1" instead of 1)
+        return v
+
     providerAccountId: str = Field(
         ..., description="ID of the provider account", min_length=1
     )

@@ -14,6 +14,10 @@ import 'sync_profile_repository.dart';
 
 class FirestoreSyncProfileRepository implements SyncProfileRepository {
   final _db = FirebaseFirestore.instance;
+  final FirebaseFunctions functions;
+
+  FirestoreSyncProfileRepository({FirebaseFunctions? functions})
+      : functions = functions ?? GetIt.I.get<FirebaseFunctions>();
 
   @override
   Stream<SyncProfile?> watchSyncProfile(ID id) {
@@ -121,7 +125,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
   @override
   Future<void> deleteSyncProfile(ID id) =>
-      FirebaseFunctions.instance.httpsCallable('delete_sync_profile').call(
+      functions.httpsCallable('delete_sync_profile').call(
         {'syncProfileId': id.value},
       );
 }

@@ -10,8 +10,11 @@ import 'backend_authorization_service.dart';
 class FirebaseBackendAuthorizationService
     implements BackendAuthorizationService {
   final String redirectUri;
+  final FirebaseFunctions functions;
 
-  FirebaseBackendAuthorizationService({required this.redirectUri});
+  FirebaseBackendAuthorizationService({
+    required this.redirectUri,
+  }) : functions = GetIt.I<FirebaseFunctions>();
 
   @override
   Future<void> authorizeBackend(ProviderAccount providerAccount) async {
@@ -29,7 +32,7 @@ class FirebaseBackendAuthorizationService
     log("Got authorization code. Sending it to the backend.");
 
     try {
-      await FirebaseFunctions.instance.httpsCallable('authorize_backend').call({
+      await functions.httpsCallable('authorize_backend').call({
         'provider': providerAccount.provider.name,
         'providerAccountId': providerAccount.providerAccountId,
         'authCode': authCode,
@@ -46,8 +49,7 @@ class FirebaseBackendAuthorizationService
 
   @override
   Future<bool> isAuthorized(ProviderAccount providerAccount) async {
-    final result =
-        await FirebaseFunctions.instance.httpsCallable('is_authorized').call({
+    final result = await functions.httpsCallable('is_authorized').call({
       'providerAccountId': providerAccount.providerAccountId,
     });
 

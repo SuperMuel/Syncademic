@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:feedback_sentry/feedback_sentry.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -51,6 +52,11 @@ void registerDependencies() {
     scopes: [CalendarApi.calendarScope],
   );
 
+  final functions = FirebaseFunctions.instanceFor(
+      region: dotenv.env['FIREBASE_FUNCTIONS_REGION']);
+
+  getIt.registerSingleton<FirebaseFunctions>(functions);
+
   getIt.registerSingleton<SyncProfileRepository>(
     FirestoreSyncProfileRepository(),
     // MockSyncProfileRepository()
@@ -98,7 +104,7 @@ void registerDependencies() {
 
   getIt.registerSingleton<IcsValidationService>(
     // const MockIcsValidationService(),
-    const FirebaseIcsValidationService(),
+    FirebaseIcsValidationService(),
   );
 }
 

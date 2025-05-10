@@ -85,12 +85,6 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return;
     }
 
-    // if the url doesn't start with http, we add it
-    if (!state.url.startsWith('http')) {
-      log('Adding https:// to the URL');
-      urlChanged('https://${state.url}');
-    }
-
     emit(state.copyWith(
         icsValidationStatus: const IcsValidationStatus.validationInProgress()));
 

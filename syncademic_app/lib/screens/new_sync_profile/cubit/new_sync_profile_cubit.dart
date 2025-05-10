@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quiver/strings.dart';
+import 'package:syncademic_app/models/create_sync_profile_payload.dart';
+import 'package:syncademic_app/services/sync_profile_service.dart';
 import '../../../services/ics_validation_service.dart';
 import 'package:validators/validators.dart';
 
@@ -255,41 +257,31 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
 
     emit(state.copyWith(isSubmitting: true));
 
-    late TargetCalendar targetCalendar;
-    if (state.targetCalendarChoice == TargetCalendarChoice.createNew) {
-      try {
-        targetCalendar =
-            await GetIt.I<TargetCalendarRepository>().createCalendar(
-          state.providerAccount!.providerAccountId,
-          state.newCalendarToBeCreated!,
-          color: state.targetCalendarColor,
-        ); //TODO : move the creation responsability to the backend
-      } catch (e) {
-        return emit(
-            state.copyWith(submitError: e.toString(), isSubmitting: false));
-      }
-    } else {
-      targetCalendar = state.existingCalendarSelected!;
-    }
-
     final scheduleSource = ScheduleSource(
       url: state.url,
     );
 
-    final syncProfile = SyncProfile(
-      id: ID(),
+    final targetCalendar =
+        state.targetCalendarChoice == TargetCalendarChoice.createNew
+            ? TargetCalendarPayload.createNew(
+                providerAccountId: state.providerAccount!.providerAccountId,
+                colorId: state.targetCalendarColor.id,
+              )
+            : TargetCalendarPayload.useExisting(
+                providerAccountId: state.providerAccount!.providerAccountId,
+                calendarId: state.existingCalendarSelected!.id.value,
+              );
+
+    final payload = CreateSyncProfileRequest(
       title: state.title,
       scheduleSource: scheduleSource,
       targetCalendar: targetCalendar,
-      status: SyncProfileStatus.notStarted(
-        updatedAt: DateTime.now(),
-      ),
     );
 
-    final repo = GetIt.I<SyncProfileRepository>();
+    final syncProfileService = GetIt.I<SyncProfileService>();
 
     try {
-      await repo.createSyncProfile(syncProfile);
+      await syncProfileService.createSyncProfile(payload);
       emit(state.copyWith(submittedSuccessfully: true, isSubmitting: false));
     } catch (e) {
       emit(state.copyWith(submitError: e.toString(), isSubmitting: false));

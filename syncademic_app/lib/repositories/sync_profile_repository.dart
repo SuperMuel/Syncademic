@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:syncademic_app/models/create_sync_profile_payload.dart';
+
 import '../models/id.dart';
 import '../models/schedule_source.dart';
 import '../models/sync_profile.dart';
@@ -137,6 +139,40 @@ class MockSyncProfileRepository implements SyncProfileRepository {
     await Future.delayed(const Duration(seconds: 2));
 
     _syncProfiles.remove(id);
+    _syncProfilesController.add(_syncProfiles.values.toList());
+  }
+
+  /// Utility method for mock purposes, to be called when
+  /// we initiate the creationg of new sync profile from the service layer.
+  /// It simulates the successful creation of a new sync profile and
+  /// adds it to the mock repository.
+  Future<void> syncProfileCreationRequested(
+      CreateSyncProfileRequest request) async {
+    await Future.delayed(const Duration(milliseconds: 100)); // Simulate network
+
+    final newId = ID();
+
+    final createdProfile = SyncProfile(
+      id: newId,
+      title: request.title,
+      scheduleSource: request.scheduleSource,
+      targetCalendar: TargetCalendar(
+        id: ID.fromString(request.targetCalendar.map(
+            createNew: (c) => 'new_mock_cal_id',
+            useExisting: (e) => e.calendarId)),
+        title: request.targetCalendar.map(
+            createNew: (c) => request.title,
+            useExisting: (e) => 'Existing Mock Calendar'),
+        providerAccountId: request.targetCalendar.map(
+            createNew: (c) => c.providerAccountId,
+            useExisting: (e) => e.providerAccountId),
+        providerAccountEmail:
+            'mock@example.com', // Needs to be fetched or assumed
+      ),
+      status: SyncProfileStatus.notStarted(updatedAt: DateTime.now()),
+      lastSuccessfulSync: null,
+    );
+    _syncProfiles[newId] = createdProfile;
     _syncProfilesController.add(_syncProfiles.values.toList());
   }
 }

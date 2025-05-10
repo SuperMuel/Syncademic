@@ -13,7 +13,9 @@ from functions.models.sync_profile import (
     ScheduleSource,
     TargetCalendar,
 )
+from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.exceptions.sync import DailySyncLimitExceededError
+from functions.services.google_calendar_service import GoogleCalendarService
 from functions.shared import domain_events
 from functions.shared.event import Event
 from functions.shared.google_calendar_colors import GoogleEventColor
@@ -26,6 +28,12 @@ from functions.services.ics_service import IcsFetchAndParseResult
 from functions.repositories.sync_stats_repository import MockSyncStatsRepository
 from functions.repositories.sync_profile_repository import MockSyncProfileRepository
 from functions.synchronizer.google_calendar_manager import MockGoogleCalendarManager
+from functions.models.schemas import (
+    CreateSyncProfileInput,
+    CreateNewTargetCalendarInput,
+    UseExistingTargetCalendarInput,
+)
+from functions.services.exceptions.target_calendar import TargetCalendarNotFoundError
 
 
 def _make_sync_profile(
@@ -91,12 +99,24 @@ def mock_event_bus() -> MockEventBus:
 
 
 @pytest.fixture
+def google_calendar_service() -> GoogleCalendarService:
+    return Mock()
+
+
+@pytest.fixture
+def ai_ruleset_service() -> AiRulesetService:
+    return Mock()
+
+
+@pytest.fixture
 def sync_profile_service(
     sync_profile_repo,
     sync_stats_repo,
     auth_service_mock,
     ics_service_mock,
     mock_event_bus,
+    google_calendar_service,
+    ai_ruleset_service,
 ):
     """Create a SyncProfileService with the real MockSyncProfileRepository."""
     return SyncProfileService(
@@ -105,6 +125,8 @@ def sync_profile_service(
         authorization_service=auth_service_mock,
         ics_service=ics_service_mock,
         event_bus=mock_event_bus,
+        google_calendar_service=google_calendar_service,
+        ai_ruleset_service=ai_ruleset_service,
     )
 
 
@@ -821,3 +843,230 @@ def test_force_sync_follows_normal_flow_on_error(
         user_id=user_id,
         sync_profile_id=prof_id,
     )
+
+
+@pytest.mark.parametrize("calendar_type", ["createNew", "useExisting"])
+def test_create_sync_profile_success(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    google_calendar_service,
+    ai_ruleset_service,
+    mock_event_bus,
+    calendar_type,
+):
+    """
+    Test create_sync_profile for both 'createNew' and 'useExisting' calendar flows.
+    Asserts correct repo, event, and sync side effects.
+    """
+    user_id = "user_create"
+    provider_account_id = "provider123"
+    title = "My Test Profile"
+    url = "https://example.com/test.ics"
+    schedule_source = ScheduleSource(url=HttpUrl(url))
+
+    fixed_uuid = "00000000-0000-4000-8000-000000000000"
+
+    def uuid_factory():
+        return fixed_uuid
+
+    # Setup target calendar input
+    if calendar_type == "createNew":
+        target_calendar_input = CreateNewTargetCalendarInput(
+            type="createNew",
+            colorId=5,
+            providerAccountId=provider_account_id,
+        )
+        # Mock calendar creation result
+        google_calendar_service.create_new_calendar.return_value = {
+            "id": "cal_new_id",
+            "summary": "New Calendar",
+            "description": "A new calendar",
+        }
+        expected_calendar_id = "cal_new_id"
+        expected_calendar_title = "New Calendar"
+        expected_calendar_description = "A new calendar"
+    else:
+        target_calendar_input = UseExistingTargetCalendarInput(
+            type="useExisting",
+            calendarId="existing_cal_id",
+            providerAccountId=provider_account_id,
+        )
+        # Mock calendar lookup result
+        google_calendar_service.get_calendar_by_id.return_value = {
+            "id": "existing_cal_id",
+            "summary": "Existing Calendar",
+            "description": "Existing desc",
+        }
+        expected_calendar_id = "existing_cal_id"
+        expected_calendar_title = "Existing Calendar"
+        expected_calendar_description = "Existing desc"
+
+    # Mock provider account email
+    auth_service_mock.get_provider_account_email.return_value = "user@example.com"
+    # Mock authorization test
+    auth_service_mock.test_authorization.return_value = None
+    # Mock ICS URL validation
+    ics_service_mock.validate_ics_url_or_raise.return_value = None
+    # Mock ruleset creation
+    ai_ruleset_service.create_ruleset_for_sync_profile.return_value = None
+    # Mock synchronize (don't actually run sync logic)
+    sync_profile_service.synchronize = Mock()
+
+    request = CreateSyncProfileInput(
+        title=title,
+        scheduleSource=schedule_source,
+        targetCalendar=target_calendar_input,
+    )
+
+    # Act
+    result = sync_profile_service.create_sync_profile(
+        user_id=user_id,
+        request=request,
+        uuid_factory=uuid_factory,
+    )
+
+    # Assert profile in repo
+    saved_profile = sync_profile_repo.get_sync_profile(user_id, fixed_uuid)
+    assert saved_profile is not None
+    assert saved_profile.title == title
+    assert str(saved_profile.scheduleSource.url) == url
+    assert saved_profile.targetCalendar.id == expected_calendar_id
+    assert saved_profile.targetCalendar.title == expected_calendar_title
+    assert saved_profile.targetCalendar.description == expected_calendar_description
+    assert saved_profile.targetCalendar.providerAccountId == provider_account_id
+    assert saved_profile.targetCalendar.providerAccountEmail == "user@example.com"
+    assert saved_profile.status.type == SyncProfileStatusType.NOT_STARTED
+    # ruleset and ruleset_error should be None
+    assert saved_profile.ruleset is None
+    assert saved_profile.ruleset_error is None
+
+    # Assert event published
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncProfileCreated,
+        user_id=user_id,
+        sync_profile_id=fixed_uuid,
+    )
+
+    # Assert ruleset creation called
+    ai_ruleset_service.create_ruleset_for_sync_profile.assert_called_once()
+    # Assert synchronize called for initial sync
+    sync_profile_service.synchronize.assert_called_once_with(
+        user_id=user_id,
+        sync_profile_id=fixed_uuid,
+        sync_trigger=SyncTrigger.ON_CREATE,
+    )
+
+
+def test_create_sync_profile_existing_calendar_not_found(
+    sync_profile_service,
+    auth_service_mock,
+    ics_service_mock,
+    google_calendar_service,
+    mock_event_bus,
+):
+    """
+    Test create_sync_profile raises TargetCalendarNotFoundError if existing calendar is not found.
+    """
+    user_id = "user_create"
+    provider_account_id = "provider123"
+    title = "My Test Profile"
+    url = "https://example.com/test.ics"
+    schedule_source = ScheduleSource(url=HttpUrl(url))
+    target_calendar_input = UseExistingTargetCalendarInput(
+        type="useExisting",
+        calendarId="missing_cal_id",
+        providerAccountId=provider_account_id,
+    )
+    # Mock calendar lookup result: not found
+    google_calendar_service.get_calendar_by_id.return_value = None
+    # Mock authorization test
+    auth_service_mock.test_authorization.return_value = None
+    # Mock ICS URL validation
+    ics_service_mock.validate_ics_url_or_raise.return_value = None
+
+    request = CreateSyncProfileInput(
+        title=title,
+        scheduleSource=schedule_source,
+        targetCalendar=target_calendar_input,
+    )
+
+    with pytest.raises(TargetCalendarNotFoundError):
+        sync_profile_service.create_sync_profile(user_id, request)
+
+    # Assert event was published
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncProfileCreationFailed,
+        user_id=user_id,
+    )
+
+
+def test_create_sync_profile_unauthorized(
+    sync_profile_service,
+    auth_service_mock,
+    ics_service_mock,
+    google_calendar_service,
+):
+    """
+    Test create_sync_profile raises if test_authorization fails.
+    """
+    user_id = "user_create"
+    provider_account_id = "provider123"
+    title = "My Test Profile"
+    url = "https://example.com/test.ics"
+    schedule_source = ScheduleSource(url=HttpUrl(url))
+    target_calendar_input = CreateNewTargetCalendarInput(
+        type="createNew",
+        colorId=5,
+        providerAccountId=provider_account_id,
+    )
+    # Mock authorization test to raise
+    auth_service_mock.test_authorization.side_effect = Exception("unauthorized")
+
+    request = CreateSyncProfileInput(
+        title=title,
+        scheduleSource=schedule_source,
+        targetCalendar=target_calendar_input,
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        sync_profile_service.create_sync_profile(user_id, request)
+    assert "unauthorized" in str(exc_info.value)
+
+
+def test_create_sync_profile_invalid_ics_url(
+    sync_profile_service,
+    auth_service_mock,
+    ics_service_mock,
+    google_calendar_service,
+):
+    """
+    Test create_sync_profile raises if ICS URL validation fails.
+    """
+    user_id = "user_create"
+    provider_account_id = "provider123"
+    title = "My Test Profile"
+    url = "https://example.com/test.ics"
+    schedule_source = ScheduleSource(url=HttpUrl(url))
+    target_calendar_input = CreateNewTargetCalendarInput(
+        type="createNew",
+        colorId=5,
+        providerAccountId=provider_account_id,
+    )
+    # Mock authorization test
+    auth_service_mock.test_authorization.return_value = None
+    # Mock ICS URL validation to raise
+    ics_service_mock.validate_ics_url_or_raise.side_effect = Exception(
+        "invalid ics url"
+    )
+
+    request = CreateSyncProfileInput(
+        title=title,
+        scheduleSource=schedule_source,
+        targetCalendar=target_calendar_input,
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        sync_profile_service.create_sync_profile(user_id, request)
+    assert "invalid ics url" in str(exc_info.value)

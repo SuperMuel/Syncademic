@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:get_it/get_it.dart';
 
 class IcsValidationResult {
   final bool isValid;
@@ -22,7 +23,10 @@ abstract class IcsValidationService {
 }
 
 class FirebaseIcsValidationService extends IcsValidationService {
-  const FirebaseIcsValidationService();
+  FirebaseIcsValidationService({FirebaseFunctions? functions})
+      : functions = functions ?? GetIt.I.get<FirebaseFunctions>();
+
+  final FirebaseFunctions functions;
 
   @override
   Future<Either<String, IcsValidationResult>> validateUrl(String url) async {
@@ -31,9 +35,7 @@ class FirebaseIcsValidationService extends IcsValidationService {
     late HttpsCallableResult response;
 
     try {
-      response = await FirebaseFunctions.instance
-          .httpsCallable('validate_ics_url')
-          .call(
+      response = await functions.httpsCallable('validate_ics_url').call(
         {'url': url},
       );
     } catch (e) {

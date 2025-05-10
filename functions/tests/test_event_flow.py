@@ -6,11 +6,13 @@ from functions.bootstrap import bootstrap_event_bus
 from functions.repositories.sync_stats_repository import MockSyncStatsRepository
 from functions.shared.domain_events import (
     IcsFetched,
+    RulesetGenerationFailed,
     SyncFailed,
     SyncProfileCreated,
     SyncSucceeded,
     UserCreated,
     SyncProfileDeletionFailed,
+    SyncProfileCreationFailed,
 )
 
 
@@ -141,7 +143,7 @@ def test_handle_sync_failed_no_increment(event_bus, sync_stats_repo) -> None:
     assert sync_stats_repo.get_daily_sync_count(user_id) == 0
 
 
-def test_handle_sync_profile_deletion_failed(
+def test_dev_notified_when_sync_profile_deletion_failed(
     event_bus, dev_notification_service
 ) -> None:
     # Given
@@ -158,5 +160,44 @@ def test_handle_sync_profile_deletion_failed(
 
     # Then
     dev_notification_service.on_sync_profile_deletion_failed.assert_called_once_with(
+        event
+    )
+
+
+def test_dev_notified_when_ruleset_generation_failed(
+    event_bus, dev_notification_service
+) -> None:
+    # Given
+    event = RulesetGenerationFailed(
+        user_id="user123",
+        sync_profile_id="profile123",
+        error_type="SomeError",
+        error_message="Failed to generate ruleset",
+        formatted_traceback="Traceback (most recent call last):\n...",
+    )
+
+    # When
+    event_bus.publish(event)
+
+    # Then
+    dev_notification_service.on_ruleset_generation_failed.assert_called_once_with(event)
+
+
+def test_dev_notified_when_sync_profile_creation_failed(
+    event_bus, dev_notification_service
+) -> None:
+    # Given
+    event = SyncProfileCreationFailed(
+        user_id="user123",
+        error_type="SomeError",
+        error_message="Failed to create profile",
+        formatted_traceback="Traceback (most recent call last):\n...",
+    )
+
+    # When
+    event_bus.publish(event)
+
+    # Then
+    dev_notification_service.on_sync_profile_creation_failed.assert_called_once_with(
         event
     )

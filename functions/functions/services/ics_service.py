@@ -123,11 +123,11 @@ class IcsService:
 
         return IcsFetchAndParseResult(events=events_or_error, raw_ics=ics_str)
 
-    def validate_ics_url(
+    def validate_ics_url_or_raise(
         self,
-        ics_source: UrlIcsSource,
+        ics_source: IcsSource,
         metadata: dict[str, Any] | None = None,
-    ) -> ValidateIcsUrlOutput:
+    ) -> IcsFetchAndParseResult:
         """
         Validates an ICS URL by attempting to fetch and parse its contents.
 
@@ -136,10 +136,10 @@ class IcsService:
             metadata: Additional metadata to pass to the event bus (e.g. sync_profile_id, user_id,...)
 
         Returns:
-            ValidateIcsUrlOutput: Contains validation results including:
-                - valid: Whether the ICS file is valid
-                - error: Error message if validation failed
-                - nbEvents: Number of events if validation succeeded
+            IcsFetchAndParseResult if successful
+
+        Raises:
+            BaseIcsError: If the ICS URL is invalid.
         """
         result_or_error = self.try_fetch_and_parse(
             ics_source,
@@ -147,14 +147,26 @@ class IcsService:
         )
 
         if isinstance(result_or_error, BaseIcsError):
+            raise result_or_error
+
+        return result_or_error
+
+    def validate_ics_url(
+        self,
+        ics_source: IcsSource,
+        metadata: dict[str, Any] | None = None,
+    ) -> ValidateIcsUrlOutput:
+        try:
+            result = self.validate_ics_url_or_raise(ics_source, metadata)
+        except BaseIcsError as e:
             return ValidateIcsUrlOutput(
                 valid=False,
-                error=str(result_or_error),
+                error=str(e),
                 nbEvents=None,
             )
 
         return ValidateIcsUrlOutput(
             valid=True,
             error=None,
-            nbEvents=len(result_or_error.events),
+            nbEvents=len(result.events),
         )

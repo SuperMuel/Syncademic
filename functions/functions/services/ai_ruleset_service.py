@@ -1,3 +1,4 @@
+import traceback
 from typing import Sequence
 
 from firebase_functions import logger
@@ -5,6 +6,7 @@ from langchain.chat_models import init_chat_model
 
 from functions.ai.ruleset_builder import RulesetBuilder
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
+from functions.infrastructure.event_bus import IEventBus
 from functions.models.rules import Ruleset
 from functions.models.sync_profile import SyncProfile
 from functions.repositories.sync_profile_repository import (
@@ -13,6 +15,7 @@ from functions.repositories.sync_profile_repository import (
 from functions.services.exceptions.ruleset import RulesetGenerationError
 from functions.services.exceptions.ics import BaseIcsError
 from functions.services.ics_service import IcsService
+from functions.shared.domain_events import RulesetGenerationFailed
 from functions.synchronizer.ics_parser import IcsParser
 from functions.synchronizer.ics_source import UrlIcsSource
 
@@ -40,10 +43,12 @@ class AiRulesetService:
         ics_service: IcsService,
         sync_profile_repo: ISyncProfileRepository,
         ruleset_builder: RulesetBuilder,
+        event_bus: IEventBus,
     ):
         self.ics_service = ics_service
         self.sync_profile_repo = sync_profile_repo
         self.ruleset_builder = ruleset_builder
+        self.event_bus = event_bus
 
     def create_ruleset_for_sync_profile(
         self,
@@ -65,6 +70,11 @@ class AiRulesetService:
             If any errors occur during fetching, parsing, or ruleset generation,
             they are logged and stored in the sync profile repository rather than raised.
         """
+        logger.info(
+            f"Creating ruleset for sync profile {sync_profile.id}",
+            sync_profile_id=sync_profile.id,
+            user_id=sync_profile.user_id,
+        )
 
         result_or_error = self.ics_service.try_fetch_and_parse(
             ics_source=sync_profile.scheduleSource.to_ics_source(),
@@ -81,6 +91,15 @@ class AiRulesetService:
                 error=f"Failed to fetch and parse ICS: {str(result_or_error)}"
             )
             self.sync_profile_repo.save_sync_profile(sync_profile)
+            self.event_bus.publish(
+                RulesetGenerationFailed(
+                    user_id=sync_profile.user_id,
+                    sync_profile_id=sync_profile.id,
+                    error_type=type(result_or_error).__name__,
+                    error_message=str(result_or_error),
+                    formatted_traceback=traceback.format_exc(),
+                )
+            )
             return
 
         events, ics_str = result_or_error.events, result_or_error.raw_ics
@@ -102,6 +121,15 @@ class AiRulesetService:
                 error=f"Failed to generate ruleset: {type(e).__name__}: {str(e)}"
             )
             self.sync_profile_repo.save_sync_profile(sync_profile)
+            self.event_bus.publish(
+                RulesetGenerationFailed(
+                    user_id=sync_profile.user_id,
+                    sync_profile_id=sync_profile.id,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    formatted_traceback=traceback.format_exc(),
+                )
+            )
             return
 
         logger.info(f"Generated ruleset: {str(output.ruleset)[:100]}...")

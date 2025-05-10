@@ -26,8 +26,9 @@ from functions.models.schemas import (
     ListUserCalendarsInput,
     RequestSyncInput,
     ValidateIcsUrlInput,
+    CreateSyncProfileInput,
 )
-from functions.models.sync_profile import SyncProfile
+from functions.models.sync_profile import SyncProfile, TargetCalendar
 from functions.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
     IBackendAuthorizationRepository,
@@ -83,19 +84,24 @@ event_bus = bootstrap_event_bus(
 
 ics_service = IcsService(event_bus=event_bus)
 
+
+ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
+
+ai_ruleset_service = AiRulesetService(
+    ics_service=ics_service,
+    sync_profile_repo=sync_profile_repo,
+    ruleset_builder=ruleset_builder,
+    event_bus=event_bus,
+)
+
 sync_profile_service = SyncProfileService(
     sync_profile_repo=sync_profile_repo,
     sync_stats_repo=sync_stats_repo,
     authorization_service=authorization_service,
     ics_service=ics_service,
+    google_calendar_service=google_calendar_service,
+    ai_ruleset_service=ai_ruleset_service,
     event_bus=event_bus,
-)
-
-ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
-ai_ruleset_service = AiRulesetService(
-    ics_service=ics_service,
-    sync_profile_repo=sync_profile_repo,
-    ruleset_builder=ruleset_builder,
 )
 
 
@@ -223,84 +229,6 @@ def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
 
     logger.info("Authorization successful")
     return IsAuthorizedOutput(authorized=True).model_dump()
-
-
-@https_fn.on_call(
-    memory=options.MemoryOption.MB_512,
-    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-    region=settings.CLOUD_FUNCTIONS_REGION,
-)
-@validate_request(CreateNewCalendarInput)
-def create_new_calendar(user_id: str, request: CreateNewCalendarInput) -> dict:
-    logger.info(
-        f"Creating new calendar.",
-        user_id=user_id,
-        request=request.model_dump_json(),
-    )
-    try:
-        result = google_calendar_service.create_new_calendar(
-            user_id=user_id,
-            provider_account_id=request.providerAccountId,
-            summary=request.summary,
-            description=request.description,
-            color_id=request.colorId,
-        )
-        return result
-    except SyncademicError as e:
-        logger.error(
-            f"Failed to create new calendar.",
-            user_id=user_id,
-            provider_account_id=request.providerAccountId,
-            error_type=type(e).__name__,
-        )
-        raise error_mapping.to_http_error(e)
-
-
-@on_document_created(
-    document="users/{userId}/syncProfiles/{syncProfileId}",
-    memory=options.MemoryOption.MB_512,
-    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
-    region=settings.CLOUD_FUNCTIONS_REGION,
-)  # type: ignore
-def on_sync_profile_created(event: Event[DocumentSnapshot]) -> None:
-    # Only logged-in users can create sync profiles in their own collection. No need to check for auth.
-    user_id = event.params["userId"]
-    sync_profile_id = event.params["syncProfileId"]
-    data = event.data.to_dict()
-
-    logger.info(
-        f"Sync profile created.",
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
-    )
-
-    assert data, "Sync Profile Document was just created : it should not be empty"
-
-    # Validate document using Pydantic
-    data["id"] = sync_profile_id
-    data["user_id"] = user_id
-    sync_profile = SyncProfile.model_validate(data)
-
-    # Populate `created_at` and other default fields
-    sync_profile_repo.save_sync_profile(sync_profile)
-
-    event_bus.publish(
-        domain_events.SyncProfileCreated(
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-        )
-    )
-
-    ai_ruleset_service.create_ruleset_for_sync_profile(
-        sync_profile,
-    )
-
-    # Initial synchronization
-    sync_profile_service.synchronize(
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
-        sync_trigger=SyncTrigger.ON_CREATE,
-    )
 
 
 @https_fn.on_call(
@@ -477,3 +405,29 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
             provider_id=event_data.get("provider_id"),
         )
     )
+
+
+@https_fn.on_call(
+    memory=options.MemoryOption.MB_512,
+    max_instances=settings.MAX_CLOUD_FUNCTIONS_INSTANCES,
+    region=settings.CLOUD_FUNCTIONS_REGION,
+)
+@validate_request(CreateSyncProfileInput)
+def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:
+    logger.info(
+        f"User {user_id} is creating a new sync profile.",
+        user_id=user_id,
+        request=request.model_dump_json(),
+    )
+    try:
+        sync_profile = sync_profile_service.create_sync_profile(user_id, request)
+    except SyncademicError as e:
+        logger.error(
+            f"Failed to create sync profile.",
+            user_id=user_id,
+            request=request.model_dump_json(),
+            error_type=type(e).__name__,
+        )
+        raise error_mapping.to_http_error(e)
+
+    return sync_profile.model_dump(mode="json")

@@ -47,4 +47,18 @@ void main() {
       });
     });
   }
+
+  group('from/to Json', () {
+    test('should create a ScheduleSource from a JSON object', () {
+      const json = {'url': 'https://example.com/schedule'};
+      final scheduleSource = ScheduleSource.fromJson(json);
+      expect(scheduleSource.url, equals(json['url']));
+    });
+    test('should create a JSON object from a ScheduleSource', () {
+      const url = 'https://example.com/schedule';
+      const scheduleSource = ScheduleSource(url: url);
+      final json = scheduleSource.toJson();
+      expect(json['url'], equals(url));
+    });
+  });
 }

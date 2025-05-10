@@ -14,27 +14,10 @@ import 'sync_profile_repository.dart';
 
 class FirestoreSyncProfileRepository implements SyncProfileRepository {
   final _db = FirebaseFirestore.instance;
+  final FirebaseFunctions functions;
 
-  @override
-  Future<void> createSyncProfile(SyncProfile syncProfile) async =>
-      _syncProfilesCollection.doc(syncProfile.id.value).set({
-        'title': syncProfile.title,
-        'scheduleSource': {
-          'url': syncProfile.scheduleSource.url,
-        },
-        'targetCalendar': {
-          'id': syncProfile.targetCalendar.id.value,
-          'title': syncProfile.targetCalendar.title,
-          'description': syncProfile.targetCalendar.description,
-          'providerAccountId': syncProfile.targetCalendar.providerAccountId,
-          'providerAccountEmail':
-              syncProfile.targetCalendar.providerAccountEmail,
-        },
-        'status': {
-          'type': 'notStarted',
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-      });
+  FirestoreSyncProfileRepository({FirebaseFunctions? functions})
+      : functions = functions ?? GetIt.I.get<FirebaseFunctions>();
 
   @override
   Stream<SyncProfile?> watchSyncProfile(ID id) {
@@ -142,7 +125,7 @@ class FirestoreSyncProfileRepository implements SyncProfileRepository {
 
   @override
   Future<void> deleteSyncProfile(ID id) =>
-      FirebaseFunctions.instance.httpsCallable('delete_sync_profile').call(
+      functions.httpsCallable('delete_sync_profile').call(
         {'syncProfileId': id.value},
       );
 }

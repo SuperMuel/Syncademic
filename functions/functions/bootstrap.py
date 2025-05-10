@@ -3,15 +3,18 @@ from typing import cast
 from functions import handlers
 from functions.infrastructure.event_bus import LocalEventBus, Handler
 from functions.repositories.sync_stats_repository import ISyncStatsRepository
+from functions.services.ai_ruleset_service import AiRulesetService
 from functions.services.dev_notification_service import IDevNotificationService
 from functions.shared.domain_events import (
     DomainEvent,
     IcsFetched,
+    RulesetGenerationFailed,
     SyncFailed,
     SyncProfileCreated,
     SyncSucceeded,
     UserCreated,
     SyncProfileDeletionFailed,
+    SyncProfileCreationFailed,
 )
 from functions.synchronizer.ics_cache import IcsFileStorage
 
@@ -27,37 +30,49 @@ def bootstrap_event_bus(
             {
                 IcsFetched: [
                     partial(
-                        handlers.handle_ics_fetched,
+                        handlers.save_ics_to_storage,
                         ics_file_storage=ics_file_storage,
                     )
                 ],
                 SyncFailed: [
                     partial(
-                        handlers.handle_sync_failed,
+                        handlers.notify_developer_on_sync_failure,
                         dev_notification_service=dev_notification_service,
                     )
                 ],
                 SyncProfileCreated: [
                     partial(
-                        handlers.handle_sync_profile_created,
+                        handlers.notify_developer_on_sync_profile_creation,
                         dev_notification_service=dev_notification_service,
                     )
                 ],
                 UserCreated: [
                     partial(
-                        handlers.handle_user_created,
+                        handlers.notify_developer_on_new_user,
                         dev_notification_service=dev_notification_service,
                     )
                 ],
                 SyncSucceeded: [
                     partial(
-                        handlers.handle_sync_succeeded,
+                        handlers.increment_sync_count_on_sync_success,
                         sync_stats_repo=sync_stats_repo,
                     )
                 ],
                 SyncProfileDeletionFailed: [
                     partial(
-                        handlers.handle_sync_profile_deletion_failed,
+                        handlers.notify_developer_on_sync_profile_deletion_failure,
+                        dev_notification_service=dev_notification_service,
+                    )
+                ],
+                SyncProfileCreationFailed: [
+                    partial(
+                        handlers.notify_developer_on_sync_profile_creation_failure,
+                        dev_notification_service=dev_notification_service,
+                    )
+                ],
+                RulesetGenerationFailed: [
+                    partial(
+                        handlers.notify_developer_on_ruleset_generation_failure,
                         dev_notification_service=dev_notification_service,
                     )
                 ],

@@ -113,6 +113,7 @@ class _IdTokenWidgetState extends State<IdTokenWidget> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Refresh Token'),
               ),
+              const SizedBox(height: 10),
             ],
           )
         else

@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "cwd": "${workspaceFolder}/backend",
+            "name": "Python Debugger: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "backend.api:app",
+                "--reload"
+            ],
+            "jinja": true
+        },
+        {
             "name": "Flutter (Chrome)",
             "type": "dart",
             "request": "launch",

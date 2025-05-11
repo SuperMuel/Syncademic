@@ -80,6 +80,8 @@ class Settings(BaseSettings):
 
     ENV: Literal["dev", "prod"] = Field(default="prod")
 
+    FIREBASE_STORAGE_BUCKET_NAME: str = Field(default="syncademic-36c18.appspot.com")
+
     FIREBASE_SERVICE_ACCOUNT_PATH: str | None = Field(
         default=None,
         examples=[
@@ -119,7 +121,7 @@ class Settings(BaseSettings):
             )
 
         # Validate JSON is properly formatted if provided
-        if self.FIREBASE_SERVICE_ACCOUNT_JSON is not None:
+        if self.FIREBASE_SERVICE_ACCOUNT_JSON:
             try:
                 json.loads(self.FIREBASE_SERVICE_ACCOUNT_JSON.get_secret_value())
             except json.JSONDecodeError:

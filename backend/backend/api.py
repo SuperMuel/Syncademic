@@ -80,8 +80,8 @@ async def get_current_user(
         decoded_token = auth.verify_id_token(token.credentials)
 
         return UserInfo(
-            uid=decoded_token.get("uid"),
-            email=decoded_token.get("email"),
+            uid=decoded_token["uid"],
+            email=decoded_token["email"],
             display_name=decoded_token.get("name"),
             photo_url=decoded_token.get("picture"),
             email_verified=decoded_token.get("email_verified", False),

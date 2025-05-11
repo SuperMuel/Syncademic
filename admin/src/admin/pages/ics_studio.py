@@ -4,9 +4,9 @@ from firebase_admin import storage
 from datetime import datetime
 from typing import TypedDict, cast
 
-from functions.services.exceptions.ics import IcsParsingError
-from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
-from functions.synchronizer.ics_parser import IcsParser
+from backend.services.exceptions.ics import IcsParsingError
+from backend.synchronizer.ics_cache import FirebaseIcsFileStorage
+from backend.synchronizer.ics_parser import IcsParser
 
 
 class IcsFileInfo(TypedDict):

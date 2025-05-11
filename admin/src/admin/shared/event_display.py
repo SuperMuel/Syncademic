@@ -3,8 +3,8 @@ from typing import Any, TypedDict
 
 import streamlit as st
 from streamlit_calendar import calendar
-from functions.shared.event import Event
-from functions.models.rules import Ruleset
+from backend.shared.event import Event
+from backend.models.rules import Ruleset
 
 
 class EventDisplayData(TypedDict):

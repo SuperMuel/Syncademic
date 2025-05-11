@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     # so we're using a size of 25 for now.
     GOOGLE_API_BATCH_SIZE: int = Field(default=25)
 
-    ENV: Literal["dev", "prod"] = Field(default="dev")
+    ENV: Literal["dev", "prod"] = Field(default="prod")
 
     FIREBASE_SERVICE_ACCOUNT_PATH: str | None = Field(
         default=None,

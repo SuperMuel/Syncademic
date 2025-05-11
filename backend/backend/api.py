@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pydantic import BaseModel, EmailStr
 import json
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -57,9 +58,6 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
     logger.info("Firebase initialized.")
     yield
     logger.info("Application shutdown.")
-
-
-from pydantic import BaseModel, EmailStr
 
 
 class UserInfo(BaseModel):

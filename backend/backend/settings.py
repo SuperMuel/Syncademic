@@ -1,6 +1,17 @@
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
+import os
+import json
+from pathlib import Path
 
-from pydantic import AfterValidator, Field, HttpUrl, SecretStr
+from pydantic import (
+    AfterValidator,
+    Field,
+    HttpUrl,
+    SecretStr,
+    field_validator,
+    ValidationInfo,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RedirectUri = Annotated[HttpUrl, AfterValidator(lambda x: str(x).rstrip("/"))]
@@ -72,6 +83,54 @@ class Settings(BaseSettings):
     GOOGLE_API_BATCH_SIZE: int = Field(default=25)
 
     ENV: Literal["dev", "prod"] = Field(default="dev")
+
+    FIREBASE_SERVICE_ACCOUNT_PATH: str | None = Field(
+        default=None,
+        examples=[
+            "/local/path/to/firebase-service-account.json",
+            None,
+        ],
+    )
+
+    FIREBASE_SERVICE_ACCOUNT_JSON: SecretStr | None = Field(
+        default=None,
+        examples=[
+            '{"type": "service_account", "project_id": "syncademic-36c18", "...": "..."}',
+            None,
+        ],
+    )
+
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
+        default="INFO"
+    )
+
+    @model_validator(mode="after")
+    def validate_firebase_service_account(self) -> Self:
+        # Check that only one firebase service account method is provided
+        if (
+            self.FIREBASE_SERVICE_ACCOUNT_PATH is not None
+            and self.FIREBASE_SERVICE_ACCOUNT_JSON is not None
+        ):
+            raise ValueError(
+                "FIREBASE_SERVICE_ACCOUNT_PATH and FIREBASE_SERVICE_ACCOUNT_JSON cannot both be provided"
+            )
+
+        # Validate the file path exists if provided
+        if self.FIREBASE_SERVICE_ACCOUNT_PATH is not None and not os.path.exists(
+            self.FIREBASE_SERVICE_ACCOUNT_PATH
+        ):
+            raise ValueError(
+                f"Firebase service account file does not exist at: {self.FIREBASE_SERVICE_ACCOUNT_PATH}"
+            )
+
+        # Validate JSON is properly formatted if provided
+        if self.FIREBASE_SERVICE_ACCOUNT_JSON is not None:
+            try:
+                json.loads(self.FIREBASE_SERVICE_ACCOUNT_JSON.get_secret_value())
+            except json.JSONDecodeError:
+                raise ValueError("Firebase service account JSON is not valid JSON")
+
+        return self
 
 
 settings = Settings()

@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import json
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
@@ -9,13 +10,16 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from backend.settings import Settings
+from backend.logging_config import configure_logging
 from dotenv import load_dotenv
 
 load_dotenv()
 
+
 logger = logging.getLogger("fastapi")
 
 settings = Settings()
+configure_logging(settings.LOG_LEVEL)
 
 reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
 
@@ -25,26 +29,25 @@ def initialize_firebase_app() -> None:
     Initializes the Firebase Admin SDK.
     It first tries to use GOOGLE_APPLICATION_CREDENTIALS env var.
     """
-    try:
-        # Check if already initialized to prevent re-initialization error
-        firebase_admin.get_app()
-    except ValueError:
-        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if firebase_admin._apps:  # already initialised
+        return
 
-        if cred_path:
-            logger.info(
-                f"Initializing Firebase Admin SDK with credentials: {cred_path}"
-            )
-            cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
-        else:
-            # For environments like Google Cloud Run/Functions,
-            # if GOOGLE_APPLICATION_CREDENTIALS is not set,
-            # it attempts to use default credentials (e.g., instance metadata service)
-            logger.info(
-                "Initializing Firebase Admin SDK with default credentials (e.g., for GCloud environment)"
-            )
-            firebase_admin.initialize_app()
+    cred: credentials.Base | None
+    if settings.FIREBASE_SERVICE_ACCOUNT_PATH is not None:
+        logger.info(f"Initializing Firebase Admin SDK with service account file.")
+        cred = credentials.Certificate(settings.FIREBASE_SERVICE_ACCOUNT_PATH)
+    elif settings.FIREBASE_SERVICE_ACCOUNT_JSON is not None:
+        logger.info("Initializing Firebase Admin SDK with service account JSON.")
+        cred = credentials.Certificate(
+            json.loads(settings.FIREBASE_SERVICE_ACCOUNT_JSON.get_secret_value())
+        )
+    else:
+        logger.info(
+            "Initializing Firebase Admin SDK with Application Default Credentials."
+        )
+        cred = credentials.ApplicationDefault()
+
+    firebase_admin.initialize_app(cred)
 
 
 @asynccontextmanager
@@ -67,10 +70,6 @@ class UserInfo(BaseModel):
     email_verified: bool = False
 
 
-class Message(BaseModel):
-    message: str
-
-
 async def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(reusable_oauth2),
 ) -> UserInfo:
@@ -80,9 +79,6 @@ async def get_current_user(
     """
 
     try:
-        # Ensure Firebase is initialized (idempotent check inside)
-        initialize_firebase_app()  # Call it here in case it's the first request
-
         decoded_token = auth.verify_id_token(token.credentials)
 
         return UserInfo(
@@ -106,10 +102,7 @@ async def get_current_user(
         )
 
 
-app = FastAPI(
-    title="Syncademic API",
-    version="0.1.0",
-)
+app = FastAPI(title="Syncademic API", version="0.1.0", lifespan=lifespan)
 
 
 app.add_middleware(

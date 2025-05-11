@@ -5,9 +5,9 @@ import requests
 import responses
 from pydantic import HttpUrl, ValidationError
 
-from functions.services.exceptions.ics import IcsSourceError
-from functions.settings import settings
-from functions.synchronizer.ics_source import (
+from backend.services.exceptions.ics import IcsSourceError
+from backend.settings import settings
+from backend.synchronizer.ics_source import (
     FileIcsSource,
     StringIcsSource,
     UrlIcsSource,

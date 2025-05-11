@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import HttpUrl, ValidationError
 
-from functions.models import (
+from backend.models import (
     ScheduleSource,
     SyncProfile,
     SyncProfileStatus,
@@ -12,7 +12,7 @@ from functions.models import (
     SyncType,
     TargetCalendar,
 )
-from functions.models.rules import Ruleset
+from backend.models.rules import Ruleset
 from tests.util import VALID_RULESET
 
 VALID_SCHEDULE_SOURCE = ScheduleSource(url=HttpUrl("https://example.com/test.ics"))

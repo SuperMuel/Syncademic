@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import Mock
 
-from functions.infrastructure.event_bus import LocalEventBus, MockEventBus
-from functions.shared.domain_events import DomainEvent, IcsFetched, SyncFailed
+from backend.infrastructure.event_bus import LocalEventBus, MockEventBus
+from backend.shared.domain_events import DomainEvent, IcsFetched, SyncFailed
 
 
 def test_local_event_bus_dispatches_to_handler() -> None:

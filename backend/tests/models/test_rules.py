@@ -2,7 +2,7 @@ import arrow
 import pytest
 from pydantic import ValidationError
 
-from functions.models import (
+from backend.models import (
     ChangeColorAction,
     ChangeFieldAction,
     CompoundCondition,
@@ -14,9 +14,9 @@ from functions.models import (
     TextFieldCondition,
     TextFieldConditionOperator,
 )
-from functions.models.rules import settings
-from functions.shared.event import Event
-from functions.shared.google_calendar_colors import GoogleEventColor
+from backend.models.rules import settings
+from backend.shared.event import Event
+from backend.shared.google_calendar_colors import GoogleEventColor
 
 
 def test_text_field_condition_valid():

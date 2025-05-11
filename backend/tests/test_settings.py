@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 import pytest
-from functions.settings import settings, Settings
+from backend.settings import settings, Settings
 
 
 def test_redirect_uris_no_trailing_slash():

@@ -1,4 +1,4 @@
-from functions.shared.event import Event
+from backend.shared.event import Event
 from sklearn.feature_extraction.text import TfidfVectorizer
 import hdbscan
 import numpy as np

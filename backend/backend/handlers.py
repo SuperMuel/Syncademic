@@ -1,8 +1,8 @@
-from functions.models.sync_profile import SyncTrigger
-from functions.repositories.sync_stats_repository import ISyncStatsRepository
-from functions.services.dev_notification_service import IDevNotificationService
-from functions.services.sync_profile_service import SyncProfileService
-from functions.shared.domain_events import (
+from backend.models.sync_profile import SyncTrigger
+from backend.repositories.sync_stats_repository import ISyncStatsRepository
+from backend.services.dev_notification_service import IDevNotificationService
+from backend.services.sync_profile_service import SyncProfileService
+from backend.shared.domain_events import (
     IcsFetched,
     RulesetGenerationFailed,
     SyncFailed,
@@ -12,7 +12,7 @@ from functions.shared.domain_events import (
     SyncProfileDeletionFailed,
     SyncProfileCreationFailed,
 )
-from functions.synchronizer.ics_cache import IcsFileStorage
+from backend.synchronizer.ics_cache import IcsFileStorage
 
 
 def save_ics_to_storage(event: IcsFetched, ics_file_storage: IcsFileStorage) -> None:

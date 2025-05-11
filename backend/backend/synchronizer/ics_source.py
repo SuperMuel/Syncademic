@@ -6,8 +6,8 @@ import requests
 from firebase_functions import logger
 from pydantic import BaseModel, HttpUrl
 
-from functions.settings import settings
-from functions.services.exceptions.ics import IcsSourceError
+from backend.settings import settings
+from backend.services.exceptions.ics import IcsSourceError
 
 
 class IcsSource(BaseModel, ABC):

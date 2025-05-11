@@ -5,11 +5,11 @@ import traceback
 from firebase_functions import logger
 from typing import TypedDict
 
-from functions.models.sync_profile import SyncProfile
-from functions.repositories.sync_profile_repository import ISyncProfileRepository
-from functions.services.user_service import FirebaseAuthUserService
-from functions.settings import settings
-from functions.shared import domain_events
+from backend.models.sync_profile import SyncProfile
+from backend.repositories.sync_profile_repository import ISyncProfileRepository
+from backend.services.user_service import FirebaseAuthUserService
+from backend.settings import settings
+from backend.shared import domain_events
 
 
 class IDevNotificationService(ABC):

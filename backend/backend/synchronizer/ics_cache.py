@@ -4,7 +4,7 @@ from typing import Any
 from google.cloud import storage
 from firebase_functions import logger
 
-from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
+from backend.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
 class IcsFileStorage(ABC):

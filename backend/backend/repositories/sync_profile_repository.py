@@ -6,7 +6,7 @@ from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.collection import CollectionReference
 from google.cloud.firestore_v1.document import DocumentReference
 
-from functions.models.sync_profile import (
+from backend.models.sync_profile import (
     SyncProfile,
     SyncProfileStatusType,
 )

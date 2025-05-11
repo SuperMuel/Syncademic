@@ -4,14 +4,14 @@ import arrow
 import pytest
 from pydantic import HttpUrl, parse_obj_as
 
-from functions.infrastructure.event_bus import MockEventBus
-from functions.models.schemas import ValidateIcsUrlOutput
-from functions.services.exceptions.ics import IcsParsingError, IcsSourceError
-from functions.services.ics_service import IcsService, IcsFetchAndParseResult
-from functions.shared import domain_events
-from functions.shared.event import Event
-from functions.synchronizer.ics_parser import IcsParser
-from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
+from backend.infrastructure.event_bus import MockEventBus
+from backend.models.schemas import ValidateIcsUrlOutput
+from backend.services.exceptions.ics import IcsParsingError, IcsSourceError
+from backend.services.ics_service import IcsService, IcsFetchAndParseResult
+from backend.shared import domain_events
+from backend.shared.event import Event
+from backend.synchronizer.ics_parser import IcsParser
+from backend.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
 @pytest.fixture
@@ -199,8 +199,8 @@ class TestValidateIcsUrl:
 
 
 def test_enrich_metadata_adds_url_when_missing():
-    from functions.services.ics_service import IcsService
-    from functions.synchronizer.ics_source import UrlIcsSource, IcsSource
+    from backend.services.ics_service import IcsService
+    from backend.synchronizer.ics_source import UrlIcsSource, IcsSource
     from unittest.mock import Mock
     from pydantic import HttpUrl
 

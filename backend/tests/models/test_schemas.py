@@ -1,7 +1,7 @@
 import pytest
 from pydantic import HttpUrl, ValidationError
 
-from functions.models.schemas import (
+from backend.models.schemas import (
     AuthorizeBackendInput,
     CreateNewCalendarInput,
     DeleteSyncProfileInput,
@@ -12,8 +12,8 @@ from functions.models.schemas import (
     ValidateIcsUrlInput,
     ValidateIcsUrlOutput,
 )
-from functions.models.sync_profile import SyncType
-from functions.settings import settings
+from backend.models.sync_profile import SyncType
+from backend.settings import settings
 
 
 @pytest.mark.parametrize(

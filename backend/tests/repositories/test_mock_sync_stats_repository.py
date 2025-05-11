@@ -1,7 +1,7 @@
 from datetime import date
 from freezegun import freeze_time
 
-from functions.repositories.sync_stats_repository import MockSyncStatsRepository
+from backend.repositories.sync_stats_repository import MockSyncStatsRepository
 
 
 def test_get_daily_sync_count_returns_zero_for_new_user() -> None:

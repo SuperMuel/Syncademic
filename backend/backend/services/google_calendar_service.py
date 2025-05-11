@@ -1,8 +1,8 @@
 from typing import Any
 from googleapiclient.errors import HttpError
 from firebase_functions import logger
-from functions.services.authorization_service import AuthorizationService
-from functions.services.exceptions.target_calendar import (
+from backend.services.authorization_service import AuthorizationService
+from backend.services.exceptions.target_calendar import (
     BaseTargetCalendarError,
 )
 

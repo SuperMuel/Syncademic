@@ -2,9 +2,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from functions.bootstrap import bootstrap_event_bus
-from functions.repositories.sync_stats_repository import MockSyncStatsRepository
-from functions.shared.domain_events import (
+from backend.bootstrap import bootstrap_event_bus
+from backend.repositories.sync_stats_repository import MockSyncStatsRepository
+from backend.shared.domain_events import (
     IcsFetched,
     RulesetGenerationFailed,
     SyncFailed,

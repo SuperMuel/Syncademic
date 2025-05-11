@@ -1,11 +1,11 @@
 import logging
 from typing import List
 
-from functions.services.exceptions.ics import (
+from backend.services.exceptions.ics import (
     IcsParsingError,
     RecurringEventError,
 )
-from functions.shared.event import Event
+from backend.shared.event import Event
 import ics
 
 logger = logging.getLogger(__name__)

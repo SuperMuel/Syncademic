@@ -5,12 +5,12 @@ import pytest
 from google.cloud import storage
 from pydantic import HttpUrl
 
-from functions.synchronizer.ics_cache import (
+from backend.synchronizer.ics_cache import (
     FirebaseIcsFileStorage,
     IcsFileStorage,
     format_exception,
 )
-from functions.synchronizer.ics_source import StringIcsSource, UrlIcsSource
+from backend.synchronizer.ics_source import StringIcsSource, UrlIcsSource
 
 # Sample ICS content
 valid_ics_content = """

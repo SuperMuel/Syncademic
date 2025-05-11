@@ -6,9 +6,9 @@ from arrow import Arrow
 from pydantic import HttpUrl
 from pytest_mock import MockFixture
 
-from functions.ai.ruleset_builder import RulesetBuilder
-from functions.infrastructure.event_bus import MockEventBus
-from functions.models.sync_profile import (
+from backend.ai.ruleset_builder import RulesetBuilder
+from backend.infrastructure.event_bus import MockEventBus
+from backend.models.sync_profile import (
     ScheduleSource,
     SyncProfile,
     SyncProfileStatus,
@@ -17,15 +17,15 @@ from functions.models.sync_profile import (
     SyncType,
     TargetCalendar,
 )
-from functions.repositories.sync_profile_repository import (
+from backend.repositories.sync_profile_repository import (
     ISyncProfileRepository,
     MockSyncProfileRepository,
 )
-from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.exceptions.ics import IcsSourceError
-from functions.services.ics_service import IcsService, IcsFetchAndParseResult
-from functions.shared.domain_events import RulesetGenerationFailed
-from functions.shared.event import Event
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.exceptions.ics import IcsSourceError
+from backend.services.ics_service import IcsService, IcsFetchAndParseResult
+from backend.shared.domain_events import RulesetGenerationFailed
+from backend.shared.event import Event
 from tests.util import VALID_RULESET
 
 

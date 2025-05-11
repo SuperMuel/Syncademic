@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import HttpUrl
 
-from functions.models.rules import Ruleset
-from functions.models.sync_profile import (
+from backend.models.rules import Ruleset
+from backend.models.sync_profile import (
     ScheduleSource,
     SyncProfile,
     SyncProfileStatus,
@@ -13,7 +13,7 @@ from functions.models.sync_profile import (
     SyncType,
     TargetCalendar,
 )
-from functions.repositories.sync_profile_repository import MockSyncProfileRepository
+from backend.repositories.sync_profile_repository import MockSyncProfileRepository
 from tests.util import VALID_RULESET
 
 

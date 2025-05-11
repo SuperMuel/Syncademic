@@ -1,11 +1,11 @@
 from functools import partial
 from typing import cast
-from functions import handlers
-from functions.infrastructure.event_bus import LocalEventBus, Handler
-from functions.repositories.sync_stats_repository import ISyncStatsRepository
-from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.dev_notification_service import IDevNotificationService
-from functions.shared.domain_events import (
+from backend import handlers
+from backend.infrastructure.event_bus import LocalEventBus, Handler
+from backend.repositories.sync_stats_repository import ISyncStatsRepository
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.dev_notification_service import IDevNotificationService
+from backend.shared.domain_events import (
     DomainEvent,
     IcsFetched,
     RulesetGenerationFailed,
@@ -16,7 +16,7 @@ from functions.shared.domain_events import (
     SyncProfileDeletionFailed,
     SyncProfileCreationFailed,
 )
-from functions.synchronizer.ics_cache import IcsFileStorage
+from backend.synchronizer.ics_cache import IcsFileStorage
 
 
 def bootstrap_event_bus(

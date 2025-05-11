@@ -2,8 +2,8 @@ from datetime import datetime
 import pytest
 from mockfirestore import MockFirestore
 
-from functions.models.authorization import BackendAuthorization
-from functions.repositories.backend_authorization_repository import (
+from backend.models.authorization import BackendAuthorization
+from backend.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
 )
 

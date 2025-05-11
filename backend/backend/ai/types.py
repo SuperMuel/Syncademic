@@ -1,4 +1,4 @@
-from functions.models import Ruleset
+from backend.models import Ruleset
 from pydantic import BaseModel
 
 

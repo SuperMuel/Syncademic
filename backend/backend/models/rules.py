@@ -5,8 +5,8 @@ from typing import Literal, Optional, Self, Union, Sequence
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings
 
-from functions.shared.event import Event
-from functions.shared.google_calendar_colors import GoogleEventColor
+from backend.shared.event import Event
+from backend.shared.google_calendar_colors import GoogleEventColor
 
 
 class RulesSettings(BaseSettings):

@@ -4,20 +4,20 @@ from typing import Sequence
 from firebase_functions import logger
 from langchain.chat_models import init_chat_model
 
-from functions.ai.ruleset_builder import RulesetBuilder
-from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.infrastructure.event_bus import IEventBus
-from functions.models.rules import Ruleset
-from functions.models.sync_profile import SyncProfile
-from functions.repositories.sync_profile_repository import (
+from backend.ai.ruleset_builder import RulesetBuilder
+from backend.ai.time_schedule_compressor import TimeScheduleCompressor
+from backend.infrastructure.event_bus import IEventBus
+from backend.models.rules import Ruleset
+from backend.models.sync_profile import SyncProfile
+from backend.repositories.sync_profile_repository import (
     ISyncProfileRepository,
 )
-from functions.services.exceptions.ruleset import RulesetGenerationError
-from functions.services.exceptions.ics import BaseIcsError
-from functions.services.ics_service import IcsService
-from functions.shared.domain_events import RulesetGenerationFailed
-from functions.synchronizer.ics_parser import IcsParser
-from functions.synchronizer.ics_source import UrlIcsSource
+from backend.services.exceptions.ruleset import RulesetGenerationError
+from backend.services.exceptions.ics import BaseIcsError
+from backend.services.ics_service import IcsService
+from backend.shared.domain_events import RulesetGenerationFailed
+from backend.synchronizer.ics_parser import IcsParser
+from backend.synchronizer.ics_source import UrlIcsSource
 
 
 class AiRulesetService:

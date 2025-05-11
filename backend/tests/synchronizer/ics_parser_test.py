@@ -3,9 +3,9 @@ from typing import List
 import arrow
 import pytest
 
-from functions.services.exceptions.ics import IcsParsingError
-from functions.shared.event import Event
-from functions.synchronizer.ics_parser import IcsParser, RecurringEventError
+from backend.services.exceptions.ics import IcsParsingError
+from backend.shared.event import Event
+from backend.synchronizer.ics_parser import IcsParser, RecurringEventError
 
 
 def build_ics_outline(inside: str):

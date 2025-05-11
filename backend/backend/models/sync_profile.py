@@ -15,8 +15,8 @@ from pydantic import (
     model_validator,
 )
 
-from functions.models.rules import Ruleset
-from functions.synchronizer.ics_source import IcsSource, UrlIcsSource
+from backend.models.rules import Ruleset
+from backend.synchronizer.ics_source import IcsSource, UrlIcsSource
 
 
 def utc_datetime_factory() -> datetime:

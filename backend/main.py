@@ -10,14 +10,14 @@ from firebase_functions.firestore_fn import (
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from pydantic import BaseModel, ValidationError
 
-from functions.ai.ruleset_builder import RulesetBuilder
-from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.bootstrap import bootstrap_event_bus
-from functions.infrastructure.event_bus import Handler, LocalEventBus
-from functions.models import (
+from backend.ai.ruleset_builder import RulesetBuilder
+from backend.ai.time_schedule_compressor import TimeScheduleCompressor
+from backend.bootstrap import bootstrap_event_bus
+from backend.infrastructure.event_bus import Handler, LocalEventBus
+from backend.models import (
     SyncTrigger,
 )
-from functions.models.schemas import (
+from backend.models.schemas import (
     AuthorizeBackendInput,
     CreateNewCalendarInput,
     DeleteSyncProfileInput,
@@ -28,32 +28,32 @@ from functions.models.schemas import (
     ValidateIcsUrlInput,
     CreateSyncProfileInput,
 )
-from functions.models.sync_profile import SyncProfile, TargetCalendar
-from functions.repositories.backend_authorization_repository import (
+from backend.models.sync_profile import SyncProfile, TargetCalendar
+from backend.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
     IBackendAuthorizationRepository,
 )
-from functions.repositories.sync_profile_repository import (
+from backend.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
     ISyncProfileRepository,
 )
-from functions.repositories.sync_stats_repository import (
+from backend.repositories.sync_stats_repository import (
     FirestoreSyncStatsRepository,
     ISyncStatsRepository,
 )
-from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.authorization_service import AuthorizationService
-from functions.services.dev_notification_service import create_dev_notification_service
-from functions.services.exceptions.base import SyncademicError
-from functions.services.exceptions.mapping import ErrorMapping
-from functions.services.google_calendar_service import GoogleCalendarService
-from functions.services.ics_service import IcsService
-from functions.services.sync_profile_service import SyncProfileService
-from functions.services.user_service import FirebaseAuthUserService
-from functions.settings import settings
-from functions.shared import domain_events
-from functions.synchronizer.ics_cache import FirebaseIcsFileStorage
-from functions.synchronizer.ics_source import UrlIcsSource
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.authorization_service import AuthorizationService
+from backend.services.dev_notification_service import create_dev_notification_service
+from backend.services.exceptions.base import SyncademicError
+from backend.services.exceptions.mapping import ErrorMapping
+from backend.services.google_calendar_service import GoogleCalendarService
+from backend.services.ics_service import IcsService
+from backend.services.sync_profile_service import SyncProfileService
+from backend.services.user_service import FirebaseAuthUserService
+from backend.settings import settings
+from backend.shared import domain_events
+from backend.synchronizer.ics_cache import FirebaseIcsFileStorage
+from backend.synchronizer.ics_source import UrlIcsSource
 
 logger.info(f"Settings: {settings}")
 

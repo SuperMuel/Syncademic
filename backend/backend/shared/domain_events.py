@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Any
 
-from functions.models.sync_profile import SyncProfile
+from backend.models.sync_profile import SyncProfile
 
 
 class DomainEvent(BaseModel):

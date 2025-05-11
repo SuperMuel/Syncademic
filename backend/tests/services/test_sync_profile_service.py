@@ -3,8 +3,8 @@ import pytest
 import arrow
 from unittest.mock import Mock
 
-from functions.infrastructure.event_bus import MockEventBus
-from functions.models.sync_profile import (
+from backend.infrastructure.event_bus import MockEventBus
+from backend.models.sync_profile import (
     SyncProfile,
     SyncProfileStatus,
     SyncProfileStatusType,
@@ -13,27 +13,27 @@ from functions.models.sync_profile import (
     ScheduleSource,
     TargetCalendar,
 )
-from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.exceptions.sync import DailySyncLimitExceededError
-from functions.services.google_calendar_service import GoogleCalendarService
-from functions.shared import domain_events
-from functions.shared.event import Event
-from functions.shared.google_calendar_colors import GoogleEventColor
-from functions.services.sync_profile_service import SyncProfileService
-from functions.services.exceptions.ics import (
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.exceptions.sync import DailySyncLimitExceededError
+from backend.services.google_calendar_service import GoogleCalendarService
+from backend.shared import domain_events
+from backend.shared.event import Event
+from backend.shared.google_calendar_colors import GoogleEventColor
+from backend.services.sync_profile_service import SyncProfileService
+from backend.services.exceptions.ics import (
     IcsParsingError,
     IcsSourceError,
 )
-from functions.services.ics_service import IcsFetchAndParseResult
-from functions.repositories.sync_stats_repository import MockSyncStatsRepository
-from functions.repositories.sync_profile_repository import MockSyncProfileRepository
-from functions.synchronizer.google_calendar_manager import MockGoogleCalendarManager
-from functions.models.schemas import (
+from backend.services.ics_service import IcsFetchAndParseResult
+from backend.repositories.sync_stats_repository import MockSyncStatsRepository
+from backend.repositories.sync_profile_repository import MockSyncProfileRepository
+from backend.synchronizer.google_calendar_manager import MockGoogleCalendarManager
+from backend.models.schemas import (
     CreateSyncProfileInput,
     CreateNewTargetCalendarInput,
     UseExistingTargetCalendarInput,
 )
-from functions.services.exceptions.target_calendar import TargetCalendarNotFoundError
+from backend.services.exceptions.target_calendar import TargetCalendarNotFoundError
 
 
 def _make_sync_profile(
@@ -358,7 +358,7 @@ def test_ruleset_applied(
         raw_ics="mock irrelevant ics value",
     )
 
-    from functions.models.rules import (
+    from backend.models.rules import (
         Rule,
         Ruleset,
         TextFieldCondition,
@@ -516,7 +516,7 @@ def test_raise_on_daily_limit(
     ICS not fetched, no events, usage doesn't increment.
     """
     # We'll saturate today's usage
-    from functions.settings import settings
+    from backend.settings import settings
 
     user_id = "userX"
     prof_id = "profileLimit"
@@ -734,7 +734,7 @@ def test_force_sync_bypasses_daily_limit(
     """
     Force sync should bypass the daily limit check.
     """
-    from functions.settings import settings
+    from backend.settings import settings
 
     user_id = "userX"
     prof_id = "profile_force_limit"

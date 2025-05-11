@@ -9,17 +9,17 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from pydantic import HttpUrl
 
-from functions.models.authorization import BackendAuthorization
-from functions.repositories.backend_authorization_repository import (
+from backend.models.authorization import BackendAuthorization
+from backend.repositories.backend_authorization_repository import (
     IBackendAuthorizationRepository,
 )
-from functions.services.exceptions import (
+from backend.services.exceptions import (
     BaseAuthorizationError,
     UnauthorizedError,
 )
-from functions.services.exceptions.auth import ProviderUserIdMismatchError
-from functions.settings import settings
-from functions.synchronizer.google_calendar_manager import (
+from backend.services.exceptions.auth import ProviderUserIdMismatchError
+from backend.settings import settings
+from backend.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
 

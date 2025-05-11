@@ -3,8 +3,8 @@ from pydantic import HttpUrl
 import pytest
 from mockfirestore import MockFirestore
 
-from functions.models.rules import Ruleset
-from functions.models.sync_profile import (
+from backend.models.rules import Ruleset
+from backend.models.sync_profile import (
     SyncProfile,
     SyncProfileStatus,
     SyncProfileStatusType,
@@ -13,7 +13,7 @@ from functions.models.sync_profile import (
     SyncTrigger,
     SyncType,
 )
-from functions.repositories.sync_profile_repository import (
+from backend.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
 )
 from tests.util import VALID_RULESET

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from mockfirestore import MockFirestore
 
-from functions.repositories.sync_stats_repository import FirestoreSyncStatsRepository
+from backend.repositories.sync_stats_repository import FirestoreSyncStatsRepository
 
 
 @pytest.fixture

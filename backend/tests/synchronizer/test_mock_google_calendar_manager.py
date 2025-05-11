@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 
 import arrow
 
-from functions.shared.event import Event
-from functions.shared.google_calendar_colors import GoogleEventColor
-from functions.synchronizer.google_calendar_manager import (
+from backend.shared.event import Event
+from backend.shared.google_calendar_colors import GoogleEventColor
+from backend.synchronizer.google_calendar_manager import (
     MockGoogleCalendarManager,
 )
 

@@ -2,8 +2,8 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, Field, HttpUrl, field_validator
 
-from functions.models.sync_profile import ScheduleSource, SyncType, TargetCalendar
-from functions.settings import RedirectUri, settings
+from backend.models.sync_profile import ScheduleSource, SyncType, TargetCalendar
+from backend.settings import RedirectUri, settings
 
 
 class ValidateIcsUrlInput(BaseModel):

@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timezone
 from pydantic import ValidationError
 
-from functions.models import BackendAuthorization
+from backend.models import BackendAuthorization
 
 
 def test_backend_authorization_minimal():

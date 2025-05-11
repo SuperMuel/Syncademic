@@ -1,5 +1,5 @@
-from functions.models.rules import ChangeColorAction, Rule, Ruleset, TextFieldCondition
-from functions.shared.google_calendar_colors import GoogleEventColor
+from backend.models.rules import ChangeColorAction, Rule, Ruleset, TextFieldCondition
+from backend.shared.google_calendar_colors import GoogleEventColor
 
 
 VALID_RULESET = Ruleset(

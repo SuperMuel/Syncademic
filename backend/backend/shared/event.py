@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import arrow
 
-from functions.shared.google_calendar_colors import GoogleEventColor
+from backend.shared.google_calendar_colors import GoogleEventColor
 
 
 @dataclass(frozen=True)

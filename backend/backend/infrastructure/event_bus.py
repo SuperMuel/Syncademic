@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, Protocol, TypeVar
 
-from functions.shared.domain_events import DomainEvent
+from backend.shared.domain_events import DomainEvent
 
 Handler = Callable[[DomainEvent], None]
 

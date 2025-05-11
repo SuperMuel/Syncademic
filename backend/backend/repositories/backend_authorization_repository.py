@@ -1,6 +1,6 @@
 from typing import Protocol
 from google.cloud import firestore
-from functions.models.authorization import BackendAuthorization
+from backend.models.authorization import BackendAuthorization
 
 
 class IBackendAuthorizationRepository(Protocol):

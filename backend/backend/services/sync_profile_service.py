@@ -6,33 +6,33 @@ from uuid import uuid4
 
 from firebase_functions import logger
 
-from functions.infrastructure.event_bus import IEventBus
-from functions.models import (
+from backend.infrastructure.event_bus import IEventBus
+from backend.models import (
     SyncProfile,
     SyncProfileStatus,
     SyncProfileStatusType,
     SyncTrigger,
     SyncType,
 )
-from functions.models.schemas import CreateSyncProfileInput
-from functions.models.sync_profile import TargetCalendar
-from functions.repositories.sync_profile_repository import ISyncProfileRepository
-from functions.repositories.sync_stats_repository import ISyncStatsRepository
-from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.authorization_service import AuthorizationService
-from functions.services.exceptions.ics import BaseIcsError, IcsParsingError
-from functions.services.exceptions.sync import (
+from backend.models.schemas import CreateSyncProfileInput
+from backend.models.sync_profile import TargetCalendar
+from backend.repositories.sync_profile_repository import ISyncProfileRepository
+from backend.repositories.sync_stats_repository import ISyncStatsRepository
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.authorization_service import AuthorizationService
+from backend.services.exceptions.ics import BaseIcsError, IcsParsingError
+from backend.services.exceptions.sync import (
     DailySyncLimitExceededError,
     SyncProfileNotFoundError,
 )
-from functions.services.exceptions.target_calendar import TargetCalendarNotFoundError
-from functions.services.google_calendar_service import GoogleCalendarService
-from functions.services.ics_service import IcsService
-from functions.settings import settings
-from functions.shared import domain_events
-from functions.shared.google_calendar_colors import GoogleEventColor
-from functions.synchronizer.google_calendar_manager import GoogleCalendarManager
-from functions.synchronizer.ics_source import UrlIcsSource
+from backend.services.exceptions.target_calendar import TargetCalendarNotFoundError
+from backend.services.google_calendar_service import GoogleCalendarService
+from backend.services.ics_service import IcsService
+from backend.settings import settings
+from backend.shared import domain_events
+from backend.shared.google_calendar_colors import GoogleEventColor
+from backend.synchronizer.google_calendar_manager import GoogleCalendarManager
+from backend.synchronizer.ics_source import UrlIcsSource
 
 
 class SyncProfileService:

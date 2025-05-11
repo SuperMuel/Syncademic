@@ -7,8 +7,8 @@ import pytz
 from firebase_functions import logger
 from googleapiclient.errors import HttpError
 
-from functions.settings import settings
-from functions.shared.event import Event
+from backend.settings import settings
+from backend.shared.event import Event
 
 ExtendedProperties: TypeAlias = dict[str, Any]
 

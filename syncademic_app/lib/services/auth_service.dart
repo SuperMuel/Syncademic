@@ -14,6 +14,8 @@ abstract class AuthService {
 
   /// Gets the current user, or null if no user is signed in.
   User? get currentUser;
+
+  Future<String?> getIdToken({bool forceRefresh = false});
 }
 
 class MockAuthService implements AuthService {
@@ -42,6 +44,12 @@ class MockAuthService implements AuthService {
   @override
   User? get currentUser {
     return _currentUser;
+  }
+
+  @override
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return _currentUser != null ? 'mock-id-token' : null;
   }
 
   void dispose() {

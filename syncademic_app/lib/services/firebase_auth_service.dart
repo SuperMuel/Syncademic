@@ -84,6 +84,20 @@ class FirebaseAuthService extends AuthService {
   @override
   syncademic.User? get currentUser =>
       _firebaseAuth.currentUser?.toSyncademicUser;
+
+  @override
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return null;
+      }
+      return await user.getIdToken(forceRefresh);
+    } catch (e) {
+      log('Error getting ID token', error: e);
+      return null;
+    }
+  }
 }
 
 extension on User {

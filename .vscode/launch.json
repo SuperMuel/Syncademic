@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Flutter (Chrome)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "cwd": "${workspaceFolder}/syncademic_app",
+            "args": [
+                "-d",
+                "chrome",
+                "--web-port",
+                "7357" // This port must match redirect_uri authorized in OAuth client
+            ]
+        },
+        {
             "name": "Syncademic Admin Panel",
             "type": "debugpy",
             "request": "launch",

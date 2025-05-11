@@ -1,10 +1,11 @@
 {
     "python.testing.pytestArgs": [
-        "functions"
+        "backend"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.analysis.extraPaths": [
-        "./functions"
-    ]
+        "./backend"
+    ],
+    "python.analysis.diagnosticMode": "workspace",
 }

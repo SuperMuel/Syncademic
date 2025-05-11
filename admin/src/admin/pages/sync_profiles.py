@@ -1,35 +1,35 @@
-from functions.ai.ruleset_builder import RulesetBuilder
-from functions.infrastructure.event_bus import MockEventBus
-from functions.services.google_calendar_service import GoogleCalendarService
+from backend.ai.ruleset_builder import RulesetBuilder
+from backend.infrastructure.event_bus import MockEventBus
+from backend.services.google_calendar_service import GoogleCalendarService
 import streamlit as st
 
-from functions.models.sync_profile import (
+from backend.models.sync_profile import (
     ScheduleSource,
     SyncProfile,
     SyncProfileStatusType,
     SyncTrigger,
     SyncType,
 )
-from functions.models.rules import Ruleset
-from functions.repositories.backend_authorization_repository import (
+from backend.models.rules import Ruleset
+from backend.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
 )
-from functions.repositories.sync_profile_repository import (
+from backend.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
 )
-from functions.repositories.sync_stats_repository import (
+from backend.repositories.sync_stats_repository import (
     FirestoreSyncStatsRepository,
 )
-from functions.services.authorization_service import (
+from backend.services.authorization_service import (
     AuthorizationService,
 )
-from functions.services.ics_service import (
+from backend.services.ics_service import (
     IcsService,
 )
-from functions.services.sync_profile_service import (
+from backend.services.sync_profile_service import (
     SyncProfileService,
 )
-from functions.services.ai_ruleset_service import (
+from backend.services.ai_ruleset_service import (
     AiRulesetService,
 )
 from admin.shared.event_display import (

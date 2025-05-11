@@ -2,17 +2,17 @@ from datetime import datetime
 
 import streamlit as st
 
-from functions.models.authorization import BackendAuthorization
-from functions.models.sync_profile import SyncProfile, SyncProfileStatusType
-from functions.models.user import User
-from functions.repositories.backend_authorization_repository import (
+from backend.models.authorization import BackendAuthorization
+from backend.models.sync_profile import SyncProfile, SyncProfileStatusType
+from backend.models.user import User
+from backend.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
 )
-from functions.repositories.sync_profile_repository import (
+from backend.repositories.sync_profile_repository import (
     FirestoreSyncProfileRepository,
 )
-from functions.services.authorization_service import AuthorizationService
-from functions.services.user_service import FirebaseAuthUserService
+from backend.services.authorization_service import AuthorizationService
+from backend.services.user_service import FirebaseAuthUserService
 
 
 class AdminDataService:

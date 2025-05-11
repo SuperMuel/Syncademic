@@ -1,4 +1,4 @@
-from functions.infrastructure.event_bus import MockEventBus
+from backend.infrastructure.event_bus import MockEventBus
 import streamlit as st
 import json
 from typing import cast
@@ -11,18 +11,18 @@ from admin.shared.event_display import (
     display_events_dataframe,
 )
 
-# --- Functions/Services imports ---
-from functions.ai.ruleset_builder import RulesetBuilder
-from functions.ai.time_schedule_compressor import TimeScheduleCompressor
-from functions.ai.types import RulesetOutput
-from functions.models.rules import Ruleset
-from functions.models.sync_profile import SyncProfile
-from functions.services.ai_ruleset_service import AiRulesetService
-from functions.services.ics_service import IcsService
-from functions.shared.event import Event
-from functions.services.exceptions.ics import IcsParsingError
-from functions.synchronizer.ics_source import IcsSource, StringIcsSource, UrlIcsSource
-from functions.synchronizer.ics_parser import IcsParser
+# --- Backend/Services imports ---
+from backend.ai.ruleset_builder import RulesetBuilder
+from backend.ai.time_schedule_compressor import TimeScheduleCompressor
+from backend.ai.types import RulesetOutput
+from backend.models.rules import Ruleset
+from backend.models.sync_profile import SyncProfile
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.ics_service import IcsService
+from backend.shared.event import Event
+from backend.services.exceptions.ics import IcsParsingError
+from backend.synchronizer.ics_source import IcsSource, StringIcsSource, UrlIcsSource
+from backend.synchronizer.ics_parser import IcsParser
 
 # Initialize services
 event_bus = MockEventBus()

@@ -3,12 +3,12 @@ name: Test backend
 on:
   pull_request:
     paths:
-      - "functions/**"
+      - "backend/**"
   push:
     branches:
       - main
     paths:
-      - "functions/**"
+      - "backend/**"
 
 jobs:
   test:
@@ -20,22 +20,20 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      
       - name: "Set up Python"
         run: |
-          cd functions
+          cd backend
           uv python install
-          
 
       - name: Install the project
-        run: | 
-          cd functions
+        run: |
+          cd backend
           uv sync --all-extras --dev
 
       - name: Run unit tests with coverage
         run: |
-          cd functions
-          uv run pytest --cov=functions --cov-report=xml
+          cd backend
+          uv run pytest --cov=backend --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

@@ -31,6 +31,9 @@ COPY . .
 # The UID/GID (e.g., 1001) can be any non-zero value not already in use.
 RUN groupadd -r appgroup && useradd --no-log-init -r -g appgroup -u 1001 appuser
 
+# Change ownership of application files to the non-root user
+RUN chown -R appuser:appgroup /app
+
 # Switch to the non-root user.
 USER appuser
 

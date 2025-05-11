@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, EmailStr, NaiveDatetime, field_validator
+from pydantic import BaseModel, EmailStr, NaiveDatetime, field_validator
 
 
 class BackendAuthorization(BaseModel):

@@ -1,7 +1,5 @@
-from backend.models.sync_profile import SyncTrigger
 from backend.repositories.sync_stats_repository import ISyncStatsRepository
 from backend.services.dev_notification_service import IDevNotificationService
-from backend.services.sync_profile_service import SyncProfileService
 from backend.shared.domain_events import (
     IcsFetched,
     RulesetGenerationFailed,

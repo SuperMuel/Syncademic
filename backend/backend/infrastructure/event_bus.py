@@ -114,7 +114,7 @@ class MockEventBus(IEventBus):
         ), f"Expected no events to be published, but found {len(self.published_events)}. Events: {self.published_events}"
 
     def assert_event_published_with_data(
-        self, event_type: type[DomainEvent], **kwargs
+        self, event_type: type[DomainEvent], **kwargs: object
     ) -> None:
         """Asserts that an event of the specified type was published and contains the specified data."""
         found_event = self.find_event(event_type)

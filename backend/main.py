@@ -11,15 +11,12 @@ from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from pydantic import BaseModel, ValidationError
 
 from backend.ai.ruleset_builder import RulesetBuilder
-from backend.ai.time_schedule_compressor import TimeScheduleCompressor
 from backend.bootstrap import bootstrap_event_bus
-from backend.infrastructure.event_bus import Handler, LocalEventBus
 from backend.models import (
     SyncTrigger,
 )
 from backend.models.schemas import (
     AuthorizeBackendInput,
-    CreateNewCalendarInput,
     DeleteSyncProfileInput,
     IsAuthorizedInput,
     IsAuthorizedOutput,
@@ -28,7 +25,6 @@ from backend.models.schemas import (
     ValidateIcsUrlInput,
     CreateSyncProfileInput,
 )
-from backend.models.sync_profile import SyncProfile, TargetCalendar
 from backend.repositories.backend_authorization_repository import (
     FirestoreBackendAuthorizationRepository,
     IBackendAuthorizationRepository,

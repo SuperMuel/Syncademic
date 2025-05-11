@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import Mock
 
 from backend.infrastructure.event_bus import LocalEventBus, MockEventBus
 from backend.shared.domain_events import DomainEvent, IcsFetched, SyncFailed

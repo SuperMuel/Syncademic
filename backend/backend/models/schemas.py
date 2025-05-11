@@ -1,8 +1,8 @@
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import AfterValidator, BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
-from backend.models.sync_profile import ScheduleSource, SyncType, TargetCalendar
+from backend.models.sync_profile import ScheduleSource, SyncType
 from backend.settings import RedirectUri, settings
 
 

@@ -49,7 +49,7 @@ class TimeScheduleCompressor:
         feature_names = vectorizer.get_feature_names_out()
 
         # Prepare output string
-        output_lines = []
+        output_lines: list[str] = []
 
         # Get unique labels and sort clusters by number of events, descending
         unique_labels = set(cluster_labels)

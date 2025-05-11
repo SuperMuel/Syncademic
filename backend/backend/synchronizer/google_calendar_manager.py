@@ -1,8 +1,7 @@
 from datetime import datetime
 from itertools import islice
-from typing import Any, Dict, Iterable, List, Optional, TypeAlias
+from typing import Any, Iterable, TypeAlias
 
-import googleapiclient
 import pytz
 from firebase_functions import logger
 from googleapiclient.errors import HttpError

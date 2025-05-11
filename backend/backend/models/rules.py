@@ -1,6 +1,6 @@
 import re
 from dataclasses import replace
-from typing import Literal, Optional, Self, Union, Sequence
+from typing import Literal, Self, Sequence
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings
@@ -182,7 +182,7 @@ class Ruleset(BaseModel):
     rules: Sequence[Rule] = Field(..., min_length=1, max_length=settings.MAX_RULES)
 
     def apply(self, events: Sequence[Event]) -> list[Event]:
-        new_events = []
+        new_events: list[Event] = []
         for event in events:
             for rule in self.rules:
                 event = rule.apply(event)

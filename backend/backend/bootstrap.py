@@ -3,7 +3,6 @@ from typing import cast
 from backend import handlers
 from backend.infrastructure.event_bus import LocalEventBus, Handler
 from backend.repositories.sync_stats_repository import ISyncStatsRepository
-from backend.services.ai_ruleset_service import AiRulesetService
 from backend.services.dev_notification_service import IDevNotificationService
 from backend.shared.domain_events import (
     DomainEvent,

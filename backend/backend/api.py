@@ -96,7 +96,7 @@ async def get_current_user(
         logger.error(f"An unexpected error occurred during token verification: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not validate credentials",
+            detail=f"Could not validate credentials: {e}",
         )
 
 

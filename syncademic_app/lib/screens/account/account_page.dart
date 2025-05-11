@@ -41,6 +41,8 @@ class _IdTokenWidgetState extends State<IdTokenWidget> {
 
     final token = await GetIt.I<AuthService>().getIdToken();
 
+    if (!mounted) return;
+
     setState(() {
       _idToken = token;
       _isLoadingToken = false;

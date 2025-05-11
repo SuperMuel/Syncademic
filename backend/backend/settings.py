@@ -102,7 +102,6 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_firebase_service_account(self) -> Self:
-        # Check that only one firebase service account method is provided
         if (
             self.FIREBASE_SERVICE_ACCOUNT_PATH is not None
             and self.FIREBASE_SERVICE_ACCOUNT_JSON is not None

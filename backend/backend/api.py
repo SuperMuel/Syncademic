@@ -86,7 +86,13 @@ async def get_current_user(
             photo_url=decoded_token.get("picture"),
             email_verified=decoded_token.get("email_verified", False),
         )
-    except auth.InvalidIdTokenError as e:
+
+    except (
+        auth.InvalidIdTokenError,
+        auth.ExpiredIdTokenError,
+        auth.RevokedIdTokenError,
+        auth.CertificateFetchError,
+    ) as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid Firebase ID token: {e}",

@@ -17,7 +17,7 @@
         {
             "label": "Export Cloud Functions Requirements",
             "type": "shell",
-            "command": "uv export -o requirements.txt",
+            "command": "uv export -o requirements.txt --no-hashes",
             "options": {
                 "cwd": "${workspaceFolder}/backend"
             },

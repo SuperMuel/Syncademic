@@ -17,11 +17,10 @@ logger = logging.getLogger("fastapi")
 
 settings = Settings()
 
-# Scheme for bearer token authentication
 reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
 
 
-def initialize_firebase_app():
+def initialize_firebase_app() -> None:
     """
     Initializes the Firebase Admin SDK.
     It first tries to use GOOGLE_APPLICATION_CREDENTIALS env var.
@@ -49,7 +48,7 @@ def initialize_firebase_app():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # noqa: ANN201
     logger.info("Application startup: Initializing Firebase...")
     initialize_firebase_app()
     logger.info("Firebase initialized.")
@@ -115,8 +114,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for development
-    # allow_origins=["https://app.syncademic.com"], # Production: specific origins
+    allow_origins=["*"]
+    if settings.ENV == "dev"
+    else [settings.PRODUCTION_FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers

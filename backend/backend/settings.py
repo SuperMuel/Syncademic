@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import AfterValidator, Field, HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -41,6 +41,8 @@ class Settings(BaseSettings):
         default=HttpUrl("https://app.syncademic.io")
     )
 
+    PRODUCTION_FRONTEND_URL: str = Field(default="https://app.syncademic.com")
+
     MAX_ICS_SIZE_BYTES: int = Field(default=1 * 1024 * 1024)  # 1 MB
     URL_ICS_SOURCE_TIMEOUT_S: int = Field(default=10)
 
@@ -68,6 +70,8 @@ class Settings(BaseSettings):
     # A size of 50 caused "The read operation timed out" errors,
     # so we're using a size of 25 for now.
     GOOGLE_API_BATCH_SIZE: int = Field(default=25)
+
+    ENV: Literal["dev", "prod"] = Field(default="dev")
 
 
 settings = Settings()

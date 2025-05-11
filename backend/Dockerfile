@@ -34,8 +34,11 @@ RUN groupadd -r appgroup && useradd --no-log-init -r -g appgroup -u 1001 appuser
 # Switch to the non-root user.
 USER appuser
 
-# Expose the port the app runs on
-EXPOSE 80
+# Set environment variable for port with a default value
+ENV PORT=80
 
-# Run the application
-CMD ["/app/.venv/bin/fastapi", "run", "/app/backend/api.py", "--port", "80", "--host", "0.0.0.0"]
+# Expose the port defined by the environment variable
+EXPOSE ${PORT}
+
+# Run the application using the environment variable
+CMD ["/bin/sh", "-c", "/app/.venv/bin/fastapi run /app/backend/api.py --port ${PORT} --host 0.0.0.0"]

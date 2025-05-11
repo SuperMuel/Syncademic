@@ -46,7 +46,7 @@ Sure, you can — but here’s why Syncademic is better:
 # How it's made
 
 #### 🧠 **The Backend**
-The [backend](./functions/README.md) is powered by [**Firebase Cloud Functions**](https://firebase.google.com/docs/functions), and [**Firebase Firestore**](https://firebase.google.com/docs/firestore).
+The [backend](./backend/README.md) is powered by [**Firebase Cloud Functions**](https://firebase.google.com/docs/functions), and [**Firebase Firestore**](https://firebase.google.com/docs/firestore).
 
 It handles :
 - Authentication using [**Firebase Auth**](https://firebase.google.com/docs/auth).

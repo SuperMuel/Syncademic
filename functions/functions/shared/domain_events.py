@@ -1,4 +1,3 @@
-# functions/shared/domain_events.py
 from pydantic import BaseModel, EmailStr, Field
 from typing import Any
 

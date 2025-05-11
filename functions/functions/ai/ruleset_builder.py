@@ -1,4 +1,4 @@
-from functions import settings
+from backend import settings
 from functions.ai.time_schedule_compressor import TimeScheduleCompressor
 from functions.ai.types import RulesetOutput
 import uuid

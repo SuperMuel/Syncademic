@@ -69,7 +69,7 @@ def firebase_storage(
     return FirebaseIcsFileStorage(bucket_mock)
 
 
-@patch("functions.synchronizer.ics_cache.datetime")
+@patch("backend.synchronizer.ics_cache.datetime")
 def test_save_to_cache_with_metadata(
     mock_datetime: MagicMock,
     firebase_storage: FirebaseIcsFileStorage,
@@ -106,7 +106,7 @@ def test_save_to_cache_with_metadata(
     assert blob_mock.metadata == expected_metadata
 
 
-@patch("functions.synchronizer.ics_cache.datetime")
+@patch("backend.synchronizer.ics_cache.datetime")
 def test_save_to_cache_with_no_metadata(
     mock_datetime: MagicMock,
     firebase_storage: FirebaseIcsFileStorage,

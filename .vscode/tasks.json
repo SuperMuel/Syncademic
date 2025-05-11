@@ -19,7 +19,7 @@
             "type": "shell",
             "command": "uv export -o requirements.txt",
             "options": {
-                "cwd": "${workspaceFolder}/functions"
+                "cwd": "${workspaceFolder}/backend"
             },
             "group": {
                 "kind": "build",
@@ -33,7 +33,7 @@
             "type": "shell",
             "command": "firebase deploy --only functions",
             "options": {
-                "cwd": "${workspaceFolder}/functions"
+                "cwd": "${workspaceFolder}/backend"
             },
             "group": {
                 "kind": "build",

@@ -102,7 +102,7 @@ def test_get_daily_sync_count_with_none_date(mock_db):
     user_id = "user123"
     today = date(2025, 1, 1)
 
-    with patch("functions.repositories.sync_stats_repository.date") as mock_date:
+    with patch("backend.repositories.sync_stats_repository.date") as mock_date:
         mock_date.today.return_value = today
 
         # Set up data for today
@@ -126,7 +126,7 @@ def test_increment_sync_count_with_none_date(mock_db):
     user_id = "user123"
     today = date(2025, 1, 1)
 
-    with patch("functions.repositories.sync_stats_repository.date") as mock_date:
+    with patch("backend.repositories.sync_stats_repository.date") as mock_date:
         mock_date.today.return_value = today
 
         # First set up initial data

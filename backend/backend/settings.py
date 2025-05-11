@@ -48,7 +48,7 @@ class Settings(BaseSettings):
         default=HttpUrl("https://app.syncademic.io")
     )
 
-    PRODUCTION_FRONTEND_URL: str = Field(default="https://app.syncademic.com")
+    PRODUCTION_FRONTEND_URL: str = Field(default="https://app.syncademic.io")
 
     MAX_ICS_SIZE_BYTES: int = Field(default=1 * 1024 * 1024)  # 1 MB
     URL_ICS_SOURCE_TIMEOUT_S: int = Field(default=10)

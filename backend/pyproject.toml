@@ -1,5 +1,5 @@
 [project]
-name = "functions"
+name = "backend"
 version = "0.1.0"
 description = "Syncademic Backend"
 readme = "README.md"

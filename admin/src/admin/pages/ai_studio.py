@@ -32,6 +32,7 @@ ai_ruleset_service = AiRulesetService(
     ics_service=ics_service,
     sync_profile_repo=data_service.sync_profile_repo,
     ruleset_builder=ruleset_builder,
+    event_bus=event_bus,
 )
 
 # Session state initialization

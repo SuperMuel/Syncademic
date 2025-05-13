@@ -48,7 +48,7 @@ logger = logging.getLogger("fastapi")
 settings = Settings()
 configure_logging(settings.LOG_LEVEL)
 
-reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
+reusable_oauth2 = HTTPBearer(scheme_name="FirebaseToken")
 
 
 def initialize_firebase_app() -> None:

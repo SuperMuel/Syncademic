@@ -20,7 +20,7 @@ COPY pyproject.toml uv.lock ./
 # Install Python dependencies using uv.
 # - `uv sync` installs dependencies specified in pyproject.toml and uv.lock.
 # - `--frozen`: Ensures that uv uses the exact versions from uv.lock, providing reproducible builds.
-RUN uv sync --frozen --no-cache
+RUN uv sync --frozen --no-dev --no-cache
 
 # Copy the rest of the application code.
 COPY . .

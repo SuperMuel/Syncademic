@@ -33,6 +33,7 @@ import 'screens/sign_in_page.dart';
 import 'screens/sync_profile/cubit/sync_profile_cubit.dart';
 import 'screens/sync_profile/sync_profile_page.dart';
 import 'services/account_service.dart';
+import 'services/api_client.dart'; // Added ApiClient import
 import 'services/auth_service.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/firebase_sync_profile_service.dart';
@@ -45,6 +46,19 @@ import 'widgets/sync_profiles_list.dart';
 
 void registerDependencies() {
   final getIt = GetIt.instance;
+
+  // Retrieve FastAPI base URL
+  final fastApiBaseUrl = dotenv.env['FASTAPI_BASE_URL'];
+  if (fastApiBaseUrl == null || fastApiBaseUrl.isEmpty) {
+    // In a real app, you might want to log this error or handle it more gracefully.
+    // For this setup, throwing an error during startup is acceptable if the URL is critical.
+    throw StateError('FASTAPI_BASE_URL is not set in the environment variables.');
+  }
+
+  // Create and register ApiClient
+  final apiClient = ApiClient(baseUrl: fastApiBaseUrl);
+  getIt.registerSingleton<ApiClient>(apiClient);
+
 
   final googleSignIn = GoogleSignIn(
     clientId: dotenv.env['SYNCADEMIC_CLIENT_ID'],
@@ -59,16 +73,9 @@ void registerDependencies() {
 
   getIt.registerSingleton<SyncProfileRepository>(
     FirestoreSyncProfileRepository(),
-    // MockSyncProfileRepository()
-    //   ..createRandomData(10)
-    //   ..addFailedProfile()
-    //   ..addInProgressProfile()
-    //   ..addNotStartedProfile()
-    //   ..addDeletionFailedProfile(),
   );
 
   getIt.registerSingleton<AuthService>(
-    // MockAuthService(),
     FirebaseAuthService(),
   );
 
@@ -77,15 +84,18 @@ void registerDependencies() {
   getIt.registerSingleton<AccountService>(FirebaseAccountService());
 
   getIt.registerSingleton<AuthorizationService>(
-    // MockAuthorizationService(),
     GoogleAuthorizationService(googleSignIn: googleSignIn),
   );
 
-  getIt.registerSingleton<SyncProfileService>(FirebaseSyncProfileService());
+  // Updated FirebaseSyncProfileService registration
+  getIt.registerSingleton<SyncProfileService>(
+    FirebaseSyncProfileService(
+      functions: functions, // Explicitly pass if still needed, or let GetIt resolve if registered
+      apiClient: getIt<ApiClient>(),
+    ),
+  );
 
   getIt.registerSingleton<BackendAuthorizationService>(
-    // MockBackendAuthorizationService(),
-
     FirebaseBackendAuthorizationService(
       redirectUri: dotenv
           .env[kDebugMode ? 'LOCAL_REDIRECT_URI' : 'PRODUCTION_REDIRECT_URI']!,
@@ -93,18 +103,19 @@ void registerDependencies() {
   );
 
   getIt.registerSingleton<TargetCalendarRepository>(
-    // MockTargetCalendarRepository(),
     GoogleTargetCalendarRepository(),
   );
 
   getIt.registerSingleton<ProviderAccountService>(
-    // MockProviderAccountService(),
     GoogleProviderAccountService(googleSignIn: googleSignIn),
   );
 
+  // Updated FirebaseIcsValidationService registration
   getIt.registerSingleton<IcsValidationService>(
-    // const MockIcsValidationService(),
-    FirebaseIcsValidationService(),
+    FirebaseIcsValidationService(
+      functions: functions, // Explicitly pass if still needed
+      apiClient: getIt<ApiClient>(),
+    ),
   );
 }
 
@@ -122,32 +133,16 @@ void main() async {
 
   await FirebaseAppCheck.instance.activate(
     webProvider: ReCaptchaV3Provider(dotenv.env['RECAPTCHA_V3_SITE_KEY']!),
-
-    // Default provider for Android is the Play Integrity provider. You can use the "AndroidProvider" enum to choose
-    // your preferred provider. Choose from:
-    // 1. Debug provider
-    // 2. Safety Net provider
-    // 3. Play Integrity provider
     androidProvider: AndroidProvider.debug,
-    // Default provider for iOS/macOS is the Device Check provider. You can use the "AppleProvider" enum to choose
-    // your preferred provider. Choose from:
-    // 1. Debug provider
-    // 2. Device Check provider
-    // 3. App Attest provider
-    // 4. App Attest provider with fallback to Device Check provider (App Attest provider is only available on iOS 14.0+, macOS 14.0+)
     appleProvider: AppleProvider.debug,
   );
 
-  registerDependencies();
+  registerDependencies(); // Call after dotenv.load and before services are used
 
   await SentryFlutter.init(
     (options) {
       options.dsn = dotenv.env['SENTRY_DSN'];
-      // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
-      // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
-      // The sampling rate for profiling is relative to tracesSampleRate
-      // Setting to 1.0 will profile 100% of sampled transactions:
       options.profilesSampleRate = 1.0;
     },
     appRunner: () => runApp(
@@ -166,11 +161,10 @@ final _router = GoRouter(
     }
 
     if (state.fullPath == '/sign-in') {
-      // Logged in users should be redirected to the home screen if they try to access the sign-in screen
       return '/';
     }
 
-    return null; // No redirection needed
+    return null;
   },
   initialLocation: '/sign-in',
   routes: [
@@ -191,7 +185,6 @@ final _router = GoRouter(
             ),
           ),
         ]),
-    // Account page
     GoRoute(
         path: '/account',
         builder: (context, state) {
@@ -202,11 +195,6 @@ final _router = GoRouter(
         builder: (_, __) {
           return BlocProvider(
             create: (_) => NewSyncProfileCubit(),
-            // create: (_) => NewSyncProfileCubit()
-            //   ..titleChanged("test")
-            //   ..next()
-            //   ..urlChanged("https://www.google.com")
-            //   ..next(),
             child: const NewSyncProfilePage(),
           );
         }),

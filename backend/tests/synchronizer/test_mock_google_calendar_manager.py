@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import arrow
+from unittest.mock import patch
 
 from backend.shared.event import Event
 from backend.shared.google_calendar_colors import GoogleEventColor
@@ -156,3 +157,73 @@ def test_get_events_filters_by_sync_profile():
 
     assert events_ids_1 == profile_1_events
     assert events_ids_2 == profile_2_events
+
+
+def test_get_events_with_min_dt_all_day_timezone():
+    """All-day events should be filtered correctly with timezone offsets."""
+    manager = MockGoogleCalendarManager()
+    sync_profile_id = "tz_profile"
+
+    events = [
+        Event(
+            start=arrow.get("2024-01-01T00:00:00+00:00"),
+            end=arrow.get("2024-01-02T00:00:00+00:00"),
+            title="Past All Day",
+            is_all_day=True,
+        ),
+        Event(
+            start=arrow.get("2024-04-01T00:00:00+00:00"),
+            end=arrow.get("2024-04-02T00:00:00+00:00"),
+            title="Future All Day",
+            is_all_day=True,
+        ),
+    ]
+
+    manager.create_events(events=events, sync_profile_id=sync_profile_id)
+
+    min_dt = datetime(2024, 3, 1, tzinfo=timezone.utc)
+
+    with patch("backend.synchronizer.google_calendar_manager.arrow.now") as mock_now:
+        mock_now.return_value = arrow.get("2024-03-01T00:00:00+02:00")
+        event_ids = manager.get_events_ids_from_sync_profile(
+            sync_profile_id=sync_profile_id,
+            min_dt=min_dt,
+        )
+
+    assert len(event_ids) == 1
+    stored = manager.get_all_events_with_ids(sync_profile_id=sync_profile_id)
+    assert stored[event_ids[0]]["summary"] == "Future All Day"
+
+
+def test_get_events_with_min_dt_timezone_aware_datetime():
+    """dateTime events with timezone offsets should be filtered properly."""
+    manager = MockGoogleCalendarManager()
+    sync_profile_id = "tz_profile_dt"
+
+    events = [
+        Event(
+            start=arrow.get("2024-01-01T09:00:00+02:00"),
+            end=arrow.get("2024-01-01T10:00:00+02:00"),
+            title="Past Event",
+        ),
+        Event(
+            start=arrow.get("2024-04-01T09:00:00+02:00"),
+            end=arrow.get("2024-04-01T10:00:00+02:00"),
+            title="Future Event",
+        ),
+    ]
+
+    manager.create_events(events=events, sync_profile_id=sync_profile_id)
+
+    min_dt = datetime(2024, 2, 1, tzinfo=timezone.utc)
+
+    with patch("backend.synchronizer.google_calendar_manager.arrow.now") as mock_now:
+        mock_now.return_value = arrow.get("2024-03-01T00:00:00+02:00")
+        event_ids = manager.get_events_ids_from_sync_profile(
+            sync_profile_id=sync_profile_id,
+            min_dt=min_dt,
+        )
+
+    assert len(event_ids) == 1
+    stored = manager.get_all_events_with_ids(sync_profile_id=sync_profile_id)
+    assert stored[event_ids[0]]["summary"] == "Future Event"

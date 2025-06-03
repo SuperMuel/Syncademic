@@ -150,6 +150,17 @@ def past_event() -> Event:
     )
 
 
+@pytest.fixture
+def past_all_day_event() -> Event:
+    today = arrow.now().shift(days=-1).floor("day")
+    return Event(
+        start=today,
+        end=today.shift(days=1),
+        title="Past All Day",
+        is_all_day=True,
+    )
+
+
 def test_on_create_success(
     sync_profile_service,
     sync_profile_repo,
@@ -265,6 +276,63 @@ def test_regular_sync_only_future(
     assert all_after[0]["summary"] == "Future Event"
 
     # final status => SUCCESS in the repository
+    updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
+    assert updated_profile is not None
+    assert updated_profile.status.type == SyncProfileStatusType.SUCCESS
+
+    mock_event_bus.assert_event_published_with_data(
+        domain_events.SyncSucceeded,
+        user_id=user_id,
+        sync_profile_id=prof_id,
+    )
+
+
+def test_regular_sync_handles_past_all_day_event(
+    sync_profile_service,
+    sync_profile_repo,
+    auth_service_mock,
+    ics_service_mock,
+    future_event,
+    past_all_day_event,
+    mock_event_bus,
+):
+    """REGULAR sync should ignore past all-day events when deleting."""
+    user_id = "user123"
+    prof_id = "profile_all_day"
+
+    ics_service_mock.try_fetch_and_parse.return_value = IcsFetchAndParseResult(
+        events=[future_event],
+        raw_ics="mock irrelevant ics value",
+    )
+
+    profile = _make_sync_profile(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        status_type=SyncProfileStatusType.SUCCESS,
+    )
+    sync_profile_repo.save_sync_profile(profile)
+
+    manager = MockGoogleCalendarManager()
+    manager.create_events(
+        [
+            past_all_day_event,
+            Event(start=future_event.start, end=future_event.end, title="Old Future"),
+        ],
+        sync_profile_id=prof_id,
+    )
+    auth_service_mock.get_authenticated_google_calendar_manager.return_value = manager
+
+    sync_profile_service.synchronize(
+        user_id=user_id,
+        sync_profile_id=prof_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=SyncType.REGULAR,
+    )
+
+    all_after = manager.get_all_events(sync_profile_id=prof_id)
+    summaries = sorted(event["summary"] for event in all_after)
+    assert summaries == ["Future Event", "Past All Day"]
+
     updated_profile = sync_profile_repo.get_sync_profile(user_id, prof_id)
     assert updated_profile is not None
     assert updated_profile.status.type == SyncProfileStatusType.SUCCESS

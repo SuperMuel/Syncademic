@@ -268,7 +268,12 @@ class MockGoogleCalendarManager(GoogleCalendarManager):
             if min_dt is not None:
                 event_end = event_dict["end"].get("dateTime") or event_dict["end"].get("date")
                 if event_end is not None:
-                    event_end_dt = arrow.get(event_end).to("UTC").datetime
+                    event_end_dt = (
+                        arrow.get(event_end)
+                        .replace(tzinfo=arrow.now().tzinfo)
+                        .to("UTC")
+                        .datetime
+                    )
                     if event_end_dt <= min_dt:
                         continue
 

@@ -2,6 +2,8 @@ from datetime import datetime
 from itertools import islice
 from typing import Any, Iterable, TypeAlias
 
+import arrow
+
 import pytz
 from firebase_functions import logger
 from googleapiclient.errors import HttpError
@@ -258,14 +260,17 @@ class MockGoogleCalendarManager(GoogleCalendarManager):
         """Retrieve event IDs filtered by sync profile and optional minimum datetime."""
         matching_ids = []
 
+
         for event_id, (event_dict, stored_profile_id) in self._events.items():
             if stored_profile_id != sync_profile_id:
                 continue
 
             if min_dt is not None:
-                event_end = event_dict["end"]["dateTime"]
-                if event_end <= min_dt.isoformat():
-                    continue
+                event_end = event_dict["end"].get("dateTime") or event_dict["end"].get("date")
+                if event_end is not None:
+                    event_end_dt = arrow.get(event_end).to("UTC").datetime
+                    if event_end_dt <= min_dt:
+                        continue
 
             matching_ids.append(event_id)
 

@@ -54,7 +54,6 @@ select = [
     "UP006", # foo: list[int] = [1, 2, 3] instead of foo: List[int] = [1, 2, 3]
     "UP007", # Use X | Y for type annotations
 
-    "UP038", # Use isinstance(x, int | float) instead of isinstance(x, (int, float))
 
     "ANN001", # Checks that function arguments have type annotations.
     "ANN201", # Missing return type annotation for public function {name}

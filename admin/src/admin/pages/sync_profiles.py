@@ -119,7 +119,7 @@ with st.sidebar:
     # Error filter
     error_filter = st.checkbox(
         "Show Only Profiles with Errors",
-        help="Show only profiles that have errors (Satus failed), or Ruleset geneartion error.",
+        help="Show only profiles that have errors (Status failed), or Ruleset generation error.",
     )
 
 # Fetch data

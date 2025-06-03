@@ -51,6 +51,23 @@ def test_local_event_bus_logs_error_on_handler_exception(caplog) -> None:
     assert any("Error handling event" in m for m in caplog.text.splitlines())
 
 
+def test_local_event_bus_continues_after_handler_error(caplog) -> None:
+    recorded: dict[str, DomainEvent] = {}
+
+    def bad_handler(event: DomainEvent) -> None:
+        raise RuntimeError("boom")
+
+    def good_handler(event: DomainEvent) -> None:
+        recorded["event"] = event
+
+    bus = LocalEventBus(handlers={IcsFetched: [bad_handler, good_handler]})
+    event = IcsFetched(ics_str="ICS", metadata=None)
+    with caplog.at_level("ERROR"):
+        bus.publish(event)
+
+    assert recorded["event"] == event
+
+
 def test_mock_event_bus_records_and_finds_events() -> None:
     bus = MockEventBus()
     event1 = IcsFetched(ics_str="A", metadata=None)

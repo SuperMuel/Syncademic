@@ -260,13 +260,14 @@ class MockGoogleCalendarManager(GoogleCalendarManager):
         """Retrieve event IDs filtered by sync profile and optional minimum datetime."""
         matching_ids = []
 
-
         for event_id, (event_dict, stored_profile_id) in self._events.items():
             if stored_profile_id != sync_profile_id:
                 continue
 
             if min_dt is not None:
-                event_end = event_dict["end"].get("dateTime") or event_dict["end"].get("date")
+                event_end = event_dict["end"].get("dateTime") or event_dict["end"].get(
+                    "date"
+                )
                 if event_end is not None:
                     event_end_dt = (
                         arrow.get(event_end)

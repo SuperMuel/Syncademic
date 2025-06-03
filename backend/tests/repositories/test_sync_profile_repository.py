@@ -186,12 +186,12 @@ def test_ruleset_stored_as_json_string(mock_db, sample_sync_profile: SyncProfile
     doc_data = doc_ref.get().to_dict()
 
     # Verify the ruleset is stored as a string
-    assert (
-        "ruleset" in doc_data
-    ), "The ruleset key should exist in the Firestore document"
-    assert isinstance(
-        doc_data["ruleset"], str
-    ), "The ruleset should be stored as a string"
+    assert "ruleset" in doc_data, (
+        "The ruleset key should exist in the Firestore document"
+    )
+    assert isinstance(doc_data["ruleset"], str), (
+        "The ruleset should be stored as a string"
+    )
 
     # Validate the ruleset
     ruleset = Ruleset.model_validate_json(doc_data["ruleset"])

@@ -103,27 +103,27 @@ class MockEventBus(IEventBus):
     ) -> None:
         """Asserts that exactly 'count' events of the specified type were published."""
         matching_events = self.find_events(event_type)
-        assert (
-            len(matching_events) == count
-        ), f"Expected {count} event(s) of type {event_type.__name__}, but found {len(matching_events)}. Events: {self.published_events}"
+        assert len(matching_events) == count, (
+            f"Expected {count} event(s) of type {event_type.__name__}, but found {len(matching_events)}. Events: {self.published_events}"
+        )
 
     def assert_no_events_published(self) -> None:
         """Asserts that no events were published."""
-        assert (
-            len(self.published_events) == 0
-        ), f"Expected no events to be published, but found {len(self.published_events)}. Events: {self.published_events}"
+        assert len(self.published_events) == 0, (
+            f"Expected no events to be published, but found {len(self.published_events)}. Events: {self.published_events}"
+        )
 
     def assert_event_published_with_data(
         self, event_type: type[DomainEvent], **kwargs: object
     ) -> None:
         """Asserts that an event of the specified type was published and contains the specified data."""
         found_event = self.find_event(event_type)
-        assert (
-            found_event is not None
-        ), f"Event of type {event_type.__name__} not published. Events: {self.published_events}"
+        assert found_event is not None, (
+            f"Event of type {event_type.__name__} not published. Events: {self.published_events}"
+        )
 
         for key, expected_value in kwargs.items():
             actual_value = getattr(found_event, key, None)
-            assert (
-                actual_value == expected_value
-            ), f"Event {event_type.__name__} attribute '{key}' expected '{expected_value}', but got '{actual_value}'"
+            assert actual_value == expected_value, (
+                f"Event {event_type.__name__} attribute '{key}' expected '{expected_value}', but got '{actual_value}'"
+            )

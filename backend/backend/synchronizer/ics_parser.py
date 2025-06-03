@@ -24,7 +24,7 @@ def _is_recurring_event(event: ics.Event) -> bool:
     extra_names: list[str] = [extra.name for extra in event.extra]
     assert all(isinstance(name, str) for name in extra_names)
 
-    recurring_props = ["RRULE", "RDATE", "EXDATE"]
+    recurring_props = ["RRULE", "RDATE", "EXDATE", "RECURRENCE-ID"]
     return any(
         extra_name.startswith(prop)
         for extra_name in extra_names

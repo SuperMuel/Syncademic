@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 def _is_recurring_event(event: ics.Event) -> bool:
-    """
-    Check if an event contains recurrence properties and raise RecurringEventError if found.
+    """Check if an event defines recurrence properties.
 
     Args:
-        event: The ICS event to check
+        event: The ICS event to inspect.
 
     Returns:
-        bool: True if the event is recurring, False otherwise
+        ``True`` if the event contains any recurrence-related properties,
+        otherwise ``False``.
     """
     extra_names: list[str] = [extra.name for extra in event.extra]
     assert all(isinstance(name, str) for name in extra_names)

@@ -241,6 +241,20 @@ END:VEVENT"""
     assert isinstance(error, RecurringEventError)
 
 
+def test_recurring_event_with_recurrence_id_throws(ics_parser: IcsParser):
+    """Test that a recurring event with RECURRENCE-ID raises an error."""
+    ics_str = build_ics_outline(
+        """BEGIN:VEVENT
+SUMMARY:Recurring Event
+DTSTART:20230101T090000
+DTEND:20230101T100000
+RECURRENCE-ID:20230102T090000
+END:VEVENT"""
+    )
+    error = ics_parser.try_parse(ics_str)
+    assert isinstance(error, RecurringEventError)
+
+
 def test_empty_ics_string(ics_parser: IcsParser):
     error = ics_parser.try_parse("")
     assert isinstance(error, IcsParsingError)

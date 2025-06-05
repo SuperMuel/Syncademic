@@ -38,6 +38,7 @@ Testing
 Dependency and project management using UV (replaces pip, pip-tools, poetry...)
 - Sync dependencies: `uv sync` (Automatically creates or updates `.venv`)
 - Install dependencies: `uv add <package>`
+- Install dev dependencies: `uv add --dev <package>`
 - Remove dependencies: `uv remove <package>`
 
 - `uv run` automatically updates the environment if needed

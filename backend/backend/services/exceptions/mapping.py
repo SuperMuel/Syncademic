@@ -62,3 +62,18 @@ class ErrorMapping:
 
             case _:
                 return (https_fn.FunctionsErrorCode.INTERNAL, str(error))
+
+    @staticmethod
+    def to_http_status_and_detail(error: SyncademicError) -> tuple[int, str]:
+        code, message = ErrorMapping.to_status_code_and_message(error)
+        status_map = {
+            https_fn.FunctionsErrorCode.UNAUTHENTICATED: 401,
+            https_fn.FunctionsErrorCode.INVALID_ARGUMENT: 400,
+            https_fn.FunctionsErrorCode.NOT_FOUND: 404,
+            https_fn.FunctionsErrorCode.PERMISSION_DENIED: 403,
+            https_fn.FunctionsErrorCode.RESOURCE_EXHAUSTED: 429,
+            https_fn.FunctionsErrorCode.FAILED_PRECONDITION: 412,
+            https_fn.FunctionsErrorCode.INTERNAL: 500,
+        }
+        status = status_map.get(code, 500)
+        return status, message

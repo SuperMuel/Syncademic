@@ -96,6 +96,8 @@ class Settings(BaseSettings):
         ],
     )
 
+    STORAGE_BUCKET: str | None = Field(None, description="Firebase Storage bucket name")
+
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO"
     )

@@ -136,7 +136,7 @@ class TelegramDevNotificationService(IDevNotificationService):
 
         try:
             if not (user := self.user_service.get_user(user_id)):
-                logger.warn(
+                logger.warning(
                     f"User not found: {user_id}",
                     user_id=user_id,
                 )
@@ -146,7 +146,7 @@ class TelegramDevNotificationService(IDevNotificationService):
                 "email": user.email,
             }
         except Exception as e:
-            logger.warn(
+            logger.warning(
                 f"Error getting user display name: {type(e).__name__}: {str(e)}",
                 user_id=user_id,
             )
@@ -169,9 +169,11 @@ class TelegramDevNotificationService(IDevNotificationService):
             response = requests.post(self.api_url, json=payload, timeout=5.0)
 
             if not response.ok:
-                logger.warn(f"Failed to send Telegram notification: {response.text}")
+                logger.warning(
+                    f"Failed to send Telegram notification: {response.text}"
+                )
         except Exception as e:
-            logger.warn(f"Error sending Telegram notification: {str(e)}")
+            logger.warning(f"Error sending Telegram notification: {str(e)}")
 
     def on_new_user(self, domain_event: domain_events.UserCreated) -> None:
         message = (
@@ -296,7 +298,7 @@ def create_dev_notification_service(
 ) -> IDevNotificationService:
     """Factory function to create the appropriate notification service based on settings."""
     if not settings.TELEGRAM_BOT_TOKEN or not settings.TELEGRAM_CHAT_ID:
-        logger.warn("Telegram credentials not configured")
+        logger.warning("Telegram credentials not configured")
         return NoOpDevNotificationService()
 
     return TelegramDevNotificationService(

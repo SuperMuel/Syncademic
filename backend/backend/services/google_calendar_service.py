@@ -40,7 +40,7 @@ class GoogleCalendarService:
                 calendars.extend(calendars_result.get("items", []))
                 if len(calendars) >= max_calendars:
                     calendars = calendars[:max_calendars]
-                    logger.warn(
+                    logger.warning(
                         "Max calendars reached while listing calendars",
                         user_id=user_id,
                         provider_account_id=provider_account_id,
@@ -129,7 +129,7 @@ class GoogleCalendarService:
         except HttpError as e:
             # Check if the error is specifically a 404 Not Found
             if e.resp.status == 404:
-                logger.warn(
+                logger.warning(
                     f"Calendar not found (404) for ID: {calendar_id}",
                     user_id=user_id,
                     provider_account_id=provider_account_id,

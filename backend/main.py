@@ -385,7 +385,7 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
         }
     except Exception as e:
         # If we can't get Firebase Auth user, just use document data
-        logger.warn(
+        logger.warning(
             f"Could not get Firebase Auth user: {str(e)}",
             user_id=user_id,
             error_type=type(e).__name__,

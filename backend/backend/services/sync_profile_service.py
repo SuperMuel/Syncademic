@@ -244,7 +244,7 @@ class SyncProfileService:
                 raise e
 
         if not events:
-            logger.warn("No events to synchronize")
+            logger.warning("No events to synchronize")
             return
 
         # When it's the first sync, we create all the events on the target calendar

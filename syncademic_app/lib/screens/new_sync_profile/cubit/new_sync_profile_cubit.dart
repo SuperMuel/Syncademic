@@ -238,6 +238,10 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   Future<void> submit() async {
+    if (state.isSubmitting) {
+      return;
+    }
+
     if (!state.canSubmit()) {
       return emit(state.copyWith(
         submitError:

@@ -242,15 +242,16 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
       return;
     }
 
+    emit(state.copyWith(isSubmitting: true));
+
     if (!state.canSubmit()) {
-      return emit(state.copyWith(
+      emit(state.copyWith(
+        isSubmitting: false,
         submitError:
             'Cannot submit invalid form. Please check each step again. If the issue persists, please contact support.',
-        isSubmitting: false,
       ));
+      return;
     }
-
-    emit(state.copyWith(isSubmitting: true));
 
     final scheduleSource = ScheduleSource(
       url: state.url,

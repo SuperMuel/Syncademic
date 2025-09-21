@@ -238,15 +238,20 @@ class NewSyncProfileCubit extends Cubit<NewSyncProfileState> {
   }
 
   Future<void> submit() async {
-    if (!state.canSubmit()) {
-      return emit(state.copyWith(
-        submitError:
-            'Cannot submit invalid form. Please check each step again. If the issue persists, please contact support.',
-        isSubmitting: false,
-      ));
+    if (state.isSubmitting) {
+      return;
     }
 
     emit(state.copyWith(isSubmitting: true));
+
+    if (!state.canSubmit()) {
+      emit(state.copyWith(
+        isSubmitting: false,
+        submitError:
+            'Cannot submit invalid form. Please check each step again. If the issue persists, please contact support.',
+      ));
+      return;
+    }
 
     final scheduleSource = ScheduleSource(
       url: state.url,

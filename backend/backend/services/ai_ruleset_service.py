@@ -1,6 +1,5 @@
+import logging
 import traceback
-
-from firebase_functions import logger
 
 from backend.ai.ruleset_builder import RulesetBuilder
 from backend.infrastructure.event_bus import IEventBus
@@ -11,6 +10,8 @@ from backend.repositories.sync_profile_repository import (
 from backend.services.exceptions.ics import BaseIcsError
 from backend.services.ics_service import IcsService
 from backend.shared.domain_events import RulesetGenerationFailed
+
+logger = logging.getLogger(__name__)
 
 
 class AiRulesetService:
@@ -64,9 +65,12 @@ class AiRulesetService:
             they are logged and stored in the sync profile repository rather than raised.
         """
         logger.info(
-            f"Creating ruleset for sync profile {sync_profile.id}",
-            sync_profile_id=sync_profile.id,
-            user_id=sync_profile.user_id,
+            "Creating ruleset for sync profile %s",
+            sync_profile.id,
+            extra={
+                "sync_profile_id": sync_profile.id,
+                "user_id": sync_profile.user_id,
+            },
         )
 
         result_or_error = self.ics_service.try_fetch_and_parse(

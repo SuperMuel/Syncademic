@@ -1,10 +1,9 @@
+import logging
 from dataclasses import replace
 from datetime import datetime, timezone
 import traceback
-from typing import Any, Callable
+from typing import Callable
 from uuid import uuid4
-
-from firebase_functions import logger
 
 from backend.infrastructure.event_bus import IEventBus
 from backend.models import (
@@ -33,6 +32,8 @@ from backend.shared import domain_events
 from backend.shared.google_calendar_colors import GoogleEventColor
 from backend.synchronizer.google_calendar_manager import GoogleCalendarManager
 from backend.synchronizer.ics_source import UrlIcsSource
+
+logger = logging.getLogger(__name__)
 
 
 class SyncProfileService:
@@ -446,8 +447,10 @@ class SyncProfileService:
         try:
             logger.info(
                 "Creating sync profile",
-                user_id=user_id,
-                request_title=request.title,
+                extra={
+                    "user_id": user_id,
+                    "request_title": request.title,
+                },
             )
 
             # Fetch Auth & Validate Provider Account
@@ -456,8 +459,10 @@ class SyncProfileService:
             )
             logger.info(
                 "Authorization test successful.",
-                user_id=user_id,
-                provider_account_id=request.targetCalendar.providerAccountId,
+                extra={
+                    "user_id": user_id,
+                    "provider_account_id": request.targetCalendar.providerAccountId,
+                },
             )
 
             # Validate ICS URL
@@ -469,17 +474,22 @@ class SyncProfileService:
             )
             logger.info(
                 "ICS URL validated successfully.",
-                user_id=user_id,
-                url=str(ics_source.url)
-                if isinstance(ics_source, UrlIcsSource)
-                else None,
+                extra={
+                    "user_id": user_id,
+                    "url": str(ics_source.url)
+                    if isinstance(ics_source, UrlIcsSource)
+                    else None,
+                },
             )
 
             sync_profile_id = uuid_factory() if uuid_factory else str(uuid4())
 
             # Handle Target Calendar
             if request.targetCalendar.type == "createNew":
-                logger.info("Creating new target calendar.", user_id=user_id)
+                logger.info(
+                    "Creating new target calendar.",
+                    extra={"user_id": user_id},
+                )
                 cal_result = self._google_calendar_service.create_new_calendar(
                     user_id=user_id,
                     provider_account_id=request.targetCalendar.providerAccountId,
@@ -492,14 +502,16 @@ class SyncProfileService:
                 calendar_description = cal_result.get("description", "")
                 logger.info(
                     "New target calendar created.",
-                    user_id=user_id,
-                    calendar_id=calendar_id,
+                    extra={
+                        "user_id": user_id,
+                        "calendar_id": calendar_id,
+                    },
                 )
             else:  # useExisting
                 calendar_id = request.targetCalendar.calendarId
                 logger.info(
                     f"Validating existing target calendar: {calendar_id}",
-                    user_id=user_id,
+                    extra={"user_id": user_id},
                 )
                 found_calendar = self._google_calendar_service.get_calendar_by_id(
                     user_id=user_id,
@@ -515,9 +527,11 @@ class SyncProfileService:
                 calendar_description = found_calendar.get("description", "")
                 logger.info(
                     "Existing target calendar validated.",
-                    user_id=user_id,
-                    calendar_id=calendar_id,
-                    title=calendar_title,
+                    extra={
+                        "user_id": user_id,
+                        "calendar_id": calendar_id,
+                        "title": calendar_title,
+                    },
                 )
 
             # Construct TargetCalendar Model
@@ -546,8 +560,10 @@ class SyncProfileService:
             self._sync_profile_repo.save_sync_profile(sync_profile)
             logger.info(
                 "SyncProfile persisted.",
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
+                extra={
+                    "user_id": user_id,
+                    "sync_profile_id": sync_profile_id,
+                },
             )
 
         except Exception as e:
@@ -583,10 +599,12 @@ class SyncProfileService:
         except Exception as e:
             logger.error(
                 "Failed to perform initial sync after profile creation.",
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
-                error_type=type(e).__name__,
-                error_message=str(e),
+                extra={
+                    "user_id": user_id,
+                    "sync_profile_id": sync_profile_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                },
             )
             # Let the normal flow continue, i.e returning the created sync profile.
             # Ideally, we shouldn't trigger the initial sync here, as it

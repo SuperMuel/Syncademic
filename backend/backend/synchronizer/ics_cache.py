@@ -1,10 +1,12 @@
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any
 from google.cloud import storage
-from firebase_functions import logger
 
 from backend.synchronizer.ics_source import IcsSource, UrlIcsSource
+
+logger = logging.getLogger(__name__)
 
 
 class IcsFileStorage(ABC):

@@ -1,10 +1,13 @@
+import logging
 from typing import Any
+
 from googleapiclient.errors import HttpError
-from firebase_functions import logger
 from backend.services.authorization_service import AuthorizationService
 from backend.services.exceptions.target_calendar import (
     BaseTargetCalendarError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleCalendarService:
@@ -42,9 +45,11 @@ class GoogleCalendarService:
                     calendars = calendars[:max_calendars]
                     logger.warning(
                         "Max calendars reached while listing calendars",
-                        user_id=user_id,
-                        provider_account_id=provider_account_id,
-                        max_calendars=max_calendars,
+                        extra={
+                            "user_id": user_id,
+                            "provider_account_id": provider_account_id,
+                            "max_calendars": max_calendars,
+                        },
                     )
                     break
                 page_token = calendars_result.get("nextPageToken")
@@ -131,8 +136,10 @@ class GoogleCalendarService:
             if e.resp.status == 404:
                 logger.warning(
                     f"Calendar not found (404) for ID: {calendar_id}",
-                    user_id=user_id,
-                    provider_account_id=provider_account_id,
+                    extra={
+                        "user_id": user_id,
+                        "provider_account_id": provider_account_id,
+                    },
                 )
                 return None
         except Exception as e:

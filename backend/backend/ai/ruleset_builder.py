@@ -1,7 +1,8 @@
-from backend import settings
+import uuid
+import logging
+
 from backend.ai.time_schedule_compressor import TimeScheduleCompressor
 from backend.ai.types import RulesetOutput
-import uuid
 from langchain.chat_models.base import BaseChatModel
 from langchain.chat_models import init_chat_model
 from langchain_core.runnables import Runnable
@@ -17,7 +18,8 @@ from backend.shared.event import Event
 
 from .prompts import EXAMPLE_COMPRESSION_1, EXAMPLE_OUTPUT_1, SYSTEM_PROMPT
 from backend.settings import settings
-from firebase_functions import logger
+
+logger = logging.getLogger(__name__)
 
 
 def format_structured_output_examples(

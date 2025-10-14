@@ -1,8 +1,8 @@
+import logging
 from abc import ABC, abstractmethod
 import requests
 import json
 import traceback
-from firebase_functions import logger
 from typing import TypedDict
 
 from backend.models.sync_profile import SyncProfile
@@ -10,6 +10,8 @@ from backend.repositories.sync_profile_repository import ISyncProfileRepository
 from backend.services.user_service import FirebaseAuthUserService
 from backend.settings import settings
 from backend.shared import domain_events
+
+logger = logging.getLogger(__name__)
 
 
 class IDevNotificationService(ABC):
@@ -137,8 +139,9 @@ class TelegramDevNotificationService(IDevNotificationService):
         try:
             if not (user := self.user_service.get_user(user_id)):
                 logger.warning(
-                    f"User not found: {user_id}",
-                    user_id=user_id,
+                    "User not found: %s",
+                    user_id,
+                    extra={"user_id": user_id},
                 )
                 return None
             return {
@@ -147,8 +150,10 @@ class TelegramDevNotificationService(IDevNotificationService):
             }
         except Exception as e:
             logger.warning(
-                f"Error getting user display name: {type(e).__name__}: {str(e)}",
-                user_id=user_id,
+                "Error getting user display name: %s: %s",
+                type(e).__name__,
+                str(e),
+                extra={"user_id": user_id},
             )
             return None
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from itertools import islice
 from typing import Any, Iterable, TypeAlias
@@ -5,11 +6,12 @@ from typing import Any, Iterable, TypeAlias
 import arrow
 
 import pytz
-from firebase_functions import logger
 from googleapiclient.errors import HttpError
 
 from backend.settings import settings
 from backend.shared.event import Event
+
+logger = logging.getLogger(__name__)
 
 ExtendedProperties: TypeAlias = dict[str, Any]
 

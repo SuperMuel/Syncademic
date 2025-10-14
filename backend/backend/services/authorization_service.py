@@ -1,7 +1,7 @@
+import logging
 import os
 from typing import Any
 
-from firebase_functions import logger
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google.oauth2.id_token import verify_oauth2_token
@@ -22,6 +22,8 @@ from backend.settings import settings
 from backend.synchronizer.google_calendar_manager import (
     GoogleCalendarManager,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AuthorizationService:

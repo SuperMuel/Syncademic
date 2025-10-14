@@ -1,13 +1,15 @@
 import io
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 
 import requests
-from firebase_functions import logger
 from pydantic import BaseModel, HttpUrl
 
 from backend.settings import settings
 from backend.services.exceptions.ics import IcsSourceError
+
+logger = logging.getLogger(__name__)
 
 
 class IcsSource(BaseModel, ABC):

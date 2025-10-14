@@ -140,13 +140,13 @@ class AuthorizationService:
         # Persist the authorization
         self._auth_repo.set_authorization(
             BackendAuthorization(
-                userId=user_id,
+                user_id=user_id,
                 provider="google",
-                providerAccountId=google_user_id,
-                providerAccountEmail=email,
-                accessToken=credentials.token,
-                refreshToken=credentials.refresh_token,
-                expirationDate=credentials.expiry,
+                provider_account_id=google_user_id,
+                provider_account_email=email,
+                access_token=credentials.token,
+                refresh_token=credentials.refresh_token,
+                expiration_date=credentials.expiry,
             )
         )
 
@@ -213,11 +213,11 @@ class AuthorizationService:
         # Build a Credentials object from stored tokens
         credentials = Credentials(
             client_id=settings.CLIENT_ID,
-            token=authorization.accessToken,
-            refresh_token=authorization.refreshToken,
+            token=authorization.access_token,
+            refresh_token=authorization.refresh_token,
             token_uri="https://oauth2.googleapis.com/token",
             client_secret=settings.CLIENT_SECRET.get_secret_value(),
-            expiry=authorization.expirationDate,
+            expiry=authorization.expiration_date,
         )
 
         # Potentially refresh tokens if expired
@@ -279,4 +279,4 @@ class AuthorizationService:
             raise ValueError(
                 "Cannot get provider account email: No valid authorization found for this user/account."
             )
-        return authorization.providerAccountEmail
+        return authorization.provider_account_email

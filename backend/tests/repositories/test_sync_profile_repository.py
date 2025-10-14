@@ -34,22 +34,22 @@ def sample_sync_profile() -> SyncProfile:
         id="test_profile_id",
         user_id="test_user_id",
         title="Test Sync Profile",
-        scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
-        targetCalendar=TargetCalendar(
+        schedule_source=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
+        target_calendar=TargetCalendar(
             id="calendar123",
             title="Test Calendar",
             description="Test calendar description",
-            providerAccountId="google_user_456",
-            providerAccountEmail="test@example.com",
+            provider_account_id="google_user_456",
+            provider_account_email="test@example.com",
         ),
         status=SyncProfileStatus(
             type=SyncProfileStatusType.NOT_STARTED,
-            syncTrigger=SyncTrigger.MANUAL,
-            syncType=SyncType.REGULAR,
-            updatedAt=datetime(2024, 12, 24, tzinfo=timezone.utc),
+            sync_trigger=SyncTrigger.MANUAL,
+            sync_type=SyncType.REGULAR,
+            updated_at=datetime(2024, 12, 24, tzinfo=timezone.utc),
         ),
         created_at=datetime(2024, 12, 23, tzinfo=timezone.utc),
-        lastSuccessfulSync=None,
+        last_successful_sync=None,
         ruleset=VALID_RULESET,
     )
 
@@ -93,9 +93,9 @@ def test_save_sync_profile_update_existing(mock_db, sample_sync_profile: SyncPro
     updated_profile.title = "Updated Profile Title"
     updated_profile.status = SyncProfileStatus(
         type=SyncProfileStatusType.IN_PROGRESS,
-        updatedAt=datetime(2024, 12, 25, tzinfo=timezone.utc),
+        updated_at=datetime(2024, 12, 25, tzinfo=timezone.utc),
     )
-    updated_profile.lastSuccessfulSync = datetime(2024, 12, 25, tzinfo=timezone.utc)
+    updated_profile.last_successful_sync = datetime(2024, 12, 25, tzinfo=timezone.utc)
 
     # Save the updated profile
     repo.save_sync_profile(updated_profile)

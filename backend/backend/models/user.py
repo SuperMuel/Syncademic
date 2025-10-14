@@ -3,8 +3,10 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from backend.backend.models.base import CamelCaseModel
 
-class UserProviderData(BaseModel):
+
+class UserProviderData(CamelCaseModel):
     """Model representing user authentication provider data."""
 
     provider_id: str
@@ -13,14 +15,14 @@ class UserProviderData(BaseModel):
     display_name: str | None = None
 
 
-class UserMetadata(BaseModel):
+class UserMetadata(CamelCaseModel):
     """Model representing user metadata."""
 
     creation_timestamp: datetime | None = None
     last_sign_in_timestamp: datetime | None = None
 
 
-class User(BaseModel):
+class User(CamelCaseModel):
     """Model representing a Firebase user."""
 
     uid: str

@@ -130,7 +130,7 @@ class TelegramDevNotificationService(IDevNotificationService):
     def _format_sync_profile(self, sync_profile: SyncProfile | None) -> str:
         if not sync_profile:
             return ""
-        return f"Profile Title: <code>{sync_profile.title}</code>\nSchedule Source URL: <code>{sync_profile.scheduleSource.url}</code>"
+        return f"Profile Title: <code>{sync_profile.title}</code>\nSchedule Source URL: <code>{sync_profile.schedule_source.url}</code>"
 
     def _get_user_info(self, user_id: str) -> _UserInfo | None:
         if not self.user_service:

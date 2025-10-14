@@ -15,6 +15,7 @@ from pydantic import (
     model_validator,
 )
 
+from backend.models.base import CamelCaseModel
 from backend.models.rules import Ruleset
 from backend.synchronizer.ics_source import IcsSource, UrlIcsSource
 
@@ -77,7 +78,7 @@ class SyncType(str, Enum):
     FULL = "full"
 
 
-class ScheduleSource(BaseModel):
+class ScheduleSource(CamelCaseModel):
     """
     Represents the source of the ICS file or schedule data.
 
@@ -101,7 +102,7 @@ class ScheduleSource(BaseModel):
         return UrlIcsSource(url=self.url)
 
 
-class TargetCalendar(BaseModel):
+class TargetCalendar(CamelCaseModel):
     """
     Represents the target calendar in the provider's system (e.g., Google Calendar).
 
@@ -109,34 +110,34 @@ class TargetCalendar(BaseModel):
     - id: unique calendar ID within the provider
     - title: title of the calendar, as rendered in the provider's UI
     - description: optional calendar description, as rendered in the provider's UI
-    - providerAccountId: the user account that owns this calendar (e.g., Google user ID)
-    - providerAccountEmail: the email for the calendar owner
+    - provider_account_id: the user account that owns this calendar (e.g., Google user ID)
+    - provider_account_email: the email for the calendar owner
     """
 
     id: str
     title: str = Field(..., min_length=1)
     description: str | None = Field(None)
-    providerAccountId: str = Field(..., min_length=1)
-    providerAccountEmail: EmailStr = Field(..., min_length=1)
+    provider_account_id: str = Field(..., min_length=1)
+    provider_account_email: EmailStr = Field(..., min_length=1)
 
 
-class SyncProfileStatus(BaseModel):
+class SyncProfileStatus(CamelCaseModel):
     """
     Tracks the current status of a synchronization profile.
 
     Fields:
-    - type: The status type (inProgress, failed, success, etc.)
-    - message: Optional error or status message
-    - syncTrigger: The trigger that initiated the sync
-    - syncType: Whether the sync was regular or full
-    - updatedAt: Timestamp of last status update
+    - type: the status type (inProgress, failed, success, etc.)
+    - message: optional error or status message
+    - sync_trigger: the trigger that initiated the sync
+    - sync_type: whether the sync was regular or full
+    - updated_at: timestamp of the last status update
     """
 
     type: SyncProfileStatusType
     message: str | None = None
-    syncTrigger: SyncTrigger | None = None
-    syncType: SyncType | None = None
-    updatedAt: PastDatetime = Field(default_factory=utc_datetime_factory)
+    sync_trigger: SyncTrigger | None = None
+    sync_type: SyncType | None = None
+    updated_at: PastDatetime = Field(default_factory=utc_datetime_factory)
 
 
 def _decode_ruleset_from_str(value: Any) -> Ruleset | dict | None:
@@ -155,7 +156,7 @@ def _decode_ruleset_from_str(value: Any) -> Ruleset | dict | None:
     return Ruleset.model_validate(loads(value))
 
 
-class SyncProfile(BaseModel):
+class SyncProfile(CamelCaseModel):
     """
     A Pydantic model representing a user's sync profile document in Firestore.
 
@@ -163,13 +164,13 @@ class SyncProfile(BaseModel):
     - id: unique identifier of the sync profile
     - user_id: ID of the user who owns this profile
     - title: a human-friendly title
-    - scheduleSource: an ICS file URL or other config
-    - targetCalendar: references the user’s chosen target calendar
+    - schedule_source: an ICS file URL or other config
+    - target_calendar: references the user’s chosen target calendar
     - status: current status
     - ruleset: JSON-serialized AI ruleset, if any
     - ruleset_error: error string if AI ruleset generation fails
     - created_at: timestamp of creation
-    - lastSuccessfulSync: timestamp of last successful sync
+    - last_successful_sync: timestamp of the last successful sync
     """
 
     id: str = Field(
@@ -180,15 +181,15 @@ class SyncProfile(BaseModel):
     )
 
     title: str = Field(..., min_length=3, max_length=50)
-    scheduleSource: ScheduleSource
-    targetCalendar: TargetCalendar
+    schedule_source: ScheduleSource
+    target_calendar: TargetCalendar
     status: SyncProfileStatus
 
     ruleset: Ruleset | None = None
     ruleset_error: str | None = None
 
     created_at: PastDatetime = Field(default_factory=utc_datetime_factory)
-    lastSuccessfulSync: PastDatetime | None = None
+    last_successful_sync: PastDatetime | None = None
 
     @field_serializer("ruleset")
     def _serialize_ruleset_as_json_str(self, ruleset: Ruleset | None) -> str | None:

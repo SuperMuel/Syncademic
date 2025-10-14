@@ -194,7 +194,7 @@ def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
     try:
         calendars = google_calendar_service.list_calendars(
             user_id=user_id,
-            provider_account_id=request.providerAccountId,
+            provider_account_id=request.provider_account_id,
         )
         return {"calendars": calendars}
     except SyncademicError as e:
@@ -203,7 +203,7 @@ def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
             e,
             extra={
                 "user_id": user_id,
-                "provider_account_id": request.providerAccountId,
+                "provider_account_id": request.provider_account_id,
                 "error_type": type(e).__name__,
             },
         )
@@ -219,7 +219,7 @@ def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
 def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
     logger.info("Checking authorization.", extra={"user_id": user_id})
 
-    provider_account_id = request.providerAccountId
+    provider_account_id = request.provider_account_id
 
     try:
         authorization_service.test_authorization(user_id, provider_account_id)
@@ -246,8 +246,8 @@ def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
 )
 @validate_request(RequestSyncInput)
 def request_sync(user_id: str, request: RequestSyncInput) -> Any:
-    sync_profile_id = request.syncProfileId
-    sync_type = request.syncType
+    sync_profile_id = request.sync_profile_id
+    sync_type = request.sync_type
 
     logger.info(
         "%s Sync request received.",
@@ -327,13 +327,13 @@ def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
         "Deleting sync profile.",
         extra={
             "user_id": user_id,
-            "sync_profile_id": request.syncProfileId,
+            "sync_profile_id": request.sync_profile_id,
         },
     )
 
     try:
         sync_profile_service.delete_sync_profile(
-            user_id=user_id, sync_profile_id=request.syncProfileId
+            user_id=user_id, sync_profile_id=request.sync_profile_id
         )
         return {"success": True}
     except SyncademicError as e:
@@ -341,7 +341,7 @@ def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
             "Failed to delete sync profile.",
             extra={
                 "user_id": user_id,
-                "sync_profile_id": request.syncProfileId,
+                "sync_profile_id": request.sync_profile_id,
                 "error_type": type(e).__name__,
             },
         )
@@ -359,24 +359,25 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         "Authorizing backend.",
         extra={
             "user_id": user_id,
-            "redirect_uri": str(request.redirectUri),
-            "provider_account_id": request.providerAccountId,
+            "request": request.model_dump_json(),
+            "redirect_uri": str(request.redirect_uri),
+            "provider_account_id": request.provider_account_id,
         },
     )
     try:
         authorization_service.authorize_backend_with_auth_code(
             user_id=user_id,
-            auth_code=request.authCode,
-            redirect_uri=request.redirectUri,
-            provider_account_id=request.providerAccountId,
+            auth_code=request.auth_code,
+            redirect_uri=request.redirect_uri,
+            provider_account_id=request.provider_account_id,
         )
     except SyncademicError as e:
         logger.error(
             "Failed to authorize backend.",
             extra={
                 "user_id": user_id,
-                "redirect_uri": str(request.redirectUri),
-                "provider_account_id": request.providerAccountId,
+                "redirect_uri": str(request.redirect_uri),
+                "provider_account_id": request.provider_account_id,
                 "error_type": type(e).__name__,
             },
         )

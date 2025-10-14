@@ -10,23 +10,23 @@ def test_backend_authorization_minimal():
     Test creating a minimal valid BackendAuthorization object.
     """
     auth = BackendAuthorization(
-        userId="someFirebaseUID",
-        providerAccountId="1234567890",
-        providerAccountEmail="user@example.com",
-        accessToken="abc123",
+        user_id="someFirebaseUID",
+        provider_account_id="1234567890",
+        provider_account_email="user@example.com",
+        access_token="abc123",
     )
     assert auth.provider == "google"
-    assert auth.expirationDate is None
+    assert auth.expiration_date is None
 
 
 @pytest.mark.parametrize("provider", ["Google", "google", "GOOGLE", "gOOgle"])
 def test_backend_authorization_with_provider(provider):
     auth = BackendAuthorization(
-        userId="someFirebaseUID",
+        user_id="someFirebaseUID",
         provider=provider,
-        providerAccountId="1234567890",
-        providerAccountEmail="user@example.com",
-        accessToken="abc123",
+        provider_account_id="1234567890",
+        provider_account_email="user@example.com",
+        access_token="abc123",
     )
 
     assert auth.provider == "google"
@@ -35,11 +35,11 @@ def test_backend_authorization_with_provider(provider):
 def test_backend_authorization_with_invalid_provider():
     with pytest.raises(ValidationError):
         BackendAuthorization(
-            userId="someFirebaseUID",
+            user_id="someFirebaseUID",
             provider="invalid",  # type: ignore
-            providerAccountId="1234567890",
-            providerAccountEmail="user@example.com",
-            accessToken="abc123",
+            provider_account_id="1234567890",
+            provider_account_email="user@example.com",
+            access_token="abc123",
         )
 
 
@@ -49,28 +49,28 @@ def test_backend_authorization_with_aware_expiration():
     """
     now_utc = datetime.now(timezone.utc)
     auth = BackendAuthorization(
-        userId="someFirebaseUID",
-        providerAccountId="myGoogleId",
-        providerAccountEmail="user@example.com",
-        accessToken="token123",
-        refreshToken="refreshXYZ",
-        expirationDate=now_utc,
+        user_id="someFirebaseUID",
+        provider_account_id="myGoogleId",
+        provider_account_email="user@example.com",
+        access_token="token123",
+        refresh_token="refreshXYZ",
+        expiration_date=now_utc,
     )
 
     # Should be converted to naive
-    assert auth.expirationDate == now_utc.replace(tzinfo=None)
-    assert auth.refreshToken == "refreshXYZ"
+    assert auth.expiration_date == now_utc.replace(tzinfo=None)
+    assert auth.refresh_token == "refreshXYZ"
 
 
 def test_backend_authorization_with_naive_expiration():
     now_utc = datetime.now()
     auth = BackendAuthorization(
-        userId="someFirebaseUID",
-        providerAccountId="myGoogleId",
-        providerAccountEmail="user@example.com",
-        accessToken="token123",
-        refreshToken="refreshXYZ",
-        expirationDate=now_utc,
+        user_id="someFirebaseUID",
+        provider_account_id="myGoogleId",
+        provider_account_email="user@example.com",
+        access_token="token123",
+        refresh_token="refreshXYZ",
+        expiration_date=now_utc,
     )
 
 
@@ -80,9 +80,9 @@ def test_backend_authorization_invalid_email():
     """
     with pytest.raises(ValidationError) as exc_info:
         BackendAuthorization(
-            userId="user1",
-            providerAccountId="gId",
-            providerAccountEmail="invalid-email",
-            accessToken="token",
+            user_id="user1",
+            provider_account_id="gId",
+            provider_account_email="invalid-email",
+            access_token="token",
         )
     assert "value is not a valid email address" in str(exc_info.value)

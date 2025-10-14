@@ -21,14 +21,14 @@ VALID_TARGET_CALENDAR = TargetCalendar(
     id="test_calendar_id",
     title="My Calendar",
     description="Sample desc",
-    providerAccountId="googleUser123",
-    providerAccountEmail="user@example.com",
+    provider_account_id="googleUser123",
+    provider_account_email="user@example.com",
 )
 
 VALID_SYNC_PROFILE_STATUS = SyncProfileStatus(
     type=SyncProfileStatusType.IN_PROGRESS,
-    syncTrigger=SyncTrigger.SCHEDULED,
-    syncType=SyncType.FULL,
+    sync_trigger=SyncTrigger.SCHEDULED,
+    sync_type=SyncType.FULL,
 )
 
 SYNC_PROFILE_ID = "test_sync_profile_id"
@@ -40,13 +40,13 @@ def test_sync_profile_valid_minimal():
         id=SYNC_PROFILE_ID,
         user_id=USER_ID,
         title="My New Profile",
-        scheduleSource=VALID_SCHEDULE_SOURCE,
-        targetCalendar=VALID_TARGET_CALENDAR,
+        schedule_source=VALID_SCHEDULE_SOURCE,
+        target_calendar=VALID_TARGET_CALENDAR,
         status=VALID_SYNC_PROFILE_STATUS,
     )
 
     assert profile.title == "My New Profile"
-    assert str(profile.scheduleSource.url) == "https://example.com/test.ics"
+    assert str(profile.schedule_source.url) == "https://example.com/test.ics"
     assert profile.status.type == SyncProfileStatusType.IN_PROGRESS
     assert profile.created_at is not None
     assert profile.created_at <= datetime.now(timezone.utc)
@@ -58,8 +58,8 @@ def test_sync_profile_empty_id():
             id="",
             user_id=USER_ID,
             title="My New Profile",
-            scheduleSource=VALID_SCHEDULE_SOURCE,
-            targetCalendar=VALID_TARGET_CALENDAR,
+            schedule_source=VALID_SCHEDULE_SOURCE,
+            target_calendar=VALID_TARGET_CALENDAR,
             status=VALID_SYNC_PROFILE_STATUS,
         )
 
@@ -72,8 +72,8 @@ def test_sync_profile_empty_user_id():
             id=SYNC_PROFILE_ID,
             user_id="",
             title="My New Profile",
-            scheduleSource=VALID_SCHEDULE_SOURCE,
-            targetCalendar=VALID_TARGET_CALENDAR,
+            schedule_source=VALID_SCHEDULE_SOURCE,
+            target_calendar=VALID_TARGET_CALENDAR,
             status=VALID_SYNC_PROFILE_STATUS,
         )
 
@@ -100,8 +100,8 @@ def test_sync_profile_too_short_title():
             id=SYNC_PROFILE_ID,
             user_id=USER_ID,
             title="",
-            scheduleSource=VALID_SCHEDULE_SOURCE,
-            targetCalendar=VALID_TARGET_CALENDAR,
+            schedule_source=VALID_SCHEDULE_SOURCE,
+            target_calendar=VALID_TARGET_CALENDAR,
             status=VALID_SYNC_PROFILE_STATUS,
         )
 
@@ -117,8 +117,8 @@ def test_sync_profile_too_long_title():
             id=SYNC_PROFILE_ID,
             user_id=USER_ID,
             title="x" * 51,
-            scheduleSource=VALID_SCHEDULE_SOURCE,
-            targetCalendar=VALID_TARGET_CALENDAR,
+            schedule_source=VALID_SCHEDULE_SOURCE,
+            target_calendar=VALID_TARGET_CALENDAR,
             status=VALID_SYNC_PROFILE_STATUS,
         )
 
@@ -130,8 +130,8 @@ def test_sync_profile_ruleset_serde_from_and_to_string():
         id=SYNC_PROFILE_ID,
         user_id=USER_ID,
         title="My New Profile",
-        scheduleSource=VALID_SCHEDULE_SOURCE,
-        targetCalendar=VALID_TARGET_CALENDAR,
+        schedule_source=VALID_SCHEDULE_SOURCE,
+        target_calendar=VALID_TARGET_CALENDAR,
         status=VALID_SYNC_PROFILE_STATUS,
         ruleset=VALID_RULESET,
     )
@@ -155,8 +155,8 @@ def test_sync_profile_update_ruleset_with_new_ruleset():
         id=SYNC_PROFILE_ID,
         user_id=USER_ID,
         title="My New Profile",
-        scheduleSource=VALID_SCHEDULE_SOURCE,
-        targetCalendar=VALID_TARGET_CALENDAR,
+        schedule_source=VALID_SCHEDULE_SOURCE,
+        target_calendar=VALID_TARGET_CALENDAR,
         status=VALID_SYNC_PROFILE_STATUS,
         ruleset_error="Previous error",
     )
@@ -181,8 +181,8 @@ def test_sync_profile_update_ruleset_with_error():
         id=SYNC_PROFILE_ID,
         user_id=USER_ID,
         title="My New Profile",
-        scheduleSource=VALID_SCHEDULE_SOURCE,
-        targetCalendar=VALID_TARGET_CALENDAR,
+        schedule_source=VALID_SCHEDULE_SOURCE,
+        target_calendar=VALID_TARGET_CALENDAR,
         status=VALID_SYNC_PROFILE_STATUS,
         ruleset=VALID_RULESET,
     )
@@ -207,8 +207,8 @@ def test_sync_profile_update_ruleset_validation_error():
         id=SYNC_PROFILE_ID,
         user_id=USER_ID,
         title="My New Profile",
-        scheduleSource=VALID_SCHEDULE_SOURCE,
-        targetCalendar=VALID_TARGET_CALENDAR,
+        schedule_source=VALID_SCHEDULE_SOURCE,
+        target_calendar=VALID_TARGET_CALENDAR,
         status=VALID_SYNC_PROFILE_STATUS,
     )
 
@@ -230,8 +230,8 @@ def test_sync_profile_validate_ruleset_and_error():
             id=SYNC_PROFILE_ID,
             user_id=USER_ID,
             title="My New Profile",
-            scheduleSource=VALID_SCHEDULE_SOURCE,
-            targetCalendar=VALID_TARGET_CALENDAR,
+            schedule_source=VALID_SCHEDULE_SOURCE,
+            target_calendar=VALID_TARGET_CALENDAR,
             status=VALID_SYNC_PROFILE_STATUS,
             ruleset=VALID_RULESET,
             ruleset_error="This should fail",

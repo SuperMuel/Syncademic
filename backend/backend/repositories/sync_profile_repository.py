@@ -116,7 +116,7 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         )
         doc_ref = self._get_doc_ref(profile.user_id, profile.id)
 
-        data_to_save = profile.model_dump()
+        data_to_save = profile.model_dump(by_alias=True)
 
         doc_ref.set(data_to_save)
         logger.info("Saved SyncProfile %s", profile.id)

@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from backend.backend.models.base import CamelCaseModel
+from backend.models.base import CamelCaseModel
 
 
 class UserProviderData(CamelCaseModel):

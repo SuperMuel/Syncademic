@@ -4,7 +4,6 @@ from json import loads
 from typing import Any, Self
 
 from pydantic import (
-    BaseModel,
     ConfigDict,
     EmailStr,
     Field,

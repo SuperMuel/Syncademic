@@ -77,7 +77,7 @@ class FirestoreBackendAuthorizationRepository(IBackendAuthorizationRepository):
         doc_id = backend_auth.user_id + backend_auth.provider_account_id
         doc_ref = self._db.collection("backendAuthorizations").document(doc_id)
 
-        doc_ref.set(backend_auth.model_dump(by_alias=True))
+        doc_ref.set(backend_auth.model_dump())
 
     def delete_authorization(self, user_id: str, provider_account_id: str) -> None:
         """

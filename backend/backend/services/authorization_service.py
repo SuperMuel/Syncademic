@@ -69,7 +69,7 @@ class AuthorizationService:
             ValueError: If the token or user ID is not found.
             Exception: For any unexpected error while exchanging or verifying tokens.
         """
-        logger.info(f"Authorizing user {user_id} with auth code")
+        logger.info("Authorizing user %s with auth code", user_id)
 
         # Workaround for Google OAuth scope changes
         # https://www.reddit.com/r/webdev/comments/11w1e36/warning_oauth_scope_has_changed_from
@@ -92,7 +92,7 @@ class AuthorizationService:
             flow.fetch_token(code=auth_code)
             credentials = flow.credentials
         except Exception as e:
-            logger.error(f"Error exchanging authorization code: {e}")
+            logger.error("Error exchanging authorization code: %s", e)
             raise BaseAuthorizationError(
                 message="Error exchanging authorization code",
                 original_exception=e,
@@ -114,7 +114,7 @@ class AuthorizationService:
                 audience=settings.CLIENT_ID,
             )
         except Exception as e:
-            logger.error(f"Error verifying ID token: {e}")
+            logger.error("Error verifying ID token: %s", e)
             raise BaseAuthorizationError(
                 message="Error verifying ID token",
                 original_exception=e,
@@ -150,7 +150,7 @@ class AuthorizationService:
             )
         )
 
-        logger.info(f"Successfully authorized user {user_id} for {google_user_id}")
+        logger.info("Successfully authorized user %s for %s", user_id, google_user_id)
 
     def get_authenticated_google_calendar_manager(
         self,
@@ -198,7 +198,11 @@ class AuthorizationService:
             UnauthorizedError: If no valid authorization is found for this user/account.
             BaseAuthorizationError: If an error occurs while refreshing the token.
         """
-        logger.info(f"Fetching calendar service for {user_id}/{provider_account_id}")
+        logger.info(
+            "Fetching calendar service for %s/%s",
+            user_id,
+            provider_account_id,
+        )
 
         authorization = self._auth_repo.get_authorization(user_id, provider_account_id)
         if authorization is None:
@@ -223,7 +227,7 @@ class AuthorizationService:
                 credentials.refresh(Request())
                 # TODO : Save credentials after refresh
             except Exception as e:
-                logger.error(f"Error refreshing Google credentials: {e}")
+                logger.error("Error refreshing Google credentials: %s", e)
                 raise BaseAuthorizationError(
                     "Error refreshing Google credentials", original_exception=e
                 )
@@ -259,7 +263,7 @@ class AuthorizationService:
 
         # TODO : do not catch all exceptions, but only authorization errors
         except Exception as e:
-            logger.error(f"Failed to test authorization: {e}")
+            logger.error("Failed to test authorization: %s", e)
             raise BaseAuthorizationError(
                 "Failed to test authorization",
                 original_exception=e,

@@ -57,7 +57,7 @@ class GoogleCalendarService:
                     break
             return calendars
         except Exception as e:
-            logger.error(f"Failed to list calendars: {e}")
+            logger.error("Failed to list calendars: %s", e)
             raise BaseTargetCalendarError(
                 message="Failed to list calendars",
                 original_exception=e,
@@ -100,13 +100,13 @@ class GoogleCalendarService:
                         calendarId=result.get("id"), body={"colorId": color_id}
                     ).execute()
                 except Exception as e:
-                    logger.error(f"Failed to set calendar color: {e}")
+                    logger.error("Failed to set calendar color: %s", e)
                     # Don't fail the whole operation if just the color update fails
 
             return result
 
         except Exception as e:
-            logger.error(f"Failed to create calendar: {e}")
+            logger.error("Failed to create calendar: %s", e)
             raise BaseTargetCalendarError(
                 message="Failed to create calendar",
                 original_exception=e,
@@ -143,5 +143,5 @@ class GoogleCalendarService:
                 )
                 return None
         except Exception as e:
-            logger.error(f"Failed to get calendar by id: {e}")
+            logger.error("Failed to get calendar by id: %s", e)
             raise

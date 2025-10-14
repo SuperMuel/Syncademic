@@ -100,7 +100,7 @@ class UrlIcsSource(IcsSource):
             IcsSourceError: If there is an error fetching or processing the ICS file,
                 including timeout, size limits, or invalid content type.
         """
-        logger.info(f"Fetching ICS file from {self.url}")
+        logger.info("Fetching ICS file from %s", self.url)
         try:
             with requests.get(
                 str(self.url), stream=True, timeout=timeout_s
@@ -110,7 +110,7 @@ class UrlIcsSource(IcsSource):
                 # Check the Content-Type header
                 content_type = response.headers.get("Content-Type")
                 if content_type is not None and "text" not in content_type:
-                    logger.info(f"Content-Type is not text : {content_type}")
+                    logger.info("Content-Type is not text : %s", content_type)
                     raise IcsSourceError(f"Content-Type is not text : {content_type}")
 
                 # Check the Content-Length header if available
@@ -118,8 +118,13 @@ class UrlIcsSource(IcsSource):
                 if content_length is not None:
                     content_length = int(content_length)
                     if content_length > max_content_size_b:
+                        requested_size_mb = content_length / 1_048_576
+                        max_size_mb = max_content_size_b / 1_048_576
                         logger.info(
-                            f"Content-Length is too large ({content_length / 1_048_576:.2f}MB > {max_content_size_b / 1_048_576:.2f}MB) ({response.headers=})"
+                            "Content-Length is too large (%0.2fMB > %0.2fMB) (%s)",
+                            requested_size_mb,
+                            max_size_mb,
+                            response.headers,
                         )
                         raise IcsSourceError("ICS file is too large.")
 
@@ -136,11 +141,11 @@ class UrlIcsSource(IcsSource):
 
                 # Decode all bytes at once
                 s = chunks.getvalue().decode("utf-8", errors="ignore")
-                logger.info(f"ICS string size: {len(s) / 1024} KB")
+                logger.info("ICS string size: %s KB", len(s) / 1024)
                 return s
 
         except requests.RequestException as e:
-            logger.error(f"Could not fetch ICS file : {e}")
+            logger.error("Could not fetch ICS file : %s", e)
             raise IcsSourceError(f"Could not fetch ICS file. ", original_exception=e)
 
 

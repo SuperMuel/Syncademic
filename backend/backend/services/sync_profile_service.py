@@ -134,7 +134,7 @@ class SyncProfileService:
         else:
             # If status is incompatible, skip
             if not self._can_sync(profile.status.type):
-                logger.info(f"Synchronization is {profile.status.type}, skipping")
+                logger.info("Synchronization is %s, skipping", profile.status.type)
                 return
 
             # If sync count is exceeded, raise DailySyncLimitExceededError
@@ -153,7 +153,7 @@ class SyncProfileService:
                 )
             )
         except Exception as e:
-            logger.error(f"Failed to get calendar service: {e}")
+            logger.error("Failed to get calendar service: %s", e)
             profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
             self._sync_profile_repo.save_sync_profile(profile)
             return
@@ -169,7 +169,7 @@ class SyncProfileService:
             )
 
         except Exception as e:
-            logger.error(f"Failed to sync: {e}")
+            logger.error("Failed to sync: %s", e)
             profile.status = _new_status(SyncProfileStatusType.FAILED, str(e))
             self._sync_profile_repo.save_sync_profile(profile)
 
@@ -209,7 +209,7 @@ class SyncProfileService:
         user_id: str,
         calendar_manager: GoogleCalendarManager,
     ) -> None:
-        logger.info(f"Running synchronization for profile {profile.id}")
+        logger.info("Running synchronization for profile %s", profile.id)
 
         result_or_error = self._ics_service.try_fetch_and_parse(
             ics_source=profile.scheduleSource.to_ics_source(),
@@ -226,7 +226,7 @@ class SyncProfileService:
 
         assert isinstance(events := result_or_error.events, list)
 
-        logger.info(f"Found {len(events)} events in ics")
+        logger.info("Found %s events in ics", len(events))
 
         # Apply ruleset if any
         if profile.ruleset:
@@ -237,11 +237,14 @@ class SyncProfileService:
                 events = [
                     replace(event, color=GoogleEventColor.GRAPHITE) for event in events
                 ]
-                logger.info(f"Applying {len(profile.ruleset.rules)} rules")
+                logger.info(
+                    "Applying %s rules",
+                    len(profile.ruleset.rules),
+                )
                 events = profile.ruleset.apply(events)
-                logger.info(f"{len(events)} events after applying rules")
+                logger.info("%s events after applying rules", len(events))
             except Exception as e:
-                logger.error(f"Failed to apply rules: {e}")
+                logger.error("Failed to apply rules: %s", e)
                 raise e
 
         if not events:
@@ -275,7 +278,7 @@ class SyncProfileService:
                 to_create = events
 
         if to_delete:
-            logger.info(f"Found {len(to_delete)} events to delete")
+            logger.info("Found %s events to delete", len(to_delete))
             calendar_manager.delete_events(
                 ids=to_delete,
             )
@@ -283,7 +286,7 @@ class SyncProfileService:
             logger.info("No events to delete")
 
         if to_create:
-            logger.info(f"Found {len(to_create)} events to create")
+            logger.info("Found %s events to create", len(to_create))
             calendar_manager.create_events(to_create, sync_profile_id=profile.id)
         else:
             logger.info("No new events to create")
@@ -307,10 +310,13 @@ class SyncProfileService:
             DailySyncLimitExceededError: If the user has reached their daily sync limit
         """
         sync_count = self._sync_stats_repo.get_daily_sync_count(user_id)
-        logger.info(f"Sync count for today: {sync_count}")
+        logger.info("Sync count for today: %s", sync_count)
 
         if sync_count >= settings.MAX_SYNCHRONIZATIONS_PER_DAY:
-            logger.info(f"User {user_id} has reached the daily synchronization limit.")
+            logger.info(
+                "User %s has reached the daily synchronization limit.",
+                user_id,
+            )
             raise DailySyncLimitExceededError(
                 f"Daily synchronization limit of {settings.MAX_SYNCHRONIZATIONS_PER_DAY} reached."
             )
@@ -358,7 +364,7 @@ class SyncProfileService:
         profile = self._get_profile_or_raise(user_id, sync_profile_id)
 
         if not self._can_delete(profile.status.type):
-            logger.info(f"Profile is {profile.status.type}, skipping deletion")
+            logger.info("Profile is %s, skipping deletion", profile.status.type)
             return
 
         profile.status = SyncProfileStatus(type=SyncProfileStatusType.DELETING)
@@ -373,7 +379,7 @@ class SyncProfileService:
                 )
             )
         except Exception as e:
-            logger.error(f"Authorization failed: {e}")
+            logger.error("Authorization failed: %s", e)
             profile.status = SyncProfileStatus(
                 type=SyncProfileStatusType.DELETION_FAILED,
                 message=f"Authorization failed.",
@@ -394,7 +400,7 @@ class SyncProfileService:
             if to_delete_ids := calendar_manager.get_events_ids_from_sync_profile(
                 sync_profile_id=profile.id
             ):
-                logger.info(f"Deleting {len(to_delete_ids)} events")
+                logger.info("Deleting %s events", len(to_delete_ids))
                 calendar_manager.delete_events(ids=to_delete_ids)
             else:
                 logger.info("No events to delete")
@@ -403,7 +409,7 @@ class SyncProfileService:
             logger.info("Deletion successful")
 
         except Exception as e:
-            logger.error(f"Unexpected error during event deletion: {e}")
+            logger.error("Unexpected error during event deletion: %s", e)
             profile.status = SyncProfileStatus(
                 type=SyncProfileStatusType.DELETION_FAILED,
                 message=f"Could not delete events from calendar.",

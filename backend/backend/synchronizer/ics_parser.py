@@ -82,7 +82,7 @@ class IcsParser:
         try:
             calendar = ics.Calendar(ics_str)
         except Exception as e:
-            logger.error(f"Failed to parse ICS file: {e}")
+            logger.error("Failed to parse ICS file: %s", e)
             return IcsParsingError(f"Failed to parse ICS file: {e}")
 
         events = []
@@ -105,6 +105,6 @@ class IcsParser:
                     )
                 )
             except Exception as e:
-                logger.error(f"Failed to parse event: {e}")
+                logger.error("Failed to parse event: %s", e)
                 return IcsParsingError(f"Failed to parse event: {e}")
         return events

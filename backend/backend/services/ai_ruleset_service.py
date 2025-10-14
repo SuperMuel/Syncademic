@@ -113,7 +113,7 @@ class AiRulesetService:
                 original_ics_size_chars=len(ics_str),
             )
         except Exception as e:
-            logger.error(f"Failed to generate ruleset: {e}")
+            logger.error("Failed to generate ruleset: %s", e)
             sync_profile.update_ruleset(
                 error=f"Failed to generate ruleset: {type(e).__name__}: {str(e)}"
             )
@@ -129,7 +129,7 @@ class AiRulesetService:
             )
             return
 
-        logger.info(f"Generated ruleset: {str(output.ruleset)[:100]}...")
+        logger.info("Generated ruleset: %s", str(output.ruleset)[:100] + "...")
 
         # Store ruleset
         sync_profile.update_ruleset(ruleset=output.ruleset)

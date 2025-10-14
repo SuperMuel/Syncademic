@@ -175,10 +175,11 @@ class TelegramDevNotificationService(IDevNotificationService):
 
             if not response.ok:
                 logger.warning(
-                    f"Failed to send Telegram notification: {response.text}"
+                    "Failed to send Telegram notification: %s",
+                    response.text,
                 )
         except Exception as e:
-            logger.warning(f"Error sending Telegram notification: {str(e)}")
+            logger.warning("Error sending Telegram notification: %s", str(e))
 
     def on_new_user(self, domain_event: domain_events.UserCreated) -> None:
         message = (

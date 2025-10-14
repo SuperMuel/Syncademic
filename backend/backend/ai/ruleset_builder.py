@@ -102,7 +102,7 @@ class RulesetBuilder:
 
         If the original ICS size is provided, we can use it to compute a compression ratio.
         """
-        logger.info(f"Compressing {len(events)} events")
+        logger.info("Compressing %s events", len(events))
 
         compressed_schedule = self.compressor.compress(events)
 
@@ -110,7 +110,7 @@ class RulesetBuilder:
             compression_ratio = (
                 original_ics_size_chars - len(compressed_schedule)
             ) / original_ics_size_chars
-            logger.info(f"Compression ratio: {compression_ratio:.2f}")
+            logger.info("Compression ratio: %.2f", compression_ratio)
 
         return compressed_schedule
 

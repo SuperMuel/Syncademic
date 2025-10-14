@@ -359,7 +359,6 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         "Authorizing backend.",
         extra={
             "user_id": user_id,
-            "request_payload": request.model_dump_json(),
             "redirect_uri": str(request.redirectUri),
             "provider_account_id": request.providerAccountId,
         },
@@ -448,7 +447,6 @@ def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:
         user_id,
         extra={
             "user_id": user_id,
-            "request_payload": request.model_dump_json(),
         },
     )
     try:
@@ -458,7 +456,6 @@ def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:
             "Failed to create sync profile.",
             extra={
                 "user_id": user_id,
-                "request_payload": request.model_dump_json(),
                 "error_type": type(e).__name__,
             },
         )

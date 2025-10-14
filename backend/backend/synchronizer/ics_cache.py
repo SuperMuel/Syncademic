@@ -60,7 +60,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
             **metadata,
         }
         blob.upload_from_string(ics_str, content_type="text/calendar")
-        logger.info(f"Stored ics string in firebase storage: {filename}")
+        logger.info("Stored ics string in firebase storage: %s", filename)
 
     def list_files(self, prefix: str | None = None) -> list[dict[str, Any]]:
         """Lists files in the bucket, optionally filtering by prefix."""

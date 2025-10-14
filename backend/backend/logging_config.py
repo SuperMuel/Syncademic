@@ -56,9 +56,9 @@ def configure_logging(log_level: str = "INFO") -> None:
     root_logger = logging.getLogger()
 
     # Clear any existing handlers
-    if root_logger.handlers:
-        for handler in root_logger.handlers:
-            root_logger.removeHandler(handler)
+    for handler in list(root_logger.handlers):
+        root_logger.removeHandler(handler)
+        handler.close()
 
     # Set the log level
     level = getattr(logging, log_level.upper())
@@ -105,6 +105,7 @@ def configure_firebase_functions_logging(log_level: str = "INFO") -> None:
     handler.setLevel(level)
     handler.setFormatter(logging.Formatter("%(message)s"))
     root_logger.addHandler(handler)
+
 
 __all__ = [
     "configure_logging",

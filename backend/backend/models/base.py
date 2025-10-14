@@ -10,7 +10,6 @@ class CamelCaseModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,
-        protected_namespaces=(),  # TODO: why ???
     )
 
     def model_dump(self, *, by_alias: bool = True, **kwargs: Any) -> dict[str, Any]:

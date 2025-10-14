@@ -359,7 +359,6 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         "Authorizing backend.",
         extra={
             "user_id": user_id,
-            "request": request.model_dump_json(),
             "redirect_uri": str(request.redirect_uri),
             "provider_account_id": request.provider_account_id,
         },

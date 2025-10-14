@@ -10,7 +10,7 @@ from firebase_admin import credentials, auth
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from backend.backend.models.base import CamelCaseModel
+from backend.models.base import CamelCaseModel
 from backend.settings import Settings
 from backend.logging_config import configure_logging
 from dotenv import load_dotenv

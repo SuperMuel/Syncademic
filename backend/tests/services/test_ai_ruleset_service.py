@@ -70,19 +70,19 @@ def sample_sync_profile() -> SyncProfile:
         id="test-profile-id",
         user_id="test-user-id",
         title="test-title",
-        targetCalendar=TargetCalendar(
+        target_calendar=TargetCalendar(
             id="test-target-calendar-id",
             title="test-target-calendar-title",
             description="test-target-calendar-description",
-            providerAccountId="test-provider-account-id",
-            providerAccountEmail="info@example.com",
+            provider_account_id="test-provider-account-id",
+            provider_account_email="info@example.com",
         ),
         status=SyncProfileStatus(
             type=SyncProfileStatusType.NOT_STARTED,
-            syncTrigger=SyncTrigger.ON_CREATE,
-            syncType=SyncType.REGULAR,
+            sync_trigger=SyncTrigger.ON_CREATE,
+            sync_type=SyncType.REGULAR,
         ),
-        scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
+        schedule_source=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
     )
 
 

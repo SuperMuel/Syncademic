@@ -10,6 +10,7 @@ from firebase_admin import credentials, auth
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from backend.models.base import CamelCaseModel
 from backend.settings import Settings
 from backend.logging_config import configure_logging
 from dotenv import load_dotenv
@@ -60,7 +61,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
     logger.info("Application shutdown.")
 
 
-class UserInfo(BaseModel):
+class UserInfo(CamelCaseModel):
     uid: str
     email: EmailStr | None = None
     display_name: str | None = None

@@ -47,13 +47,13 @@ def _make_sync_profile(
         id=sync_profile_id,
         user_id=user_id,
         title="Test Profile",
-        scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
-        targetCalendar=TargetCalendar(
+        schedule_source=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
+        target_calendar=TargetCalendar(
             id="calendar123",
             title="MyCalendar",
             description="",
-            providerAccountId="googleUser123",
-            providerAccountEmail="test@example.com",
+            provider_account_id="googleUser123",
+            provider_account_email="test@example.com",
         ),
         status=SyncProfileStatus(type=status_type),
         ruleset=ruleset,
@@ -943,8 +943,8 @@ def test_create_sync_profile_success(
     if calendar_type == "createNew":
         target_calendar_input = CreateNewTargetCalendarInput(
             type="createNew",
-            colorId=5,
-            providerAccountId=provider_account_id,
+            color_id=5,
+            provider_account_id=provider_account_id,
         )
         # Mock calendar creation result
         google_calendar_service.create_new_calendar.return_value = {
@@ -958,8 +958,8 @@ def test_create_sync_profile_success(
     else:
         target_calendar_input = UseExistingTargetCalendarInput(
             type="useExisting",
-            calendarId="existing_cal_id",
-            providerAccountId=provider_account_id,
+            calendar_id="existing_cal_id",
+            provider_account_id=provider_account_id,
         )
         # Mock calendar lookup result
         google_calendar_service.get_calendar_by_id.return_value = {
@@ -984,8 +984,8 @@ def test_create_sync_profile_success(
 
     request = CreateSyncProfileInput(
         title=title,
-        scheduleSource=schedule_source,
-        targetCalendar=target_calendar_input,
+        schedule_source=schedule_source,
+        target_calendar=target_calendar_input,
     )
 
     # Act
@@ -999,12 +999,12 @@ def test_create_sync_profile_success(
     saved_profile = sync_profile_repo.get_sync_profile(user_id, fixed_uuid)
     assert saved_profile is not None
     assert saved_profile.title == title
-    assert str(saved_profile.scheduleSource.url) == url
-    assert saved_profile.targetCalendar.id == expected_calendar_id
-    assert saved_profile.targetCalendar.title == expected_calendar_title
-    assert saved_profile.targetCalendar.description == expected_calendar_description
-    assert saved_profile.targetCalendar.providerAccountId == provider_account_id
-    assert saved_profile.targetCalendar.providerAccountEmail == "user@example.com"
+    assert str(saved_profile.schedule_source.url) == url
+    assert saved_profile.target_calendar.id == expected_calendar_id
+    assert saved_profile.target_calendar.title == expected_calendar_title
+    assert saved_profile.target_calendar.description == expected_calendar_description
+    assert saved_profile.target_calendar.provider_account_id == provider_account_id
+    assert saved_profile.target_calendar.provider_account_email == "user@example.com"
     assert saved_profile.status.type == SyncProfileStatusType.NOT_STARTED
     # ruleset and ruleset_error should be None
     assert saved_profile.ruleset is None
@@ -1044,8 +1044,8 @@ def test_create_sync_profile_existing_calendar_not_found(
     schedule_source = ScheduleSource(url=HttpUrl(url))
     target_calendar_input = UseExistingTargetCalendarInput(
         type="useExisting",
-        calendarId="missing_cal_id",
-        providerAccountId=provider_account_id,
+        calendar_id="missing_cal_id",
+        provider_account_id=provider_account_id,
     )
     # Mock calendar lookup result: not found
     google_calendar_service.get_calendar_by_id.return_value = None
@@ -1056,8 +1056,8 @@ def test_create_sync_profile_existing_calendar_not_found(
 
     request = CreateSyncProfileInput(
         title=title,
-        scheduleSource=schedule_source,
-        targetCalendar=target_calendar_input,
+        schedule_source=schedule_source,
+        target_calendar=target_calendar_input,
     )
 
     with pytest.raises(TargetCalendarNotFoundError):
@@ -1086,16 +1086,16 @@ def test_create_sync_profile_unauthorized(
     schedule_source = ScheduleSource(url=HttpUrl(url))
     target_calendar_input = CreateNewTargetCalendarInput(
         type="createNew",
-        colorId=5,
-        providerAccountId=provider_account_id,
+        color_id=5,
+        provider_account_id=provider_account_id,
     )
     # Mock authorization test to raise
     auth_service_mock.test_authorization.side_effect = Exception("unauthorized")
 
     request = CreateSyncProfileInput(
         title=title,
-        scheduleSource=schedule_source,
-        targetCalendar=target_calendar_input,
+        schedule_source=schedule_source,
+        target_calendar=target_calendar_input,
     )
 
     with pytest.raises(Exception) as exc_info:
@@ -1119,8 +1119,8 @@ def test_create_sync_profile_invalid_ics_url(
     schedule_source = ScheduleSource(url=HttpUrl(url))
     target_calendar_input = CreateNewTargetCalendarInput(
         type="createNew",
-        colorId=5,
-        providerAccountId=provider_account_id,
+        color_id=5,
+        provider_account_id=provider_account_id,
     )
     # Mock authorization test
     auth_service_mock.test_authorization.return_value = None
@@ -1131,8 +1131,8 @@ def test_create_sync_profile_invalid_ics_url(
 
     request = CreateSyncProfileInput(
         title=title,
-        scheduleSource=schedule_source,
-        targetCalendar=target_calendar_input,
+        schedule_source=schedule_source,
+        target_calendar=target_calendar_input,
     )
 
     with pytest.raises(Exception) as exc_info:

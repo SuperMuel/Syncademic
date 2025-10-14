@@ -162,11 +162,11 @@ class IcsService:
             return ValidateIcsUrlOutput(
                 valid=False,
                 error=str(e),
-                nbEvents=None,
+                nb_events=None,
             )
 
         return ValidateIcsUrlOutput(
             valid=True,
             error=None,
-            nbEvents=len(result.events),
+            nb_events=len(result.events),
         )

@@ -74,7 +74,7 @@ class FirestoreBackendAuthorizationRepository(IBackendAuthorizationRepository):
         """
         Creates or replaces the backend authorization document in Firestore.
         """
-        doc_id = backend_auth.userId + backend_auth.providerAccountId
+        doc_id = backend_auth.user_id + backend_auth.provider_account_id
         doc_ref = self._db.collection("backendAuthorizations").document(doc_id)
 
         doc_ref.set(backend_auth.model_dump())

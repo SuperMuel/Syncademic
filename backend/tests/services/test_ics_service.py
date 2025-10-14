@@ -156,7 +156,7 @@ class TestValidateIcsUrl:
         assert isinstance(result, ValidateIcsUrlOutput)
         assert result.valid is True
         assert result.error is None
-        assert result.nbEvents == len(mock_events)
+        assert result.nb_events == len(mock_events)
         service.try_fetch_and_parse.assert_called_once_with(
             mock_ics_source, metadata={"test": "test"}
         )
@@ -177,7 +177,7 @@ class TestValidateIcsUrl:
         assert isinstance(result, ValidateIcsUrlOutput)
         assert result.valid is False
         assert result.error == str(error)
-        assert result.nbEvents is None
+        assert result.nb_events is None
 
     def test_parsing_error(
         self,
@@ -195,7 +195,7 @@ class TestValidateIcsUrl:
         assert isinstance(result, ValidateIcsUrlOutput)
         assert result.valid is False
         assert result.error == str(error)
-        assert result.nbEvents is None
+        assert result.nb_events is None
 
 
 def test_enrich_metadata_adds_url_when_missing():

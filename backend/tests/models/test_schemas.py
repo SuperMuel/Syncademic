@@ -32,7 +32,7 @@ def test_validate_ics_url_output_valid_minimum():
     data = {"valid": True, "nbEvents": 0}
     output = ValidateIcsUrlOutput.model_validate(data)
     assert output.valid is True
-    assert output.nbEvents == 0
+    assert output.nb_events == 0
 
 
 def test_validate_ics_url_output_valid_with_events():
@@ -40,7 +40,7 @@ def test_validate_ics_url_output_valid_with_events():
     data = {"valid": False, "nbEvents": 42}
     output = ValidateIcsUrlOutput.model_validate(data)
     assert output.valid is False
-    assert output.nbEvents == 42
+    assert output.nb_events == 42
 
 
 def test_validate_ics_url_output_negative_events():
@@ -65,7 +65,7 @@ def test_list_user_calendars_input_valid():
     """Ensure ListUserCalendarsInput works with a valid providerAccountId."""
     data = {"providerAccountId": "1234567890"}
     obj = ListUserCalendarsInput.model_validate(data)
-    assert obj.providerAccountId == "1234567890"
+    assert obj.provider_account_id == "1234567890"
 
 
 def test_list_user_calendars_input_invalid():
@@ -79,7 +79,7 @@ def test_is_authorized_input_valid():
     """Check that IsAuthorizedInput accepts a valid non-empty providerAccountId."""
     data = {"providerAccountId": "google_id_123"}
     obj = IsAuthorizedInput.model_validate(data)
-    assert obj.providerAccountId == "google_id_123"
+    assert obj.provider_account_id == "google_id_123"
 
 
 def test_is_authorized_input_empty_provider_id():
@@ -102,8 +102,8 @@ def test_create_new_calendar_input_valid():
         "description": "A calendar created for testing.",
     }
     obj = CreateNewCalendarInput.model_validate(data)
-    assert obj.providerAccountId == "google_id_123"
-    assert obj.colorId == 10
+    assert obj.provider_account_id == "google_id_123"
+    assert obj.color_id == 10
     assert obj.summary == "My New Calendar"
     assert obj.description == "A calendar created for testing."
 
@@ -116,8 +116,8 @@ def test_create_new_calendar_input_valid_no_description():
         "summary": "My New Calendar",
     }
     obj = CreateNewCalendarInput.model_validate(data)
-    assert obj.providerAccountId == "google_id_123"
-    assert obj.colorId == 10
+    assert obj.provider_account_id == "google_id_123"
+    assert obj.color_id == 10
     assert obj.summary == "My New Calendar"
     assert obj.description == ""
 
@@ -165,8 +165,8 @@ def test_request_sync_input_valid():
     """Check that RequestSyncInput validates with valid data."""
     data = {"syncProfileId": "profile_123", "syncType": "regular"}
     obj = RequestSyncInput.model_validate(data)
-    assert obj.syncProfileId == "profile_123"
-    assert obj.syncType == SyncType.REGULAR
+    assert obj.sync_profile_id == "profile_123"
+    assert obj.sync_type == SyncType.REGULAR
 
 
 def test_request_sync_input_invalid_sync_type():
@@ -181,7 +181,7 @@ def test_delete_sync_profile_input_valid():
     """Check that DeleteSyncProfileInput validates with valid data."""
     data = {"syncProfileId": "profile_to_delete"}
     obj = DeleteSyncProfileInput(**data)
-    assert obj.syncProfileId == "profile_to_delete"
+    assert obj.sync_profile_id == "profile_to_delete"
 
 
 def test_delete_sync_profile_input_empty_id():
@@ -210,10 +210,10 @@ def test_authorize_backend_input_valid(redirect_uri: HttpUrl):
         "providerAccountId": "1122334455",
     }
     obj = AuthorizeBackendInput.model_validate(data)
-    assert obj.authCode == "some-code-value"
-    assert obj.redirectUri == redirect_uri
+    assert obj.auth_code == "some-code-value"
+    assert obj.redirect_uri == redirect_uri
     assert obj.provider == "google"
-    assert obj.providerAccountId == "1122334455"
+    assert obj.provider_account_id == "1122334455"
 
 
 def test_authorize_backend_input_missing_auth_code():
@@ -254,4 +254,4 @@ def test_authorize_backend_input_redirect_uri_no_trailing_slash():
         "providerAccountId": "1122334455",
     }
     obj = AuthorizeBackendInput.model_validate(data)
-    assert not str(obj.redirectUri).endswith("/")
+    assert not str(obj.redirect_uri).endswith("/")

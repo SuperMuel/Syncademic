@@ -124,8 +124,8 @@ class SyncProfileService:
         ) -> SyncProfileStatus:
             return SyncProfileStatus(
                 type=status_type,
-                syncTrigger=sync_trigger,
-                syncType=sync_type,
+                sync_trigger=sync_trigger,
+                sync_type=sync_type,
                 message=error_message,
             )
 
@@ -148,8 +148,8 @@ class SyncProfileService:
             calendar_manager = (
                 self._authorization_service.get_authenticated_google_calendar_manager(
                     user_id=user_id,
-                    provider_account_id=profile.targetCalendar.providerAccountId,
-                    calendar_id=profile.targetCalendar.id,
+                    provider_account_id=profile.target_calendar.provider_account_id,
+                    calendar_id=profile.target_calendar.id,
                 )
             )
         except Exception as e:
@@ -187,7 +187,7 @@ class SyncProfileService:
 
         # On success
         profile.status = _new_status(SyncProfileStatusType.SUCCESS)
-        profile.lastSuccessfulSync = datetime.now(timezone.utc)
+        profile.last_successful_sync = datetime.now(timezone.utc)
 
         self._sync_profile_repo.save_sync_profile(profile)
 
@@ -212,13 +212,13 @@ class SyncProfileService:
         logger.info("Running synchronization for profile %s", profile.id)
 
         result_or_error = self._ics_service.try_fetch_and_parse(
-            ics_source=profile.scheduleSource.to_ics_source(),
+            ics_source=profile.schedule_source.to_ics_source(),
             metadata={
                 "sync_profile_id": profile.id,
                 "user_id": user_id,
                 "sync_trigger": sync_trigger,
                 "sync_type": sync_type,
-                "source": profile.scheduleSource.model_dump(),
+                "source": profile.schedule_source.model_dump(),
             },
         )
         if isinstance(result_or_error, BaseIcsError):
@@ -374,8 +374,8 @@ class SyncProfileService:
             calendar_manager = (
                 self._authorization_service.get_authenticated_google_calendar_manager(
                     user_id=user_id,
-                    provider_account_id=profile.targetCalendar.providerAccountId,
-                    calendar_id=profile.targetCalendar.id,
+                    provider_account_id=profile.target_calendar.provider_account_id,
+                    calendar_id=profile.target_calendar.id,
                 )
             )
         except Exception as e:
@@ -461,18 +461,18 @@ class SyncProfileService:
 
             # Fetch Auth & Validate Provider Account
             self._authorization_service.test_authorization(
-                user_id, request.targetCalendar.providerAccountId
+                user_id, request.target_calendar.provider_account_id
             )
             logger.info(
                 "Authorization test successful.",
                 extra={
                     "user_id": user_id,
-                    "provider_account_id": request.targetCalendar.providerAccountId,
+                    "provider_account_id": request.target_calendar.provider_account_id,
                 },
             )
 
             # Validate ICS URL
-            ics_source = request.scheduleSource.to_ics_source()
+            ics_source = request.schedule_source.to_ics_source()
 
             self._ics_service.validate_ics_url_or_raise(
                 ics_source,
@@ -491,17 +491,17 @@ class SyncProfileService:
             sync_profile_id = uuid_factory() if uuid_factory else str(uuid4())
 
             # Handle Target Calendar
-            if request.targetCalendar.type == "createNew":
+            if request.target_calendar.type == "createNew":
                 logger.info(
                     "Creating new target calendar.",
                     extra={"user_id": user_id},
                 )
                 cal_result = self._google_calendar_service.create_new_calendar(
                     user_id=user_id,
-                    provider_account_id=request.targetCalendar.providerAccountId,
+                    provider_account_id=request.target_calendar.provider_account_id,
                     summary=request.title,
                     description=f"Syncademic calendar for '{request.title}' ({sync_profile_id=})",
-                    color_id=request.targetCalendar.colorId,
+                    color_id=request.target_calendar.color_id,
                 )
                 calendar_id = cal_result["id"]
                 calendar_title = cal_result.get("summary", request.title)
@@ -514,14 +514,14 @@ class SyncProfileService:
                     },
                 )
             else:  # useExisting
-                calendar_id = request.targetCalendar.calendarId
+                calendar_id = request.target_calendar.calendar_id
                 logger.info(
                     f"Validating existing target calendar: {calendar_id}",
                     extra={"user_id": user_id},
                 )
                 found_calendar = self._google_calendar_service.get_calendar_by_id(
                     user_id=user_id,
-                    provider_account_id=request.targetCalendar.providerAccountId,
+                    provider_account_id=request.target_calendar.provider_account_id,
                     calendar_id=calendar_id,
                 )
                 if not found_calendar:
@@ -545,9 +545,9 @@ class SyncProfileService:
                 id=calendar_id,
                 title=calendar_title,
                 description=calendar_description,
-                providerAccountId=request.targetCalendar.providerAccountId,
-                providerAccountEmail=self._authorization_service.get_provider_account_email(
-                    user_id, request.targetCalendar.providerAccountId
+                provider_account_id=request.target_calendar.provider_account_id,
+                provider_account_email=self._authorization_service.get_provider_account_email(
+                    user_id, request.target_calendar.provider_account_id
                 ),
             )
 
@@ -556,8 +556,8 @@ class SyncProfileService:
                 id=sync_profile_id,
                 user_id=user_id,
                 title=request.title,
-                scheduleSource=request.scheduleSource,
-                targetCalendar=target_calendar,
+                schedule_source=request.schedule_source,
+                target_calendar=target_calendar,
                 status=SyncProfileStatus(type=SyncProfileStatusType.NOT_STARTED),
                 # ruleset and ruleset_error are None initially
             )

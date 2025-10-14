@@ -35,33 +35,33 @@ def test_get_authorization_found(mock_db):
     doc_id = user_id + provider_account_id
     mock_db.collection("backendAuthorizations").document(doc_id).set(
         BackendAuthorization(
-            userId=user_id,
+            user_id=user_id,
             provider="google",
-            providerAccountId=provider_account_id,
-            providerAccountEmail="test@example.com",
-            accessToken="abc123",
-            refreshToken="def456",
-            expirationDate=datetime.now(),
+            provider_account_id=provider_account_id,
+            provider_account_email="test@example.com",
+            access_token="abc123",
+            refresh_token="def456",
+            expiration_date=datetime.now(),
         ).model_dump()
     )
 
     result = repo.get_authorization(user_id, provider_account_id)
     assert result is not None
-    assert result.userId == user_id
-    assert result.providerAccountId == provider_account_id
-    assert result.accessToken == "abc123"
+    assert result.user_id == user_id
+    assert result.provider_account_id == provider_account_id
+    assert result.access_token == "abc123"
 
 
 def test_set_authorization(mock_db):
     repo = FirestoreBackendAuthorizationRepository(db=mock_db)
 
     auth = BackendAuthorization(
-        userId="user123",
+        user_id="user123",
         provider="google",
-        providerAccountId="google_user_789",
-        providerAccountEmail="test@example.com",
-        accessToken="abc123",
-        refreshToken="def456",
+        provider_account_id="google_user_789",
+        provider_account_email="test@example.com",
+        access_token="abc123",
+        refresh_token="def456",
     )
 
     repo.set_authorization(auth)
@@ -80,17 +80,17 @@ def test_set_authorizatio_already_exists(mock_db):
     repo = FirestoreBackendAuthorizationRepository(db=mock_db)
 
     auth = BackendAuthorization(
-        userId="user123",
+        user_id="user123",
         provider="google",
-        providerAccountId="google_user_789",
-        providerAccountEmail="test@example.com",
-        accessToken="abc123",
-        refreshToken="def456",
+        provider_account_id="google_user_789",
+        provider_account_email="test@example.com",
+        access_token="abc123",
+        refresh_token="def456",
     )
 
     repo.set_authorization(auth)
 
-    auth = auth.model_copy(update={"accessToken": "new_token"})
+    auth.access_token = "new_token"
 
     repo.set_authorization(auth)
 

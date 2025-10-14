@@ -74,11 +74,11 @@ class AiRulesetService:
         )
 
         result_or_error = self.ics_service.try_fetch_and_parse(
-            ics_source=sync_profile.scheduleSource.to_ics_source(),
+            ics_source=sync_profile.schedule_source.to_ics_source(),
             metadata={
                 "sync_profile_id": sync_profile.id,
                 "user_id": sync_profile.user_id,
-                "source": sync_profile.scheduleSource.model_dump(),
+                "source": sync_profile.schedule_source.model_dump(),
                 "purpose": "create_ruleset",
             },
         )
@@ -106,7 +106,7 @@ class AiRulesetService:
             output = self.ruleset_builder.generate_ruleset(
                 events,
                 metadata={
-                    "ics_url": sync_profile.scheduleSource.url,
+                    "ics_url": sync_profile.schedule_source.url,
                     "user_id": sync_profile.user_id,
                     "sync_profile_id": sync_profile.id,
                 },

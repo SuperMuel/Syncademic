@@ -28,18 +28,18 @@ def sample_sync_profile() -> SyncProfile:
         id="profile1",
         user_id="user1",
         title="Test Profile",
-        scheduleSource=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
-        targetCalendar=TargetCalendar(
+        schedule_source=ScheduleSource(url=HttpUrl("https://example.com/calendar.ics")),
+        target_calendar=TargetCalendar(
             id="cal1",
             title="My Calendar",
             description="My Calendar",
-            providerAccountId="acc1",
-            providerAccountEmail="test@example.com",
+            provider_account_id="acc1",
+            provider_account_email="test@example.com",
         ),
         status=SyncProfileStatus(
             type=SyncProfileStatusType.NOT_STARTED,
-            syncTrigger=SyncTrigger.MANUAL,
-            syncType=SyncType.REGULAR,
+            sync_trigger=SyncTrigger.MANUAL,
+            sync_type=SyncType.REGULAR,
         ),
         created_at=datetime.now(UTC),
     )

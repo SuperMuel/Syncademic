@@ -1,8 +1,9 @@
+import logging
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
 from firebase_admin import auth, initialize_app, storage
-from firebase_functions import https_fn, logger, options, scheduler_fn
+from firebase_functions import https_fn, options, scheduler_fn
 from firebase_functions.firestore_fn import (
     Event,
     on_document_created,
@@ -12,6 +13,7 @@ from pydantic import BaseModel, ValidationError
 
 from backend.ai.ruleset_builder import RulesetBuilder
 from backend.bootstrap import bootstrap_event_bus
+from backend.logging_config import configure_firebase_functions_logging
 from backend.models import (
     SyncTrigger,
 )
@@ -51,7 +53,11 @@ from backend.shared import domain_events
 from backend.synchronizer.ics_cache import FirebaseIcsFileStorage
 from backend.synchronizer.ics_source import UrlIcsSource
 
-logger.info(f"Settings: {settings}")
+logger = logging.getLogger(__name__)
+
+configure_firebase_functions_logging(settings.LOG_LEVEL)
+
+logger.info("Settings: %s", settings)
 
 initialize_app()
 
@@ -169,7 +175,7 @@ def validate_request(input_model: type[T]):  # noqa: ANN201
 )
 @validate_request(ValidateIcsUrlInput)
 def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
-    logger.info(f"Validating ICS URL.", user_id=user_id)
+    logger.info("Validating ICS URL.", extra={"user_id": user_id})
     return ics_service.validate_ics_url(
         UrlIcsSource.from_str(request.url),
         metadata={"user_id": user_id},
@@ -183,7 +189,7 @@ def validate_ics_url(user_id: str, request: ValidateIcsUrlInput) -> dict:
 )
 @validate_request(ListUserCalendarsInput)
 def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
-    logger.info(f"Listing calendars.", user_id=user_id)
+    logger.info("Listing calendars.", extra={"user_id": user_id})
 
     try:
         calendars = google_calendar_service.list_calendars(
@@ -193,10 +199,13 @@ def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
         return {"calendars": calendars}
     except SyncademicError as e:
         logger.error(
-            f"Failed to list calendars: {e}",
-            user_id=user_id,
-            provider_account_id=request.providerAccountId,
-            error_type=type(e).__name__,
+            "Failed to list calendars: %s",
+            e,
+            extra={
+                "user_id": user_id,
+                "provider_account_id": request.providerAccountId,
+                "error_type": type(e).__name__,
+            },
         )
         raise error_mapping.to_http_error(e)
 
@@ -208,7 +217,7 @@ def list_user_calendars(user_id: str, request: ListUserCalendarsInput) -> dict:
 )
 @validate_request(IsAuthorizedInput)
 def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
-    logger.info(f"Checking authorization.", user_id=user_id)
+    logger.info("Checking authorization.", extra={"user_id": user_id})
 
     provider_account_id = request.providerAccountId
 
@@ -216,10 +225,13 @@ def is_authorized(user_id: str, request: IsAuthorizedInput) -> dict:
         authorization_service.test_authorization(user_id, provider_account_id)
     except SyncademicError as e:
         logger.info(
-            f"Failed to test authorization: {e}",
-            user_id=user_id,
-            provider_account_id=provider_account_id,
-            error_type=type(e).__name__,
+            "Failed to test authorization: %s",
+            e,
+            extra={
+                "user_id": user_id,
+                "provider_account_id": provider_account_id,
+                "error_type": type(e).__name__,
+            },
         )
         return IsAuthorizedOutput(authorized=False).model_dump()
 
@@ -238,9 +250,12 @@ def request_sync(user_id: str, request: RequestSyncInput) -> Any:
     sync_type = request.syncType
 
     logger.info(
-        f"{sync_type} Sync request received.",
-        user_id=user_id,
-        sync_profile_id=sync_profile_id,
+        "%s Sync request received.",
+        getattr(sync_type, "value", str(sync_type)),
+        extra={
+            "user_id": user_id,
+            "sync_profile_id": sync_profile_id,
+        },
     )
 
     try:
@@ -252,10 +267,12 @@ def request_sync(user_id: str, request: RequestSyncInput) -> Any:
         )
     except SyncademicError as e:
         logger.error(
-            f"Failed to synchronize.",
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-            error_type=type(e).__name__,
+            "Failed to synchronize.",
+            extra={
+                "user_id": user_id,
+                "sync_profile_id": sync_profile_id,
+                "error_type": type(e).__name__,
+            },
         )
         raise error_mapping.to_http_error(e)
 
@@ -274,10 +291,12 @@ def scheduled_sync(event: Any) -> None:
         sync_profile_id, user_id = sync_profile.id, sync_profile.user_id
 
         logger.info(
-            f"Synchronizing.",
-            user_id=user_id,
-            sync_profile_id=sync_profile_id,
-            sync_profile_title=sync_profile.title,
+            "Synchronizing.",
+            extra={
+                "user_id": user_id,
+                "sync_profile_id": sync_profile_id,
+                "sync_profile_title": sync_profile.title,
+            },
         )
         try:
             sync_profile_service.synchronize(
@@ -287,10 +306,13 @@ def scheduled_sync(event: Any) -> None:
             )
         except Exception as e:
             logger.error(
-                f"Failed to synchronize. {e}",
-                user_id=user_id,
-                sync_profile_id=sync_profile_id,
-                error_type=type(e).__name__,
+                "Failed to synchronize. %s",
+                e,
+                extra={
+                    "user_id": user_id,
+                    "sync_profile_id": sync_profile_id,
+                    "error_type": type(e).__name__,
+                },
             )
 
 
@@ -302,9 +324,11 @@ def scheduled_sync(event: Any) -> None:
 @validate_request(DeleteSyncProfileInput)
 def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
     logger.info(
-        f"Deleting sync profile.",
-        user_id=user_id,
-        sync_profile_id=request.syncProfileId,
+        "Deleting sync profile.",
+        extra={
+            "user_id": user_id,
+            "sync_profile_id": request.syncProfileId,
+        },
     )
 
     try:
@@ -314,10 +338,12 @@ def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
         return {"success": True}
     except SyncademicError as e:
         logger.error(
-            f"Failed to delete sync profile.",
-            user_id=user_id,
-            sync_profile_id=request.syncProfileId,
-            error_type=type(e).__name__,
+            "Failed to delete sync profile.",
+            extra={
+                "user_id": user_id,
+                "sync_profile_id": request.syncProfileId,
+                "error_type": type(e).__name__,
+            },
         )
         raise error_mapping.to_http_error(e)
 
@@ -330,11 +356,12 @@ def delete_sync_profile(user_id: str, request: DeleteSyncProfileInput) -> dict:
 @validate_request(AuthorizeBackendInput)
 def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
     logger.info(
-        f"Authorizing backend.",
-        user_id=user_id,
-        request=request.model_dump_json(),
-        redirect_uri=str(request.redirectUri),
-        provider_account_id=request.providerAccountId,
+        "Authorizing backend.",
+        extra={
+            "user_id": user_id,
+            "redirect_uri": str(request.redirectUri),
+            "provider_account_id": request.providerAccountId,
+        },
     )
     try:
         authorization_service.authorize_backend_with_auth_code(
@@ -345,11 +372,13 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
         )
     except SyncademicError as e:
         logger.error(
-            f"Failed to authorize backend.",
-            user_id=user_id,
-            redirect_uri=str(request.redirectUri),
-            provider_account_id=request.providerAccountId,
-            error_type=type(e).__name__,
+            "Failed to authorize backend.",
+            extra={
+                "user_id": user_id,
+                "redirect_uri": str(request.redirectUri),
+                "provider_account_id": request.providerAccountId,
+                "error_type": type(e).__name__,
+            },
         )
         raise error_mapping.to_http_error(e)
 
@@ -364,7 +393,7 @@ def authorize_backend(user_id: str, request: AuthorizeBackendInput) -> dict:
 )  # type: ignore
 def on_user_created(event: Event[DocumentSnapshot]) -> None:
     user_id = event.params["userId"]
-    logger.info(f"New user created: {user_id}")
+    logger.info("New user created: %s", user_id)
 
     # Get user data from the document
     user_data = event.data.to_dict() or {}
@@ -386,9 +415,12 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
     except Exception as e:
         # If we can't get Firebase Auth user, just use document data
         logger.warning(
-            f"Could not get Firebase Auth user: {str(e)}",
-            user_id=user_id,
-            error_type=type(e).__name__,
+            "Could not get Firebase Auth user: %s",
+            e,
+            extra={
+                "user_id": user_id,
+                "error_type": type(e).__name__,
+            },
         )
         if "email" in user_data:
             event_data["email"] = user_data["email"]
@@ -411,18 +443,21 @@ def on_user_created(event: Event[DocumentSnapshot]) -> None:
 @validate_request(CreateSyncProfileInput)
 def create_sync_profile(user_id: str, request: CreateSyncProfileInput) -> dict:
     logger.info(
-        f"User {user_id} is creating a new sync profile.",
-        user_id=user_id,
-        request=request.model_dump_json(),
+        "User %s is creating a new sync profile.",
+        user_id,
+        extra={
+            "user_id": user_id,
+        },
     )
     try:
         sync_profile = sync_profile_service.create_sync_profile(user_id, request)
     except SyncademicError as e:
         logger.error(
-            f"Failed to create sync profile.",
-            user_id=user_id,
-            request=request.model_dump_json(),
-            error_type=type(e).__name__,
+            "Failed to create sync profile.",
+            extra={
+                "user_id": user_id,
+                "error_type": type(e).__name__,
+            },
         )
         raise error_mapping.to_http_error(e)
 

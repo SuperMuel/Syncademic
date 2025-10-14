@@ -113,7 +113,7 @@ class IcsService:
                 )
             )
         except IcsSourceError as e:
-            logger.error(f"Failed to fetch ICS file from source: {e}")
+            logger.error("Failed to fetch ICS file from source: %s", e)
             return e
 
         events_or_error = self.ics_parser.try_parse(ics_str)

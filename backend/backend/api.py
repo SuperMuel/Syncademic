@@ -35,7 +35,7 @@ def initialize_firebase_app() -> None:
 
     cred: credentials.Base | None
     if settings.FIREBASE_SERVICE_ACCOUNT_PATH is not None:
-        logger.info(f"Initializing Firebase Admin SDK with service account file.")
+        logger.info("Initializing Firebase Admin SDK with service account file.")
         cred = credentials.Certificate(settings.FIREBASE_SERVICE_ACCOUNT_PATH)
     elif settings.FIREBASE_SERVICE_ACCOUNT_JSON is not None:
         logger.info("Initializing Firebase Admin SDK with service account JSON.")
@@ -99,7 +99,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": 'Bearer error="invalid_token"'},
         )
     except Exception as e:
-        logger.error(f"An unexpected error occurred during token verification: {e}")
+        logger.error("An unexpected error occurred during token verification: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Could not validate credentials: {e}",

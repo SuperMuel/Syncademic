@@ -1,7 +1,8 @@
-from backend import settings
+import uuid
+import logging
+
 from backend.ai.time_schedule_compressor import TimeScheduleCompressor
 from backend.ai.types import RulesetOutput
-import uuid
 from langchain.chat_models.base import BaseChatModel
 from langchain.chat_models import init_chat_model
 from langchain_core.runnables import Runnable
@@ -17,7 +18,8 @@ from backend.shared.event import Event
 
 from .prompts import EXAMPLE_COMPRESSION_1, EXAMPLE_OUTPUT_1, SYSTEM_PROMPT
 from backend.settings import settings
-from firebase_functions import logger
+
+logger = logging.getLogger(__name__)
 
 
 def format_structured_output_examples(
@@ -100,7 +102,7 @@ class RulesetBuilder:
 
         If the original ICS size is provided, we can use it to compute a compression ratio.
         """
-        logger.info(f"Compressing {len(events)} events")
+        logger.info("Compressing %s events", len(events))
 
         compressed_schedule = self.compressor.compress(events)
 
@@ -108,7 +110,7 @@ class RulesetBuilder:
             compression_ratio = (
                 original_ics_size_chars - len(compressed_schedule)
             ) / original_ics_size_chars
-            logger.info(f"Compression ratio: {compression_ratio:.2f}")
+            logger.info("Compression ratio: %.2f", compression_ratio)
 
         return compressed_schedule
 

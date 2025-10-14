@@ -89,7 +89,11 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         Retrieves a SyncProfile by user_id and sync_profile_id.
         Returns None if not found.
         """
-        logger.info(f"Getting sync profile {sync_profile_id} for user {user_id}")
+        logger.info(
+            "Getting sync profile %s for user %s",
+            sync_profile_id,
+            user_id,
+        )
 
         doc_ref: DocumentReference = self._get_doc_ref(user_id, sync_profile_id)
 
@@ -105,19 +109,23 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
 
     def save_sync_profile(self, profile: SyncProfile) -> None:
         """Saves (creates or updates) a SyncProfile by overwriting."""
-        logger.info(f"Saving SyncProfile {profile.id} for user {profile.user_id}")
+        logger.info(
+            "Saving SyncProfile %s for user %s",
+            profile.id,
+            profile.user_id,
+        )
         doc_ref = self._get_doc_ref(profile.user_id, profile.id)
 
         data_to_save = profile.model_dump()
 
         doc_ref.set(data_to_save)
-        logger.info(f"Saved SyncProfile {profile.id}")
+        logger.info("Saved SyncProfile %s", profile.id)
 
     def list_user_sync_profiles(self, user_id: str) -> list[SyncProfile]:
         """
         Lists all SyncProfiles for a given user.
         """
-        logger.info(f"Listing sync profiles for user {user_id}")
+        logger.info("Listing sync profiles for user %s", user_id)
 
         collection_ref: CollectionReference = (
             self._db.collection("users").document(user_id).collection("syncProfiles")
@@ -189,7 +197,11 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         Warning: This method only deletes the document from Firestore. Unlike SyncProfileService.delete(),
         it does not clean up associated data like calendar events. Use with caution.
         """
-        logger.info(f"Deleting sync profile {sync_profile_id} for user {user_id}")
+        logger.info(
+            "Deleting sync profile %s for user %s",
+            sync_profile_id,
+            user_id,
+        )
 
         doc_ref: DocumentReference = self._get_doc_ref(user_id, sync_profile_id)
         doc_ref.delete()

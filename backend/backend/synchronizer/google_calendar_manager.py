@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from itertools import islice
 from typing import Any, Iterable, TypeAlias
@@ -5,11 +6,12 @@ from typing import Any, Iterable, TypeAlias
 import arrow
 
 import pytz
-from firebase_functions import logger
 from googleapiclient.errors import HttpError
 
 from backend.settings import settings
 from backend.shared.event import Event
+
+logger = logging.getLogger(__name__)
 
 ExtendedProperties: TypeAlias = dict[str, Any]
 
@@ -99,7 +101,7 @@ class GoogleCalendarManager:
         if len(events) > 10000:  # TODO : make this configurable
             raise ValueError(f"Too many events to create ({len(events)})")
 
-        logger.info(f"Creating {len(events)} events.")
+        logger.info("Creating %s events.", len(events))
 
         for i, sublist in enumerate(
             batched(events, batch_size)
@@ -119,7 +121,11 @@ class GoogleCalendarManager:
                     )
                 )
             batch.execute()
-            logger.info(f"Inserted {i * 50 + len(sublist)}/{len(events)} events.")
+            logger.info(
+                "Inserted %s/%s events.",
+                i * 50 + len(sublist),
+                len(events),
+            )
 
     def get_events_ids_from_sync_profile(
         self,
@@ -174,11 +180,14 @@ class GoogleCalendarManager:
         """
         Delete events from the calendar by their ids.
         """
-        logger.info(f"Will delete {len(ids)} events.")
+        logger.info("Will delete %s events.", len(ids))
 
         for i, sublist in enumerate(batched(ids, batch_size)):
             logger.info(
-                f"Processing batch {i + 1}/{(len(ids) + batch_size - 1) // batch_size} ({len(sublist)} events)"
+                "Processing batch %s/%s (%s events)",
+                i + 1,
+                (len(ids) + batch_size - 1) // batch_size,
+                len(sublist),
             )
             batch = self._service.new_batch_http_request()
             for id in sublist:
@@ -189,8 +198,12 @@ class GoogleCalendarManager:
                     )
                 )
             batch.execute()
-            logger.info(f"Deleted {i * batch_size + len(sublist)}/{len(ids)} events.")
-        logger.info(f"Deleted {len(ids)} events.")
+            logger.info(
+                "Deleted %s/%s events.",
+                i * batch_size + len(sublist),
+                len(ids),
+            )
+        logger.info("Deleted %s events.", len(ids))
 
     def check_calendar_exists(self) -> bool:
         """
@@ -207,7 +220,7 @@ class GoogleCalendarManager:
             return True
         except HttpError as e:
             if e.status_code == 404:
-                logger.info(f"Calendar {self._calendar_id} not found")
+                logger.info("Calendar %s not found", self._calendar_id)
                 return False
             raise
         except Exception as e:

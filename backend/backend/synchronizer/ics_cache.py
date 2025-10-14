@@ -1,10 +1,12 @@
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any
 from google.cloud import storage
-from firebase_functions import logger
 
 from backend.synchronizer.ics_source import IcsSource, UrlIcsSource
+
+logger = logging.getLogger(__name__)
 
 
 class IcsFileStorage(ABC):
@@ -58,7 +60,7 @@ class FirebaseIcsFileStorage(IcsFileStorage):
             **metadata,
         }
         blob.upload_from_string(ics_str, content_type="text/calendar")
-        logger.info(f"Stored ics string in firebase storage: {filename}")
+        logger.info("Stored ics string in firebase storage: %s", filename)
 
     def list_files(self, prefix: str | None = None) -> list[dict[str, Any]]:
         """Lists files in the bucket, optionally filtering by prefix."""

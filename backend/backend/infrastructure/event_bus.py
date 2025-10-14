@@ -19,7 +19,7 @@ class LocalEventBus:
     ) -> None:
         self.handlers: dict[type[DomainEvent], list[Handler]] = handlers
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.info(f"{self.__class__.__name__} initialized")
+        self.logger.info("%s initialized", self.__class__.__name__)
 
     def publish(self, event: DomainEvent) -> None:
         if event.__class__ not in self.handlers:
@@ -27,11 +27,19 @@ class LocalEventBus:
             # it's better than silently ignoring the event.
             raise ValueError(f"No handler registered for event type: {event.__class__}")
         for handler in self.handlers[event.__class__]:
-            self.logger.info(f"Publishing event {event.__class__} to handler {handler}")
+            self.logger.info(
+                "Publishing event %s to handler %s",
+                event.__class__,
+                handler,
+            )
             try:
                 handler(event)
             except Exception as e:
-                self.logger.error(f"Error handling event {event.__class__}: {e}")
+                self.logger.error(
+                    "Error handling event %s: %s",
+                    event.__class__,
+                    e,
+                )
 
 
 T = TypeVar("T", bound=DomainEvent)
@@ -51,7 +59,10 @@ class MockEventBus(IEventBus):
     def publish(self, event: DomainEvent) -> None:
         """Records the event instead of dispatching."""
         event_type = type(event)
-        self.logger.info(f"Mock publish called with event: {event_type.__name__}")
+        self.logger.info(
+            "Mock publish called with event: %s",
+            event_type.__name__,
+        )
         self.published_events.append(event)
 
     # --- Helper methods for assertions ---

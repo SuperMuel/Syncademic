@@ -21,12 +21,16 @@ import 'authorization/authorization_service.dart';
 import 'authorization/backend_authorization_service.dart';
 import 'authorization/firebase_backend_authorization_service.dart';
 import 'authorization/google_authorization/google_authorization_service.dart';
+import 'backend/backend_api.dart';
+import 'backend/fastapi_backend_api.dart';
+import 'backend/firebase_backend_api.dart';
 import 'firebase_options.dart';
 import 'repositories/firestore_sync_profile_repository.dart';
 import 'repositories/google_target_calendar_repository.dart';
 import 'repositories/sync_profile_repository.dart';
 import 'repositories/target_calendar_repository.dart';
 import 'screens/account/account_page.dart';
+import 'screens/dev_tools/dev_tools_page.dart';
 import 'screens/new_sync_profile/cubit/new_sync_profile_cubit.dart';
 import 'screens/new_sync_profile/new_sync_profile_page.dart';
 import 'screens/sign_in_page.dart';
@@ -72,6 +76,28 @@ void registerDependencies() {
     FirebaseAuthService(),
   );
 
+  final backendMode =
+      (dotenv.env['BACKEND_MODE'] ?? 'firebase').toLowerCase().trim();
+
+  switch (backendMode) {
+    case 'fastapi':
+      getIt.registerSingleton<BackendApi>(FastApiBackendApi(
+        authService: getIt<AuthService>(),
+        baseUrl: dotenv.env['FASTAPI_BASE_URL'],
+      ));
+      break;
+    case 'firebase':
+    case '':
+      getIt.registerSingleton<BackendApi>(
+        FirebaseBackendApi(functions: functions),
+      );
+      break;
+    default:
+      throw Exception(
+        'Unsupported BACKEND_MODE "$backendMode". Use "firebase" or "fastapi".',
+      );
+  }
+
   getIt.registerSingleton<AuthCubit>(AuthCubit());
 
   getIt.registerSingleton<AccountService>(FirebaseAccountService());
@@ -104,7 +130,7 @@ void registerDependencies() {
 
   getIt.registerSingleton<IcsValidationService>(
     // const MockIcsValidationService(),
-    FirebaseIcsValidationService(),
+    BackendIcsValidationService(),
   );
 }
 
@@ -156,24 +182,8 @@ void main() async {
   );
 }
 
-// GoRouter configuration
-final _router = GoRouter(
-  redirect: (context, state) async {
-    final user = GetIt.I<AuthService>().currentUser;
-
-    if (user == null) {
-      return '/sign-in';
-    }
-
-    if (state.fullPath == '/sign-in') {
-      // Logged in users should be redirected to the home screen if they try to access the sign-in screen
-      return '/';
-    }
-
-    return null; // No redirection needed
-  },
-  initialLocation: '/sign-in',
-  routes: [
+List<RouteBase> _buildRoutes() {
+  final routes = <RouteBase>[
     GoRoute(
       path: '/sign-in',
       builder: (context, state) => const SignInPage(),
@@ -210,7 +220,38 @@ final _router = GoRouter(
             child: const NewSyncProfilePage(),
           );
         }),
-  ],
+  ];
+
+  if (kDebugMode) {
+    routes.add(
+      GoRoute(
+        path: '/dev-tools',
+        builder: (context, state) => const DevToolsPage(),
+      ),
+    );
+  }
+
+  return routes;
+}
+
+// GoRouter configuration
+final _router = GoRouter(
+  redirect: (context, state) async {
+    final user = GetIt.I<AuthService>().currentUser;
+
+    if (user == null) {
+      return '/sign-in';
+    }
+
+    if (state.fullPath == '/sign-in') {
+      // Logged in users should be redirected to the home screen if they try to access the sign-in screen
+      return '/';
+    }
+
+    return null; // No redirection needed
+  },
+  initialLocation: '/sign-in',
+  routes: _buildRoutes(),
 );
 
 class HomeScreen extends StatefulWidget {
@@ -246,6 +287,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Syncademic'),
         actions: [
+          if (kDebugMode)
+            IconButton(
+              icon: const Icon(Icons.developer_mode),
+              onPressed: () => context.push('/dev-tools'),
+              tooltip: "Dev tools",
+            ),
           IconButton(
             icon: const Icon(Icons.info),
             onPressed: () => showAboutDialog(

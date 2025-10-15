@@ -1,8 +1,9 @@
 import 'dart:developer';
 
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
+
+import '../backend/backend_api.dart';
 
 class IcsValidationResult {
   final bool isValid;
@@ -22,41 +23,30 @@ abstract class IcsValidationService {
   Future<Either<String, IcsValidationResult>> validateUrl(String url);
 }
 
-class FirebaseIcsValidationService extends IcsValidationService {
-  FirebaseIcsValidationService({FirebaseFunctions? functions})
-      : functions = functions ?? GetIt.I.get<FirebaseFunctions>();
+class BackendIcsValidationService extends IcsValidationService {
+  BackendIcsValidationService({BackendApi? backendApi})
+      : _backendApi = backendApi ?? GetIt.I.get<BackendApi>();
 
-  final FirebaseFunctions functions;
+  final BackendApi _backendApi;
 
   @override
   Future<Either<String, IcsValidationResult>> validateUrl(String url) async {
     log('Validating URL: $url');
-
-    late HttpsCallableResult response;
-
     try {
-      response = await functions.httpsCallable('validate_ics_url').call(
-        {'url': url},
-      );
-    } catch (e) {
-      log('Error while validating URL: $e');
-      return left(e.toString());
-    }
+      final response = await _backendApi.validateIcsUrl(url);
+      log('Validation result: $response');
 
-    log('Validation result: ${response.data}');
-
-    try {
-      //TODO : parse using deep_pick https://pub.dev/packages/deep_pick
       final result = IcsValidationResult(
-        isValid: response.data['valid'],
-        nbEvents: response.data.containsKey('nbEvents')
-            ? response.data['nbEvents']
-            : null,
-        error: response.data['error'],
+        isValid: response.isValid,
+        nbEvents: response.nbEvents,
+        error: response.error,
       );
       return right(result);
+    } on BackendApiException catch (e) {
+      log('Backend API error while validating URL: ${e.message}');
+      return left(e.message);
     } catch (e) {
-      log('Error while parsing validation result: $e');
+      log('Error while validating URL: $e');
       return left(e.toString());
     }
   }

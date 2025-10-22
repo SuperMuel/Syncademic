@@ -1,6 +1,9 @@
+import logging
 from typing import Protocol
 from google.cloud import firestore
 from backend.models.authorization import BackendAuthorization
+
+logger = logging.getLogger(__name__)
 
 
 class IBackendAuthorizationRepository(Protocol):
@@ -53,6 +56,12 @@ class FirestoreBackendAuthorizationRepository(IBackendAuthorizationRepository):
         :param db: Optionally inject a Firestore client for testing or advanced usage.
         """
         self._db = db or firestore.Client()
+        firebase_project_id = getattr(self._db, "project", None)
+        logger.info(
+            "Initialized %s with Firebase project: %s",
+            self.__class__.__name__,
+            firebase_project_id,
+        )
 
     def get_authorization(
         self, user_id: str, provider_account_id: str

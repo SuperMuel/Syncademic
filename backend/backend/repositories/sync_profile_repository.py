@@ -72,6 +72,12 @@ class FirestoreSyncProfileRepository(ISyncProfileRepository):
         :param db: Optionally inject a Firestore client (useful for testing).
         """
         self._db = db or firestore.Client()
+        firebase_project_id = getattr(self._db, "project", None)
+        logger.info(
+            "Initialized %s with Firebase project: %s",
+            self.__class__.__name__,
+            firebase_project_id,
+        )
 
     def _get_doc_ref(self, user_id: str, sync_profile_id: str) -> DocumentReference:
         """Helper to get the document reference."""

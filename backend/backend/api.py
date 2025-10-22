@@ -192,7 +192,7 @@ async def secure_endpoint(
 
 
 @app.post("/ics/validate", response_model=ValidateIcsUrlOutput)
-async def validate_ics_url_endpoint(
+def validate_ics_url_endpoint(
     payload: ValidateIcsUrlInput,
     current_user: UserInfo = Depends(get_current_user),
 ) -> ValidateIcsUrlOutput:

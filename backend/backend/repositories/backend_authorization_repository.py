@@ -1,6 +1,9 @@
+import logging
 from typing import Protocol
 from google.cloud import firestore
 from backend.models.authorization import BackendAuthorization
+
+logger = logging.getLogger(__name__)
 
 
 class IBackendAuthorizationRepository(Protocol):
@@ -35,7 +38,7 @@ class IBackendAuthorizationRepository(Protocol):
     def exists(self, user_id: str, provider_account_id: str) -> bool:
         """
         Returns True if there is a valid BackendAuthorization document for the given user
-        and provider_account_id, otherwise False. It doesn't acutally check if the token is expired or
+        and provider_account_id, otherwise False. It doesn't actually check if the token is expired or
         if the user has revoked the access. It only checks if the document exists.
         """
 
@@ -53,6 +56,12 @@ class FirestoreBackendAuthorizationRepository(IBackendAuthorizationRepository):
         :param db: Optionally inject a Firestore client for testing or advanced usage.
         """
         self._db = db or firestore.Client()
+        firebase_project_id = getattr(self._db, "project", None)
+        logger.info(
+            "Initialized %s with Firebase project: %s",
+            self.__class__.__name__,
+            firebase_project_id,
+        )
 
     def get_authorization(
         self, user_id: str, provider_account_id: str

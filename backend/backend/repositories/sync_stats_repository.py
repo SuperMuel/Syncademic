@@ -1,8 +1,11 @@
 from datetime import date
+import logging
 from typing import Protocol
 
 from google.cloud import firestore
 from google.cloud.firestore_v1.document import DocumentReference
+
+logger = logging.getLogger(__name__)
 
 
 class ISyncStatsRepository(Protocol):
@@ -43,6 +46,13 @@ class FirestoreSyncStatsRepository(ISyncStatsRepository):
                    If not provided, a default client is created.
         """
         self._db = db or firestore.Client()
+
+        firebase_project_id = getattr(self._db, "project", None)
+        logger.info(
+            "Initialized %s with Firebase project: %s",
+            self.__class__.__name__,
+            firebase_project_id,
+        )
 
     def get_daily_sync_count(self, user_id: str, day: date | None = None) -> int:
         """

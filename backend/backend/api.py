@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 import os
 from pydantic import EmailStr, ValidationError
 import json
@@ -7,16 +8,38 @@ import logging
 from typing import Any
 import firebase_admin
 from firebase_admin import credentials, auth, storage
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 
+from backend.ai.ruleset_builder import RulesetBuilder
 from backend.bootstrap import bootstrap_event_bus
+from backend.models import SyncTrigger
 from backend.models.base import CamelCaseModel
-from backend.models.schemas import ValidateIcsUrlInput, ValidateIcsUrlOutput
+from backend.models.schemas import (
+    AuthorizeBackendInput,
+    CreateSyncProfileInput,
+    DeleteSyncProfileInput,
+    IsAuthorizedInput,
+    IsAuthorizedOutput,
+    ListUserCalendarsInput,
+    RequestSyncInput,
+    ValidateIcsUrlInput,
+    ValidateIcsUrlOutput,
+)
+from backend.repositories.backend_authorization_repository import (
+    FirestoreBackendAuthorizationRepository,
+)
 from backend.repositories.sync_profile_repository import FirestoreSyncProfileRepository
 from backend.repositories.sync_stats_repository import FirestoreSyncStatsRepository
+from backend.services.ai_ruleset_service import AiRulesetService
+from backend.services.authorization_service import AuthorizationService
 from backend.services.dev_notification_service import create_dev_notification_service
+from backend.services.exceptions.base import SyncademicError
+from backend.services.exceptions.mapping import ErrorMapping
+from backend.services.google_calendar_service import GoogleCalendarService
 from backend.services.ics_service import IcsService
+from backend.services.sync_profile_service import SyncProfileService
 from backend.services.user_service import FirebaseAuthUserService
 from backend.settings import settings
 from backend.logging_config import configure_logging
@@ -32,6 +55,7 @@ logger = logging.getLogger("fastapi")
 configure_logging(settings.LOG_LEVEL)
 
 reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
+ERROR_MAPPING = ErrorMapping()
 
 
 def initialize_firebase_app() -> None:
@@ -60,22 +84,23 @@ def initialize_firebase_app() -> None:
     firebase_admin.initialize_app(cred)
 
 
-ics_service: IcsService | None = None
+@dataclass
+class DomainServices:
+    ics_service: IcsService
+    authorization_service: AuthorizationService
+    google_calendar_service: GoogleCalendarService
+    sync_profile_service: SyncProfileService
 
 
-def initialize_domain_services() -> None:
-    """Initialize backend domain services shared by FastAPI endpoints."""
-
-    global ics_service
-
-    if ics_service is not None:
-        return
+def build_domain_services() -> DomainServices:
+    """Build backend domain services shared by FastAPI endpoints."""
 
     logger.info("Initializing domain services...")
-
     sync_stats_repo = FirestoreSyncStatsRepository()
     sync_profile_repo = FirestoreSyncProfileRepository()
     user_service = FirebaseAuthUserService()
+    backend_auth_repo = FirestoreBackendAuthorizationRepository()
+
     dev_notification_service = create_dev_notification_service(
         user_service=user_service,
         sync_profile_repo=sync_profile_repo,
@@ -91,16 +116,46 @@ def initialize_domain_services() -> None:
     )
 
     ics_service = IcsService(event_bus=event_bus)
+
+    authorization_service = AuthorizationService(backend_auth_repo)
+    google_calendar_service = GoogleCalendarService(authorization_service)
+
+    ruleset_builder = RulesetBuilder(llm=settings.RULES_BUILDER_LLM)
+    ai_ruleset_service = AiRulesetService(
+        ics_service=ics_service,
+        sync_profile_repo=sync_profile_repo,
+        ruleset_builder=ruleset_builder,
+        event_bus=event_bus,
+    )
+
+    sync_profile_service = SyncProfileService(
+        sync_profile_repo=sync_profile_repo,
+        sync_stats_repo=sync_stats_repo,
+        authorization_service=authorization_service,
+        ics_service=ics_service,
+        google_calendar_service=google_calendar_service,
+        ai_ruleset_service=ai_ruleset_service,
+        event_bus=event_bus,
+    )
+
     logger.info("Domain services initialized.")
+
+    return DomainServices(
+        ics_service=ics_service,
+        authorization_service=authorization_service,
+        google_calendar_service=google_calendar_service,
+        sync_profile_service=sync_profile_service,
+    )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201
     logger.info("Application startup: Initializing Firebase...")
     initialize_firebase_app()
-    initialize_domain_services()
+    app.state.domain_services = build_domain_services()
     logger.info("Firebase initialized.")
     yield
+    app.state.domain_services = None
     logger.info("Application shutdown.")
 
 
@@ -153,6 +208,54 @@ async def get_current_user(
 app = FastAPI(title="Syncademic API", version="0.1.0", lifespan=lifespan)
 
 
+def get_domain_services(request: Request) -> DomainServices:
+    services: DomainServices | None = getattr(
+        request.app.state, "domain_services", None
+    )
+    if services is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Domain services are not available",
+        )
+    return services
+
+
+def syncademic_error_response(
+    error: SyncademicError,
+    *,
+    error_mapping: ErrorMapping,
+) -> JSONResponse:
+    """Convert a Syncademic domain error into an HTTP response."""
+    status_code, message = error_mapping.to_fastapi_status_code_and_message(error)
+
+    detail: dict[str, Any] = {"message": message}
+    if error.details:
+        detail["details"] = error.details
+
+    logger.error(
+        "Syncademic error mapped to HTTP response.",
+        extra={
+            "error_type": type(error).__name__,
+            "status_code": status_code,
+        },
+        exc_info=error,
+    )
+
+    return JSONResponse(status_code=status_code, content=detail)
+
+
+@app.exception_handler(SyncademicError)
+async def handle_syncademic_error(
+    request: Request,
+    error: SyncademicError,
+) -> JSONResponse:
+    """FastAPI handler that maps Syncademic domain errors to HTTP responses."""
+    return syncademic_error_response(
+        error,
+        error_mapping=ERROR_MAPPING,
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"]
@@ -195,15 +298,9 @@ async def secure_endpoint(
 def validate_ics_url_endpoint(
     payload: ValidateIcsUrlInput,
     current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
 ) -> ValidateIcsUrlOutput:
     """Validate an ICS URL using the shared Syncademic domain services."""
-
-    if ics_service is None:
-        logger.error("ICS service not initialized")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="ICS service is not available",
-        )
 
     try:
         ics_source = UrlIcsSource.from_str(payload.url)
@@ -218,9 +315,168 @@ def validate_ics_url_endpoint(
         extra={"user_id": current_user.uid, "url": payload.url},
     )
 
-    result = ics_service.validate_ics_url(
+    result = services.ics_service.validate_ics_url(
         ics_source,
         metadata={"user_id": current_user.uid},
     )
 
     return result
+
+
+@app.post("/calendars/list")
+def list_user_calendars_endpoint(
+    payload: ListUserCalendarsInput,
+    current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
+) -> dict[str, Any]:
+    """List calendars for the authenticated user."""
+
+    logger.info(
+        "Listing calendars via FastAPI.",
+        extra={
+            "user_id": current_user.uid,
+            "provider_account_id": payload.provider_account_id,
+        },
+    )
+
+    calendars = services.google_calendar_service.list_calendars(
+        user_id=current_user.uid,
+        provider_account_id=payload.provider_account_id,
+    )
+
+    return {"calendars": calendars}
+
+
+@app.post("/authorization/status", response_model=IsAuthorizedOutput)
+def is_authorized_endpoint(
+    payload: IsAuthorizedInput,
+    current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
+) -> IsAuthorizedOutput:
+    """Check whether the authenticated user is authorized for a provider account."""
+
+    logger.info(
+        "Checking authorization via FastAPI.",
+        extra={
+            "user_id": current_user.uid,
+            "provider_account_id": payload.provider_account_id,
+        },
+    )
+
+    try:
+        services.authorization_service.test_authorization(
+            current_user.uid,
+            payload.provider_account_id,
+        )
+    except SyncademicError as exc:
+        logger.info(
+            "Authorization test failed.",
+            extra={
+                "user_id": current_user.uid,
+                "provider_account_id": payload.provider_account_id,
+                "error_type": type(exc).__name__,
+            },
+        )
+        return IsAuthorizedOutput(authorized=False)
+
+    logger.info("Authorization successful via FastAPI.")
+    return IsAuthorizedOutput(authorized=True)
+
+
+@app.post("/sync/request")
+def request_sync_endpoint(
+    payload: RequestSyncInput,
+    current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
+) -> dict[str, bool]:
+    """Trigger synchronization for a user's Syncademic profile."""
+
+    logger.info(
+        "%s sync request received via FastAPI.",
+        getattr(payload.sync_type, "value", str(payload.sync_type)),
+        extra={
+            "user_id": current_user.uid,
+            "sync_profile_id": payload.sync_profile_id,
+        },
+    )
+
+    services.sync_profile_service.synchronize(
+        user_id=current_user.uid,
+        sync_profile_id=payload.sync_profile_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=payload.sync_type,
+    )
+
+    return {"success": True}
+
+
+@app.delete("/sync-profiles/{sync_profile_id}")
+def delete_sync_profile_endpoint(
+    sync_profile_id: str,
+    current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
+) -> dict[str, bool]:
+    """Delete a sync profile for the authenticated user."""
+
+    logger.info(
+        "Deleting sync profile via FastAPI.",
+        extra={
+            "user_id": current_user.uid,
+            "sync_profile_id": sync_profile_id,
+        },
+    )
+
+    services.sync_profile_service.delete_sync_profile(
+        user_id=current_user.uid,
+        sync_profile_id=sync_profile_id,
+    )
+
+    return {"success": True}
+
+
+@app.post("/authorization/backend")
+def authorize_backend_endpoint(
+    payload: AuthorizeBackendInput,
+    current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
+) -> dict[str, bool]:
+    """Authorize backend access for a provider account via OAuth."""
+
+    logger.info(
+        "Authorizing backend via FastAPI.",
+        extra={
+            "user_id": current_user.uid,
+            "redirect_uri": str(payload.redirect_uri),
+            "provider_account_id": payload.provider_account_id,
+        },
+    )
+
+    services.authorization_service.authorize_backend_with_auth_code(
+        user_id=current_user.uid,
+        auth_code=payload.auth_code,
+        redirect_uri=payload.redirect_uri,
+        provider_account_id=payload.provider_account_id,
+    )
+
+    return {"success": True}
+
+
+@app.post("/sync-profiles")
+def create_sync_profile_endpoint(
+    payload: CreateSyncProfileInput,
+    current_user: UserInfo = Depends(get_current_user),
+    services: DomainServices = Depends(get_domain_services),
+) -> dict[str, Any]:
+    """Create a new sync profile for the authenticated user."""
+
+    logger.info(
+        "Creating sync profile via FastAPI.",
+        extra={"user_id": current_user.uid},
+    )
+
+    sync_profile = services.sync_profile_service.create_sync_profile(
+        current_user.uid,
+        payload,
+    )
+
+    return sync_profile.model_dump(mode="json")

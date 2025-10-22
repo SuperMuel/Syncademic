@@ -10,6 +10,7 @@ import firebase_admin
 from firebase_admin import credentials, auth, storage
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 
 from backend.ai.ruleset_builder import RulesetBuilder
 from backend.bootstrap import bootstrap_event_bus
@@ -54,6 +55,7 @@ logger = logging.getLogger("fastapi")
 configure_logging(settings.LOG_LEVEL)
 
 reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
+ERROR_MAPPING = ErrorMapping()
 
 
 def initialize_firebase_app() -> None:
@@ -88,7 +90,6 @@ class DomainServices:
     authorization_service: AuthorizationService
     google_calendar_service: GoogleCalendarService
     sync_profile_service: SyncProfileService
-    error_mapping: ErrorMapping
 
 
 def build_domain_services() -> DomainServices:
@@ -137,7 +138,6 @@ def build_domain_services() -> DomainServices:
         event_bus=event_bus,
     )
 
-    error_mapping = ErrorMapping()
     logger.info("Domain services initialized.")
 
     return DomainServices(
@@ -145,7 +145,6 @@ def build_domain_services() -> DomainServices:
         authorization_service=authorization_service,
         google_calendar_service=google_calendar_service,
         sync_profile_service=sync_profile_service,
-        error_mapping=error_mapping,
     )
 
 
@@ -221,12 +220,12 @@ def get_domain_services(request: Request) -> DomainServices:
     return services
 
 
-def raise_syncademic_http_error(
+def syncademic_error_response(
     error: SyncademicError,
     *,
     error_mapping: ErrorMapping,
-) -> None:
-    """Convert a Syncademic domain error into an HTTPException."""
+) -> JSONResponse:
+    """Convert a Syncademic domain error into an HTTP response."""
     status_code, message = error_mapping.to_fastapi_status_code_and_message(error)
 
     detail: dict[str, Any] = {"message": message}
@@ -239,9 +238,22 @@ def raise_syncademic_http_error(
             "error_type": type(error).__name__,
             "status_code": status_code,
         },
+        exc_info=error,
     )
 
-    raise HTTPException(status_code=status_code, detail=detail) from error
+    return JSONResponse(status_code=status_code, content=detail)
+
+
+@app.exception_handler(SyncademicError)
+async def handle_syncademic_error(
+    request: Request,
+    error: SyncademicError,
+) -> JSONResponse:
+    """FastAPI handler that maps Syncademic domain errors to HTTP responses."""
+    return syncademic_error_response(
+        error,
+        error_mapping=ERROR_MAPPING,
+    )
 
 
 app.add_middleware(
@@ -327,13 +339,10 @@ def list_user_calendars_endpoint(
         },
     )
 
-    try:
-        calendars = services.google_calendar_service.list_calendars(
-            user_id=current_user.uid,
-            provider_account_id=payload.provider_account_id,
-        )
-    except SyncademicError as exc:
-        raise_syncademic_http_error(exc, error_mapping=services.error_mapping)
+    calendars = services.google_calendar_service.list_calendars(
+        user_id=current_user.uid,
+        provider_account_id=payload.provider_account_id,
+    )
 
     return {"calendars": calendars}
 
@@ -391,15 +400,12 @@ def request_sync_endpoint(
         },
     )
 
-    try:
-        services.sync_profile_service.synchronize(
-            user_id=current_user.uid,
-            sync_profile_id=payload.sync_profile_id,
-            sync_trigger=SyncTrigger.MANUAL,
-            sync_type=payload.sync_type,
-        )
-    except SyncademicError as exc:
-        raise_syncademic_http_error(exc, error_mapping=services.error_mapping)
+    services.sync_profile_service.synchronize(
+        user_id=current_user.uid,
+        sync_profile_id=payload.sync_profile_id,
+        sync_trigger=SyncTrigger.MANUAL,
+        sync_type=payload.sync_type,
+    )
 
     return {"success": True}
 
@@ -420,13 +426,10 @@ def delete_sync_profile_endpoint(
         },
     )
 
-    try:
-        services.sync_profile_service.delete_sync_profile(
-            user_id=current_user.uid,
-            sync_profile_id=sync_profile_id,
-        )
-    except SyncademicError as exc:
-        raise_syncademic_http_error(exc, error_mapping=services.error_mapping)
+    services.sync_profile_service.delete_sync_profile(
+        user_id=current_user.uid,
+        sync_profile_id=sync_profile_id,
+    )
 
     return {"success": True}
 
@@ -448,15 +451,12 @@ def authorize_backend_endpoint(
         },
     )
 
-    try:
-        services.authorization_service.authorize_backend_with_auth_code(
-            user_id=current_user.uid,
-            auth_code=payload.auth_code,
-            redirect_uri=payload.redirect_uri,
-            provider_account_id=payload.provider_account_id,
-        )
-    except SyncademicError as exc:
-        raise_syncademic_http_error(exc, error_mapping=services.error_mapping)
+    services.authorization_service.authorize_backend_with_auth_code(
+        user_id=current_user.uid,
+        auth_code=payload.auth_code,
+        redirect_uri=payload.redirect_uri,
+        provider_account_id=payload.provider_account_id,
+    )
 
     return {"success": True}
 
@@ -474,12 +474,9 @@ def create_sync_profile_endpoint(
         extra={"user_id": current_user.uid},
     )
 
-    try:
-        sync_profile = services.sync_profile_service.create_sync_profile(
-            current_user.uid,
-            payload,
-        )
-    except SyncademicError as exc:
-        raise_syncademic_http_error(exc, error_mapping=services.error_mapping)
+    sync_profile = services.sync_profile_service.create_sync_profile(
+        current_user.uid,
+        payload,
+    )
 
     return sync_profile.model_dump(mode="json")

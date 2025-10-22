@@ -38,9 +38,9 @@ class Settings(BaseSettings):
     RULES_BUILDER_LLM: str = Field(default="gpt-4o")
 
     CLIENT_ID: str = Field(default="mock-client-id")
-    CLIENT_SECRET: SecretStr = Field(default=SecretStr("mock-client-secret"))
+    CLIENT_SECRET: SecretStr = Field(default=...)
 
-    OPENAI_API_KEY: SecretStr = Field(default=SecretStr("mock-openai-api-key"))
+    OPENAI_API_KEY: SecretStr = Field(default=...)
 
     LOCAL_REDIRECT_URI: RedirectUri = Field(default=HttpUrl("http://localhost:7357"))
 
@@ -100,7 +100,7 @@ class Settings(BaseSettings):
         default="INFO"
     )
 
-    FIREBASE_STORAGE_BUCKET: str = Field(default="mock-storage-bucket")
+    FIREBASE_STORAGE_BUCKET: str = Field(default=...)
 
     @model_validator(mode="after")
     def validate_firebase_service_account(self) -> Self:

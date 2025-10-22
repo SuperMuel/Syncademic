@@ -18,7 +18,7 @@ from backend.repositories.sync_stats_repository import FirestoreSyncStatsReposit
 from backend.services.dev_notification_service import create_dev_notification_service
 from backend.services.ics_service import IcsService
 from backend.services.user_service import FirebaseAuthUserService
-from backend.settings import Settings
+from backend.settings import settings
 from backend.logging_config import configure_logging
 from backend.synchronizer.ics_cache import FirebaseIcsFileStorage
 from backend.synchronizer.ics_source import UrlIcsSource
@@ -29,7 +29,6 @@ load_dotenv()
 
 logger = logging.getLogger("fastapi")
 
-settings = Settings()
 configure_logging(settings.LOG_LEVEL)
 
 reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
@@ -82,7 +81,7 @@ def initialize_domain_services() -> None:
         sync_profile_repo=sync_profile_repo,
     )
 
-    bucket = storage.bucket(os.getenv("STORAGE_BUCKET"))
+    bucket = storage.bucket(settings.FIREBASE_STORAGE_BUCKET)
     ics_file_storage = FirebaseIcsFileStorage(bucket=bucket)
 
     event_bus = bootstrap_event_bus(
@@ -208,7 +207,7 @@ async def validate_ics_url_endpoint(
 
     try:
         ics_source = UrlIcsSource.from_str(payload.url)
-    except ValidationError as exc:  # pragma: no cover - validation handled by FastAPI
+    except ValidationError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=exc.errors(),

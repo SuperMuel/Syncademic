@@ -100,6 +100,8 @@ class Settings(BaseSettings):
         default="INFO"
     )
 
+    FIREBASE_STORAGE_BUCKET: str = Field(default=...)
+
     @model_validator(mode="after")
     def validate_firebase_service_account(self) -> Self:
         if (

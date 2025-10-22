@@ -38,7 +38,7 @@ class IBackendAuthorizationRepository(Protocol):
     def exists(self, user_id: str, provider_account_id: str) -> bool:
         """
         Returns True if there is a valid BackendAuthorization document for the given user
-        and provider_account_id, otherwise False. It doesn't acutally check if the token is expired or
+        and provider_account_id, otherwise False. It doesn't actually check if the token is expired or
         if the user has revoked the access. It only checks if the document exists.
         """
 

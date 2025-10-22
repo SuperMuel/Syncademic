@@ -100,7 +100,7 @@ class Settings(BaseSettings):
         default="INFO"
     )
 
-    FIREBASE_STORAGE_BUCKET: str = Field(default=...)
+    FIREBASE_STORAGE_BUCKET: str = Field(default="mock-storage-bucket")
 
     @model_validator(mode="after")
     def validate_firebase_service_account(self) -> Self:

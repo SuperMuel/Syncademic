@@ -1,18 +1,27 @@
 from contextlib import asynccontextmanager
-from pydantic import BaseModel, EmailStr
+import os
+from pydantic import EmailStr, ValidationError
 import json
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-import os
 from typing import Any
 import firebase_admin
-from firebase_admin import credentials, auth
+from firebase_admin import credentials, auth, storage
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from backend.bootstrap import bootstrap_event_bus
 from backend.models.base import CamelCaseModel
-from backend.settings import Settings
+from backend.models.schemas import ValidateIcsUrlInput, ValidateIcsUrlOutput
+from backend.repositories.sync_profile_repository import FirestoreSyncProfileRepository
+from backend.repositories.sync_stats_repository import FirestoreSyncStatsRepository
+from backend.services.dev_notification_service import create_dev_notification_service
+from backend.services.ics_service import IcsService
+from backend.services.user_service import FirebaseAuthUserService
+from backend.settings import settings
 from backend.logging_config import configure_logging
+from backend.synchronizer.ics_cache import FirebaseIcsFileStorage
+from backend.synchronizer.ics_source import UrlIcsSource
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,7 +29,6 @@ load_dotenv()
 
 logger = logging.getLogger("fastapi")
 
-settings = Settings()
 configure_logging(settings.LOG_LEVEL)
 
 reusable_oauth2 = HTTPBearer(scheme_name="Firebase Token")
@@ -52,10 +60,45 @@ def initialize_firebase_app() -> None:
     firebase_admin.initialize_app(cred)
 
 
+ics_service: IcsService | None = None
+
+
+def initialize_domain_services() -> None:
+    """Initialize backend domain services shared by FastAPI endpoints."""
+
+    global ics_service
+
+    if ics_service is not None:
+        return
+
+    logger.info("Initializing domain services...")
+
+    sync_stats_repo = FirestoreSyncStatsRepository()
+    sync_profile_repo = FirestoreSyncProfileRepository()
+    user_service = FirebaseAuthUserService()
+    dev_notification_service = create_dev_notification_service(
+        user_service=user_service,
+        sync_profile_repo=sync_profile_repo,
+    )
+
+    bucket = storage.bucket(settings.FIREBASE_STORAGE_BUCKET)
+    ics_file_storage = FirebaseIcsFileStorage(bucket=bucket)
+
+    event_bus = bootstrap_event_bus(
+        ics_file_storage=ics_file_storage,
+        dev_notification_service=dev_notification_service,
+        sync_stats_repo=sync_stats_repo,
+    )
+
+    ics_service = IcsService(event_bus=event_bus)
+    logger.info("Domain services initialized.")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201
     logger.info("Application startup: Initializing Firebase...")
     initialize_firebase_app()
+    initialize_domain_services()
     logger.info("Firebase initialized.")
     yield
     logger.info("Application shutdown.")
@@ -146,3 +189,38 @@ async def secure_endpoint(
     The `current_user` is injected by the `get_current_user` dependency.
     """
     return current_user
+
+
+@app.post("/ics/validate", response_model=ValidateIcsUrlOutput)
+def validate_ics_url_endpoint(
+    payload: ValidateIcsUrlInput,
+    current_user: UserInfo = Depends(get_current_user),
+) -> ValidateIcsUrlOutput:
+    """Validate an ICS URL using the shared Syncademic domain services."""
+
+    if ics_service is None:
+        logger.error("ICS service not initialized")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="ICS service is not available",
+        )
+
+    try:
+        ics_source = UrlIcsSource.from_str(payload.url)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=exc.errors(),
+        ) from exc
+
+    logger.info(
+        "Validating ICS URL via FastAPI",
+        extra={"user_id": current_user.uid, "url": payload.url},
+    )
+
+    result = ics_service.validate_ics_url(
+        ics_source,
+        metadata={"user_id": current_user.uid},
+    )
+
+    return result

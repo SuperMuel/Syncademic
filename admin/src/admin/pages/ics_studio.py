@@ -19,7 +19,7 @@ class IcsFileInfo(TypedDict):
 def initialize_services() -> tuple[FirebaseIcsFileStorage, IcsParser]:
     """Initialize and return required services."""
     ics_storage = FirebaseIcsFileStorage(
-        bucket=storage.bucket(os.getenv("STORAGE_BUCKET"))
+        bucket=storage.bucket(os.getenv("FIREBASE_STORAGE_BUCKET"))
     )
     ics_parser = IcsParser()
     return ics_storage, ics_parser

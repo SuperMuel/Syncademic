@@ -33,6 +33,13 @@ irrelevant events removed.
   secrets wiring.
 - **CI/CD deploys only.** No more `firebase deploy` or other deploys from a
   laptop. Every deploy goes through CI/CD.
+- **Everything runs locally.** Prefer infrastructure that is easy to run on a
+  laptop. Postgres beats Firebase here: a local Postgres is trivial, while
+  Firebase needs its emulators. The goal is that AI agents can iterate and
+  debug locally, and work in parallel on independent copies of the app,
+  without deploying or spawning dev versions of cloud services. External APIs
+  that cannot run locally (Google Calendar, LLMs) sit behind interfaces with
+  local fakes.
 
 ## Status
 

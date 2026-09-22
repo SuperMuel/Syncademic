@@ -146,9 +146,15 @@ class ChangeFieldAction(BaseModel):
 
 class ChangeColorAction(BaseModel):
     action: Literal["change_color"] = "change_color"
-    value: GoogleEventColor
+    value: GoogleEventColor | Literal["calendar"] = Field(
+        ...,
+        description='"calendar" removes the event color so the event is displayed '
+        "in the target calendar's own color.",
+    )
 
     def apply(self, event: Event) -> Event | None:
+        if self.value == "calendar":
+            return replace(event, color=None)
         return replace(event, color=self.value)
 
 

@@ -892,6 +892,33 @@ def test_change_color_action_apply():
     assert new_event.title == event.title
 
 
+def test_change_color_action_calendar_clears_color():
+    event = Event(
+        title="HAI507I Lecture",
+        color=GoogleEventColor.GRAPHITE,
+        start=start,
+        end=end,
+    )
+
+    new_event = ChangeColorAction(value="calendar").apply(event)
+
+    assert new_event is not None
+    assert new_event.color is None
+
+
+def test_change_color_action_calendar_roundtrip():
+    ruleset = Ruleset.model_validate_json(
+        '{"rules": [{"condition": {"field": "title", "operator": "contains",'
+        ' "value": "Lecture"}, "actions": [{"action": "change_color",'
+        ' "value": "calendar"}]}]}'
+    )
+
+    action = ruleset.rules[0].actions[0]
+    assert isinstance(action, ChangeColorAction)
+    assert action.value == "calendar"
+    assert Ruleset.model_validate_json(ruleset.model_dump_json()) == ruleset
+
+
 def test_delete_event_action_apply():
     event = Event(
         title="HAI507I Lecture",

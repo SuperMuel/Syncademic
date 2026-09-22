@@ -23,6 +23,16 @@ irrelevant events removed.
   AI-written code stays sandboxed.
 - **Cloudflare.** Move the website, and probably the rest of the
   infrastructure, to Cloudflare. Stay on the free tier where possible.
+- **Python, if kept, is current.** v1 is stuck on Python 3.11. Any Python in
+  v2 uses a recent release.
+- **FastAPI Cloud as an option.** For a Python API,
+  [FastAPI Cloud](https://fastapicloud.com/pricing/) is a candidate host; it
+  has a free Hobby plan.
+- **Infrastructure as code.** Define as much of the infrastructure as possible
+  in code, ideally all of it: DNS, hosting, workers, storage, scheduled jobs,
+  secrets wiring.
+- **CI/CD deploys only.** No more `firebase deploy` or other deploys from a
+  laptop. Every deploy goes through CI/CD.
 
 ## Status
 

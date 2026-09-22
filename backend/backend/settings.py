@@ -31,7 +31,8 @@ serialization, causing the OAuth2 token exchange to fail with a redirect_uri_mis
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        env_file=".env",
+        # .env is what `firebase deploy` uploads; keep local dev values in .env.local.
+        env_file=(".env", ".env.local"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

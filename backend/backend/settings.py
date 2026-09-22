@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         description="Cron schedule for automatic synchronization",
     )
     SCHEDULED_SYNC_TIMEOUT_SEC: int = Field(
-        default=3600,
+        default=1800,
         description="Timeout in seconds before scheduled synchronization of all profiles is cancelled",
     )
 

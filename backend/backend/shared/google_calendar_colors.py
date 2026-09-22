@@ -2,7 +2,10 @@ from enum import Enum
 
 
 class GoogleEventColor(str, Enum):
-    """Represents the colors used in google calendar"""
+    """Google Calendar event colors, named as in the Calendar UI.
+
+    IDs follow https://developers.google.com/apps-script/reference/calendar/event-color
+    """
 
     # don't use auto() here because it might cause issues with serialization/deserialization
     # e.g if we use auto() and then change the order of the enum values, the deserialization will break
@@ -40,9 +43,9 @@ class GoogleEventColor(str, Enum):
             "lavender": "#a4bdfc",
             "sage": "#7ae7bf",
             "grape": "#dbadff",
-            "tangerine": "#ff887c",
+            "tangerine": "#ffb878",
             "banana": "#fbd75b",
-            "flamingo": "#ffb878",
+            "flamingo": "#ff887c",
             "peacock": "#46d6db",
             "graphite": "#e1e1e1",
             "blueberry": "#5484ed",
@@ -60,11 +63,11 @@ class GoogleEventColor(str, Enum):
             case GoogleEventColor.GRAPE:
                 return "3"
             case GoogleEventColor.TANGERINE:
-                return "4"
+                return "6"
             case GoogleEventColor.BANANA:
                 return "5"
             case GoogleEventColor.FLAMINGO:
-                return "6"
+                return "4"
             case GoogleEventColor.PEACOCK:
                 return "7"
             case GoogleEventColor.GRAPHITE:

@@ -37,9 +37,7 @@ irrelevant events removed.
   laptop. Postgres beats Firebase here: a local Postgres is trivial, while
   Firebase needs its emulators. The goal is that AI agents can iterate and
   debug locally, and work in parallel on independent copies of the app,
-  without deploying or spawning dev versions of cloud services. External APIs
-  that cannot run locally (Google Calendar, LLMs) sit behind interfaces with
-  local fakes.
+  without deploying or spawning dev versions of cloud services.
 
 ## Status
 

@@ -3,6 +3,7 @@ import os
 import json
 from pydantic import (
     AfterValidator,
+    AliasChoices,
     Field,
     HttpUrl,
     SecretStr,
@@ -100,7 +101,12 @@ class Settings(BaseSettings):
         default="INFO"
     )
 
-    FIREBASE_STORAGE_BUCKET: str = Field(default=...)
+    # Deployed Functions read .env files, where Firebase rejects keys starting
+    # with FIREBASE_, so STORAGE_BUCKET is accepted as well.
+    FIREBASE_STORAGE_BUCKET: str = Field(
+        default=...,
+        validation_alias=AliasChoices("STORAGE_BUCKET", "FIREBASE_STORAGE_BUCKET"),
+    )
 
     @model_validator(mode="after")
     def validate_firebase_service_account(self) -> Self:

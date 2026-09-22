@@ -21,3 +21,18 @@ def test_invalid_redirect_uri_local():
 def test_invalid_redirect_uri_production():
     with pytest.raises(ValidationError):
         Settings(PRODUCTION_REDIRECT_URI="oijfezoifjez")  # type: ignore
+
+
+def test_storage_bucket_read_from_storage_bucket_env(monkeypatch):
+    # Firebase rejects FIREBASE_-prefixed keys in deployed .env files.
+    monkeypatch.delenv("FIREBASE_STORAGE_BUCKET", raising=False)
+    monkeypatch.setenv("STORAGE_BUCKET", "bucket-from-dotenv")
+
+    assert Settings().FIREBASE_STORAGE_BUCKET == "bucket-from-dotenv"
+
+
+def test_storage_bucket_still_read_from_legacy_env(monkeypatch):
+    monkeypatch.delenv("STORAGE_BUCKET", raising=False)
+    monkeypatch.setenv("FIREBASE_STORAGE_BUCKET", "legacy-bucket")
+
+    assert Settings().FIREBASE_STORAGE_BUCKET == "legacy-bucket"
